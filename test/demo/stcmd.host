@@ -1,5 +1,5 @@
 dbLoadDatabase "../../dbd/demo.dbd"
-registerRecordDeviceDriver(pdbbase)
+demo_registerRecordDeviceDriver(pdbbase)
 dbLoadRecords "demo.db"
 iocInit
 seq &demo
