@@ -1,6 +1,11 @@
 Recent Changes
 --------------
 
+Version 2.0.6 contains the following changes.
+
+When looking to see if all PVs have connected it now looks for first monitor coming back as well as all PVs connecting. This prevents the chance of using the
+value of a PV before it is given a value.
+
 Version 2.0.5 of the sequencer contains the following changes:
 
 Replaced the C++ static constructor used for command registration with a
