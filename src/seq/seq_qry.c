@@ -272,7 +272,7 @@ long epicsShareAPI seqQueueShow(epicsThreadId tid)
 		printf("Number of entries = %d\n", ellCount(pQueue));
 		for (pEntry = (QENTRY *) ellFirst(pQueue), i = 1;
 		     pEntry != NULL;
-		     pEntry = (QENTRY *) ellNext(pEntry), i++)
+		     pEntry = (QENTRY *) ellNext(&pEntry->node), i++)
 		{
 			CHAN	*pDB = pEntry->pDB;
 			pvValue	*pAccess = &pEntry->value;
