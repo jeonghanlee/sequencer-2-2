@@ -134,7 +134,7 @@ void gen_preamble()
 {
 	extern char		*prog_name;
 	extern int		async_opt, conn_opt, debug_opt, reent_opt,
-				main_opt, newef_opt, init_reg_opt;
+				main_opt, newef_opt;
 
 	/* Program name (comment) */
 	printf("\n/* Program \"%s\" */\n", prog_name);
