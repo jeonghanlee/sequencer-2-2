@@ -38,6 +38,4 @@ sncVersion.c: $(TOP)/configure/CONFIG
 clean::
 	@$(RM) snc.c snc_lex.c
 
-depends: install
-
 snc.c: snc_lex.c
