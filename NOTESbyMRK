@@ -1,6 +1,12 @@
 Recent Changes
 --------------
 
+Version 2.0.7 contains the following changes
+
+A sequence program could wait up to 20 seconds before all PVs connect and
+the first monitor occurs for each monitored PV. This could happen even
+if all PVs are local. This is now fixed.
+
 Version 2.0.6 contains the following changes.
 
 When looking to see if all PVs have connected it now looks for first monitor coming back as well as all PVs connecting. This prevents the chance of using the
