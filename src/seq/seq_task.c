@@ -506,12 +506,12 @@ long seqStop(threadId tid)
 	}
 
 	/* Close the log file */
-	if (pSP->logFd != NULL && pSP->logFd != stdout)
+	if (pSP->logFd != NULL)
 	{
 		DEBUG("Log file closed, fd=%d, file=%s\n", fileno(pSP->logFd),
 		      pSP->pLogFile);
 		fclose(pSP->logFd);
-		pSP->logFd = stdout;
+		pSP->logFd = NULL;
 		pSP->pLogFile = "";
 	}
 

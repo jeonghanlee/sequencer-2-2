@@ -649,7 +649,6 @@ SPROG		*pSP;
 
 	/* Create a logging resource locking semaphore */
 	pSP->logSemId = semBinaryMustCreate(semFull);
-	pSP->logFd = stdout; /* default fd is stdout */
 	pSP->pLogFile = "";
 
 	/* Check for logfile spec. */
@@ -686,7 +685,7 @@ int		arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8; /* arguments */
 	int		count, status;
 	TS_STAMP	timeStamp;
 	char		logBfr[LOG_BFR_SIZE], *eBfr=logBfr+LOG_BFR_SIZE, *pBfr;
-
+	FILE		*fd = pSP->logFd ? pSP->logFd : stdout;
 	pBfr = logBfr;
 
 	/* Enter thread name */
@@ -711,7 +710,7 @@ int		arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8; /* arguments */
 	/* Write the msg */
 	semBinaryTake(pSP->logSemId);
 	count = pBfr - logBfr + 1;
-	status = fwrite(logBfr, 1, count, pSP->logFd);
+	status = fwrite(logBfr, 1, count, fd);
 	semBinaryGive(pSP->logSemId);
 
 	if (status != count)
@@ -722,9 +721,11 @@ int		arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8; /* arguments */
 	}
 
 	/* If this is not stdout, flush the buffer */
-	if (pSP->logFd != stdout)
+	if (fd != stdout)
 	{
+		semBinaryTake(pSP->logSemId);
 		fflush(pSP->logFd);
+		semBinaryGive(pSP->logSemId);
 	}
 	return OK;
 }
