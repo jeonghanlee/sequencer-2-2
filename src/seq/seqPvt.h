@@ -105,6 +105,7 @@ struct	db_channel
 	short		getType;	/* db get type (e.g. DBR_STS_INT) */
 	short		putType;	/* db put type (e.g. DBR_INT) */
 	char		*message;	/* last db access error message */
+        epicsBoolean    gotFirstMonitor;
 	epicsBoolean	monitored;	/* TRUE if channel IS monitored */
 	void		*evid;		/* event id (supplied by PV lib) */
 	struct state_program *sprog;	/* state program that owns this struct*/
@@ -187,6 +188,8 @@ struct	state_program
 	long		numChans;	/* number of db channels, incl. unass */
 	long		assignCount;	/* number of db channels assigned */
 	long		connCount;	/* number of channels connected */
+        long		numMonitoredChans;
+        long		firstMonitorCount;
 	SSCB		*pSS;		/* array of state set control blocks */
 	long		numSS;		/* number of state sets */
 	char		*pVar;		/* ptr to user variable area */

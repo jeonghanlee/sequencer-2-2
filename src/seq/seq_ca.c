@@ -89,6 +89,7 @@ epicsShareFunc long seq_connect(SPROG *pSP)
 			continue; /* skip records without pv names */
 		pDB->assigned = TRUE;
 		pSP->assignCount += 1; /* keep track of number of *assigned* channels */
+		if (pDB->monFlag) pSP->numMonitoredChans++;/*do it before pvVarCreate*/
 #ifdef	DEBUG
 		errlogPrintf("seq_connect: connect %s to %s\n", pDB->pVarName,
 			pDB->dbName);
@@ -157,8 +158,15 @@ epicsShareFunc void seq_put_handler(void *var, pvType type, int count, pvValue *
 epicsShareFunc void seq_mon_handler(void *var, pvType type, int count, pvValue *pValue,
 		     void *arg)
 {
+	CHAN *pCHAN = (CHAN *)arg;
+        SPROG *pSP = pCHAN->sprog;
+
+        if(!pCHAN->gotFirstMonitor) {
+		pCHAN->gotFirstMonitor = 1;
+		pSP->firstMonitorCount++;
+	}
 	/* Process event handling in each state set */
-	proc_db_events(pValue, type, (CHAN *)arg, MON_COMPLETE);
+	proc_db_events(pValue, type, pCHAN, MON_COMPLETE);
 }
 
 /* Common code for completion and monitor handling */

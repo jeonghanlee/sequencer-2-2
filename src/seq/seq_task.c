@@ -312,7 +312,8 @@ LOCAL long seq_waitConnect(SPROG *pSP, SSCB *pSS)
 	double		delay;
 
 	delay = 10.0; /* 10, 20, 30, 40, 40,... sec */
-	while (pSP->connCount < pSP->assignCount)
+	while (pSP->connCount < pSP->assignCount
+        || pSP->firstMonitorCount < pSP->numMonitoredChans)
 	{
 		status = epicsEventWaitWithTimeout(pSS->syncSemId, delay);
 		if ((status != OK) && (pSP->threadId == pSS->threadId))
