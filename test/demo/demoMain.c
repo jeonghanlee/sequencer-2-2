@@ -15,12 +15,12 @@ of this distribution.
 #include <string.h>
 #include <stdio.h>
 
-#include "ioccrf.h"
+#include "iocsh.h"
 
 int main(int argc,char *argv[])
 {
     if(argc>=2)
-        ioccrf(argv[1]);
-    ioccrf(NULL);
+        iocsh(argv[1]);
+    iocsh(NULL);
     return(0);
 }

@@ -1,5 +1,5 @@
 /*
- * $Id: seqCommands.c,v 1.9 2001-03-22 19:38:26 mrk Exp $
+ * $Id: seqCommands.c,v 1.10 2001-05-17 18:25:17 norume Exp $
  *
  * DESCRIPTION: EPICS sequencer commands
  *
@@ -22,7 +22,7 @@
 #include <epicsThread.h>
 #include <cantProceed.h>
 
-#include <ioccrf.h>
+#include <iocsh.h>
 #include "seq.h"
 
 
@@ -67,12 +67,12 @@ findThread (const char *name)
 }
 
 /* seq */
-static const ioccrfArg seqArg0 = { "sequencer",ioccrfArgString};
-static const ioccrfArg seqArg1 = { "macro definitions",ioccrfArgString};
-static const ioccrfArg seqArg2 = { "stack size",ioccrfArgInt};
-static const ioccrfArg * const seqArgs[3] = { &seqArg0,&seqArg1,&seqArg2 };
-static const ioccrfFuncDef seqFuncDef = {"seq",3,seqArgs};
-static void seqCallFunc(const ioccrfArgBuf *args)
+static const iocshArg seqArg0 = { "sequencer",iocshArgString};
+static const iocshArg seqArg1 = { "macro definitions",iocshArgString};
+static const iocshArg seqArg2 = { "stack size",iocshArgInt};
+static const iocshArg * const seqArgs[3] = { &seqArg0,&seqArg1,&seqArg2 };
+static const iocshFuncDef seqFuncDef = {"seq",3,seqArgs};
+static void seqCallFunc(const iocshArgBuf *args)
 {
     char *table = args[0].sval;
     char *macroDef = args[1].sval;
@@ -95,10 +95,10 @@ static void seqCallFunc(const ioccrfArgBuf *args)
 }
 
 /* seqShow */
-static const ioccrfArg seqShowArg0 = { "sequencer",ioccrfArgString};
-static const ioccrfArg * const seqShowArgs[1] = {&seqShowArg0};
-static const ioccrfFuncDef seqShowFuncDef = {"seqShow",1,seqShowArgs};
-static void seqShowCallFunc(const ioccrfArgBuf *args)
+static const iocshArg seqShowArg0 = { "sequencer",iocshArgString};
+static const iocshArg * const seqShowArgs[1] = {&seqShowArg0};
+static const iocshFuncDef seqShowFuncDef = {"seqShow",1,seqShowArgs};
+static void seqShowCallFunc(const iocshArgBuf *args)
 {
     epicsThreadId id;
     char *name = args[0].sval;
@@ -110,10 +110,10 @@ static void seqShowCallFunc(const ioccrfArgBuf *args)
 }
 
 /* seqQueueShow */
-static const ioccrfArg seqQueueShowArg0 = { "sequencer",ioccrfArgString};
-static const ioccrfArg * const seqQueueShowArgs[1] = {&seqQueueShowArg0};
-static const ioccrfFuncDef seqQueueShowFuncDef = {"seqQueueShow",1,seqQueueShowArgs};
-static void seqQueueShowCallFunc(const ioccrfArgBuf *args)
+static const iocshArg seqQueueShowArg0 = { "sequencer",iocshArgString};
+static const iocshArg * const seqQueueShowArgs[1] = {&seqQueueShowArg0};
+static const iocshFuncDef seqQueueShowFuncDef = {"seqQueueShow",1,seqQueueShowArgs};
+static void seqQueueShowCallFunc(const iocshArgBuf *args)
 {
     epicsThreadId id;
     char *name = args[0].sval;
@@ -123,10 +123,10 @@ static void seqQueueShowCallFunc(const ioccrfArgBuf *args)
 }
 
 /* seqStop */
-static const ioccrfArg seqStopArg0 = { "sequencer",ioccrfArgString};
-static const ioccrfArg * const seqStopArgs[1] = {&seqStopArg0};
-static const ioccrfFuncDef seqStopFuncDef = {"seqStop",1,seqStopArgs};
-static void seqStopCallFunc(const ioccrfArgBuf *args)
+static const iocshArg seqStopArg0 = { "sequencer",iocshArgString};
+static const iocshArg * const seqStopArgs[1] = {&seqStopArg0};
+static const iocshFuncDef seqStopFuncDef = {"seqStop",1,seqStopArgs};
+static void seqStopCallFunc(const iocshArgBuf *args)
 {
     epicsThreadId id;
     char *name = args[0].sval;
@@ -136,11 +136,11 @@ static void seqStopCallFunc(const ioccrfArgBuf *args)
 }
 
 /* seqChanShow */
-static const ioccrfArg seqChanShowArg0 = { "sequencer",ioccrfArgString};
-static const ioccrfArg seqChanShowArg1 = { "channel",ioccrfArgString};
-static const ioccrfArg * const seqChanShowArgs[2] = {&seqChanShowArg0,&seqChanShowArg1};
-static const ioccrfFuncDef seqChanShowFuncDef = {"seqChanShow",2,seqChanShowArgs};
-static void seqChanShowCallFunc(const ioccrfArgBuf *args)
+static const iocshArg seqChanShowArg0 = { "sequencer",iocshArgString};
+static const iocshArg seqChanShowArg1 = { "channel",iocshArgString};
+static const iocshArg * const seqChanShowArgs[2] = {&seqChanShowArg0,&seqChanShowArg1};
+static const iocshFuncDef seqChanShowFuncDef = {"seqChanShow",2,seqChanShowArgs};
+static void seqChanShowCallFunc(const iocshArgBuf *args)
 {
     epicsThreadId id;
     char *name = args[0].sval;
@@ -159,10 +159,10 @@ void epicsShareAPI seqRegisterSequencerCommands (void)
     static int firstTime = 1;
     if (firstTime) {
         firstTime = 0;
-        ioccrfRegister(&seqFuncDef,seqCallFunc);
-        ioccrfRegister(&seqShowFuncDef,seqShowCallFunc);
-        ioccrfRegister(&seqQueueShowFuncDef,seqQueueShowCallFunc);
-        ioccrfRegister(&seqStopFuncDef,seqStopCallFunc);
-        ioccrfRegister(&seqChanShowFuncDef,seqChanShowCallFunc);
+        iocshRegister(&seqFuncDef,seqCallFunc);
+        iocshRegister(&seqShowFuncDef,seqShowCallFunc);
+        iocshRegister(&seqQueueShowFuncDef,seqQueueShowCallFunc);
+        iocshRegister(&seqStopFuncDef,seqStopCallFunc);
+        iocshRegister(&seqChanShowFuncDef,seqChanShowCallFunc);
     }
 }
