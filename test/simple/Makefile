@@ -4,7 +4,7 @@ include $(TOP)/configure/CONFIG
 #----------------------------------------
 #  ADD MACRO DEFINITIONS AFTER THIS LINE
 
-SNC = $(TOP)/bin/$(EPICS_HOST_ARCH)/snc
+SNC = $(INSTALL_BIN)/snc
 
 #  Generate snc main programs
 SNCFLAGS_DEFAULT += +m
