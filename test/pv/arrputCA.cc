@@ -1,4 +1,4 @@
-/* $Id: arrputCA.cc,v 1.1.1.1 2000-04-04 03:23:09 wlupton Exp $
+/* $Id: arrputCA.cc,v 1.2 2004-01-15 14:11:09 mrk Exp $
  *
  * Loop putting simulated values to an array-valued PV (CA version)
  */
@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include "osiThread.h"
+#include "epicsThread.h"
 
 #include "cadef.h"
 
@@ -40,7 +40,7 @@ int main( int argc, char *argv[] ) {
 
 	status = ca_array_put( DBR_DOUBLE, count, chid, value );
 	REPORT;
-	threadSleep( delay );
+	epicsThreadSleep( delay );
     }
 }
 

@@ -1,4 +1,4 @@
-/* $Id: arrput.cc,v 1.1.1.1 2000-04-04 03:23:09 wlupton Exp $
+/* $Id: arrput.cc,v 1.2 2004-01-15 14:11:09 mrk Exp $
  *
  * Loop putting simulated values to an array-valued PV
  */
@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include "osiThread.h"
+#include "epicsThread.h"
 
 #include "pv.h"
 
@@ -49,7 +49,7 @@ int main( int argc, char *argv[] ) {
 	var.put( pvTypeDOUBLE, count, &value );
 	REPORT;
 
-	threadSleep( delay );
+	epicsThreadSleep( delay );
     }
 }
 

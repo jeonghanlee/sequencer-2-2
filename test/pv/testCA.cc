@@ -1,11 +1,10 @@
-// $Id: testCA.cc,v 1.1.1.1 2000-04-04 03:23:09 wlupton Exp $
+// $Id: testCA.cc,v 1.2 2004-01-15 14:11:09 mrk Exp $
 //
 // CA test program illustrating R3.14 behavior
 
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "osiThread.h"
 #include "cadef.h"
 
 #define	 REPORT SEVCHK( status, name )
