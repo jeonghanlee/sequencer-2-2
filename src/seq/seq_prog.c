@@ -22,8 +22,8 @@
 /*#define	DEBUG*/
 
 #define epicsExportSharedSymbols
-#include	"seq.h"
 #include	<string.h>
+#include	"seq.h"
 
 LOCAL	epicsMutexId seqProgListSemId;
 LOCAL	int	    seqProgListInited = FALSE;

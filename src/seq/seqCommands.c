@@ -1,5 +1,5 @@
 /*
- * $Id: seqCommands.c,v 1.8 2001-03-22 15:50:26 mrk Exp $
+ * $Id: seqCommands.c,v 1.9 2001-03-22 19:38:26 mrk Exp $
  *
  * DESCRIPTION: EPICS sequencer commands
  *
@@ -22,8 +22,8 @@
 #include <epicsThread.h>
 #include <cantProceed.h>
 
-#include <seqCom.h>
 #include <ioccrf.h>
+#include "seq.h"
 
 
 struct sequencerProgram {

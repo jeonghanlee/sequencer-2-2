@@ -66,7 +66,7 @@
 /*#define	DEBUG	1*/
 
 #ifdef		vxWorks
-#include	"vxWorks.h"	/*needed by sys/stat.h (unfortunately)*/
+"include	"vxWorks.h"	/*needed by sys/stat.h (unfortunately)*/
 #endif
 
 #include	<sys/types.h>
