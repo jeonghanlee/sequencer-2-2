@@ -14,7 +14,7 @@ OBJS_vxWorks = $(SEQS)
 
 #  Sequencer and EPICS libraries
 PROD_LIBS += seq
-seq_DIR    = $(INSTALL_LIB)
+seq_DIR    = $(SEQ_LIB)
 
 include $(TOP)/test/Makefile.pv
 
