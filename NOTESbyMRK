@@ -20,6 +20,13 @@ without databases running in the same process.
 Release History for releases that work with EPICS base 3.14.
 --------------
 
+Version 2.0.10 contains the new diagnostic
+
+seqcar(verbosity)
+
+This produces report about all the channel access connections from sequence
+programs.
+
 Version 2.0.9 contains the following changes
 
 seq_connect now initializes assignCount and numMonitoredChans BEFORE connecting
