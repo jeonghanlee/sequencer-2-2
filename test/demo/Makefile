@@ -15,11 +15,13 @@ USR_CPPFLAGS = -DCA
 ifneq "$(PVCA)" "TRUE"
 SNCFLAGS = +m
 endif
+SNCFLAGS_RTEMS = +i
 
 #  Products
 PROD_DEFAULT = demo
 PROD_WIN32 = -nil-
 OBJS_vxWorks = demo
+OBJS_RTEMS = demo
 
 #  Sources (CA only)
 ifeq "$(PVCA)" "TRUE"
@@ -34,7 +36,7 @@ seqdev_DIR    = $(INSTALL_LIB)
 include $(TOP)/test/Makefile.pv
 
 ifeq "$(PVCA)" "TRUE"
-PROD_LIBS += dbtoolsIoc miscIoc asIoc dbIoc registryIoc dbStaticIoc rsrvIoc
+PROD_LIBS += dbtoolsIoc miscIoc asIoc dbIoc registryIoc dbStaticIoc rsrvIoc Com
 endif
 
 # Unix objects (mostly CA only)
@@ -57,9 +59,10 @@ endif
 
 #  VxWorks library
 LIBRARY_vxWorks = demoIoc
+LIBRARY_RTEMS = demoIoc
 demoIoc_OBJS += registerRecordDeviceDriver.o
 
-demoIoc_OBJS += $(EPICS_BASE_BIN)/iocCoreLibrary
+demoIoc_OBJS_vxWorks += $(EPICS_BASE_BIN)/iocCoreLibrary
 demoIoc_OBJS += $(EPICS_BASE_BIN)/iocInit.o
 
 demoIoc_OBJS += $(EPICS_BASE_BIN)/aoRecord.o
