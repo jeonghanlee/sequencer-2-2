@@ -1,4 +1,4 @@
-/* $Id: devSequencer.c,v 1.1 2001-03-19 20:59:36 mrk Exp $
+/* $Id: devSequencer.c,v 1.2 2003-03-31 16:05:14 mrk Exp $
  *
  * Device support to permit database access to sequencer internals
  *
@@ -39,7 +39,8 @@ typedef struct {
 /* stringin */
 LOCAL long siInit( struct stringinRecord *pRec );
 LOCAL long siRead( struct stringinRecord *pRec );
-DSET  devSiSeq = { 5, NULL, NULL, siInit, NULL, siRead };
+LOCAL DSET  devSiSeq = { 5, NULL, NULL, siInit, NULL, siRead };
+dset *pdevSiSeq = (dset *)&devSiSeq;
 
 LOCAL long siInit( struct stringinRecord *pRec )
 {
@@ -83,6 +84,9 @@ LOCAL long siRead( struct stringinRecord *pRec )
 
 /*
  * $Log: not supported by cvs2svn $
+ * Revision 1.1  2001/03/19 20:59:36  mrk
+ * changes for base 3.14
+ *
  * Revision 1.1.1.1  2000/04/04 03:22:41  wlupton
  * first commit of seq-2-0-0
  *
