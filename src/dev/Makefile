@@ -26,3 +26,5 @@ include $(TOP)/configure/RULES
 #----------------------------------------
 #  ADD RULES AFTER THIS LINE
 
+# $(INSTALL_DBD)/seq.dbd needed by test/demo depends
+depends: $(INSTALL_DBDS)
