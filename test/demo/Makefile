@@ -36,7 +36,7 @@ seqdev_DIR    = $(SEQ_LIB)
 include $(TOP)/test/Makefile.pv
 
 ifeq "$(PVCA)" "TRUE"
-PROD_LIBS += dbtoolsIoc miscIoc asIoc dbIoc registryIoc dbStaticIoc rsrvIoc Com
+PROD_LIBS += iocsh dbtoolsIoc miscIoc asIoc dbIoc registryIoc dbStaticIoc rsrvIoc Com
 endif
 
 # Unix objects (mostly CA only)
@@ -45,7 +45,7 @@ demo_OBJS += demo.o
 ifeq "$(PVCA)" "TRUE"
 demo_OBJS += registerRecordDeviceDriver.o
 
-demo_OBJS += $(EPICS_BASE_BIN)/iocInit.o
+demo_OBJS_vxWorks += $(EPICS_BASE_BIN)/iocInit.o
 
 demo_OBJS += $(EPICS_BASE_BIN)/aoRecord.o
 demo_OBJS += $(EPICS_BASE_BIN)/boRecord.o
@@ -63,7 +63,7 @@ LIBRARY_RTEMS = demoIoc
 demoIoc_OBJS += registerRecordDeviceDriver.o
 
 demoIoc_OBJS_vxWorks += $(EPICS_BASE_BIN)/iocCoreLibrary
-demoIoc_OBJS += $(EPICS_BASE_BIN)/iocInit.o
+demoIoc_OBJS_vxWorks += $(EPICS_BASE_BIN)/iocInit.o
 
 demoIoc_OBJS += $(EPICS_BASE_BIN)/aoRecord.o
 demoIoc_OBJS += $(EPICS_BASE_BIN)/boRecord.o
