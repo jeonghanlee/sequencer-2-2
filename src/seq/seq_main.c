@@ -71,6 +71,7 @@
 #include	<errno.h>
 #include	<fcntl.h>
 #include 	<string.h>
+#include 	<stddef.h>
 #include 	<stdarg.h>
 
 /* #include 	<unistd.h>*/
@@ -440,7 +441,7 @@ SPROG			*pSP;
 
 		/* Reentrant option: Convert offset to addr of the user var. */
 		if ((pSP->options & OPT_REENT) != 0)
-			pDB->pVar += (int)pSP->pVar;
+			pDB->pVar += (ptrdiff_t)pSP->pVar;
 #ifdef	DEBUG
 		printf(" Assigned Name=%s, VarName=%s, VarType=%s, "
 			"count=%d\n", pDB->dbAsName, pDB->pVarName,
