@@ -46,12 +46,14 @@
  * 17jan96,ajk	Removed ca_import_cancel(), which is now in channel access lib.
  * 17jan96,ajk	Many routines changed to use ANSI-style function headers.
  * 09aug96,wfl	Added support for syncQ queued values.
+ * 15feb00,wfl	Improved debug output (no functional change).
  */
 
 #define		ANSI
 #include	"seq.h"
 #include	"string.h"
 #include	"logLib.h"
+#include	"sysLib.h"
 #include	"taskVarLib.h"
 
 LOCAL VOID proc_db_events(union db_access_val *, CHAN *, long);
@@ -275,7 +277,8 @@ long seq_disconnect(SPROG *pSP)
 	if (pMySP == NULL)
 	{
 #ifdef	DEBUG_DISCONNECT
-		logMsg("seq_disconnect: ca_import\n", 0,0,0,0,0,0);
+		logMsg("seq_disconnect: ca_import(0x%x)\n", seqAuxTaskId,
+			0,0,0,0,0);
 #endif	/*DEBUG_DISCONNECT*/
 		status = ca_import(seqAuxTaskId); /* not a sequencer task */
 		SEVCHK (status, "seq_disconnect: ca_import");
@@ -284,7 +287,7 @@ long seq_disconnect(SPROG *pSP)
 	pDB = pSP->pChan;
 #ifdef	DEBUG_DISCONNECT
 	logMsg("seq_disconnect: pSP = 0x%x, pDB = 0x%x\n",
-	 pSP, pDB, 0,0,0,0);
+	 (int)pSP, (int)pDB, 0,0,0,0);
 #endif	/*DEBUG_DISCONNECT*/
 
 	for (i = 0; i < pSP->numChans; i++, pDB++)
@@ -292,9 +295,8 @@ long seq_disconnect(SPROG *pSP)
 		if (!pDB->assigned)
 			continue;
 #ifdef	DEBUG_DISCONNECT
-		logMsg("seq_disconnect: disconnect %s from %s\n",
-		 pDB->pVarName, pDB->dbName, 0,0,0,0);
-		taskDelay(sysClkRateGet() / 10);
+		logMsg("disconnect %s from %s\n", (int)pDB->pVarName,
+			(int)pDB->dbName, 0,0,0,0);
 #endif	/*DEBUG_DISCONNECT*/
 		/* Disconnect this channel */
 		status = ca_clear_channel(pDB->chid);
@@ -313,7 +315,9 @@ long seq_disconnect(SPROG *pSP)
 	if (pMySP == NULL)
 	{
 #ifdef	DEBUG_DISCONNECT
-		logMsg("seq_disconnect: ca_import_cancel\n", 0,0,0,0,0,0);
+		logMsg("seq_disconnect: ca_import_cancel(0x%x)\n", taskIdSelf(),
+			0,0,0,0,0);
+		taskDelay(sysClkRateGet());
 #endif	/*DEBUG_DISCONNECT*/
 		SEVCHK(ca_import_cancel(taskIdSelf()),
 			"seq_disconnect: ca_import_cancel() failed!");
