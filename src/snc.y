@@ -18,6 +18,7 @@
 23jun97,wfl	Permitted pre-processor "#" lines between states. 
 13jan98,wfl     Added "down a level" handling of compound expressions
 09jun98,wfl     Permitted pre-processor "#" lines between state-sets
+22sep99,grw     Supported entry and exit actions; supported state options.
 ***************************************************************************/
 /*	SNC - State Notation Compiler.
  *	The general structure of a state program is:
@@ -60,11 +61,11 @@ extern	int line_num; /* input file line no. */
 	void	*pval;
 	Expr	*pexpr;
 }
-%token	<pchar>	STATE STATE_SET
+%token	<pchar>	STATE ENTRY STATE_SET
 %token	<pchar>	NUMBER NAME
 %token	<pchar>	CHAR_CONST
 %token	<pchar>	DEBUG_PRINT
-%token	PROGRAM EXIT OPTION
+%token	PROGRAM EXIT L_OPTION
 %token	R_SQ_BRACKET L_SQ_BRACKET
 %token	BAD_CHAR L_BRACKET R_BRACKET
 %token	COLON SEMI_COLON EQUAL
@@ -75,7 +76,7 @@ extern	int line_num; /* input file line no. */
 %token	ASTERISK AMPERSAND
 %token	AUTO_INCR AUTO_DECR
 %token	PLUS MINUS SLASH GT GE EQ LE LT NE NOT BIT_OR BIT_XOR BIT_AND
-%token	L_SHIFT R_SHIFT COMPLEMENT MODULO
+%token	L_SHIFT R_SHIFT COMPLEMENT MODULO OPTION
 %token	PLUS_EQUAL MINUS_EQUAL MULT_EQUAL DIV_EQUAL AND_EQUAL OR_EQUAL
 %token	MODULO_EQUAL LEFT_EQUAL RIGHT_EQUAL CMPL_EQUAL
 %token	<pchar>	STRING
@@ -88,6 +89,10 @@ extern	int line_num; /* input file line no. */
 %type	<pexpr> expr compound_expr assign_list bracked_expr
 %type	<pexpr> statement stmt_list compound_stmt if_stmt else_stmt while_stmt
 %type	<pexpr> for_stmt escaped_c_list
+%type   <pexpr> state_option_list, state_option
+%type   <pexpr> condition_list
+%type   <pexpr> entry_list, exit_list, entry, exit
+
 /* precidence rules for expr evaluation */
 %right	EQUAL COMMA
 %left	OR AND
@@ -194,6 +199,7 @@ type		/* types for variables defined in SNL */
 |	DOUBLE		{ $$ = V_DOUBLE; }
 |	STRING_DECL	{ $$ = V_STRING; }
 |	EVFLAG		{ $$ = V_EVFLAG; }
+|       error { snc_err("type specifier"); }
 ;
 
 sync_stmt	/* sync <variable> <event flag> */
@@ -239,26 +245,72 @@ state_set 	/* define a state set */
 state_list /* define a state set body (one or more states) */
 :	state				{ $$ = $1; }
 |	state_list state		{ $$ = link_expr($1, $2); }
-|	error { snc_err("state set"); }
+|	error { snc_err("state list"); }
 ;
 
 state	/* a block that defines a single state */
-:	STATE NAME L_BRACKET transition_list R_BRACKET
-				{ $$ = expression(E_STATE, $2, $4, 0); }
+: 	STATE NAME L_BRACKET state_option_list condition_list R_BRACKET
+			{ $$ = expression(E_STATE, $2, $5, $4); }
 |	pp_code				{ $$ = 0; }
 |	error { snc_err("state block"); }
+;
+
+state_option_list /* A list of options for a single state */
+:       /* Optional */                  { $$ = NULL; }
+|	state_option			{ $$ = $1; }
+|	state_option_list state_option	{ $$ = link_expr($1, $2); }
+|	error				{ snc_err("state option list"); }
+;
+
+state_option /* An option for a state */
+:	OPTION PLUS NAME SEMI_COLON	
+                { $$ = expression(E_OPTION,"stateoption",$3,"+"); }
+|	OPTION MINUS NAME SEMI_COLON	
+		{ $$ = expression(E_OPTION,"stateoption",$3,"-"); }
+|       error	{ snc_err("state option specifier"); }
+;
+
+condition_list /* Conditions and resulting actions */
+:	entry_list transition_list exit_list	
+				{ $$ = link_expr( link_expr($1,$2), $3 ); }
+|	error			{ snc_err("state condition list"); }
+;
+
+entry_list
+:	/* optional */		{ $$ = NULL; }
+|	entry			{ $$ = $1; }
+|	entry_list entry	{ $$ = link_expr( $1, $2 ); }
+;
+
+exit_list
+:	/* optional */		{ $$ = NULL; }
+|	exit			{ $$ = $1; }
+|	exit_list exit 	        { $$ = link_expr( $1, $2 ); }
+;
+
+entry	/* On entry to a state, do this */
+:	ENTRY L_BRACKET stmt_list R_BRACKET
+			        { $$ = expression( E_ENTRY, "entry", 0, $3 ); } 
+|	error		        { snc_err("entry block"); }
+;
+
+exit	/* On exit from a state, do this */
+:	EXIT L_BRACKET stmt_list R_BRACKET
+			        { $$ = expression( E_EXIT, "exit", 0, $3 ); } 
+|	error	 	        { snc_err("exit block"); }
 ;
 
 transition_list	/* all transitions for one state */
 :	transition			{ $$ = $1; }
 |	transition_list transition	{ $$ = link_expr($1, $2); }
-|	error { snc_err("transition"); }
+|	error                           { snc_err("when transition list"); }
 ;
 
-transition	/* define a transition ("when" statment ) */
+transition /* define a transition condition and action */
 :	WHEN L_PAREN expr R_PAREN L_BRACKET stmt_list R_BRACKET STATE NAME
-			{ $$ = expression(E_WHEN, $9, $3, $6); }
+			                { $$ = expression(E_WHEN, $9, $3, $6); }
 |	pp_code				{ $$ = 0; }
+|       error                           { snc_err("when transition block"); }
 ;
 
 expr	/* general expr: e.g. (-b+2*a/(c+d)) != 0 || (func1(x,y) < 5.0) */
@@ -358,7 +410,7 @@ statement
 |	for_stmt			{ $$ = $1; }
 |	C_STMT				{ $$ = expression(E_TEXT, "", $1, 0); }
 |	pp_code				{ $$ = 0; }
-|	error 				{ snc_err("action statement"); }
+/* |	error 				{ snc_err("action statement"); } */
 ;
 
 if_stmt

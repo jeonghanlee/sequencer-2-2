@@ -15,6 +15,7 @@
 23jun97,wfl	Avoided SEGV if variable or event flag was undeclared.
 13jan98,wfl     Fixed handling of compound expressions, using E_COMMA.
 29apr99,wfl     Avoided compilation warnings.
+22sep99,grw	Supported entry and exit actions
 ***************************************************************************/
 #include	<stdio.h>
 #include	<string.h>
@@ -74,6 +75,9 @@ void gen_ss_code()
 			printf("\f/* Code for state \"%s\" in state set \"%s\" */\n",
 			 sp->value, ssp->value);
 
+			/* Generate entry and exit functions */
+                        gen_change_func(sp, ssp);
+
 			/* Generate function to set up for delay processing */
 			gen_delay_func(sp, ssp);
 
@@ -88,6 +92,105 @@ void gen_ss_code()
 	/* Generate exit handler code */
 	gen_exit_handler();
 }
+/* Generate functions for each state which perform the state entry and 
+  * exit actions. 
+  */
+gen_change_func(sp, ssp)
+Expr		*ssp;
+Expr		*sp;
+{
+        Expr		*ep;
+	int isEntry = FALSE, isExit = FALSE;
+
+	/* Don't write code for an entry or exit function unless there
+	   was at least one entry or exit statement */
+
+	for ( ep = sp->left; ep != NULL; ep = ep->next )
+	{
+		if ( ep->type == E_ENTRY )
+		       isEntry = TRUE;
+		else if ( ep->type == E_EXIT )
+		       isExit = TRUE;
+	}
+	if (isEntry) gen_entry_func( sp, ssp );
+	if (isExit) gen_exit_func( sp, ssp );
+}
+
+gen_entry_func( sp, ssp )
+Expr		*sp;
+Expr		*ssp;			/* Parent state set */
+{	
+        Expr	*ep,			/* Entry expression */
+		*xp;			/* statement expression walker */
+	int	entryI =  0, line_num = -1;
+
+	/* Entry function declaration */
+	printf("\n/* Entry function for state \"%s\" in state set \"%s\" */\n",
+ 		sp->value, ssp->value);
+	printf("static void I_%s_%s(ssId, pVar)\n",
+		ssp->value, sp->value);
+	printf("SS_ID\tssId;\n");
+	printf("struct UserVar\t*pVar;\n{");
+
+	for ( ep = sp->left; ep != NULL; ep = ep->next )
+	{
+		if ( ep->type == E_ENTRY )
+		{
+			printf("/* Entry %d: */\n", ++entryI);
+			for (xp = ep->right; xp != NULL; xp = xp->next)
+		        {
+		                 if (line_num != xp->line_num) 
+                                 { 
+                                         print_line_num(xp->line_num, xp->src_file); 
+                                         line_num = xp->line_num; 
+                                 } 
+				 eval_expr(ACTION_STMT, xp, sp, 1);
+			}
+		}
+	}
+
+	/* end of function */
+	printf("}\n");
+	return;
+}
+
+gen_exit_func( sp, ssp )
+Expr		*sp;
+Expr		*ssp;			/* Parent state set */
+{	
+        Expr	*ep,			/* Entry expression */
+		*xp;			/* statement expression walker */
+	int	exitI =  0, line_num = -1;
+
+	/* Exit function declaration */
+	printf("\n/* Exit function for state \"%s\" in state set \"%s\" */\n",
+ 		sp->value, ssp->value);
+	printf("static void O_%s_%s(ssId, pVar)\n",
+		ssp->value, sp->value);
+	printf("SS_ID\tssId;\n");
+	printf("struct UserVar\t*pVar;\n{");
+
+	for ( ep = sp->left; ep != NULL; ep = ep->next )
+	{
+		if ( ep->type == E_EXIT )
+		{
+ 			 printf("/* Exit %d: */\n", ++exitI);
+			 for (xp = ep->right; xp != NULL; xp = xp->next)
+			 {
+		                 if (line_num != xp->line_num) 
+                                 { 
+                                         print_line_num(xp->line_num, xp->src_file); 
+                                         line_num = xp->line_num; 
+                                 } 
+				 eval_expr(ACTION_STMT, xp, sp, 1);
+			 }
+		}
+	}
+	/* end of function */
+	printf("}\n");
+	return;
+}
+
 /* Generate a function for each state that sets up delay processing:
  * This function gets called prior to the event function to guarantee
  * that the initial delay value specified in delay() calls are used.
@@ -109,8 +212,11 @@ Expr		*sp;
 	/* For each transition: */
 	for (tp = sp->left; tp != NULL; tp = tp->next)
 	{
-		print_line_num(tp->line_num, tp->src_file);
-		traverseExprTree(tp, E_FUNC, "delay", eval_delay, sp);
+       		if ( tp->type == E_WHEN )
+		{
+		        print_line_num(tp->line_num, tp->src_file);
+		        traverseExprTree(tp, E_FUNC, "delay", eval_delay, sp);
+		}
 	}
 	printf("}\n");
 }
@@ -174,22 +280,25 @@ Expr		*ssp; /* Parent state set */
 	/* For each transition ("when" statement) ... */
 	for (tp = sp->left; tp != NULL; tp = tp->next)
 	{
-		/* "case" for each transition */
-		printf("\tcase %d:\n", trans_num);
-		/* For each action statement insert action code */
-		for (ap = tp->right; ap != NULL; ap = ap->next)
+	        if (tp->type == E_WHEN) 
 		{
-			if (line_num != ap->line_num)
-			{
-				print_line_num(ap->line_num, ap->src_file);
-				line_num = ap->line_num;
-			}
-			/* Evaluate statements */
-			eval_expr(ACTION_STMT, ap, sp, 2);
+		         /* "case" for each transition */ 
+		         printf("\tcase %d:\n", trans_num); 
+		         /* For each action statement insert action code */
+		         for (ap = tp->right; ap != NULL; ap = ap->next) 
+                         { 
+		                 if (line_num != ap->line_num) 
+                                 { 
+                                         print_line_num(ap->line_num, ap->src_file); 
+                                         line_num = ap->line_num; 
+                                 } 
+                                 /* Evaluate statements */ 
+                                 eval_expr(ACTION_STMT, ap, sp, 2); 
+			 } 
+                         /* end of case */ 
+                         printf("\t\treturn;\n"); 
+                         trans_num++;
 		}
-		/* end of case */
-		printf("\t\treturn;\n");
-		trans_num++;
 	}
 	/* end of switch stmt */
 	printf("\t}\n");
@@ -217,28 +326,31 @@ Expr		*ssp;
 	/* For each transition generate an "if" statement ... */
 	for (tp = sp->left; tp != NULL; tp = tp->next)
 	{
-		print_line_num(tp->line_num, tp->src_file);
-		printf("\tif (");
-		if (tp->left == 0)
-			printf("TRUE");
-		else
-			eval_expr(EVENT_STMT, tp->left, sp, 0);
-		printf(")\n\t{\n");
-		/* index is the transition number (0, 1, ...) */
-		index = state_block_index_from_name(ssp, tp->value);
-		if (index < 0)
+	        if (tp->type == E_WHEN) 
 		{
-			fprintf(stderr, "Line %d: ", tp->line_num);
-			fprintf(stderr, "No state %s in state set %s\n",
-			 tp->value, ssp->value);
-			index = 0; /* default to 1-st state */
-			printf("\t\t/* state %s does not exist */\n",
-			 tp->value);
+		        print_line_num(tp->line_num, tp->src_file);
+			printf("\tif (");
+			if (tp->left == 0)
+			      printf("TRUE");
+			else
+			      eval_expr(EVENT_STMT, tp->left, sp, 0);
+			printf(")\n\t{\n");
+			/* index is the transition number (0, 1, ...) */
+			index = state_block_index_from_name(ssp, tp->value);
+			if (index < 0)
+			{
+			       fprintf(stderr, "Line %d: ", tp->line_num);
+			       fprintf(stderr, "No state %s in state set %s\n",
+				       tp->value, ssp->value);
+			       index = 0; /* default to 1-st state */
+			       printf("\t\t/* state %s does not exist */\n",
+				      tp->value);
+			}
+			printf("\t\t*pNextState = %d;\n", index);
+			printf("\t\t*pTransNum = %d;\n", trans_num);
+			printf("\t\treturn TRUE;\n\t}\n");
+			trans_num++;
 		}
-		printf("\t\t*pNextState = %d;\n", index);
-		printf("\t\t*pTransNum = %d;\n", trans_num);
-		printf("\t\treturn TRUE;\n\t}\n");
-		trans_num++;
 	}
 	printf("\treturn FALSE;\n");
 	printf("}\n");
@@ -344,6 +456,7 @@ int		level;		/* indentation level */
 	case E_VAR:
 #ifdef	DEBUG
 		fprintf(stderr, "E_VAR: %s\n", ep->value);
+		fprintf(stderr, "ep->left is %s\n",ep->left ? "non-null" : "null");
 #endif	/*DEBUG*/
 		if(reent_opt)
 		{	/* Make variables point to allocated structure */

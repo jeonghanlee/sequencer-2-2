@@ -21,6 +21,7 @@
 17may94,ajk	Removed old event flag (-e) option.
 08aug96,wfl	Added new syncq_stmt() routine.
 29apr99,wfl	Avoided compilation warnings.
+22sep99,grw     Supported entry and exit actions; supported state options.
 ***************************************************************************/
 
 /*====================== Includes, globals, & defines ====================*/
@@ -792,8 +793,10 @@ Expr		*ep2;	/* beginning 2-nd (append it to 1-st) */
 {
 	Expr		*ep;
 
-	if (ep1 == 0)
-		return ep2; /* shouldn't happen */
+	if (ep1 == 0 && ep2 == 0)
+	        return NULL;
+	else if (ep1 == 0)
+		return ep2; 
 	else if (ep2 == 0)
 		return ep1;
 
@@ -830,4 +833,4 @@ char	*stype[] = {
 	"E_ASGNOP", "E_PAREN", "E_SUBSCR", "E_TEXT", "E_STMT", "E_CMPND",
 	"E_IF", "E_ELSE", "E_WHILE", "E_SS", "E_STATE", "E_WHEN",
 	"E_FOR", "E_X", "E_PRE", "E_POST", "E_BREAK", "E_COMMA",
-	"E_?", "E_?", "E_?", "E_?", "E_?", "E_?", "E_?", "E_?", "E_?" };
+	"E_ENTRY", "E_EXIT", "E_OPTION", "E_?", "E_?", "E_?", "E_?", "E_?", "E_?" };

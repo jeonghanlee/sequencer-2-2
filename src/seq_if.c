@@ -34,7 +34,7 @@
  * 09aug96,wfl	Added seq_pvGetQ() to support syncQ.
  * 13aug96,wfl	Added seq_pvFreeQ() to free entries on syncQ queue.
  * 23jun96,wfl  Added task wakeup code to seq_efClear() (like seq_efSet()).
-
+ * 22sep99,grw  Supported not re-starting timers on transition to curr. state.
  */
 
 #include 	<string.h>
@@ -664,6 +664,7 @@ long seq_delay(SS_ID ssId, long delayId)
 {
 	SSCB		*pSS;
 	ULONG		timeElapsed;
+        long            expired = FALSE;
 
 	pSS = (SSCB *)ssId;
 
@@ -671,13 +672,16 @@ long seq_delay(SS_ID ssId, long delayId)
 	timeElapsed = tickGet() - pSS->timeEntered;
 
 	/* Check for delay timeout */
-	if (timeElapsed >= pSS->delay[delayId])		
+	if ( (timeElapsed >= pSS->delay[delayId]) )
 	{
 		pSS->delayExpired[delayId] = TRUE; /* mark as expired */
-		return TRUE;
+		expired = TRUE;
 	}
-
-	return FALSE;
+#if defined(DEBUG)
+	fprintf(stderr,"Delay %ld : %ld tics, %s\n",delayId,pSS->delay[delayId],
+		expired ? "expired": "unexpired");
+#endif
+	return expired;
 }
 
 /*

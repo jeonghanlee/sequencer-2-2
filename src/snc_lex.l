@@ -25,6 +25,7 @@
 08aug96,wfl	Added SYNCQ token.
 23jun97,wfl	Added ^L as white-space char; permitted '"x" "y"' syntax.
 01oct98,wfl     Replaced FPNUM with version from Sun lex manual ("E" support)
+22sep99,grw     Supported ENTRY token (for entry action).
 ***************************************************************************/
 /* Lexical analyzer for State Notation Compiler (snc).
  *
@@ -181,6 +182,7 @@ CCONST	\'.\'
 <SNL>"for"	RETURN(FOR);
 <SNL>"break"	RETURN(BREAK);
 <SNL>"exit"	RETURN(EXIT);
+<SNL>"entry"    RETURN(ENTRY);
 <SNL>"TRUE" {	yylval.pchar = "1";
 		RETURN(NUMBER);
 }

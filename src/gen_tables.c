@@ -19,6 +19,8 @@
 08aug96,wfl	Added emission of code for syncQ queues.
 11mar98,wfl	Corrected calculation of number of event words.
 29apr99,wfl	Avoided compilation warnings.
+22sep99,grw     Supported entry and exit actions; supported state options;
+		avoided warnings when no variables are mapped to channels.
 ***************************************************************************/
 /*#define	DEBUG	1*/
 
@@ -91,32 +93,40 @@ void gen_db_blocks()
 	Chan		*cp;
 	int		nchan, elem_num;
 
-	printf("\n/* Database Blocks */\n");
-	printf("static struct seqChan seqChan[NUM_CHANNELS] = {\n");
 	nchan = 0;
 
-	for (cp = chan_list; cp != NULL; cp = cp->next)
+	if ( chan_list ) 
 	{
+	        printf("\n/* Database Blocks */\n");
+	        printf("static struct seqChan seqChan[NUM_CHANNELS] = {\n");
+		for (cp = chan_list; cp != NULL; cp = cp->next)
+		{
 #ifdef	DEBUG
-		fprintf(stderr, "gen_db_blocks: index=%d, num_elem=%d\n",
-			cp->index, cp->num_elem);
+		        fprintf(stderr, "gen_db_blocks: index=%d, num_elem=%d\n",
+			        cp->index, cp->num_elem);
 #endif	/*DEBUG*/
 
-		if (cp->num_elem == 0)
-		{	/* Variable assigned to single pv */
-			fill_db_block(cp, 0);
-			nchan++;
-		}
-		else
-		{	/* Variable assigned to multiple pv's */
-			for (elem_num = 0; elem_num < cp->num_elem; elem_num++)
-			{
-				fill_db_block(cp, elem_num);
+			if (cp->num_elem == 0)
+			{	/* Variable assigned to single pv */
+			        fill_db_block(cp, 0);
 				nchan++;
 			}
+			else
+			{	/* Variable assigned to multiple pv's */
+			        for (elem_num = 0; elem_num<cp->num_elem; elem_num++)
+				{
+				        fill_db_block(cp, elem_num);
+					nchan++;
+				}
+			}
 		}
+		printf("};\n");
 	}
-	printf("};\n");
+	else
+	{
+	        printf("\n/* No Database Blocks, create 1 for ptr init. */\n");
+	        printf("static struct seqChan seqChan[1];\n");
+	}
 	return;
 }
 
@@ -279,6 +289,23 @@ void fill_state_block(sp, ss_name)
 Expr		*sp;
 char		*ss_name;
 {
+        Expr *ep;
+	int isEntry = FALSE, isExit = FALSE;
+
+	/* Check if there are any entry or exit "transitions" in this
+	   state so that if so the state block will be initialized to include a
+	   reference to the function which implements them, but otherwise just
+	   include a null pointer in those members */
+
+	for ( ep = sp->left; ep != NULL; ep = ep->next )
+        {
+	      if ( ep->type == E_ENTRY ) 
+		     isEntry = TRUE;
+	      else if ( ep->type == E_EXIT )
+	             isExit = TRUE;
+	} 
+
+	/* Write the source code to initialize the state block for this state */
 
 	printf("\t/* State \"%s\" */ {\n", sp->value);
 
@@ -290,10 +317,123 @@ char		*ss_name;
 
 	printf("\t/* delay function */   (DELAY_FUNC) D_%s_%s,\n", ss_name, sp->value);
 
-	printf("\t/* event mask array */ EM_%s_%s},\n\n", ss_name, sp->value);
+	printf("\t/* entry function */   (ENTRY_FUNC)");
+	if ( isEntry ) 
+		printf(" I_%s_%s,\n", ss_name, sp->value);
+	else
+		printf(" 0,\n");
 
+	printf("\t/* exit function */   (EXIT_FUNC)");
+	if ( isExit ) 
+		printf(" O_%s_%s,\n", ss_name, sp->value);
+	else
+		printf(" 0,\n");
+
+	printf("\t/* event mask array */ EM_%s_%s,\n", ss_name, sp->value);
+
+	printf("\t/* state options */   ");
+	encode_state_options(sp);
+	printf("},\n\n");
 	return;
 }
+
+/* Writes the state option bitmask into a state block. At present this f is
+extremely simple since there is only one permitted option and so there are
+no possible state option conflicts.  */
+encode_state_options(Expr *sp)
+{
+        Expr     *ep;
+	char     errMsg[BUFSIZ], *pc = NULL, *suppl;
+	bitMask  options = 0,
+	         optionSpec = 0;
+	int      duplicate = FALSE,
+                 contradictory = FALSE;  /* Currently there are no contradictions */
+
+	printf("(0");
+	/* For each option character, within each OPTION statement in this state,
+           check the option character is recognized and if so code it's bit mask */
+	for (ep = sp->right; ep != NULL; ep = ep->next )
+	{
+	        for (pc = (char*)ep->left; *pc != NULL; pc++)
+		{
+		        /* Option not to reset timers on state entry from self */
+		        if ( *pc == 't' ) 
+		        {
+			       if ( optionSpec & OPT_NORESETTIMERS )
+				     duplicate = TRUE;
+                               if ( strchr(ep->right,'+') )
+			       {
+				     /* No contradictions */
+				     /* Default, no bit to code */ 
+			       } 
+			       else if ( strchr(ep->right,'-') ) 
+			       {
+				     /* No contradictions */ 
+				     printf(" | OPT_NORESETTIMERS" );
+				     options |= OPT_NORESETTIMERS;
+			       }
+			       optionSpec |=  OPT_NORESETTIMERS;
+		        }
+			else if ( *pc == 'e' )
+		        {
+			       if ( optionSpec & OPT_DOENTRYFROMSELF )
+				     duplicate = TRUE;
+			       if ( strchr(ep->right,'+') )
+				     /* No contradictions */ 
+				     /* Default, no opt bit to code */
+				     ;		
+			       else if ( strchr(ep->right,'-') )
+			       {
+				     /* No contradictions */
+		                     printf(" | OPT_DOENTRYFROMSELF" );
+			             options |= OPT_DOENTRYFROMSELF;
+			       }
+			       optionSpec |= OPT_DOENTRYFROMSELF;
+			}
+			else if ( *pc == 'x' )
+		        {
+			       if ( optionSpec & OPT_DOEXITTOSELF )
+				     duplicate = TRUE;
+			       if ( strchr(ep->right,'+') )
+				     /* No contradictions */ 
+				     /* Default, no opt bit to code */
+				     ;		
+			       else if ( strchr(ep->right,'-') )
+			       {
+				     /* No contradictions */
+		                     printf(" | OPT_DOEXITTOSELF" );
+			             options |= OPT_DOEXITTOSELF;
+			       }
+			       optionSpec |= OPT_DOEXITTOSELF;
+			}
+		        else
+		        {
+			       sprintf(errMsg,"Unrecognized option in state %s: %s%c",
+				       sp->value, ep->right, *pc);
+			       snc_err(errMsg);
+			}
+
+			if ( duplicate )
+			{
+			       sprintf(errMsg,
+                                       "Option already specified in state %s: %c",
+		       	               sp->value, *pc);
+		               snc_err(errMsg);
+			}
+			if ( contradictory )
+			{
+			       sprintf(errMsg,
+				       "Contradictory option or option out of order %s%c in state %s:\n\t\t %s",
+                                       ep->right,*pc,sp->value,suppl);
+			       snc_err(errMsg);
+			}
+
+		}
+	}
+	printf(")");
+	return;
+} 
+
 
 /* Generate the program parameter list */
 void gen_prog_params()

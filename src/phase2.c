@@ -20,8 +20,9 @@
 13jan98,wfl     Supported E_COMMA token (for compound expressions).
 01oct98,wfl	Supported setting initial value on declaration.
 29apr99,wfl     Avoided compilation warnings.
+22sep99,grw     Supported entry and exit actions.
 ***************************************************************************/
-/*#define	DEBUG	1*/
+/*#define DEBUG 1*/
 
 #include	<stdio.h>
 #include	<stdlib.h>
@@ -197,6 +198,9 @@ Expr		*ep;
 	fprintf(stderr, "connect_variable: \"%s\", line %d\n", ep->value, ep->line_num);
 #endif	/*DEBUG*/
 	vp = (Var *)findVar(ep->value);
+#ifdef	DEBUG
+	fprintf(stderr, "\t \"%s\" was %s\n", ep->value, vp ? "found" : "not found" );
+#endif	/*DEBUG*/
 	if (vp == 0)
 	{	/* variable not declared; add it to the variable list */
 		if (warn_opt)
@@ -579,6 +583,8 @@ void		*argp;		/* ptr to argument to pass on to function */
 		break;
 
 	case E_WHEN:
+        case E_ENTRY:  /* E_ENTRY and E_EXIT only have expressions on RHS (->right) */
+        case E_EXIT:   /* but add them here incase ->left is used in future. */
 	case E_ASGNOP:
 	case E_BINOP:
 	case E_SUBSCR:

@@ -10,11 +10,11 @@
 18nov91,ajk	Replaced lstLib stuff with in-line links.
 28oct93,ajk	Added support for assigning array elements to pv's.
 28oct93,ajk	Added support for pointer declarations (see VC_*)
-5nov93,ajk	Changed structures var & db_chan to handle array assignments.
-5nov93,ajk	changed malloc() to calloc() 3 places.
+05nov93,ajk	Changed structures var & db_chan to handle array assignments.
+05nov93,ajk	changed malloc() to calloc() 3 places.
 20jul95,ajk	Added unsigned types (V_U...).
 08aug96,wfl	Added syncQ variables to var struct.
-
+01sep99,grw     Added E_OPTION, E_ENTRY, E_EXIT.
 ***************************************************************************/
 
 #ifndef INCLparseh
@@ -140,5 +140,8 @@ Chan		*findChan();
 #define	E_POST		22		/* expr++ or expr-- */
 #define	E_BREAK		23		/* break stmt */
 #define	E_COMMA		24		/* expr , expr */
-
+#define E_ENTRY         25              /* entry statement */
+#define E_EXIT          26              /* exit statement */
+#define E_OPTION        27              /* state option statement */
 #endif	/*INCLparseh*/
+

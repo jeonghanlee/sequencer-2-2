@@ -10,24 +10,29 @@
 	state sets.
 
 	ENVIRONMENT: VxWorks
-	HISTORY
+	HISTORY:
+
 04dec91,ajk	Implemented linked list of state programs, eliminating task
 		variables.
 11dec91,ajk	Made cosmetic changes and cleaned up comments.
 19dec91,ajk	Changed algoritm in seq_getTimeout().
 29apr92,ajk	Implemented new event flag mode.
 30apr92,ajk	Periodically call ca_pend_event() to detect connection failures.
-21may92,ajk	In sprog_delete() wait for loggin semaphore before suspending tasks.
-		Some minor changes in the way semaphores are deleted.
-18feb92,ajk	Changed to allow sharing of single CA task by all state programs. 
-		Added seqAuxTask() and removed ca_pend_event() from ss_entry().
+21may92,ajk	In sprog_delete() wait for logging semaphore before suspending
+		tasks. Some minor changes in the way semaphores are deleted.
+18feb92,ajk	Changed to allow sharing of single CA task by all state
+		programs. Added seqAuxTask() and removed ca_pend_event() from
+		ss_entry().
 09aug93,ajk	Added calls to taskwdInsert() & taskwdRemove().
 24nov93,ajk	Added support for assigning array elements to db channels.
-24nov93,ajk	Changed implementation of event bits to support unlimited channels
+24nov93,ajk	Changed implementation of event bits to support unlimited
+		channels.
 20may94,ajk	Changed sprog_delete() to spawn a separate cleanup task.
-19oct95,ajk/rmw Fixed bug which kept events from being cleared in old eventflag mode
+19oct95,ajk/rmw Fixed bug which kept events from being cleared in old eventflag
+		mode.
 20jul95,ajk	Add user-specified task priority to taskSpwan().
-?????96,joh Fixed problem with delay calculations.
+?????96,joh 	Fixed problem with delay calculations.
+22sep99,grw     Supported entry and exit actions; supported state options.
 ***************************************************************************/
 /*#define		DEBUG*/
 
@@ -45,7 +50,7 @@
 /* Function declarations */
 LOCAL	VOID seq_waitConnect(SPROG *pSP, SSCB *pSS);
 LOCAL	VOID ss_task_init(SPROG *, SSCB *);
-LOCAL	VOID seq_clearDelay(SSCB *);
+LOCAL	VOID seq_clearDelay(SSCB *, STATE*);
 LOCAL	int seq_getTimeout(SSCB *);
 LOCAL	long seq_cleanup(int tid, SPROG *pSP, SEM_ID cleanupSem);
 
@@ -134,6 +139,8 @@ SSCB	*pSS;
 	/* Initilaize state set to enter the first state */
 	pST = pSS->pStates;
 	pSS->currentState = 0;
+	pSS->nextState = -1;
+	pSS->prevState = -1;
 
 	/* Use the event mask for this state */
 	pSS->pMask = (pST->pEventMask);
@@ -150,11 +157,19 @@ SSCB	*pSS;
 	 */
 	while (1)
 	{
-		seq_clearDelay(pSS); /* Clear delay list */
+		/* If we've changed state so do any entry actions. Also do these 
+                 * even if its the same state if option to do so is enabled. 
+                 */
+		if ( pSS->prevState != pSS->currentState ||
+                     pST->options & OPT_DOENTRYFROMSELF )
+	  	         if ( pST->entryFunc ) pST->entryFunc( ssId, pVar );
+
+		seq_clearDelay(pSS, pST); /* Clear delay list */
 		pST->delayFunc(ssId, pVar); /* Set up new delay list */
 
 		/* Setting this semaphor here guarantees that a when() is always
-		 * executed at least once when a state is first entered. */
+		 * executed at least once when a state is first entered. 
+                 */
 		semGive(pSS->syncSemId);
 
 		/*
@@ -178,17 +193,16 @@ SSCB	*pSS;
 		        /* Clear all event flags (old ef mode only) */
 			if ( ev_trig && ((pSP->options & OPT_NEWEF) == 0) )
 			{    /* Clear all event flags (old mode only) */
-			    register	int i;
+			        register	int i;
 
-			    for (i = 0; i < nWords; i++)
-					pSP->pEvents[i] = pSP->pEvents[i] & !pSS->pMask[i];
-				
+			        for (i = 0; i < nWords; i++)
+				         pSP->pEvents[i] = 
+                                         pSP->pEvents[i] & !pSS->pMask[i];
 			}
 
 			semGive(pSP->caSemId);
 
 		} while (!ev_trig);
-
 
 		/*
 		 * An event triggered:
@@ -201,6 +215,11 @@ SSCB	*pSS;
 
 		/* Execute the action for this event */
 		pST->actionFunc(ssId, pVar, pSS->transNum);
+
+		/* If changing state, do any exit actions. */
+		if ( pSS->currentState != pSS->nextState ||
+                     pST->options & OPT_DOEXITTOSELF )
+		         if ( pST->exitFunc ) pST->exitFunc( ssId, pVar );
 
 		/* Flush any outstanding DB requests */
 		ca_flush_io();
@@ -253,17 +272,26 @@ LOCAL VOID seq_waitConnect(SPROG *pSP, SSCB *pSS)
 /*
  * seq_clearDelay() - clear the time delay list.
  */
-LOCAL VOID seq_clearDelay(pSS)
+LOCAL VOID seq_clearDelay(pSS,pST)
 SSCB		*pSS;
+STATE           *pST;
 {
 	int		ndelay;
 
-	pSS->timeEntered = tickGet(); /* record time we entered this state */
+
+        /* On state change set time we entered this state; or if transition from
+         * same state if option to do so is on for this state. 
+         */
+	if ( (pSS->currentState != pSS->prevState) ||
+             !(pST->options & OPT_NORESETTIMERS) )
+	{
+	        pSS->timeEntered = tickGet();  
+	}
 
 	for (ndelay = 0; ndelay < MAX_NDELAY; ndelay++)
 	{
 		pSS->delay[ndelay] = 0;
-		pSS->delayExpired[ndelay] = FALSE;
+	 	pSS->delayExpired[ndelay] = FALSE;
 	}
 
 	pSS->numDelays = 0;

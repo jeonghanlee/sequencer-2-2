@@ -3,6 +3,6 @@ TOP = .
 include $(TOP)/config/CONFIG_APP
 
 #directories in which to build
-DIRS += src
+DIRS += src test
 
 include $(TOP)/config/RULES_TOP

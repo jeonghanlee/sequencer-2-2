@@ -39,12 +39,12 @@
  * 20jul93,ajk	Removed non-ANSI function definitions.
  * 21mar94,ajk	Implemented new i/f with snc (see seqCom.h).
  * 21mar94,ajk	Implemented assignment of array elements to db.  Also,
-		allow "unlimited" number of channels.
+ *		allow "unlimited" number of channels.
  * 28mar94,ajk	Added time stamp support.
  * 29mar94,ajk	Added dbOffset in db_channel structure; allows faster processing
-		of values returned with monitors and pvGet().
-   09aug96,wfl	Added syncQ queue support.
-
+ *		of values returned with monitors and pvGet().
+ * 09aug96,wfl	Added syncQ queue support.
+ * 22sep99,grw  Supported entry and exit actions; supported state options.
  */
 #ifndef	INCLseqh
 #define	INCLseqh
@@ -121,7 +121,10 @@ struct	state_info_block
 	ACTION_FUNC	actionFunc;	/* ptr to action routine for this state */
 	EVENT_FUNC	eventFunc;	/* ptr to event routine for this state */
 	DELAY_FUNC	delayFunc;	/* ptr to delay setup routine for this state */
+        ENTRY_FUNC	entryFunc;      /* ptr to entry routine for this state */
+	EXIT_FUNC	exitFunc;       /* ptr to exit routine for this state */
 	bitMask		*pEventMask;	/* event mask for this state */
+        bitMask         options;        /* options mask for this state */
 };
 typedef	struct	state_info_block STATE;
 

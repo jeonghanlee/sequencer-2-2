@@ -51,6 +51,7 @@
 03jun96,ajk	Now compiles with -wall and -pedantic switches.
 09aug96,wfl	Added initialization of syncQ queues.
 17may99,wfl	Moved misplaced event array initialization.
+22sep99,grw     Supported entry and exit actions; supported state options.
 ***************************************************************************/
 /*#define	DEBUG	1*/
 
@@ -364,7 +365,10 @@ SPROG			*pSP;
 			pState->actionFunc = (ACTION_FUNC)pSeqState->actionFunc;
 			pState->eventFunc = (EVENT_FUNC)pSeqState->eventFunc;
 			pState->delayFunc = (DELAY_FUNC)pSeqState->delayFunc;
+			pState->entryFunc = (ENTRY_FUNC)pSeqState->entryFunc;
+			pState->exitFunc = (EXIT_FUNC)pSeqState->exitFunc;
 			pState->pEventMask = pSeqState->pEventMask;
+                        pState->options = pSeqState->options;
 #ifdef	DEBUG
 		logMsg("init_sscb: State Name=%s, Event Mask=0x%x\n",
 		 pState->pStateName, *pState->pEventMask, 0,0,0,0);

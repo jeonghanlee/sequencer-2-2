@@ -25,6 +25,7 @@
  * 22jul96,ajk	Changed PFUNC to ACTION_FUNC, EVENT_FUNC, DELAY_FUNC, EXIT_FUNC.
  * 08aug96,wfl	Changed magic number; added syncQ queue support.
  * 13aug96,wfl	Added pvFreeQ() declaration.
+ * 22sep99,grw  Supported entry and exit actions; supported state options.
  */
 #ifndef	INCLseqComh
 #define	INCLseqComh
@@ -42,6 +43,12 @@
 #define	OPT_NEWEF	(1<<4)	/* new event flag mode */
 #define	OPT_TIME	(1<<5)	/* get time stamps */
 #define	OPT_VXWORKS	(1<<6)	/* include VxWorks files */
+
+/* Bit encoding for State Specific Options */
+#define OPT_NORESETTIMERS	(1<<0)  /* If TRUE, don't reset timers on */
+					/* entry to state from same state */
+#define OPT_DOENTRYFROMSELF     (1<<1)  /* Do entry{} even if from same state */
+#define OPT_DOEXITTOSELF        (1<<2)  /* Do exit{} even if to same state */
 
 /* Macros to handle set & clear event bits */
 #define NBITS           32	/* # bits in bitMask word */
@@ -64,6 +71,7 @@ typedef	void	(*ACTION_FUNC)();
 typedef	long	(*EVENT_FUNC)();
 typedef	void	(*DELAY_FUNC)();
 typedef	void	(*EXIT_FUNC)();
+typedef void    (*ENTRY_FUNC)();
 
 #ifdef	OFFSET
 #undef	OFFSET
@@ -96,8 +104,11 @@ struct	seqState
 	char		*pStateName;	/* state name */
 	ACTION_FUNC	actionFunc;	/* action routine for this state */
 	EVENT_FUNC	eventFunc;	/* event routine for this state */
-	DELAY_FUNC	delayFunc;	/* delay setup routine for this state */
+	DELAY_FUNC	delayFunc; 	/* delay setup routine for this state */
+        ENTRY_FUNC      entryFunc;      /* statements performed on entry to state */
+	EXIT_FUNC       exitFunc;       /* statements performed on exit from state */
 	bitMask		*pEventMask;	/* event mask for this state */
+        bitMask         options;        /* State specific option mask */ 
 };
 
 /* Structure to hold information about a State Set */
