@@ -292,7 +292,7 @@ LOCAL void proc_db_events_queued(pvValue *pValue, CHAN *pDB)
 		if (pEntry == NULL)
 		{
 			errlogPrintf("proc_db_events_queued: %s queue memory "
-			       "allocation failure\n", (int)pDB->pVarName);
+			       "allocation failure\n", pDB->pVarName);
 			return;
 		}
 		ellAdd(&pSP->pQueues[pDB->queueIndex], (ELLNODE *) pEntry);

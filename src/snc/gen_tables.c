@@ -268,7 +268,7 @@ void gen_state_blocks()
 			printf("\t/* Event mask for state %s: */\n", sp->value);
 			printf("static bitMask\tEM_%s_%s[] = {\n", ssp->value, sp->value);
 			for (n = 0; n < numEventWords; n++)
-				printf("\t0x%08x,\n", pEventMask[n]);
+				printf("\t0x%08lx,\n", (unsigned long)pEventMask[n]);
 			printf("};\n");
 		}
 
@@ -347,7 +347,7 @@ no possible state option conflicts.  */
 void encode_state_options(Expr *sp)
 {
         Expr     *ep;
-	char     errMsg[BUFSIZ], *pc = NULL, *suppl;
+	char     errMsg[BUFSIZ], *pc = NULL, *suppl = NULL;
 	bitMask  options = 0,
 	         optionSpec = 0;
 	int      duplicate = FALSE,
@@ -358,7 +358,7 @@ void encode_state_options(Expr *sp)
            check the option character is recognized and if so code it's bit mask */
 	for (ep = sp->right; ep != NULL; ep = ep->next )
 	{
-	        for (pc = (char*)ep->left; *pc != NULL; pc++)
+	        for (pc = (char*)ep->left; *pc != '\0'; pc++)
 		{
 			char *right = (char *)ep->right;
 		        /* Option not to reset timers on state entry from self */
@@ -542,7 +542,7 @@ void gen_ss_array()
 		printf("\t/* ptr to state block */ state_%s,\n", ssp->value);
 
 		nstates = exprCount(ssp->left);
-		printf("\t/* number of states */   %d,\n", nstates, ssp->value);
+		printf("\t/* number of states */   %d,\n", nstates);
 
 		printf("\t/* error state */        %d},\n", find_error_state(ssp));
 
