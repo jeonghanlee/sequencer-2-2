@@ -47,6 +47,10 @@ LOCAL	void printValue(char *, int, int);
 LOCAL	SPROG *seqQryFind(epicsThreadId);
 LOCAL	void seqShowAll();
 
+/* The seqTraverseProg function is in seq_prog.c */
+epicsStatus seqTraverseProg(void (*pFunc)(), void *param);
+
+
 /*
  * seqShow() - Query the sequencer for state information.
  * If a non-zero thread id is specified then print the information about
@@ -245,6 +249,53 @@ long epicsShareAPI seqChanShow(epicsThreadId tid, char *pStr)
 	}
 
 	return 0;
+}
+/*
+ * seqcar() - Sequencer Channel Access Report
+ */
+
+struct seqStats {
+	int	level;
+	int	nProgs;
+	int	nChans;
+	int	nConn;
+};
+
+LOCAL void seqcarCollect(SPROG *pSP, void *param) {
+	struct seqStats *pstats = (struct seqStats *) param;
+	CHAN	*pDB = pSP->pChan;
+	int	nch;
+	int	level = pstats->level;
+	int 	printedProgName = 0;
+	pstats->nProgs++;
+	for (nch = 0; nch < pSP->numChans; nch++) {
+		if (pDB->assigned) pstats->nChans++;
+		if (pDB->connected) pstats->nConn++;
+		if (level > 1 ||
+		    (level == 1 && !pDB->connected)) {
+			if (!printedProgName) {
+				printf("  Program \"%s\"\n", pSP->pProgName);
+				printedProgName = 1;
+			}
+			printf("    Variable \"%s\" %sconnected to PV \"%s\"\n",
+				pDB->pVarName,
+				pDB->connected ? "" : "not ",
+				pDB->dbName);
+		}
+		pDB++;
+	}
+}
+
+long epicsShareAPI seqcar(int level)
+{
+	struct seqStats stats = {0, 0, 0, 0};
+	int diss;
+	stats.level = level;
+	seqTraverseProg(seqcarCollect, (void *) &stats);
+	diss = stats.nChans - stats.nConn;
+	printf("Total programs=%d, channels=%d, connected=%d, disconnected=%d\n",
+	       stats.nProgs, stats.nChans, stats.nConn, diss);
+	return diss;
 }
 /*
  * seqQueueShow() - Show syncQ queue information for a state program.
@@ -452,9 +503,6 @@ SPROG		*pSP;
 	}
 	printf("\n");
 }
-
-/* The seqTraverseProg function is in seq_prog.c */
-epicsStatus seqTraverseProg(void (*pFunc)(), void *param);
 
 /* Print a brief summary of all state programs */
 LOCAL void seqShowAll()

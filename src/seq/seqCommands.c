@@ -1,5 +1,5 @@
 /*
- * $Id: seqCommands.c,v 1.11 2004-04-05 18:50:22 jba Exp $
+ * $Id: seqCommands.c,v 1.12 2005-01-20 16:49:06 anj Exp $
  *
  * DESCRIPTION: EPICS sequencer commands
  *
@@ -151,6 +151,15 @@ static void seqChanShowCallFunc(const iocshArgBuf *args)
         seqChanShow (id, chan);
 }
 
+/* seqcar */
+static const iocshArg seqcarArg0 = { "verbosity",iocshArgInt};
+static const iocshArg * const seqcarArgs[1] = {&seqcarArg0};
+static const iocshFuncDef seqcarFuncDef = {"seqcar",1,seqcarArgs};
+static void seqcarCallFunc(const iocshArgBuf *args)
+{
+    seqcar (args[0].ival);
+}
+
 /*
  * This routine is called before multitasking has started, so there's
  * no race condition in the test/set of firstTime.
@@ -165,5 +174,6 @@ epicsShareFunc void epicsShareAPI seqRegisterSequencerCommands (void)
         iocshRegister(&seqQueueShowFuncDef,seqQueueShowCallFunc);
         iocshRegister(&seqStopFuncDef,seqStopCallFunc);
         iocshRegister(&seqChanShowFuncDef,seqChanShowCallFunc);
+        iocshRegister(&seqcarFuncDef,seqcarCallFunc);
     }
 }
