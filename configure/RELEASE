@@ -6,5 +6,10 @@
 
 EPICS_BASE=/home/phoebus/MRK/epics/base
 TEMPLATE_TOP=/home/phoebus/MRK/epics/base/templates/makeBaseApp/top
-SEQ=$(TOP)
-PVCA=TRUE
+
+#
+# Enable appropriate process variable access methods
+#
+PVCA   = TRUE
+PVFILE = FALSE
+PVTKL  = FALSE
