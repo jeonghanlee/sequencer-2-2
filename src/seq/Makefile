@@ -5,15 +5,16 @@ include $(TOP)/configure/CONFIG
 #  ADD MACRO DEFINITIONS AFTER THIS LINE
 
 #  Include files
-INC = seqCom.h
+INC = seqCom.h seq.h
 
 #  Internal debug control
 #USR_CPPFLAGS = -DDEBUG=TRUE
 
 #  seq library
 LIBRARY = seq
-seq_DLL_LIBS = pv Com
+seq_DLL_LIBS = pv Com iocsh
 pv_DIR=$(INSTALL_LIB)
+iocsh_DIR=$(EPICS_BASE_LIB)
 
 LIBSRCS = seq_main.c seq_task.c seq_ca.c seq_if.c seq_mac.c seq_prog.c \
 	  seq_qry.c seqVersion.c seqCommands.c
