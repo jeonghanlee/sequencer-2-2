@@ -58,8 +58,9 @@
 
 #include	<ctype.h>
 
-#include	"osiSem.h"
-#include	"osiThread.h"
+#include	"epicsMutex.h"
+#include	"epicsEvent.h"
+#include	"epicsThread.h"
 
 #include	"epicsTypes.h"
 #include	"ellLib.h"
@@ -112,7 +113,7 @@ struct	db_channel
 	epicsBoolean	putWasComplete;	/* previous value of putComplete */
 	short		dbOffset;	/* offset to value in db access struct*/
 	short		status;		/* last db access status code */
-	TS_STAMP	timeStamp;	/* time stamp */
+	epicsTimeStamp	timeStamp;	/* time stamp */
 	long		dbCount;	/* actual count for db access */
 	short		severity;	/* last db access severity code */
 	short		size;		/* size (in bytes) of single var elem */
@@ -155,16 +156,16 @@ typedef	struct	state_info_block STATE;
 struct	state_set_control_block
 {
 	char		*pSSName;	/* state set name (for debugging) */
-	threadId	threadId;	/* thread id */
+	epicsThreadId	threadId;	/* thread id */
 	unsigned int	threadPriority;	/* thread priority */
 	unsigned int	stackSize;	/* stack size */
-	semBinaryId	syncSemId;	/* semaphore for event sync */
-	semBinaryId	getSemId;	/* semaphore id for async get */
-	semBinaryId	putSemId;	/* semaphore id for async put */
-	semBinaryId	death1SemId;	/* semaphore id for death (#1) */
-	semBinaryId	death2SemId;	/* semaphore id for death (#2) */
-	semBinaryId	death3SemId;	/* semaphore id for death (#3) */
-	semBinaryId	death4SemId;	/* semaphore id for death (#4) */
+	epicsEventId	syncSemId;	/* semaphore for event sync */
+	epicsEventId	getSemId;	/* semaphore id for async get */
+	epicsEventId	putSemId;	/* semaphore id for async put */
+	epicsEventId	death1SemId;	/* semaphore id for death (#1) */
+	epicsEventId	death2SemId;	/* semaphore id for death (#2) */
+	epicsEventId	death3SemId;	/* semaphore id for death (#3) */
+	epicsEventId	death4SemId;	/* semaphore id for death (#4) */
 	long		numStates;	/* number of states */
 	STATE		*pStates;	/* ptr to array of state blocks */
 	short		currentState;	/* current state index */
@@ -193,10 +194,10 @@ typedef	struct	macro {
 struct	state_program
 {
 	char		*pProgName;	/* program name (for debugging) */
-	threadId	threadId;	/* thread id (main thread) */
+	epicsThreadId	threadId;	/* thread id (main thread) */
 	unsigned int	threadPriority;	/* thread priority */
 	unsigned int	stackSize;	/* stack size */
-	semMutexId	caSemId;	/* mutex for locking CA events */
+	epicsMutexId	caSemId;	/* mutex for locking CA events */
 	CHAN		*pChan;		/* table of channels */
 	long		numChans;	/* number of db channels, incl. unass */
 	long		assignCount;	/* number of db channels assigned */
@@ -212,7 +213,7 @@ struct	state_program
 	long		options;	/* options (bit-encoded) */
 	ENTRY_FUNC	entryFunc;	/* entry function */
 	EXIT_FUNC	exitFunc;	/* exit function */
-	semBinaryId	logSemId;	/* logfile locking semaphore */
+	epicsMutexId	logSemId;	/* logfile locking semaphore */
 	FILE		*logFd;		/* logfile file descr. */
 	char		*pLogFile;	/* logfile name */
 	int		numQueues;	/* number of syncQ queues */
@@ -234,25 +235,25 @@ typedef struct auxiliary_args AUXARGS;
 
 /* Thread parameters */
 #define THREAD_NAME_SIZE	32
-#define THREAD_STACK_SIZE	threadStackBig
-#define THREAD_PRIORITY		threadPriorityMedium
+#define THREAD_STACK_SIZE	epicsThreadStackBig
+#define THREAD_PRIORITY		epicsThreadPriorityMedium
 
 /* Function declarations for internal sequencer funtions */
 epicsShareFunc long epicsShareAPI seq (struct seqProgram *, char *, unsigned int);
 void	seqWakeup (SPROG *, long);
 void	seqFree (SPROG *);
-long	seqStop(threadId tid);
+long	seqStop(epicsThreadId tid);
 long	sequencer (SPROG *);
 long	sprogDelete (long);
 long	seqMacParse (char *, SPROG *);
 char	*seqMacValGet (MACRO *, char *);
 void	seqMacEval (char *, char *, long, MACRO *);
 epicsStatus seq_log ();
-SPROG	*seqFindProg (threadId);
-long	seqShow (threadId);
-long	seqChanShow (threadId, char *);
-long	seqQueueShow (threadId tid);
-SPROG  *seqFindProg(threadId tid);
+SPROG	*seqFindProg (epicsThreadId);
+long	seqShow (epicsThreadId);
+long	seqChanShow (epicsThreadId, char *);
+long	seqQueueShow (epicsThreadId tid);
+SPROG  *seqFindProg(epicsThreadId tid);
 epicsShareFunc SPROG  *epicsShareAPI seqFindProgByName(char *);
 
 

@@ -1,4 +1,4 @@
-/* $Id: pv.h,v 1.2 2000-04-14 21:53:28 jba Exp $
+/* $Id: pv.h,v 1.3 2001-02-16 18:45:39 mrk Exp $
  *
  * Definitions for EPICS sequencer message system-independent library (pv)
  * (NB, "pv" = "process variable").
@@ -14,9 +14,9 @@
 #define INCLpvh
 
 #include "shareLib.h" /* reset share lib defines */
-#include "osiThread.h"		/* for thread ids */
-#include "osiSem.h"		/* for locks */
-#include "tsStamp.h"		/* for time stamps */
+#include "epicsThread.h"	/* for thread ids */
+#include "epicsMutex.h"		/* for locks */
+#include "epicsTime.h"		/* for time stamps */
 
 #include "pvAlarm.h"		/* status and severity definitions */
 
@@ -71,7 +71,7 @@ typedef char   pvString[256]; /* use sizeof( pvString ) */
     typedef struct { \
 	pvStat	  status; \
 	pvSevr    severity; \
-	TS_STAMP  stamp; \
+	epicsTimeStamp  stamp; \
 	pv##_type value[1]; \
     } pvTime##_type
 
@@ -166,7 +166,7 @@ private:
     pvStat	stat_;		/* status */
     char	*mess_;		/* error message */
 
-    semMutexId	lock_;		/* prevents more than one thread in library */
+    epicsMutexId	lock_;		/* prevents more than one thread in library */
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -347,6 +347,9 @@ epicsShareFunc char * epicsShareAPI Strdcpy( char *dst, const char *src );
 
 /*
  * $Log: not supported by cvs2svn $
+ * Revision 1.2  2000/04/14 21:53:28  jba
+ * Changes for win32 build.
+ *
  * Revision 1.1.1.1  2000/04/04 03:22:13  wlupton
  * first commit of seq-2-0-0
  *

@@ -237,11 +237,11 @@ LOCAL void proc_db_events(pvValue *pValue, pvType type, CHAN *pDB,
 	{
 	    case GET_COMPLETE:
 		if (pDB->sset != NULL)
-			semBinaryGive(pDB->sset->getSemId);
+			epicsEventSignal(pDB->sset->getSemId);
 		break;
 	    case PUT_COMPLETE:
 		if (pDB->sset != NULL)
-			semBinaryGive(pDB->sset->putSemId);
+			epicsEventSignal(pDB->sset->putSemId);
 		break;
 	    default:
 		break;
@@ -320,7 +320,7 @@ epicsShareFunc long seq_disconnect(SPROG *pSP)
 		return 0;
 
 	/* Attach to PV context of pvSys creator (auxiliary thread) */
-	pMySP = seqFindProg(threadGetIdSelf());
+	pMySP = seqFindProg(epicsThreadGetIdSelf());
 	if (pMySP == NULL)
 	{
 #ifdef	DEBUG_DISCONNECT
@@ -425,7 +425,7 @@ void seqWakeup(SPROG *pSP, long eventNum)
 		if ( (eventNum == 0) || 
 		     ( pSS->pMask != NULL && bitTest(pSS->pMask, eventNum) ) )
 		{
-			semBinaryGive(pSS->syncSemId); /* wake up ss thread */
+			epicsEventSignal(pSS->syncSemId); /* wake up ss thread */
 		}
 
 	}

@@ -1,21 +1,13 @@
 #CONFIG
 include $(TOP)/configure/CONFIG_APP
-# Add any changes to make rules here
+# Add any changes to make definitions here
 
 #CROSS_COMPILER_TARGET_ARCHS = vxWorks-68040
-CROSS_COMPILER_TARGET_ARCHS =
 
-# shareable library version (from CONFIG_BASE)
-SHRLIB_VERSION = $(EPICS_VERSION).$(EPICS_REVISION)
-
-# sequencer version number (replaces old Version file)
-SEQ_VERSION = 2.0.0
-
-# override to use snc from SEQ
-SNC = $(SEQ)/bin/$(EPICS_HOST_ARCH)/snc
-
-# which message systems to support (comment to disable)
-PVCA = TRUE
-#PVFILE = TRUE
-#PVKTL = TRUE
-
+# Use this when your IOC and the host use different paths
+# to access the application. Typically this will be 
+# used with the Microsoft FTP server or with NFS mounts. Use
+# is indicated by failure of the cdCommands script on
+# vxWorks. You must rebuild in the iocBoot directory 
+# before this takes effect.
+#IOCS_APPL_TOP = <the top of the application as seen by the IOC>

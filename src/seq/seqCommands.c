@@ -1,5 +1,5 @@
 /*
- * $Id: seqCommands.c,v 1.4 2000-05-04 20:24:33 norume Exp $
+ * $Id: seqCommands.c,v 1.5 2001-02-16 18:45:40 mrk Exp $
  *
  * DESCRIPTION: EPICS sequencer commands
  *
@@ -18,7 +18,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 
-#include <osiThread.h>
+#include <epicsThread.h>
 #include <cantProceed.h>
 
 #include <seqCom.h>
@@ -35,10 +35,10 @@
 /*
  * Prototypes (these probably belong in seqCom.h)
  */
-long seqShow (threadId);
-long seqChanShow (threadId, char *);
-long seqQueueShow (threadId tid);
-long seqStop (threadId);
+long seqShow (epicsThreadId);
+long seqChanShow (epicsThreadId, char *);
+long seqQueueShow (epicsThreadId tid);
+long seqStop (epicsThreadId);
 
 #ifdef SEQ_PROG_REG
 struct sequencerProgram {
@@ -67,16 +67,16 @@ seqRegisterSequencerProgram (struct seqProgram *p)
 /*
  * Find a thread by name or ID number
  */
-static threadId
+static epicsThreadId
 findThread (const char *name)
 {
-    threadId id;
+    epicsThreadId id;
     char *term;
 
-    id = (threadId)strtoul (name, &term, 16);
+    id = (epicsThreadId)strtoul (name, &term, 16);
     if ((term != name) && (*term == '\0'))
         return id;
-    id = threadGetId (name);
+    id = epicsThreadGetId (name);
     if (id)
         return id;
     printf ("No such thread.\n");
@@ -128,7 +128,7 @@ static ioccrfArg *seqShowArgs[1] = {&seqShowArg0};
 static ioccrfFuncDef seqShowFuncDef = {"seqShow",1,seqShowArgs};
 static void seqShowCallFunc(ioccrfArg **args)
 {
-    threadId id;
+    epicsThreadId id;
     char *name = (char *)args[0]->value;
 
     if (name == NULL)
@@ -143,7 +143,7 @@ static ioccrfArg *seqQueueShowArgs[1] = {&seqQueueShowArg0};
 static ioccrfFuncDef seqQueueShowFuncDef = {"seqQueueShow",1,seqQueueShowArgs};
 static void seqQueueShowCallFunc(ioccrfArg **args)
 {
-    threadId id;
+    epicsThreadId id;
     char *name = (char *)args[0]->value;
 
     if ((name != NULL) && ((id = findThread (name)) != NULL))
@@ -156,7 +156,7 @@ static ioccrfArg *seqStopArgs[1] = {&seqStopArg0};
 static ioccrfFuncDef seqStopFuncDef = {"seqStop",1,seqStopArgs};
 static void seqStopCallFunc(ioccrfArg **args)
 {
-    threadId id;
+    epicsThreadId id;
     char *name = (char *)args[0]->value;
 
     if ((name != NULL) && ((id = findThread (name)) != NULL))
@@ -170,7 +170,7 @@ static ioccrfArg *seqChanShowArgs[2] = {&seqChanShowArg0,&seqChanShowArg1};
 static ioccrfFuncDef seqChanShowFuncDef = {"seqChanShow",2,seqChanShowArgs};
 static void seqChanShowCallFunc(ioccrfArg **args)
 {
-    threadId id;
+    epicsThreadId id;
     char *name = (char *)args[0]->value;
     char *chan = (char *)args[1]->value;
 

@@ -1,4 +1,4 @@
-/* $Id: pvKtl.cc,v 1.1.1.1 2000-04-04 03:22:14 wlupton Exp $
+/* $Id: pvKtl.cc,v 1.2 2001-02-16 18:45:39 mrk Exp $
  *
  * Implementation of EPICS sequencer KTL library (pvKtl)
  *
@@ -1234,20 +1234,20 @@ static int copyFromKTL( int ktlFlags, KTL_DATATYPE ktlType, int ktlCount,
     // if type is not simple, copy status, severity and time stamp
     // (note assumption that STAT and SEVR can be cast; this is in fact true)
     if ( !PV_SIMPLE( type ) ) {
-	TS_STAMP stamp;
+	epicsTimeStamp stamp;
 	if ( ktlFlags & KTL_SUPER ) {
 	    value->timeCharVal.status = ( pvStat ) ktlValue->super.stat;
 	    value->timeCharVal.severity = ( pvSevr ) ktlValue->super.sevr;
 	    if ( ktlFlags & KTL_STAMP ) {
-		tsStampFromTimeval( &value->timeCharVal.stamp,
+		epicsTimeFromTimeval( &value->timeCharVal.stamp,
 				    &ktlValue->super.stamp );
 	    }
 	    else {
-		( void ) tsStampGetCurrent( &stamp );
+		( void ) epicsTimeGetCurrent( &stamp );
 		value->timeCharVal.stamp = stamp;
 	    }
 	} else {
-	    ( void ) tsStampGetCurrent( &stamp );
+	    ( void ) epicsTimeGetCurrent( &stamp );
 	    value->timeCharVal.status = pvStatOK;
 	    value->timeCharVal.severity = pvSevrNONE;
 	    value->timeCharVal.stamp = stamp;
@@ -1352,6 +1352,9 @@ static void freeKTL( KTL_DATATYPE ktlType, KTL_POLYMORPH *ktlValue )
 
 /*
  * $Log: not supported by cvs2svn $
+ * Revision 1.1.1.1  2000/04/04 03:22:14  wlupton
+ * first commit of seq-2-0-0
+ *
  * Revision 1.19  2000/03/31 23:01:41  wlupton
  * supported setStatus
  *

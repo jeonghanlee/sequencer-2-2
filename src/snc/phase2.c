@@ -111,7 +111,13 @@ void phase2()
 	assign_delay_ids();
 
 	/* Generate preamble code */
+        printf ("\n#ifdef __cplusplus\n");
+        printf ("}\n");
+        printf ("#endif\n");
 	gen_preamble();
+        printf ("\n#ifdef __cplusplus\n");
+        printf ("extern \"C\" {\n");
+        printf ("#endif\n");
 
 	/* Generate variable declarations */
 	gen_var_decl();
@@ -173,13 +179,12 @@ void gen_preamble()
         /* Main program (if "main" option set) */
 	if (main_opt) {
 	    printf("\n/* Main program */\n");
-	    printf("#include \"osiThread.h\"\n");
+	    printf("#include \"epicsThread.h\"\n");
 	    printf("#include \"errlog.h\"\n");
 	    printf("#include \"taskwd.h\"\n");
 	    printf("\n");
 	    printf("int main(int argc,char *argv[]) {\n");
 	    printf("    char *macro_def = (argc>1)?argv[1]:NULL;\n");
-	    printf("    threadInit();\n");
 	    printf("    errlogInit(10000);\n");
 	    printf("    taskwdInit();\n");
 	    printf("    return seq((void *)&%s, macro_def, 0);\n", prog_name);

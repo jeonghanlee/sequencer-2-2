@@ -44,7 +44,7 @@
 /* User functions */
 LOCAL	int wait_rtn();
 LOCAL	void printValue(char *, int, int);
-LOCAL	SPROG *seqQryFind(threadId);
+LOCAL	SPROG *seqQryFind(epicsThreadId);
 LOCAL	void seqShowAll();
 
 /*
@@ -52,7 +52,7 @@ LOCAL	void seqShowAll();
  * If a non-zero thread id is specified then print the information about
  * the state program, otherwise print a brief summary of all state programs
  */
-long seqShow(threadId tid)
+long seqShow(epicsThreadId tid)
 {
 	SPROG		*pSP;
 	SSCB		*pSS;
@@ -99,10 +99,10 @@ long seqShow(threadId tid)
 	{
 		printf("  State Set: \"%s\"\n", pSS->pSSName);
 
-		if (pSS->threadId != (threadId)0)
+		if (pSS->threadId != (epicsThreadId)0)
 		{
 		    char threadName[THREAD_NAME_SIZE];
-		    threadGetName(pSS->threadId, threadName,sizeof(threadName));
+		    epicsThreadGetName(pSS->threadId, threadName,sizeof(threadName));
 		    printf("  thread name = %s;", threadName);
 		}
 
@@ -141,7 +141,7 @@ long seqShow(threadId tid)
 /*
  * seqChanShow() - Show channel information for a state program.
  */
-long seqChanShow(threadId tid, char *pStr)
+long seqChanShow(epicsThreadId tid, char *pStr)
 {
 	SPROG		*pSP;
 	CHAN		*pDB;
@@ -150,7 +150,7 @@ long seqChanShow(threadId tid, char *pStr)
 	int		match, showAll;
 
 	pSP = seqQryFind(tid);
-	if (tid == (threadId) 0)
+	if (tid == (epicsThreadId) 0)
 		return 0;
 
 	printf("State Program: \"%s\"\n", pSP->pProgName);
@@ -233,7 +233,7 @@ long seqChanShow(threadId tid, char *pStr)
 							    pDB->message : "");
 
 		/* Print time stamp in text format: "yyyy/mm/dd hh:mm:ss.sss" */
-		tsStampToStrftime(tsBfr, sizeof(tsBfr),
+		epicsTimeToStrftime(tsBfr, sizeof(tsBfr),
 				  "%Y/%m/%d %H:%M:%S.%03f", &pDB->timeStamp);
 		printf("  Time stamp = %s\n", tsBfr);
 
@@ -251,7 +251,7 @@ long seqChanShow(threadId tid, char *pStr)
 /*
  * seqQueueShow() - Show syncQ queue information for a state program.
  */
-long seqQueueShow(threadId tid)
+long seqQueueShow(epicsThreadId tid)
 {
 	SPROG		*pSP;
 	ELLLIST		*pQueue;
@@ -259,7 +259,7 @@ long seqQueueShow(threadId tid)
 	char		tsBfr[50];
 
 	pSP = seqQryFind(tid);
-	if (tid == (threadId) 0)
+	if (tid == (epicsThreadId) 0)
 		return 0;
 
 	printf("State Program: \"%s\"\n", pSP->pProgName);
@@ -293,7 +293,7 @@ long seqQueueShow(threadId tid)
 
 			/* Print time stamp in text format:
 			   "yyyy/mm/dd hh:mm:ss.sss" */
-			tsStampToStrftime(tsBfr, sizeof(tsBfr), "%Y/%m/%d "
+			epicsTimeToStrftime(tsBfr, sizeof(tsBfr), "%Y/%m/%d "
 				"%H:%M:%S.%03f", &pAccess->timeStringVal.stamp);
 			printf("  Time stamp = %s\n", tsBfr);
 		}
@@ -404,7 +404,7 @@ int		count, type;
 }
 
 /* Find a state program associated with a given thread id */
-LOCAL SPROG *seqQryFind(threadId tid)
+LOCAL SPROG *seqQryFind(epicsThreadId tid)
 {
 	SPROG		*pSP;
 
@@ -445,7 +445,7 @@ SPROG		*pSP;
 		if (pSS->threadId == 0)
 			strcpy(threadName,"(no thread)");
 		else
-			threadGetName(pSS->threadId, threadName,
+			epicsThreadGetName(pSS->threadId, threadName,
 				      sizeof(threadName));
 		printf("%-16s %-10lx %-16s %-16s\n", progName,
 		    (unsigned long) pSS->threadId, threadName, pSS->pSSName );

@@ -1,4 +1,4 @@
-/* $Id: pv.cc,v 1.2 2000-04-14 21:53:28 jba Exp $
+/* $Id: pv.cc,v 1.3 2001-02-16 18:45:39 mrk Exp $
  *
  * Implementation of EPICS sequencer message system-independent library (pv)
  * (NB, "pv" = "process variable").
@@ -29,12 +29,10 @@ epicsShareFunc pvSystem::pvSystem( int debug ) :
     sevr_( pvSevrNONE ),
     stat_( pvStatOK ),
     mess_( NULL ),
-    lock_( semMutexMustCreate() )
+    lock_( epicsMutexMustCreate() )
 {
     if ( getDebug() > 0 )
 	printf( "%8p: pvSystem::pvSystem( %d )\n", this, debug );
-
-    threadInit();
 }
 
 /*+
@@ -61,7 +59,7 @@ epicsShareFunc pvSystem::~pvSystem()
  */
 epicsShareFunc void pvSystem::lock()
 {
-    semMutexMustTake( lock_ );
+    epicsMutexMustLock( lock_ );
 
     if ( getDebug() > 1 )
 	printf( "%8p: pvSystem::lock()\n", this );
@@ -69,7 +67,7 @@ epicsShareFunc void pvSystem::lock()
 
 epicsShareFunc void pvSystem::unlock()
 {
-    semMutexGive( lock_ );
+    epicsMutexUnlock( lock_ );
 
     if ( getDebug() > 1 )
 	printf( "%8p: pvSystem::unlock()\n", this );
@@ -408,7 +406,7 @@ epicsShareFunc int epicsShareAPI pvTimeGetCurrentDouble( double *pTime ) {
     TS_STAMP stamp;
 
     *pTime = 0.0;
-    if ( tsStampGetCurrent( &stamp ) == tsStampERROR )
+    if ( epicsTimeGetCurrent( &stamp ) == epicsTimeERROR )
 	return pvStatERROR;
 
     *pTime = ( double ) stamp.secPastEpoch +  ( ( double ) stamp.nsec / 1e9 );
@@ -439,6 +437,9 @@ epicsShareFunc char * epicsShareAPI Strdcpy( char *dst, const char *src ) {
 
 /*
  * $Log: not supported by cvs2svn $
+ * Revision 1.2  2000/04/14 21:53:28  jba
+ * Changes for win32 build.
+ *
  * Revision 1.1.1.1  2000/04/04 03:22:13  wlupton
  * first commit of seq-2-0-0
  *

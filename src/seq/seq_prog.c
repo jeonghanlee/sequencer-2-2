@@ -24,7 +24,7 @@
 #define epicsExportSharedSymbols
 #include	"seq.h"
 
-LOCAL	semBinaryId seqProgListSemId;
+LOCAL	epicsMutexId seqProgListSemId;
 LOCAL	int	    seqProgListInited = FALSE;
 LOCAL	ELLLIST	    seqProgList;
 LOCAL	void	    seqProgListInit();
@@ -42,7 +42,7 @@ typedef struct prog_node
 /*
  * seqFindProg() - find a program in the state program list from thread id.
  */
-SPROG *seqFindProg(threadId threadId)
+SPROG *seqFindProg(epicsThreadId threadId)
 {
 	PROG_NODE	*pNode;
 	SPROG		*pSP;
@@ -52,7 +52,7 @@ SPROG *seqFindProg(threadId threadId)
 	if (!seqProgListInited || threadId == 0)
 		return NULL;
 
-	semBinaryTake(seqProgListSemId);
+	epicsMutexMustLock(seqProgListSemId);
 
 	for (pNode = seqListFirst(&seqProgList); pNode != NULL;
 	     pNode = seqListNext(pNode) )
@@ -60,7 +60,7 @@ SPROG *seqFindProg(threadId threadId)
 		pSP = pNode->pSP;
 		if (pSP->threadId == threadId)
 		{
-			semBinaryGive(seqProgListSemId);
+			epicsMutexUnlock(seqProgListSemId);
 			return pSP;
 		}
 		pSS = pSP->pSS;
@@ -68,12 +68,12 @@ SPROG *seqFindProg(threadId threadId)
 		{
 			if (pSS->threadId == threadId)
 			{
-				semBinaryGive(seqProgListSemId);
+				epicsMutexUnlock(seqProgListSemId);
 				return pSP;
 			}
 		}
 	}
-	semBinaryGive(seqProgListSemId);
+	epicsMutexUnlock(seqProgListSemId);
 
 	return NULL; /* not in list */
 }
@@ -89,7 +89,7 @@ epicsShareFunc SPROG *epicsShareAPI seqFindProgByName(char *pProgName)
 	if (!seqProgListInited || pProgName == 0)
 		return NULL;
 
-	semBinaryTake(seqProgListSemId);
+	epicsMutexMustLock(seqProgListSemId);
 
 	for (pNode = seqListFirst(&seqProgList); pNode != NULL;
 	     pNode = seqListNext(pNode) )
@@ -97,11 +97,11 @@ epicsShareFunc SPROG *epicsShareAPI seqFindProgByName(char *pProgName)
 		pSP = pNode->pSP;
 		if (strcmp(pSP->pProgName, pProgName) == 0)
 		{
-			semBinaryGive(seqProgListSemId);
+			epicsMutexUnlock(seqProgListSemId);
 			return pSP;
 		}
 	}
-	semBinaryGive(seqProgListSemId);
+	epicsMutexUnlock(seqProgListSemId);
 
 	return NULL; /* not in list */
 }
@@ -121,7 +121,7 @@ void		*param;		/* any parameter */
 	if (!seqProgListInited)
 		return ERROR;
 
-	semBinaryTake(seqProgListSemId);
+	epicsMutexMustLock(seqProgListSemId);
 	for (pNode = seqListFirst(&seqProgList); pNode != NULL;
 	     pNode = seqListNext(pNode) )
 	{
@@ -129,7 +129,7 @@ void		*param;		/* any parameter */
 		pFunc(pSP, param);
 	}
 
-	semBinaryGive(seqProgListSemId);
+	epicsMutexUnlock(seqProgListSemId);
 	return OK;
 }
 
@@ -145,14 +145,14 @@ SPROG		*pSP;
 	if (!seqProgListInited)
 		seqProgListInit(); /* Initialize list */
 
-	semBinaryTake(seqProgListSemId);
+	epicsMutexMustLock(seqProgListSemId);
 	for (pNode = seqListFirst(&seqProgList); pNode != NULL;
 	     pNode = seqListNext(pNode) )
 	{
 
 		if (pSP == pNode->pSP)
 		{
-			semBinaryGive(seqProgListSemId);
+			epicsMutexUnlock(seqProgListSemId);
 #ifdef DEBUG
 			errlogPrintf("Thread %d already in list\n",
 				     pSP->threadId);
@@ -165,13 +165,13 @@ SPROG		*pSP;
 	pNode = (PROG_NODE *)malloc(sizeof(PROG_NODE) );
 	if (pNode == NULL)
 	{
-		semBinaryGive(seqProgListSemId);
+		epicsMutexUnlock(seqProgListSemId);
 		return ERROR;
 	}
 
 	pNode->pSP = pSP;
 	ellAdd((ELLLIST *)&seqProgList, (ELLNODE *)pNode);
-	semBinaryGive(seqProgListSemId);
+	epicsMutexUnlock(seqProgListSemId);
 #ifdef DEBUG
 	errlogPrintf("Added thread %d to list.\n", pSP->threadId);
 #endif /*DEBUG*/
@@ -191,7 +191,7 @@ SPROG		*pSP;
 	if (!seqProgListInited)
 		return ERROR;
 
-	semBinaryTake(seqProgListSemId);
+	epicsMutexMustLock(seqProgListSemId);
 	for (pNode = seqListFirst(&seqProgList); pNode != NULL;
 	     pNode = seqListNext(pNode) )
 	{
@@ -199,7 +199,7 @@ SPROG		*pSP;
 		{
 			ellDelete((ELLLIST *)&seqProgList, (ELLNODE *)pNode);
 			free(pNode);
-			semBinaryGive(seqProgListSemId);
+			epicsMutexUnlock(seqProgListSemId);
 
 #ifdef DEBUG
 			errlogPrintf("Deleted thread %d from list.\n",
@@ -209,7 +209,7 @@ SPROG		*pSP;
 		}
 	}	
 
-	semBinaryGive(seqProgListSemId);
+	epicsMutexUnlock(seqProgListSemId);
 	return ERROR; /* not in list */
 }
 
@@ -222,7 +222,7 @@ LOCAL void seqProgListInit()
 	ellInit(&seqProgList);
 
 	/* Create a semaphore for mutual exclusion */
-	seqProgListSemId = semBinaryMustCreate(semFull);
+	seqProgListSemId = epicsMutexMustCreate();
 	seqProgListInited = TRUE;
 }
 

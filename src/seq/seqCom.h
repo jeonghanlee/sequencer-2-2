@@ -43,7 +43,7 @@
 
 #include	"shareLib.h" /* reset share lib defines */
 #include	"pvAlarm.h"	/* status and severity defs */
-#include	"tsStamp.h"	/* time stamp defs */
+#include	"epicsTime.h"	/* time stamp defs */
 
 #define	MAGIC	20000315	/* current magic number for SPROG (yyyymmdd) */
 
@@ -167,7 +167,7 @@ epicsShareFunc long	epicsShareAPI seq_pvGet(SS_ID, long, long);	/* get pv value 
 epicsShareFunc int	epicsShareAPI seq_pvGetQ(SS_ID, int);		/* get queued pv value */
 epicsShareFunc int	epicsShareAPI seq_pvFreeQ(SS_ID, int);	/* free elements on pv queue */
 epicsShareFunc long	epicsShareAPI seq_pvPut(SS_ID, long, long);	/* put pv value */
-epicsShareFunc TS_STAMP epicsShareAPI seq_pvTimeStamp(SS_ID, long);   /* get time stamp value */
+epicsShareFunc epicsTimeStamp epicsShareAPI seq_pvTimeStamp(SS_ID, long);   /* get time stamp value */
 epicsShareFunc long	epicsShareAPI seq_pvAssign(SS_ID, long, char *);/* assign/connect to a pv */
 epicsShareFunc long	epicsShareAPI seq_pvMonitor(SS_ID, long);	/* enable monitoring on pv */
 epicsShareFunc long	epicsShareAPI seq_pvStopMonitor(SS_ID, long);	/* disable monitoring on pv */

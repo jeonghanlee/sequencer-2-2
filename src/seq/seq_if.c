@@ -85,8 +85,8 @@
 #define SYNCHRONOUS  2
 
 /* Macros for resource lock */
-#define LOCK   semMutexTake(pSP->caSemId)
-#define UNLOCK semMutexGive(pSP->caSemId)
+#define LOCK   epicsMutexMustLock(pSP->caSemId)
+#define UNLOCK epicsMutexUnlock(pSP->caSemId)
 
 /* Flush outstanding PV requests */
 epicsShareFunc void epicsShareAPI seq_pvFlush()
@@ -104,7 +104,7 @@ epicsShareFunc long epicsShareAPI seq_pvGet(SS_ID ssId, long pvId, long compType
 	CHAN		*pDB;	/* ptr to channel struct */
 	int		sync;	/* whether synchronous get */
 	int		status;
-	semTakeStatus	sem_status;
+	epicsEventWaitStatus	sem_status;
 	extern		void seq_get_handler();
 
 	pSS = (SSCB *)ssId;
@@ -144,7 +144,7 @@ epicsShareFunc long epicsShareAPI seq_pvGet(SS_ID ssId, long pvId, long compType
 	/* If synchronous pvGet then clear the pvGet pend semaphore */
 	if (sync)
 	{
-		semBinaryTakeNoWait(pSS->getSemId);
+		epicsEventTryWait(pSS->getSemId);
 	}
 
 	/* Perform the PV get operation with a callback routine specified */
@@ -166,8 +166,8 @@ epicsShareFunc long epicsShareAPI seq_pvGet(SS_ID ssId, long pvId, long compType
 	if (sync)
 	{
 		pvSysFlush(pvSys);
-		sem_status = semBinaryTakeTimeout(pSS->getSemId, 10.0);
-		if (sem_status != semTakeOK)
+		sem_status = epicsEventWaitWithTimeout(pSS->getSemId, 10.0);
+		if (sem_status != epicsEventWaitOK)
 		{
 			pDB->status = pvStatTIMEOUT;
 			pDB->severity = pvSevrMAJOR;
@@ -206,7 +206,7 @@ epicsShareFunc long epicsShareAPI seq_pvPut(SS_ID ssId, long pvId, long compType
 	int		sync;	/* whether synchronous put */
 	int		status;
 	int		count;
-        semTakeStatus   sem_status;
+        epicsEventWaitStatus   sem_status;
         extern          void seq_put_handler();
 
 	pSS = (SSCB *)ssId;
@@ -256,7 +256,7 @@ epicsShareFunc long epicsShareAPI seq_pvPut(SS_ID ssId, long pvId, long compType
         /* If synchronous pvPut then clear the pvPut pend semaphore */
         if (sync)
         {
-                semBinaryTakeNoWait(pSS->putSemId);
+                epicsEventTryWait(pSS->putSemId);
         }
 
 	/* Determine number of elements to put (don't try to put more
@@ -294,8 +294,8 @@ epicsShareFunc long epicsShareAPI seq_pvPut(SS_ID ssId, long pvId, long compType
         if (sync)
         {
 		pvSysFlush(pvSys);
-                sem_status = semBinaryTakeTimeout(pSS->putSemId, 10.0);
-                if (sem_status != semTakeOK)
+                sem_status = epicsEventWaitWithTimeout(pSS->putSemId, 10.0);
+                if (sem_status != epicsEventWaitOK)
                 {
 			pDB->status = pvStatTIMEOUT;
 			pDB->severity = pvSevrMAJOR;
@@ -643,7 +643,7 @@ epicsShareFunc long epicsShareAPI seq_pvIndex(SS_ID ssId, long pvId)
 /*
  * seq_pvTimeStamp() - returns channel time stamp.
  */
-epicsShareFunc TS_STAMP epicsShareAPI seq_pvTimeStamp(SS_ID ssId, long pvId)
+epicsShareFunc epicsTimeStamp epicsShareAPI seq_pvTimeStamp(SS_ID ssId, long pvId)
 {
 	SPROG		*pSP;	/* ptr to state program */
 	CHAN		*pDB;	/* ptr to channel struct */

@@ -49,7 +49,7 @@ MACRO	*pMac;
 
 #ifdef	DEBUG
 	errlogPrintf("seqMacEval: InStr=%s\n", pInStr);
-	threadSleep(0.5);
+	epicsThreadSleep(0.5);
 #endif	/*DEBUG*/
 	pTmp = pOutStr;
 	while (*pInStr != 0 && maxChar > 0)
@@ -71,7 +71,7 @@ MACRO	*pMac;
 				
 #ifdef	DEBUG
 			errlogPrintf("Macro name=%s\n", name);
-			threadSleep(0.5);
+			epicsThreadSleep(0.5);
 #endif	/*DEBUG*/
 			/* Find macro value from macro name */
 			pValue = seqMacValGet(pMac, name);
@@ -98,7 +98,7 @@ MACRO	*pMac;
 	*pOutStr = 0;
 #ifdef	DEBUG
 	errlogPrintf("OutStr=%s\n", pTmp);
-	threadSleep(0.5);
+	epicsThreadSleep(0.5);
 #endif	/*DEBUG*/
 }
 /* 
@@ -181,7 +181,7 @@ SPROG		*pSP;
 		pName[nChar] = '\0';
 #ifdef	DEBUG
 		errlogPrintf("name=%s, nChar=%d\n", pName, nChar);
-		threadSleep(0.5);
+		epicsThreadSleep(0.5);
 #endif	/*DEBUG*/
 		pMacStr += nChar;
 
@@ -226,7 +226,7 @@ SPROG		*pSP;
 		pValue[nChar] = '\0';
 #ifdef	DEBUG
 		errlogPrintf("value=%s, nChar=%d\n", pValue, nChar);
-		threadSleep(0.5);
+		epicsThreadSleep(0.5);
 #endif	/*DEBUG*/
 
 		/* Skip past last value and over blanks and comma */
@@ -304,7 +304,7 @@ char	*pName;	/* macro name */
 
 #ifdef	DEBUG
 	errlogPrintf("seqMacTblGet: name=%s\n", pName);
-	threadSleep(0.5);
+	epicsThreadSleep(0.5);
 #endif	/*DEBUG*/
 	for (i = 0, pMacTbl = pMac; i < MAX_MACROS; i++, pMacTbl++)
 	{

@@ -75,14 +75,14 @@ SPROG		*pSP;	/* ptr to original (global) state program table */
 {
 	SSCB		*pSS;
 	int		nss;
-	threadId	tid;
+	epicsThreadId	tid;
 	size_t		threadLen;
 	char		threadName[THREAD_NAME_SIZE+10];
 	extern		void ss_entry();
 
 	/* Retrieve info about this thread */
-	pSP->threadId = threadGetIdSelf();
-	threadGetName(pSP->threadId, threadName, sizeof(threadName));
+	pSP->threadId = epicsThreadGetIdSelf();
+	epicsThreadGetName(pSP->threadId, threadName, sizeof(threadName));
 	pSS = pSP->pSS;
 	pSS->threadId = pSP->threadId;
 
@@ -107,11 +107,11 @@ SPROG		*pSP;	/* ptr to original (global) state program table */
 		sprintf(threadName+threadLen, "_%d", nss);
 
 		/* Spawn the task */
-		tid = threadCreate(
+		tid = epicsThreadCreate(
 			threadName,			/* thread name */
 			pSP->threadPriority,		/* priority */
 			pSP->stackSize,			/* stack size */
-			(THREADFUNC)ss_entry,		/* entry point */
+			(EPICSTHREADFUNC)ss_entry,		/* entry point */
 			pSS);				/* parameter */
 
 		errlogPrintf("Spawning thread 0x%x: \"%s\"\n", tid,
@@ -181,7 +181,7 @@ SSCB	*pSS;
 		 * always executed at least once when a state is first
 		 * entered.
 		 */
-		semBinaryGive(pSS->syncSemId);
+		epicsEventSignal(pSS->syncSemId);
 
 		/* Loop until an event is triggered, i.e. when() returns TRUE
 		 */
@@ -189,18 +189,18 @@ SSCB	*pSS;
 			/* Wake up on PV event, event flag, or expired delay */
 			delay = seq_getTimeout(pSS); /* min. delay from list */
 			if (delay > 0.0)
-				(void) semBinaryTakeTimeout(pSS->syncSemId,
+				(void) epicsEventWaitWithTimeout(pSS->syncSemId,
 							    delay);
 
 			/* Check whether we have been asked to exit */
-			if (semBinaryTakeNoWait(pSS->death1SemId) ==
-							semTakeOK) goto exit;
+			if (epicsEventTryWait(pSS->death1SemId) ==
+							epicsEventWaitOK) goto exit;
 
 			/* Call the event function to check for an event
 			 * trigger. The statement inside the when() statement
 			 * is executed. Note, we lock out PV events while doing 
 			 * this. */
-			semMutexTake(pSP->caSemId);
+			epicsMutexMustLock(pSP->caSemId);
 
 			ev_trig = pST->eventFunc(ssId, pVar,
 			 &pSS->transNum, &pSS->nextState); /* check events */
@@ -215,7 +215,7 @@ SSCB	*pSS;
 					pSP->pEvents[i] & !pSS->pMask[i];
 			}
 
-			semMutexGive(pSP->caSemId);
+			epicsMutexUnlock(pSP->caSemId);
 
 		} while (!ev_trig);
 
@@ -251,14 +251,14 @@ exit:
 
 	/* Pass control back (so all state-set threads can complete phase 1
 	 * before embarking on phase 2) */
-	semBinaryGive(pSS->death2SemId);
+	epicsEventSignal(pSS->death2SemId);
 
 	/* Wait for request to perform uninitialization (phase 2) */
-	semBinaryMustTake(pSS->death3SemId);
+	epicsEventMustWait(pSS->death3SemId);
 	ss_thread_uninit(pSP, pSS, 2);
 
 	/* Pass control back and die (i.e. exit) */
-	semBinaryGive(pSS->death4SemId);
+	epicsEventSignal(pSS->death4SemId);
 }
 /* Initialize a state-set thread */
 LOCAL void ss_thread_init(pSP, pSS)
@@ -266,7 +266,7 @@ SPROG	*pSP;
 SSCB	*pSS;
 {
 	/* Get this thread's id */
-	pSS->threadId = threadGetIdSelf();
+	pSS->threadId = epicsThreadGetIdSelf();
 
 	/* Attach to PV context of pvSys creator (auxiliary thread); was
 	   already done for the first state-set */
@@ -314,7 +314,7 @@ LOCAL long seq_waitConnect(SPROG *pSP, SSCB *pSS)
 	delay = 10.0; /* 10, 20, 30, 40, 40,... sec */
 	while (pSP->connCount < pSP->assignCount)
 	{
-		status = semBinaryTakeTimeout(pSS->syncSemId, delay);
+		status = epicsEventWaitWithTimeout(pSS->syncSemId, delay);
 		if ((status != OK) && (pSP->threadId == pSS->threadId))
 		{
 			errlogPrintf("%d of %d assigned channels have conn"
@@ -324,7 +324,7 @@ LOCAL long seq_waitConnect(SPROG *pSP, SSCB *pSS)
 			delay += 10.0;
 
 		/* Check whether we have been asked to exit */
-		if (semBinaryTakeNoWait(pSS->death1SemId) == semTakeOK)
+		if (epicsEventTryWait(pSS->death1SemId) == epicsEventWaitOK)
 			return ERROR;
 	}
 
@@ -426,7 +426,7 @@ SSCB		*pSS;
 /*
  * Delete all state-set threads and do general clean-up.
  */
-long seqStop(threadId tid)
+long seqStop(epicsThreadId tid)
 {
 	SPROG		*pSP;
 	SSCB		*pSS;
@@ -450,7 +450,7 @@ long seqStop(threadId tid)
 
 		/* Ask the thread to exit */
 		DEBUG("      tid=0x%x\n", pSS->threadId);
-		semBinaryGive(pSS->death1SemId);
+		epicsEventSignal(pSS->death1SemId);
 	}
 
 	/* Wake up all state-sets */
@@ -464,7 +464,7 @@ long seqStop(threadId tid)
 		if (pSS->threadId == 0)
 			continue;
 
-		if (semBinaryTakeTimeout(pSS->death2SemId,10.0) != semTakeOK)
+		if (epicsEventWaitWithTimeout(pSS->death2SemId,10.0) != epicsEventWaitOK)
 		{
 			errlogPrintf("Timeout waiting for thread 0x%x "
 				     "(\"%s\") death phase 1 (ignored)\n",
@@ -484,7 +484,7 @@ long seqStop(threadId tid)
 			continue;
 
 		DEBUG("      tid=0x%x\n", pSS->threadId);
-		semBinaryGive(pSS->death3SemId);
+		epicsEventSignal(pSS->death3SemId);
 	}
 
 	/* Wait for them all to complete phase 2 of their deaths */
@@ -494,7 +494,7 @@ long seqStop(threadId tid)
 		if (pSS->threadId == 0)
 			continue;
 
-		if (semBinaryTakeTimeout(pSS->death4SemId,10.0) != semTakeOK)
+		if (epicsEventWaitWithTimeout(pSS->death4SemId,10.0) != epicsEventWaitOK)
 		{
 			errlogPrintf("Timeout waiting for thread 0x%x "
 				     "(\"%s\") death phase 2 (ignored)\n",
@@ -523,24 +523,24 @@ long seqStop(threadId tid)
 	for (nss = 0, pSS = pSP->pSS; nss < pSP->numSS; nss++, pSS++)
 	{
 		if (pSS->syncSemId != NULL)
-			semBinaryDestroy(pSS->syncSemId);
+			epicsEventDestroy(pSS->syncSemId);
 		if (pSS->getSemId != NULL)
-			semBinaryDestroy(pSS->getSemId);
+			epicsEventDestroy(pSS->getSemId);
 		if (pSS->putSemId != NULL)
-			semBinaryDestroy(pSS->putSemId);
+			epicsEventDestroy(pSS->putSemId);
 		if (pSS->death1SemId != NULL)
-			semBinaryDestroy(pSS->death1SemId);
+			epicsEventDestroy(pSS->death1SemId);
 		if (pSS->death2SemId != NULL)
-			semBinaryDestroy(pSS->death2SemId);
+			epicsEventDestroy(pSS->death2SemId);
 		if (pSS->death3SemId != NULL)
-			semBinaryDestroy(pSS->death3SemId);
+			epicsEventDestroy(pSS->death3SemId);
 		if (pSS->death4SemId != NULL)
-			semBinaryDestroy(pSS->death4SemId);
+			epicsEventDestroy(pSS->death4SemId);
 	}
 
 	/* Delete program-wide semaphores */
-	semMutexDestroy(pSP->caSemId);
-	semBinaryDestroy(pSP->logSemId);
+	epicsMutexDestroy(pSP->caSemId);
+	epicsMutexDestroy(pSP->logSemId);
 
 	/* Free all allocated memory */
 	seqFree(pSP);
@@ -602,10 +602,10 @@ void *seqAuxThread(void *tArgs)
 	char		*pPvSysName = pArgs->pPvSysName;
 	long		debug = pArgs->debug;
 	int		status;
-	extern		threadId seqAuxThreadId;
+	extern		epicsThreadId seqAuxThreadId;
 
 	/* Register this thread with the EPICS watchdog */
-	taskwdInsert(threadGetIdSelf(),(SEQVOIDFUNCPTR)0, (void *)0);
+	taskwdInsert(epicsThreadGetIdSelf(),(SEQVOIDFUNCPTR)0, (void *)0);
 
 	/* All state program threads will use a common PV context (subtract
 	   1 from debug level for PV debugging) */
@@ -614,10 +614,10 @@ void *seqAuxThread(void *tArgs)
         {
                 errlogPrintf("seqAuxThread: pvSysCreate() %s failure: %s\n",
                             pPvSysName, pvSysGetMess(pvSys));
-		seqAuxThreadId = (threadId) -1;
+		seqAuxThreadId = (epicsThreadId) -1;
                 return NULL;
         }
-	seqAuxThreadId = threadGetIdSelf(); /* AFTER pvSysCreate() */
+	seqAuxThreadId = epicsThreadGetIdSelf(); /* AFTER pvSysCreate() */
 
 	/* This loop allows for check for connect/disconnect on PVs */
 	for (;;)
