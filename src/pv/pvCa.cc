@@ -1,4 +1,4 @@
-/* $Id: pvCa.cc,v 1.2 2000-04-14 21:53:28 jba Exp $
+/* $Id: pvCa.cc,v 1.3 2001-03-09 21:11:51 mrk Exp $
  *
  * Implementation of EPICS sequencer CA library (pvCa)
  *
@@ -124,8 +124,8 @@ epicsShareFunc pvStat caSystem::pend( double seconds, int wait )
     if ( getDebug() > 1 )
         printf( "%8p: caSystem::pend( %g, %d )\n", this, seconds, wait );
 
-    if ( seconds <= 0.0 ) seconds = 1e-8;
-    INVOKE( ca_pend( seconds, !wait ) );
+    if ( seconds <= 0.0 || !wait ) seconds = 1e-8;
+    INVOKE( ca_pend_event( seconds ) );
     return getStat();
 }
 
@@ -777,6 +777,9 @@ static void copyFromCA( int type, int count,
 
 /*
  * $Log: not supported by cvs2svn $
+ * Revision 1.2  2000/04/14 21:53:28  jba
+ * Changes for win32 build.
+ *
  * Revision 1.1.1.1  2000/04/04 03:22:14  wlupton
  * first commit of seq-2-0-0
  *
