@@ -1,0 +1,18 @@
+EPICS sequencer v1.9.3.p2
+-------------------------
+
+This is the unbundled version of the EPICS sequencer. It is the version which
+has been in use for some years at the W. M. Keck Observatory. It includes
+all bug fixes which have been made to the bundled version and in addition
+has extensions for queueing monitored values.
+
+The doc sub-directory will contain the source code of Andy Kozubal's sequencer
+manual. This refers to v1.9 of the sequencer and does not describe the above
+changes. It will be updated asap to give full documentation of this version.
+The doc sub-directory _does_ contain a couple of presentations from the 1996
+EPICS collaboration and software sharing meetings.
+
+The directory tree is organized as a makeBaseApp application.
+
+William Lupton, wlupton@keck.hawaii.edu, 29-Apr-99
+

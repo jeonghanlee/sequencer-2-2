@@ -1,0 +1,17 @@
+EPICS sequencer documentation
+-----------------------------
+
+README		this file
+syncqDiffs	list of changes for syncQ addition
+to-do		list of proposed additions
+vanSnc1.pdf	presentation from 1996 EPICS collaboration meeting
+vanSnc2.pdf	presentation from 1996 software sharing meeting
+
+Andy Kozubal's State Notation Language and Sequencer Users Guide is at URL
+http://lansce.lanl.gov:80/lansce8/Epics/sequencer/snl_1.9_man.html. The
+source of this document will be placed here when available. It will be
+updated to include documentation of features present in the unbundled
+version and absent in the bundled version.
+
+William Lupton, wlupton@keck.hawaii.edu, 29-Apr-99
+

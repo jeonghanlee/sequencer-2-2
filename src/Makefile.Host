@@ -1,0 +1,41 @@
+# Makefile.Host
+TOP = ../..
+include $(TOP)/config/CONFIG_APP
+#----------------------------------------
+#  ADD MACRO DEFINITIONS AFTER THIS LINE
+
+#  Compiler warnings (uncomment to see; get lots from yacc-generated code
+#  and should get none from any other code)
+HOST_WARN  = NO
+
+#  Debugger support (comment out if not desired)
+HOST_OPT   = NO
+USR_CFLAGS = -g
+
+#  YACC options (generate y.tab.h; generate y.output)
+YACCOPT    = -d -v
+
+#  Lex library
+USR_LIBS   = l
+
+#  Source/object files
+NAMES = snc_main parse phase2 gen_ss_code gen_tables sncVersion snc
+SRCS  = $(NAMES:%=%.c)
+OBJS  = $(NAMES:%=%.o)
+
+#  Product
+PROD = snc
+
+include $(TOP)/config/RULES.Host
+#----------------------------------------
+#  ADD RULES AFTER THIS LINE
+
+#  The generated lex file includes snc.h
+snc_lex.c: snc.h ../snc_lex.l
+snc.o: snc_lex.c
+
+#  How to generate the version file
+sncVersion.c: ../Version
+	$(RM) sncVersion.c
+	sh ../makeVersion ../Version > sncVersion.c
+
