@@ -278,6 +278,7 @@ unsigned int		stackSize;	/* optional stack size (bytes) */
 		
 		}
 		seqStop(tid);
+		threadExitMain();
 		return 0;
 	}
 
