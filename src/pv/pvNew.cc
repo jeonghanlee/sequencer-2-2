@@ -1,4 +1,4 @@
-/* $Id: pvNew.cc,v 1.1.1.1 2000-04-04 03:22:15 wlupton Exp $
+/* $Id: pvNew.cc,v 1.2 2000-04-14 21:53:29 jba Exp $
  *
  * Routine to create a system object for a named message system
  * (will eventually load dynamically)
@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#define epicsExportSharedSymbols
 #include "pv.h"
 
 #if defined( PVCA )
@@ -28,7 +29,7 @@
  *
  * Description:
  */
-pvSystem *newPvSystem( const char *name, int debug ) {
+epicsShareFunc pvSystem * epicsShareAPI newPvSystem( const char *name, int debug ) {
 
 #if defined( PVCA )
     if ( strcmp( name, "ca" ) == 0 )

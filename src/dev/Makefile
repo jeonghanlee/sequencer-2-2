@@ -14,7 +14,8 @@ USR_CPPFLAGS = -I../../seq
 #USR_CPPFLAGS += -DDEBUG=TRUE
 
 #  seqdev library
-LIBRARY = seqdev
+LIBRARY_DEFAULT = seqdev
+LIBRARY_WIN32 = -nil-
 
 LIBSRCS = dev.c
 

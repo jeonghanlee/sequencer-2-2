@@ -1,4 +1,4 @@
-/* $Id: pv.cc,v 1.1.1.1 2000-04-04 03:22:13 wlupton Exp $
+/* $Id: pv.cc,v 1.2 2000-04-14 21:53:28 jba Exp $
  *
  * Implementation of EPICS sequencer message system-independent library (pv)
  * (NB, "pv" = "process variable").
@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define epicsExportSharedSymbols
 #include "pv.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -20,7 +21,8 @@
  *
  * Description:	
  */
-pvSystem::pvSystem( int debug ) :
+epicsShareFunc pvSystem::pvSystem( int debug ) :
+
     magic_( PV_MAGIC ),
     debug_( debug ),
     status_( 0 ),
@@ -42,7 +44,7 @@ pvSystem::pvSystem( int debug ) :
  *
  * Description:	
  */
-pvSystem::~pvSystem()
+epicsShareFunc pvSystem::~pvSystem()
 {
     if ( getDebug() > 0 )
 	printf( "%8p: pvSystem::~pvSystem()\n", this );
@@ -57,7 +59,7 @@ pvSystem::~pvSystem()
  *
  * Function value:
  */
-void pvSystem::lock()
+epicsShareFunc void pvSystem::lock()
 {
     semMutexMustTake( lock_ );
 
@@ -65,7 +67,7 @@ void pvSystem::lock()
 	printf( "%8p: pvSystem::lock()\n", this );
 }
 
-void pvSystem::unlock()
+epicsShareFunc void pvSystem::unlock()
 {
     semMutexGive( lock_ );
 
@@ -82,7 +84,7 @@ void pvSystem::unlock()
  *
  * Function value:
  */
-void pvSystem::setError( int status, pvSevr sevr, pvStat stat,
+epicsShareFunc void pvSystem::setError( int status, pvSevr sevr, pvStat stat,
 			 const char *mess )
 {
     status_ = status;
@@ -200,75 +202,75 @@ pvCallback::~pvCallback()
     if ( Sys == NULL || Sys->getMagic() != PV_MAGIC ) \
 	_erract
 
-pvStat pvSysCreate( const char *name, int debug, void **pSys ) {
+epicsShareFunc pvStat epicsShareAPI pvSysCreate( const char *name, int debug, void **pSys ) {
     *pSys = newPvSystem( name, debug );
     return ( *pSys == NULL ) ? pvStatERROR : pvStatOK;
 }
 
-pvStat pvSysDestroy( void *sys ) {
+epicsShareFunc pvStat epicsShareAPI pvSysDestroy( void *sys ) {
     SYS_CHECK( return pvStatERROR );
     delete Sys;
     return pvStatOK;
 }
 
-pvStat pvSysAttach( void *sys ) {
+epicsShareFunc pvStat epicsShareAPI pvSysAttach( void *sys ) {
     SYS_CHECK( return pvStatERROR );
     return Sys->attach();
 }
 
-pvStat pvSysFlush( void *sys ) {
+epicsShareFunc pvStat epicsShareAPI pvSysFlush( void *sys ) {
     SYS_CHECK( return pvStatERROR );
     return Sys->flush();
 }
 
-pvStat pvSysPend( void *sys, double seconds, int wait ) {
+epicsShareFunc pvStat epicsShareAPI pvSysPend( void *sys, double seconds, int wait ) {
     SYS_CHECK( return pvStatERROR );
     return Sys->pend( seconds, wait );
 }
 
-pvStat pvSysLock( void *sys ) {
+epicsShareFunc pvStat epicsShareAPI pvSysLock( void *sys ) {
     SYS_CHECK( return pvStatERROR );
     Sys->lock();
     return pvStatOK;
 }
 
-pvStat pvSysUnlock( void *sys ) {
+epicsShareFunc pvStat epicsShareAPI pvSysUnlock( void *sys ) {
     SYS_CHECK( return pvStatERROR );
     Sys->unlock();
     return pvStatOK;
 }
 
-int pvSysGetMagic( void *sys ) {
+epicsShareFunc int epicsShareAPI pvSysGetMagic( void *sys ) {
     SYS_CHECK( return pvStatERROR );
     return Sys->getMagic();
 }
 
-void pvSysSetDebug( void *sys, int debug ) {
+epicsShareFunc void epicsShareAPI pvSysSetDebug( void *sys, int debug ) {
     SYS_CHECK( ; );
     Sys->setDebug( debug );
 }
 
-int pvSysGetDebug( void *sys ) {
+epicsShareFunc int epicsShareAPI pvSysGetDebug( void *sys ) {
     SYS_CHECK( return pvStatERROR );
     return Sys->getDebug();
 }
 
-int pvSysGetStatus( void *sys ) {
+epicsShareFunc int epicsShareAPI pvSysGetStatus( void *sys ) {
     SYS_CHECK( return pvStatERROR );
     return Sys->getStatus();
 }
 
-pvSevr pvSysGetSevr( void *sys ) {
+epicsShareFunc pvSevr epicsShareAPI pvSysGetSevr( void *sys ) {
     SYS_CHECK( return pvSevrERROR );
     return Sys->getSevr();
 }
 
-pvStat pvSysGetStat( void *sys ) {
+epicsShareFunc pvStat epicsShareAPI pvSysGetStat( void *sys ) {
     SYS_CHECK( return pvStatERROR );
     return Sys->getStat();
 }
 
-char *pvSysGetMess( void *sys ) {
+epicsShareFunc char * epicsShareAPI pvSysGetMess( void *sys ) {
     SYS_CHECK( return ( char * ) "" );
     return Sys->getMess();
 }
@@ -278,123 +280,123 @@ char *pvSysGetMess( void *sys ) {
     if ( Var == NULL || Var->getMagic() != PV_MAGIC ) \
 	_erract
 
-pvStat pvVarCreate( void *sys, const char *name, pvConnFunc func, void *priv,
+epicsShareFunc pvStat epicsShareAPI pvVarCreate( void *sys, const char *name, pvConnFunc func, void *priv,
 		    int debug, void **pVar ) {
     SYS_CHECK( return pvStatERROR );
     *pVar = Sys->newVariable( name, func, priv, debug );
     return ( *pVar == NULL ) ? pvStatERROR : pvStatOK;
 }
 
-pvStat pvVarDestroy( void *var ) {
+epicsShareFunc pvStat epicsShareAPI pvVarDestroy( void *var ) {
     VAR_CHECK( return pvStatERROR );
     delete Var;
     return pvStatOK;
 }
 
-pvStat pvVarGet( void *var, pvType type, int count, pvValue *value ) {
+epicsShareFunc pvStat epicsShareAPI pvVarGet( void *var, pvType type, int count, pvValue *value ) {
     VAR_CHECK( return pvStatERROR );
     return Var->get( type, count, value );
 }
 
-pvStat pvVarGetNoBlock( void *var, pvType type, int count, pvValue *value ) {
+epicsShareFunc pvStat epicsShareAPI pvVarGetNoBlock( void *var, pvType type, int count, pvValue *value ) {
     VAR_CHECK( return pvStatERROR );
     return Var->getNoBlock( type, count, value );
 }
 
-pvStat pvVarGetCallback( void *var, pvType type, int count,
+epicsShareFunc pvStat epicsShareAPI pvVarGetCallback( void *var, pvType type, int count,
 		         pvEventFunc func, void *arg ) {
     VAR_CHECK( return pvStatERROR );
     return Var->getCallback( type, count, func, arg );
 }
 
-pvStat pvVarPut( void *var, pvType type, int count, pvValue *value ) {
+epicsShareFunc pvStat epicsShareAPI pvVarPut( void *var, pvType type, int count, pvValue *value ) {
     VAR_CHECK( return pvStatERROR );
     return Var->put( type, count, value );
 }
 
-pvStat pvVarPutNoBlock( void *var, pvType type, int count, pvValue *value ) {
+epicsShareFunc pvStat epicsShareAPI pvVarPutNoBlock( void *var, pvType type, int count, pvValue *value ) {
     VAR_CHECK( return pvStatERROR );
     return Var->putNoBlock( type, count, value );
 }
 
-pvStat pvVarPutCallback( void *var, pvType type, int count, pvValue *value,
+epicsShareFunc pvStat epicsShareAPI pvVarPutCallback( void *var, pvType type, int count, pvValue *value,
                          pvEventFunc func, void *arg ) {
     VAR_CHECK( return pvStatERROR );
     return Var->putCallback( type, count, value, func, arg );
 }
 
-pvStat pvVarMonitorOn( void *var, pvType type, int count,
+epicsShareFunc pvStat epicsShareAPI pvVarMonitorOn( void *var, pvType type, int count,
                        pvEventFunc func, void *arg, void **pCallback ) {
     VAR_CHECK( return pvStatERROR );
     return Var->monitorOn( type, count, func, arg, ( pvCallback ** ) pCallback);
 }
 
-pvStat pvVarMonitorOff( void *var, void *callback ) {
+epicsShareFunc pvStat epicsShareAPI pvVarMonitorOff( void *var, void *callback ) {
     VAR_CHECK( return pvStatERROR );
     return Var->monitorOff( ( pvCallback * ) callback );
 }
 
-int pvVarGetMagic( void *var ) {
+epicsShareFunc int epicsShareAPI pvVarGetMagic( void *var ) {
     VAR_CHECK( return pvStatERROR );
     return Var->getMagic();
 }
 
-void pvVarSetDebug( void *var, int debug ) {
+epicsShareFunc void epicsShareAPI pvVarSetDebug( void *var, int debug ) {
     VAR_CHECK( ; );
     Var->setDebug( debug );
 }
 
-int pvVarGetDebug( void *var ) {
+epicsShareFunc int epicsShareAPI pvVarGetDebug( void *var ) {
     VAR_CHECK( return pvStatERROR );
     return Var->getDebug();
 }
 
-int pvVarGetConnected( void *var ) {
+epicsShareFunc int epicsShareAPI pvVarGetConnected( void *var ) {
     VAR_CHECK( return pvStatERROR );
     return Var->getConnected();
 }
 
-pvType pvVarGetType( void *var ) {
+epicsShareFunc pvType epicsShareAPI pvVarGetType( void *var ) {
     VAR_CHECK( return pvTypeERROR );
     return Var->getType();
 }
 
-int pvVarGetCount( void *var ) {
+epicsShareFunc int epicsShareAPI pvVarGetCount( void *var ) {
     VAR_CHECK( return pvStatERROR );
     return Var->getCount();
 }
 
-void pvVarSetPrivate( void *var, void *priv ) {
+epicsShareFunc void epicsShareAPI pvVarSetPrivate( void *var, void *priv ) {
     VAR_CHECK( ; );
     Var->setPrivate( priv );
 }
 
-char *pvVarGetName( void *var ) {
+epicsShareFunc char *epicsShareAPI pvVarGetName( void *var ) {
     VAR_CHECK( return NULL );
     return Var->getName();
 }
 
-void *pvVarGetPrivate( void *var ) {
+epicsShareFunc void *epicsShareAPI pvVarGetPrivate( void *var ) {
     VAR_CHECK( return NULL );
     return Var->getPrivate();
 }
 
-int pvVarGetStatus( void *var ) {
+epicsShareFunc int epicsShareAPI pvVarGetStatus( void *var ) {
     VAR_CHECK( return pvStatERROR );
     return Var->getStatus();
 }
 
-pvSevr pvVarGetSevr( void *var ) {
+epicsShareFunc pvSevr epicsShareAPI pvVarGetSevr( void *var ) {
     VAR_CHECK( return pvSevrERROR );
     return Var->getSevr();
 }
 
-pvStat pvVarGetStat( void *var ) {
+epicsShareFunc pvStat epicsShareAPI pvVarGetStat( void *var ) {
     VAR_CHECK( return pvStatERROR );
     return Var->getStat();
 }
 
-char *pvVarGetMess( void *var ) {
+epicsShareFunc char *epicsShareAPI pvVarGetMess( void *var ) {
     VAR_CHECK( return ( char * ) "" );
     return Var->getMess();
 }
@@ -402,7 +404,7 @@ char *pvVarGetMess( void *var ) {
 /*
  * Time utilities
  */
-int pvTimeGetCurrentDouble( double *pTime ) {
+epicsShareFunc int epicsShareAPI pvTimeGetCurrentDouble( double *pTime ) {
     TS_STAMP stamp;
 
     *pTime = 0.0;
@@ -416,14 +418,14 @@ int pvTimeGetCurrentDouble( double *pTime ) {
 /*
  * Misc utilities
  */
-char *Strdup( const char *s ) {
+epicsShareFunc char * epicsShareAPI Strdup( const char *s ) {
     char *p = ( char * ) malloc( strlen( s ) + 1 );
     if ( p != NULL )
 	strcpy( p, s );
     return p;
 }
 
-char *Strdcpy( char *dst, const char *src ) {
+epicsShareFunc char * epicsShareAPI Strdcpy( char *dst, const char *src ) {
     if ( dst != NULL && strlen( src ) > strlen( dst ) ) {
 	free( dst );
 	dst = NULL;
@@ -437,6 +439,9 @@ char *Strdcpy( char *dst, const char *src ) {
 
 /*
  * $Log: not supported by cvs2svn $
+ * Revision 1.1.1.1  2000/04/04 03:22:13  wlupton
+ * first commit of seq-2-0-0
+ *
  * Revision 1.16  2000/03/29 01:59:14  wlupton
  * added pvVarGetName
  *

@@ -24,6 +24,7 @@
 #include	<stdlib.h>
 #include	<string.h>
 
+#define epicsExportSharedSymbols
 #include	"seq.h"
 
 LOCAL int seqMacParseName(char *);
@@ -103,7 +104,7 @@ MACRO	*pMac;
 /* 
  * seq_macValueGet - given macro name, return pointer to its value.
  */
-char	*seq_macValueGet(ssId, pName)
+epicsShareFunc char	*epicsShareAPI seq_macValueGet(ssId, pName)
 SS_ID		ssId;
 char		*pName;
 {

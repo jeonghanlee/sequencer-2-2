@@ -1,4 +1,4 @@
-/* $Id: pvCa.cc,v 1.1.1.1 2000-04-04 03:22:14 wlupton Exp $
+/* $Id: pvCa.cc,v 1.2 2000-04-14 21:53:28 jba Exp $
  *
  * Implementation of EPICS sequencer CA library (pvCa)
  *
@@ -8,6 +8,10 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "alarm.h"
+#include "cadef.h"
+
+#define epicsExportSharedSymbols
 #include "pvCa.h"
 
 /* handlers */
@@ -50,7 +54,7 @@ static void copyFromCA( int type, int count,
  *
  * Description:	
  */
-caSystem::caSystem( int debug ) :
+epicsShareFunc caSystem::caSystem( int debug ) :
     pvSystem( debug ),
     context_( NULL )
 {
@@ -68,7 +72,7 @@ caSystem::caSystem( int debug ) :
  *
  * Description:	
  */
-caSystem::~caSystem()
+epicsShareFunc caSystem::~caSystem()
 {
     if ( getDebug() > 0 )
 	printf( "%8p: caSystem::~caSystem()\n", this );
@@ -83,7 +87,7 @@ caSystem::~caSystem()
  *
  * Description:
  */
-pvStat caSystem::attach()
+epicsShareFunc pvStat caSystem::attach()
 {
     if ( getDebug() > 0 )
         printf( "%8p: caSystem::attach()\n", this );
@@ -99,7 +103,7 @@ pvStat caSystem::attach()
  *
  * Description:
  */
-pvStat caSystem::flush()
+epicsShareFunc pvStat caSystem::flush()
 {
     if ( getDebug() > 0 )
         printf( "%8p: caSystem::flush()\n", this );
@@ -115,7 +119,7 @@ pvStat caSystem::flush()
  *
  * Description:
  */
-pvStat caSystem::pend( double seconds, int wait )
+epicsShareFunc pvStat caSystem::pend( double seconds, int wait )
 {
     if ( getDebug() > 1 )
         printf( "%8p: caSystem::pend( %g, %d )\n", this, seconds, wait );
@@ -132,7 +136,7 @@ pvStat caSystem::pend( double seconds, int wait )
  *
  * Description:
  */
-pvVariable *caSystem::newVariable( const char *name, pvConnFunc func, void *priv,
+epicsShareFunc pvVariable *caSystem::newVariable( const char *name, pvConnFunc func, void *priv,
 				   int debug )
 {
     if ( getDebug() > 0 )
@@ -150,7 +154,7 @@ pvVariable *caSystem::newVariable( const char *name, pvConnFunc func, void *priv
  *
  * Description:
  */
-caVariable::caVariable( caSystem *system, const char *name, pvConnFunc func,
+epicsShareFunc caVariable::caVariable( caSystem *system, const char *name, pvConnFunc func,
 		        void *priv, int debug ) :
     pvVariable( system, name, func, priv, debug ),
     chid_( NULL )
@@ -172,7 +176,7 @@ caVariable::caVariable( caSystem *system, const char *name, pvConnFunc func,
  *
  * Description:
  */
-caVariable::~caVariable()
+epicsShareFunc caVariable::~caVariable()
 {
     if ( getDebug() > 0 )
         printf( "%8p: caVariable::~caVariable()\n", this );
@@ -187,7 +191,7 @@ caVariable::~caVariable()
  *
  * Description:
  */
-pvStat caVariable::get( pvType type, int count, pvValue *value )
+epicsShareFunc pvStat caVariable::get( pvType type, int count, pvValue *value )
 {
     if ( getDebug() > 0 )
         printf( "%8p: caVariable::get( %d, %d )\n", this, type, count );
@@ -212,7 +216,7 @@ pvStat caVariable::get( pvType type, int count, pvValue *value )
  *
  * Description:
  */
-pvStat caVariable::getNoBlock( pvType type, int count, pvValue *value )
+epicsShareFunc pvStat caVariable::getNoBlock( pvType type, int count, pvValue *value )
 {
     if ( getDebug() > 0 )
         printf( "%8p: caVariable::getNoBlock( %d, %d )\n", this,
@@ -230,7 +234,7 @@ pvStat caVariable::getNoBlock( pvType type, int count, pvValue *value )
  *
  * Description:
  */
-pvStat caVariable::getCallback( pvType type, int count,
+epicsShareFunc pvStat caVariable::getCallback( pvType type, int count,
 			        pvEventFunc func, void *arg )
 {
     if ( getDebug() > 0 )
@@ -252,7 +256,7 @@ pvStat caVariable::getCallback( pvType type, int count,
  *
  * Description:
  */
-pvStat caVariable::put( pvType type, int count, pvValue *value )
+epicsShareFunc pvStat caVariable::put( pvType type, int count, pvValue *value )
 {
     if ( getDebug() > 0 )
         printf( "%8p: caVariable::put( %d, %d )\n", this, type, count );
@@ -274,7 +278,7 @@ pvStat caVariable::put( pvType type, int count, pvValue *value )
  *
  * Description:
  */
-pvStat caVariable::putNoBlock( pvType type, int count, pvValue *value )
+epicsShareFunc pvStat caVariable::putNoBlock( pvType type, int count, pvValue *value )
 {
     if ( getDebug() > 0 )
         printf( "%8p: caVariable::putNoBlock( %d, %d )\n", this,
@@ -295,7 +299,7 @@ pvStat caVariable::putNoBlock( pvType type, int count, pvValue *value )
  *
  * Description:
  */
-pvStat caVariable::putCallback( pvType type, int count, pvValue *value,
+epicsShareFunc pvStat caVariable::putCallback( pvType type, int count, pvValue *value,
 			        pvEventFunc func, void *arg )
 {
     if ( getDebug() > 0 )
@@ -317,7 +321,7 @@ pvStat caVariable::putCallback( pvType type, int count, pvValue *value,
  *
  * Description:
  */
-pvStat caVariable::monitorOn( pvType type, int count, pvEventFunc func,
+epicsShareFunc pvStat caVariable::monitorOn( pvType type, int count, pvEventFunc func,
 			      void *arg, pvCallback **pCallback )
 {
     if ( getDebug() > 0 )
@@ -345,7 +349,7 @@ pvStat caVariable::monitorOn( pvType type, int count, pvEventFunc func,
  *
  * Description:
  */
-pvStat caVariable::monitorOff( pvCallback *callback )
+epicsShareFunc pvStat caVariable::monitorOff( pvCallback *callback )
 {
     if ( getDebug() > 0 )
         printf( "%8p: caVariable::monitorOff()\n", this );
@@ -367,7 +371,7 @@ pvStat caVariable::monitorOff( pvCallback *callback )
  *
  * Description:
  */
-int caVariable::getConnected() const
+epicsShareFunc int caVariable::getConnected() const
 {
     if ( getDebug() > 1 )
         printf( "%8p: caVariable::getConnected()\n", this );
@@ -382,7 +386,7 @@ int caVariable::getConnected() const
  *
  * Description:
  */
-pvType caVariable::getType() const
+epicsShareFunc pvType caVariable::getType() const
 {
     if ( getDebug() > 1 )
         printf( "%8p: caVariable::getType()\n", this );
@@ -397,7 +401,7 @@ pvType caVariable::getType() const
  *
  * Description:
  */
-int caVariable::getCount() const
+epicsShareFunc int caVariable::getCount() const
 {
     if ( getDebug() > 1 )
         printf( "%8p: caVariable::getCount()\n", this );
@@ -773,6 +777,9 @@ static void copyFromCA( int type, int count,
 
 /*
  * $Log: not supported by cvs2svn $
+ * Revision 1.1.1.1  2000/04/04 03:22:14  wlupton
+ * first commit of seq-2-0-0
+ *
  * Revision 1.17  2000/03/29 01:59:38  wlupton
  * accounted for possibility of NULL args.dbr in callback
  *

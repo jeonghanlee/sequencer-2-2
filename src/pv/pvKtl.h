@@ -1,4 +1,4 @@
-/* $Id: pvKtl.h,v 1.1.1.1 2000-04-04 03:22:15 wlupton Exp $
+/* $Id: pvKtl.h,v 1.2 2000-04-14 21:53:29 jba Exp $
  *
  * Definitions for EPICS sequencer KTL library (pvKtl)
  *
@@ -39,8 +39,8 @@ class ktlVariable;
 class ktlNode {
 
 public:
-    inline void setData( const void * data ) { data_ = data; }
-    inline const void *getData() const { return data_; }
+    epicsShareFunc inline void setData( const void * data ) { data_ = data; }
+    epicsShareFunc inline const void *getData() const { return data_; }
 
 private:
     ELLNODE node_;
@@ -53,17 +53,17 @@ private:
 class ktlSystem : public pvSystem {
 
 public:
-    ktlSystem( int debug = 0 );
-    ~ktlSystem();
+    epicsShareFunc ktlSystem( int debug = 0 );
+    epicsShareFunc ~ktlSystem();
 
-    virtual pvStat attach();
-    virtual pvStat flush();
-    virtual pvStat pend( double seconds = 0.0, int wait = FALSE );
+    epicsShareFunc virtual pvStat attach();
+    epicsShareFunc virtual pvStat flush();
+    epicsShareFunc virtual pvStat pend( double seconds = 0.0, int wait = FALSE );
 
-    virtual pvVariable *newVariable( const char *name, pvConnFunc func = NULL,
+    epicsShareFunc virtual pvVariable *newVariable( const char *name, pvConnFunc func = NULL,
 				     void *priv = NULL, int debug = 0 );
 
-    int getAttach() const { return attach_; }
+    epicsShareFunc int getAttach() const { return attach_; }
 
 private:
     int attach_;		/* whether to attach on open */
@@ -75,37 +75,37 @@ private:
 class ktlService {
 
 public:
-    ktlService( ktlSystem *system, const char *name, int debug = 0 );
-    ~ktlService();
+    epicsShareFunc ktlService( ktlSystem *system, const char *name, int debug = 0 );
+    epicsShareFunc ~ktlService();
 
-    static ktlService *getService( ktlSystem *system, char *name,
+    epicsShareFunc static ktlService *getService( ktlSystem *system, char *name,
 				   int debug = 0 );
 
-    inline void setDebug( int debug ) { debug_ = debug; }
-    inline int getDebug() const { return debug_; }
+    epicsShareFunc inline void setDebug( int debug ) { debug_ = debug; }
+    epicsShareFunc inline int getDebug() const { return debug_; }
 
-    inline char *getName() const { return name_; }
-    inline KTL_HANDLE *getHandle() const { return handle_; }
-    inline int getFlags() const { return flags_; }
+    epicsShareFunc inline char *getName() const { return name_; }
+    epicsShareFunc inline KTL_HANDLE *getHandle() const { return handle_; }
+    epicsShareFunc inline int getFlags() const { return flags_; }
 
-    void add( const ktlKeyword *keyword );
-    void remove( const ktlKeyword *keyword );
-    ktlKeyword *find( const char *keyName );
+    epicsShareFunc void add( const ktlKeyword *keyword );
+    epicsShareFunc void remove( const ktlKeyword *keyword );
+    epicsShareFunc ktlKeyword *find( const char *keyName );
 
-    static ktlService *first();
-    ktlService *next() const;
+    epicsShareFunc static ktlService *first();
+    epicsShareFunc ktlService *next() const;
 
-    static fd_set *getFdsetsAll();
-    static pvStat dispatchAll();
+    epicsShareFunc static fd_set *getFdsetsAll();
+    epicsShareFunc static pvStat dispatchAll();
 
     // provide same error-handling interface as system and variable
-    void setError( int status, pvSevr sevr, pvStat stat, const char *mess );
-    inline int getStatus() const { return status_; }
-    inline pvSevr getSevr() const { return sevr_; }
-    inline pvStat getStat() const { return stat_; }
-    inline void setStatus( int status ) { status_ = status; }
-    inline void setStat( pvStat stat ) { stat_ = stat; }
-    inline char *getMess() const { return mess_?mess_:(char *)""; }
+    epicsShareFunc void setError( int status, pvSevr sevr, pvStat stat, const char *mess );
+    epicsShareFunc inline int getStatus() const { return status_; }
+    epicsShareFunc inline pvSevr getSevr() const { return sevr_; }
+    epicsShareFunc inline pvStat getStat() const { return stat_; }
+    epicsShareFunc inline void setStatus( int status ) { status_ = status; }
+    epicsShareFunc inline void setStat( pvStat stat ) { stat_ = stat; }
+    epicsShareFunc inline char *getMess() const { return mess_?mess_:(char *)""; }
 
 private:
     int		debug_;         /* debugging level (inherited from varaible) */
@@ -131,35 +131,35 @@ private:
 class ktlKeyword {
 
 public:
-    ktlKeyword( ktlService *service, const char *keyName, int debug = 0 );
-    ~ktlKeyword();
+    epicsShareFunc ktlKeyword( ktlService *service, const char *keyName, int debug = 0 );
+    epicsShareFunc ~ktlKeyword();
 
-    static ktlKeyword *getKeyword( ktlService *service, const char *keyName,
+    epicsShareFunc static ktlKeyword *getKeyword( ktlService *service, const char *keyName,
 				   int debug = 0 );
 
-    inline void setDebug( int debug ) { debug_ = debug; }
-    inline int getDebug() { return debug_; }
+    epicsShareFunc inline void setDebug( int debug ) { debug_ = debug; }
+    epicsShareFunc inline int getDebug() { return debug_; }
 
-    inline const ktlService *getService() const { return service_; }
-    inline int getFlags() const { return getService()->getFlags(); }
-    inline const char *getKeyName() const { return keyName_; }
-    inline int getMonitored() { return monitored_; }
+    epicsShareFunc inline const ktlService *getService() const { return service_; }
+    epicsShareFunc inline int getFlags() const { return getService()->getFlags(); }
+    epicsShareFunc inline const char *getKeyName() const { return keyName_; }
+    epicsShareFunc inline int getMonitored() { return monitored_; }
 
-    int add( ktlVariable *variable );
-    void remove( ktlVariable *variable );
-    int monitorOn( ktlVariable *variable );
-    int monitorOff( ktlVariable *variable );
-    ktlVariable *first();
-    ktlVariable *next( ktlVariable *variable );
+    epicsShareFunc int add( ktlVariable *variable );
+    epicsShareFunc void remove( ktlVariable *variable );
+    epicsShareFunc int monitorOn( ktlVariable *variable );
+    epicsShareFunc int monitorOff( ktlVariable *variable );
+    epicsShareFunc ktlVariable *first();
+    epicsShareFunc ktlVariable *next( ktlVariable *variable );
 
     // provide same error-handling interface as system and variable
-    void setError( int status, pvSevr sevr, pvStat stat, const char *mess );
-    inline int getStatus() const { return status_; }
-    inline pvSevr getSevr() const { return sevr_; }
-    inline pvStat getStat() const { return stat_; }
-    inline void setStatus( int status ) { status_ = status; }
-    inline void setStat( pvStat stat ) { stat_ = stat; }
-    inline char *getMess() const { return mess_?mess_:(char *)""; }
+    epicsShareFunc void setError( int status, pvSevr sevr, pvStat stat, const char *mess );
+    epicsShareFunc inline int getStatus() const { return status_; }
+    epicsShareFunc inline pvSevr getSevr() const { return sevr_; }
+    epicsShareFunc inline pvStat getStat() const { return stat_; }
+    epicsShareFunc inline void setStatus( int status ) { status_ = status; }
+    epicsShareFunc inline void setStat( pvStat stat ) { stat_ = stat; }
+    epicsShareFunc inline char *getMess() const { return mess_?mess_:(char *)""; }
 
 private:
     int		debug_;         /* debugging level (inherited from variable) */
@@ -229,6 +229,9 @@ private:
 
 /*
  * $Log: not supported by cvs2svn $
+ * Revision 1.1.1.1  2000/04/04 03:22:15  wlupton
+ * first commit of seq-2-0-0
+ *
  * Revision 1.11  2000/03/31 23:01:29  wlupton
  * supported setStatus
  *

@@ -21,6 +21,7 @@
 ***************************************************************************/
 /*#define	DEBUG*/
 
+#define epicsExportSharedSymbols
 #include	"seq.h"
 
 LOCAL	semBinaryId seqProgListSemId;
@@ -80,7 +81,7 @@ SPROG *seqFindProg(threadId threadId)
 /*
  * seqFindProgByName() - find a program in the state program list by name.
  */
-SPROG *seqFindProgByName(char *pProgName)
+epicsShareFunc SPROG *epicsShareAPI seqFindProgByName(char *pProgName)
 {
 	PROG_NODE	*pNode;
 	SPROG		*pSP;
@@ -110,7 +111,7 @@ SPROG *seqFindProgByName(char *pProgName)
  * call the specified routine or function.  Passes one parameter of
  * pointer size.
  */
-epicsStatus seqTraverseProg(pFunc, param)
+epicsShareFunc epicsStatus seqTraverseProg(pFunc, param)
 void		(*pFunc)();	/* function to call */
 void		*param;		/* any parameter */
 {
@@ -136,7 +137,7 @@ void		*param;		/* any parameter */
  * seqAddProg() - add a program to the state program list.
  * Returns ERROR if program is already in list, else TRUE.
  */
-epicsStatus seqAddProg(pSP)
+epicsShareFunc epicsStatus seqAddProg(pSP)
 SPROG		*pSP;
 {
 	PROG_NODE	*pNode;
@@ -182,7 +183,7 @@ SPROG		*pSP;
  *seqDelProg() - delete a program from the program list.
  * Returns TRUE if deleted, else FALSE.
  */
-epicsStatus seqDelProg(pSP)
+epicsShareFunc epicsStatus seqDelProg(pSP)
 SPROG		*pSP;
 {
 	PROG_NODE	*pNode;

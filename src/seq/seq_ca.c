@@ -59,6 +59,7 @@
 
 #include	<string.h>
 
+#define epicsExportSharedSymbols
 #include	"seq.h"
 
 LOCAL void proc_db_events(pvValue *, pvType, CHAN *, long);
@@ -73,7 +74,7 @@ LOCAL void proc_db_events_queued(pvValue *, CHAN *);
 /*
  * seq_connect() - Connect to all database channels.
  */
-long seq_connect(SPROG *pSP)
+epicsShareFunc long seq_connect(SPROG *pSP)
 {
 	CHAN		*pDB;
 	int		status, i;
@@ -132,7 +133,7 @@ long seq_connect(SPROG *pSP)
  * seq_get_handler() - Sequencer callback handler.
  * Called when a "get" completes.
  */
-void seq_get_handler(void *var, pvType type, int count, pvValue *pValue,
+epicsShareFunc void seq_get_handler(void *var, pvType type, int count, pvValue *pValue,
 		     void *arg)
 {
 	/* Process event handling in each state set */
@@ -143,7 +144,7 @@ void seq_get_handler(void *var, pvType type, int count, pvValue *pValue,
  * seq_put_handler() - Sequencer callback handler.
  * Called when a "put" completes.
  */
-void seq_put_handler(void *var, pvType type, int count, pvValue *pValue,
+epicsShareFunc void seq_put_handler(void *var, pvType type, int count, pvValue *pValue,
 		     void *arg)
 {
 	/* Process event handling in each state set */
@@ -153,7 +154,7 @@ void seq_put_handler(void *var, pvType type, int count, pvValue *pValue,
 /*
  * seq_mon_handler() - PV events (monitors) come here.
  */
-void seq_mon_handler(void *var, pvType type, int count, pvValue *pValue,
+epicsShareFunc void seq_mon_handler(void *var, pvType type, int count, pvValue *pValue,
 		     void *arg)
 {
 	/* Process event handling in each state set */
@@ -308,7 +309,7 @@ LOCAL void proc_db_events_queued(pvValue *pValue, CHAN *pDB)
 /*	Disconnect all database channels */
 /*#define	DEBUG_DISCONNECT*/
 
-long seq_disconnect(SPROG *pSP)
+epicsShareFunc long seq_disconnect(SPROG *pSP)
 {
 	CHAN	*pDB;
 	int	i;

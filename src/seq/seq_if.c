@@ -50,6 +50,7 @@
 #include 	<stdlib.h>
 #include 	<string.h>
 
+#define epicsExportSharedSymbols
 #include	"seq.h"
 
 /*#define		DEBUG*/
@@ -88,7 +89,7 @@
 #define UNLOCK semMutexGive(pSP->caSemId)
 
 /* Flush outstanding PV requests */
-void seq_pvFlush()
+epicsShareFunc void epicsShareAPI seq_pvFlush()
 {
 	pvSysFlush(pvSys);
 }	
@@ -96,7 +97,7 @@ void seq_pvFlush()
 /*
  * seq_pvGet() - Get DB value.
  */
-long seq_pvGet(SS_ID ssId, long pvId, long compType)
+epicsShareFunc long epicsShareAPI seq_pvGet(SS_ID ssId, long pvId, long compType)
 {
 	SPROG		*pSP;	/* ptr to state program */
 	SSCB		*pSS;	/* ptr to state set */
@@ -182,7 +183,7 @@ long seq_pvGet(SS_ID ssId, long pvId, long compType)
 /*
  * seq_pvGetComplete() - returns TRUE if the last get completed.
  */
-long seq_pvGetComplete(SS_ID ssId, long pvId)
+epicsShareFunc long epicsShareAPI seq_pvGetComplete(SS_ID ssId, long pvId)
 {
 	SPROG		*pSP;	/* ptr to state program */
 	CHAN		*pDB;	/* ptr to channel struct */
@@ -196,7 +197,7 @@ long seq_pvGetComplete(SS_ID ssId, long pvId)
 /*
  * seq_pvPut() - Put DB value.
  */
-long seq_pvPut(SS_ID ssId, long pvId, long compType)
+epicsShareFunc long epicsShareAPI seq_pvPut(SS_ID ssId, long pvId, long compType)
 {
 	SPROG		*pSP;	/* ptr to state program */
 	SSCB		*pSS;	/* ptr to state set */
@@ -322,7 +323,7 @@ long seq_pvPut(SS_ID ssId, long pvId, long compType)
 /*
  * seq_pvPutComplete() - returns TRUE if the last put completed.
  */
-long seq_pvPutComplete(SS_ID ssId, long pvId, long length, long any,
+epicsShareFunc long epicsShareAPI seq_pvPutComplete(SS_ID ssId, long pvId, long length, long any,
 		       long *pComplete)
 {
 	SPROG		*pSP;	/* ptr to state program */
@@ -368,7 +369,7 @@ long seq_pvPutComplete(SS_ID ssId, long pvId, long length, long any,
  * seq_pvAssign() - Assign/Connect to a channel.
  * Assign to a zero-length string ("") disconnects/de-assigns.
  */
-long seq_pvAssign(SS_ID ssId, long pvId, char *pvName)
+epicsShareFunc long epicsShareAPI seq_pvAssign(SS_ID ssId, long pvId, char *pvName)
 {
 	SPROG		*pSP;	/* ptr to state program */
 	CHAN		*pDB;	/* ptr to channel struct */
@@ -438,7 +439,7 @@ long seq_pvAssign(SS_ID ssId, long pvId, char *pvName)
 /*
  * seq_pvMonitor() - Initiate a monitor on a channel.
  */
-long seq_pvMonitor(SS_ID ssId, long pvId)
+epicsShareFunc long epicsShareAPI seq_pvMonitor(SS_ID ssId, long pvId)
 {
 	SPROG		*pSP;	/* ptr to state program */
 	CHAN		*pDB;	/* ptr to channel struct */
@@ -482,7 +483,7 @@ long seq_pvMonitor(SS_ID ssId, long pvId)
 /*
  * seq_pvStopMonitor() - Cancel a monitor
  */
-long seq_pvStopMonitor(SS_ID ssId, long pvId)
+epicsShareFunc long epicsShareAPI seq_pvStopMonitor(SS_ID ssId, long pvId)
 {
 	SPROG		*pSP;	/* ptr to state program */
 	CHAN		*pDB;	/* ptr to channel struct */
@@ -509,7 +510,7 @@ long seq_pvStopMonitor(SS_ID ssId, long pvId)
 /*
  * seq_pvChannelCount() - returns total number of database channels.
  */
-long seq_pvChannelCount(SS_ID ssId)
+epicsShareFunc long epicsShareAPI seq_pvChannelCount(SS_ID ssId)
 {
 	SPROG		*pSP;	/* ptr to state program */
 
@@ -520,7 +521,7 @@ long seq_pvChannelCount(SS_ID ssId)
 /*
  * seq_pvConnectCount() - returns number of database channels connected.
  */
-long seq_pvConnectCount(SS_ID ssId)
+epicsShareFunc long epicsShareAPI seq_pvConnectCount(SS_ID ssId)
 {
 	SPROG		*pSP;	/* ptr to state program */
 
@@ -531,7 +532,7 @@ long seq_pvConnectCount(SS_ID ssId)
 /*
  * seq_pvAssignCount() - returns number of database channels assigned.
  */
-long seq_pvAssignCount(SS_ID ssId)
+epicsShareFunc long epicsShareAPI seq_pvAssignCount(SS_ID ssId)
 {
 	SPROG		*pSP;	/* ptr to state program */
 
@@ -542,7 +543,7 @@ long seq_pvAssignCount(SS_ID ssId)
 /*
  * seq_pvConnected() - returns TRUE if database channel is connected.
  */
-long seq_pvConnected(SS_ID ssId, long pvId)
+epicsShareFunc long epicsShareAPI seq_pvConnected(SS_ID ssId, long pvId)
 {
 	SPROG		*pSP;	/* ptr to state program */
 	CHAN		*pDB;
@@ -555,7 +556,7 @@ long seq_pvConnected(SS_ID ssId, long pvId)
 /*
  * seq_pvAssigned() - returns TRUE if database channel is assigned.
  */
-long seq_pvAssigned(SS_ID ssId, long pvId)
+epicsShareFunc long epicsShareAPI seq_pvAssigned(SS_ID ssId, long pvId)
 {
 	SPROG		*pSP;	/* ptr to state program */
 	CHAN		*pDB;
@@ -569,7 +570,7 @@ long seq_pvAssigned(SS_ID ssId, long pvId)
  * seq_pvCount() - returns number elements in an array, which is the lesser of
  * (1) the array size and (2) the element count returned by the PV layer.
  */
-long seq_pvCount(SS_ID ssId, long pvId)
+epicsShareFunc long epicsShareAPI seq_pvCount(SS_ID ssId, long pvId)
 {
 	SPROG		*pSP;	/* ptr to state program */
 	CHAN		*pDB;	/* ptr to channel struct */
@@ -582,7 +583,7 @@ long seq_pvCount(SS_ID ssId, long pvId)
 /*
  * seq_pvName() - returns channel name.
  */
-char *seq_pvName(SS_ID ssId, long pvId)
+epicsShareFunc char *epicsShareAPI seq_pvName(SS_ID ssId, long pvId)
 {
 	SPROG		*pSP;	/* ptr to state program */
 	CHAN		*pDB;	/* ptr to channel struct */
@@ -595,7 +596,7 @@ char *seq_pvName(SS_ID ssId, long pvId)
 /*
  * seq_pvStatus() - returns channel alarm status.
  */
-long seq_pvStatus(SS_ID ssId, long pvId)
+epicsShareFunc long epicsShareAPI seq_pvStatus(SS_ID ssId, long pvId)
 {
 	SPROG		*pSP;	/* ptr to state program */
 	CHAN		*pDB;	/* ptr to channel struct */
@@ -608,7 +609,7 @@ long seq_pvStatus(SS_ID ssId, long pvId)
 /*
  * seq_pvSeverity() - returns channel alarm severity.
  */
-long seq_pvSeverity(SS_ID ssId, long pvId)
+epicsShareFunc long epicsShareAPI seq_pvSeverity(SS_ID ssId, long pvId)
 {
 	SPROG		*pSP;	/* ptr to state program */
 	CHAN		*pDB;	/* ptr to channel struct */
@@ -621,7 +622,7 @@ long seq_pvSeverity(SS_ID ssId, long pvId)
 /*
  * seq_pvMessage() - returns channel error message.
  */
-char *seq_pvMessage(SS_ID ssId, long pvId)
+epicsShareFunc char *epicsShareAPI seq_pvMessage(SS_ID ssId, long pvId)
 {
 	SPROG		*pSP;	/* ptr to state program */
 	CHAN		*pDB;	/* ptr to channel struct */
@@ -634,7 +635,7 @@ char *seq_pvMessage(SS_ID ssId, long pvId)
 /*
  * seq_pvIndex() - returns index of database variable.
  */
-long seq_pvIndex(SS_ID ssId, long pvId)
+epicsShareFunc long epicsShareAPI seq_pvIndex(SS_ID ssId, long pvId)
 {
 	return pvId; /* index is same as pvId */
 }
@@ -642,7 +643,7 @@ long seq_pvIndex(SS_ID ssId, long pvId)
 /*
  * seq_pvTimeStamp() - returns channel time stamp.
  */
-TS_STAMP seq_pvTimeStamp(SS_ID ssId, long pvId)
+epicsShareFunc TS_STAMP epicsShareAPI seq_pvTimeStamp(SS_ID ssId, long pvId)
 {
 	SPROG		*pSP;	/* ptr to state program */
 	CHAN		*pDB;	/* ptr to channel struct */
@@ -655,7 +656,7 @@ TS_STAMP seq_pvTimeStamp(SS_ID ssId, long pvId)
  * seq_efSet() - Set an event flag, then wake up each state
  * set that might be waiting on that event flag.
  */
-void seq_efSet(SS_ID ssId, long ev_flag)
+epicsShareFunc void epicsShareAPI seq_efSet(SS_ID ssId, long ev_flag)
 {
 	SPROG		*pSP;
 	SSCB		*pSS;
@@ -684,7 +685,7 @@ void seq_efSet(SS_ID ssId, long ev_flag)
 /*
  * seq_efTest() - Test event flag against outstanding events.
  */
-long seq_efTest(SS_ID ssId, long ev_flag)
+epicsShareFunc long epicsShareAPI seq_efTest(SS_ID ssId, long ev_flag)
 /* event flag */
 {
 	SPROG		*pSP;
@@ -713,7 +714,7 @@ long seq_efTest(SS_ID ssId, long ev_flag)
 /*
  * seq_efClear() - Test event flag against outstanding events, then clear it.
  */
-long seq_efClear(SS_ID ssId, long ev_flag)
+epicsShareFunc long epicsShareAPI seq_efClear(SS_ID ssId, long ev_flag)
 {
 	SPROG		*pSP;
 	SSCB		*pSS;
@@ -742,7 +743,7 @@ long seq_efClear(SS_ID ssId, long ev_flag)
 /*
  * seq_efTestAndClear() - Test event flag against outstanding events, then clear it.
  */
-long seq_efTestAndClear(SS_ID ssId, long ev_flag)
+epicsShareFunc long epicsShareAPI seq_efTestAndClear(SS_ID ssId, long ev_flag)
 {
 	SPROG		*pSP;
 	SSCB		*pSS;
@@ -767,7 +768,7 @@ long seq_efTestAndClear(SS_ID ssId, long ev_flag)
  * seq_pvGetQ() - Get queued DB value (looks like pvGet() but really more
  *		  like efTestAndClear()).
  */
-int seq_pvGetQ(SS_ID ssId, int pvId)
+epicsShareFunc int epicsShareAPI seq_pvGetQ(SS_ID ssId, int pvId)
 
 {
 	SPROG		*pSP;
@@ -852,7 +853,7 @@ int seq_pvGetQ(SS_ID ssId, int pvId)
  * seq_pvFreeQ() - Free elements on syncQ queue and clear event flag.
  *		   Intended to be called from action code.
  */
-int seq_pvFreeQ(SS_ID	ssId, int	pvId)
+epicsShareFunc int epicsShareAPI seq_pvFreeQ(SS_ID	ssId, int	pvId)
 {
 	SPROG		*pSP;
 	SSCB		*pSS;
@@ -891,7 +892,7 @@ int seq_pvFreeQ(SS_ID	ssId, int	pvId)
 
 
 /* seq_delay() - test for delay() time-out expired */
-long seq_delay(SS_ID ssId, long delayId)
+epicsShareFunc long epicsShareAPI seq_delay(SS_ID ssId, long delayId)
 {
 	SSCB		*pSS;
 	double		timeNow, timeElapsed;
@@ -919,7 +920,7 @@ long seq_delay(SS_ID ssId, long delayId)
 /*
  * seq_delayInit() - initialize delay time (in seconds) on entering a state.
  */
-void seq_delayInit(SS_ID ssId, long delayId, double delay)
+epicsShareFunc void epicsShareAPI seq_delayInit(SS_ID ssId, long delayId, double delay)
 {
 	SSCB		*pSS;
 	int		ndelay;
@@ -937,7 +938,7 @@ void seq_delayInit(SS_ID ssId, long delayId, double delay)
  * seq_optGet: return the value of an option (e.g. "a").
  * FALSE means "-" and TRUE means "+".
  */
-long seq_optGet(SS_ID ssId, char *opt)
+epicsShareFunc long epicsShareAPI seq_optGet(SS_ID ssId, char *opt)
 {
 	SPROG		*pSP;
 

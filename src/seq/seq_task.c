@@ -48,9 +48,10 @@
 
 #include	<limits.h>
 #include 	<string.h>
-#include 	<unistd.h>
+/*#include 	<unistd.h> */
 
 #define		DECLARE_PV_SYS
+#define epicsExportSharedSymbols
 #include	"seq.h"
 
 /* Used to disable debug output */

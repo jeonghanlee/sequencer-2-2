@@ -36,8 +36,9 @@
 /*#define	DEBUG	1*/
 
 #include	<string.h>
-#include	<unistd.h>
+/* #include	<unistd.h> */
 
+#define epicsExportSharedSymbols
 #include	"seq.h"
 
 /* User functions */

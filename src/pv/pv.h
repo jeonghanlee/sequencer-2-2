@@ -1,4 +1,4 @@
-/* $Id: pv.h,v 1.1.1.1 2000-04-04 03:22:13 wlupton Exp $
+/* $Id: pv.h,v 1.2 2000-04-14 21:53:28 jba Exp $
  *
  * Definitions for EPICS sequencer message system-independent library (pv)
  * (NB, "pv" = "process variable").
@@ -13,6 +13,7 @@
 #ifndef INCLpvh
 #define INCLpvh
 
+#include "shareLib.h" /* reset share lib defines */
 #include "osiThread.h"		/* for thread ids */
 #include "osiSem.h"		/* for locks */
 #include "tsStamp.h"		/* for time stamps */
@@ -129,32 +130,32 @@ class pvCallback;
 class pvSystem {
 
 public:
-    pvSystem( int debug = 0 );
-    virtual ~pvSystem();
+    epicsShareFunc pvSystem( int debug = 0 );
+    epicsShareFunc virtual ~pvSystem();
 
-    inline pvSystem *getSystem() { return this; } 
+    epicsShareFunc inline pvSystem *getSystem() { return this; } 
 
-    virtual pvStat attach() { return pvStatOK; }
-    virtual pvStat flush() { return pvStatOK; }
-    virtual pvStat pend( double seconds = 0.0, int wait = FALSE ) = 0;
+    epicsShareFunc virtual pvStat attach() { return pvStatOK; }
+    epicsShareFunc virtual pvStat flush() { return pvStatOK; }
+    epicsShareFunc virtual pvStat pend( double seconds = 0.0, int wait = FALSE ) = 0;
 
-    virtual pvVariable *newVariable( const char *name, pvConnFunc func = NULL,
+    epicsShareFunc virtual pvVariable *newVariable( const char *name, pvConnFunc func = NULL,
 				     void *priv = NULL, int debug = 0 ) = 0;
 
-    void lock();
-    void unlock();
+    epicsShareFunc void lock();
+    epicsShareFunc void unlock();
 
-    inline int getMagic() const { return magic_; }
-    inline void setDebug( int debug ) { debug_ = debug; }
-    inline int getDebug() const { return debug_; }
+    epicsShareFunc inline int getMagic() const { return magic_; }
+    epicsShareFunc inline void setDebug( int debug ) { debug_ = debug; }
+    epicsShareFunc inline int getDebug() const { return debug_; }
 
-    void setError( int status, pvSevr sevr, pvStat stat, const char *mess );
-    inline int getStatus() const { return status_; }
-    inline pvSevr getSevr() const { return sevr_; }
-    inline pvStat getStat() const { return stat_; }
-    inline void setStatus( int status ) { status_ = status; }
-    inline void setStat( pvStat stat ) { stat_ = stat; }
-    inline char *getMess() const { return mess_?mess_:(char *)""; }
+    epicsShareFunc void setError( int status, pvSevr sevr, pvStat stat, const char *mess );
+    epicsShareFunc inline int getStatus() const { return status_; }
+    epicsShareFunc inline pvSevr getSevr() const { return sevr_; }
+    epicsShareFunc inline pvStat getStat() const { return stat_; }
+    epicsShareFunc inline void setStatus( int status ) { status_ = status; }
+    epicsShareFunc inline void setStat( pvStat stat ) { stat_ = stat; }
+    epicsShareFunc inline char *getMess() const { return mess_?mess_:(char *)""; }
 
 private:
     int		magic_;		/* magic number (used for authentication) */
@@ -179,44 +180,44 @@ class pvVariable {
 public:
     // private data is constructor argument so that it is guaranteed set
     // before connection callback is invoked
-    pvVariable( pvSystem *system, const char *name, pvConnFunc func = NULL,
+    epicsShareFunc pvVariable( pvSystem *system, const char *name, pvConnFunc func = NULL,
 		void *priv = NULL, int debug = 0 );
-    virtual ~pvVariable();
+    epicsShareFunc virtual ~pvVariable();
 
-    virtual pvStat get( pvType type, int count, pvValue *value ) = 0;
-    virtual pvStat getNoBlock( pvType type, int count, pvValue *value ) = 0;
-    virtual pvStat getCallback( pvType type, int count,
+    epicsShareFunc virtual pvStat get( pvType type, int count, pvValue *value ) = 0;
+    epicsShareFunc virtual pvStat getNoBlock( pvType type, int count, pvValue *value ) = 0;
+    epicsShareFunc virtual pvStat getCallback( pvType type, int count,
 		pvEventFunc func, void *arg = NULL ) = 0;
-    virtual pvStat put( pvType type, int count, pvValue *value ) = 0;
-    virtual pvStat putNoBlock( pvType type, int count, pvValue *value ) = 0;
-    virtual pvStat putCallback( pvType type, int count, pvValue *value,
+    epicsShareFunc virtual pvStat put( pvType type, int count, pvValue *value ) = 0;
+    epicsShareFunc virtual pvStat putNoBlock( pvType type, int count, pvValue *value ) = 0;
+    epicsShareFunc virtual pvStat putCallback( pvType type, int count, pvValue *value,
 		pvEventFunc func, void *arg = NULL ) = 0;
-    virtual pvStat monitorOn( pvType type, int count,
+    epicsShareFunc virtual pvStat monitorOn( pvType type, int count,
 		pvEventFunc func, void *arg = NULL,
 		pvCallback **pCallback = NULL ) = 0;
-    virtual pvStat monitorOff( pvCallback *callback = NULL ) = 0;
+    epicsShareFunc virtual pvStat monitorOff( pvCallback *callback = NULL ) = 0;
 
-    virtual int getConnected() const = 0;
-    virtual pvType getType() const = 0;
-    virtual int getCount() const = 0;
+    epicsShareFunc virtual int getConnected() const = 0;
+    epicsShareFunc virtual pvType getType() const = 0;
+    epicsShareFunc virtual int getCount() const = 0;
 
-    inline int getMagic() const { return magic_; }
-    inline void setDebug( int debug ) { debug_ = debug; }
-    inline int getDebug() const { return debug_; }
-    inline pvConnFunc getFunc() const { return func_; }
+    epicsShareFunc inline int getMagic() const { return magic_; }
+    epicsShareFunc inline void setDebug( int debug ) { debug_ = debug; }
+    epicsShareFunc inline int getDebug() const { return debug_; }
+    epicsShareFunc inline pvConnFunc getFunc() const { return func_; }
 
-    inline pvSystem *getSystem() const { return system_; }
-    inline char *getName() const { return name_; }
-    inline void setPrivate( void *priv ) { private_ = priv; }
-    inline void *getPrivate() const { return private_; }
+    epicsShareFunc inline pvSystem *getSystem() const { return system_; }
+    epicsShareFunc inline char *getName() const { return name_; }
+    epicsShareFunc inline void setPrivate( void *priv ) { private_ = priv; }
+    epicsShareFunc inline void *getPrivate() const { return private_; }
 
-    void setError( int status, pvSevr sevr, pvStat stat, const char *mess );
-    inline int getStatus() const { return status_; }
-    inline pvSevr getSevr() const { return sevr_; }
-    inline pvStat getStat() const { return stat_; }
-    inline void setStatus( int status ) { status_ = status; }
-    inline void setStat( pvStat stat ) { stat_ = stat; }
-    inline char *getMess() const { return mess_?mess_:(char *)""; }
+    epicsShareFunc void setError( int status, pvSevr sevr, pvStat stat, const char *mess );
+    epicsShareFunc inline int getStatus() const { return status_; }
+    epicsShareFunc inline pvSevr getSevr() const { return sevr_; }
+    epicsShareFunc inline pvStat getStat() const { return stat_; }
+    epicsShareFunc inline void setStatus( int status ) { status_ = status; }
+    epicsShareFunc inline void setStat( pvStat stat ) { stat_ = stat; }
+    epicsShareFunc inline char *getMess() const { return mess_?mess_:(char *)""; }
 
 private:
     int		magic_;		/* magic number (used for authentication) */
@@ -242,21 +243,21 @@ private:
 class pvCallback {
 
 public:
-    pvCallback( pvVariable *variable, pvType type, int count,
+    epicsShareFunc pvCallback( pvVariable *variable, pvType type, int count,
 		pvEventFunc func, void *arg, int debug = 0);
-    ~pvCallback();
+    epicsShareFunc ~pvCallback();
 
-    inline int getMagic() { return magic_; }
-    inline void setDebug( int debug ) { debug_ = debug; }
-    inline int getDebug() { return debug_; }
+    epicsShareFunc inline int getMagic() { return magic_; }
+    epicsShareFunc inline void setDebug( int debug ) { debug_ = debug; }
+    epicsShareFunc inline int getDebug() { return debug_; }
 
-    inline pvVariable *getVariable() { return variable_; }
-    inline pvType getType() { return type_; }
-    inline int getCount() { return count_; };
-    inline pvEventFunc getFunc() { return func_; };
-    inline void *getArg() { return arg_; };
-    inline void setPrivate( void *priv ) { private_ = priv; }
-    inline void *getPrivate() { return private_; }
+    epicsShareFunc inline pvVariable *getVariable() { return variable_; }
+    epicsShareFunc inline pvType getType() { return type_; }
+    epicsShareFunc inline int getCount() { return count_; };
+    epicsShareFunc inline pvEventFunc getFunc() { return func_; };
+    epicsShareFunc inline void *getArg() { return arg_; };
+    epicsShareFunc inline void setPrivate( void *priv ) { private_ = priv; }
+    epicsShareFunc inline void *getPrivate() { return private_; }
 
 private:
     int		magic_;		/* magic number (used for authentication) */
@@ -281,62 +282,62 @@ private:
  */
 #ifdef __cplusplus
 extern "C" {
-pvSystem *newPvSystem( const char *name, int debug = 0 );
+epicsShareFunc pvSystem * epicsShareAPI newPvSystem( const char *name, int debug = 0 );
 #endif
 
-pvStat pvSysCreate( const char *name, int debug, void **pSys );
-pvStat pvSysDestroy( void *sys );
-pvStat pvSysFlush( void *sys );
-pvStat pvSysPend( void *sys, double seconds, int wait );
-pvStat pvSysLock( void *sys );
-pvStat pvSysUnlock( void *sys );
-pvStat pvSysAttach( void *sys );
-int    pvSysGetMagic( void *sys );
-void   pvSysSetDebug( void *sys, int debug );
-int    pvSysGetDebug( void *sys );
-int    pvSysGetStatus( void *sys );
-pvSevr pvSysGetSevr( void *sys );
-pvStat pvSysGetStat( void *sys );
-char   *pvSysGetMess( void *sys );
+epicsShareFunc pvStat epicsShareAPI pvSysCreate( const char *name, int debug, void **pSys );
+epicsShareFunc pvStat epicsShareAPI pvSysDestroy( void *sys );
+epicsShareFunc pvStat epicsShareAPI pvSysFlush( void *sys );
+epicsShareFunc pvStat epicsShareAPI pvSysPend( void *sys, double seconds, int wait );
+epicsShareFunc pvStat epicsShareAPI pvSysLock( void *sys );
+epicsShareFunc pvStat epicsShareAPI pvSysUnlock( void *sys );
+epicsShareFunc pvStat epicsShareAPI pvSysAttach( void *sys );
+epicsShareFunc int    epicsShareAPI pvSysGetMagic( void *sys );
+epicsShareFunc void   epicsShareAPI pvSysSetDebug( void *sys, int debug );
+epicsShareFunc int    epicsShareAPI pvSysGetDebug( void *sys );
+epicsShareFunc int    epicsShareAPI pvSysGetStatus( void *sys );
+epicsShareFunc pvSevr epicsShareAPI pvSysGetSevr( void *sys );
+epicsShareFunc pvStat epicsShareAPI pvSysGetStat( void *sys );
+epicsShareFunc char * epicsShareAPI pvSysGetMess( void *sys );
 
-pvStat pvVarCreate( void *sys, const char *name, pvConnFunc func, void *priv,
+epicsShareFunc pvStat epicsShareAPI pvVarCreate( void *sys, const char *name, pvConnFunc func, void *priv,
 		    int debug, void **pVar );
-pvStat pvVarDestroy( void *var );
-pvStat pvVarGet( void *var, pvType type, int count, pvValue *value );
-pvStat pvVarGetNoBlock( void *var, pvType type, int count, pvValue *value );
-pvStat pvVarGetCallback( void *var, pvType type, int count,
+epicsShareFunc pvStat epicsShareAPI pvVarDestroy( void *var );
+epicsShareFunc pvStat epicsShareAPI pvVarGet( void *var, pvType type, int count, pvValue *value );
+epicsShareFunc pvStat epicsShareAPI pvVarGetNoBlock( void *var, pvType type, int count, pvValue *value );
+epicsShareFunc pvStat epicsShareAPI pvVarGetCallback( void *var, pvType type, int count,
 		         pvEventFunc func, void *arg );
-pvStat pvVarPut( void *var, pvType type, int count, pvValue *value );
-pvStat pvVarPutNoBlock( void *var, pvType type, int count, pvValue *value );
-pvStat pvVarPutCallback( void *var, pvType type, int count, pvValue *value,
+epicsShareFunc pvStat epicsShareAPI pvVarPut( void *var, pvType type, int count, pvValue *value );
+epicsShareFunc pvStat epicsShareAPI pvVarPutNoBlock( void *var, pvType type, int count, pvValue *value );
+epicsShareFunc pvStat epicsShareAPI pvVarPutCallback( void *var, pvType type, int count, pvValue *value,
 		         pvEventFunc func, void *arg );
-pvStat pvVarMonitorOn( void *var, pvType type, int count,
+epicsShareFunc pvStat epicsShareAPI pvVarMonitorOn( void *var, pvType type, int count,
 		       pvEventFunc func, void *arg, void **pId );
-pvStat pvVarMonitorOff( void *var, void *id );
-int    pvVarGetMagic( void *var );
-void   pvVarSetDebug( void *var, int debug );
-int    pvVarGetDebug( void *var );
-int    pvVarGetConnected( void *var );
-pvType pvVarGetType( void *var );
-int    pvVarGetCount( void *var );
-char   *pvVarGetName( void *var );
-void   pvVarSetPrivate( void *var, void *priv );
-void   *pvVarGetPrivate( void *var );
-int    pvVarGetStatus( void *var );
-pvSevr pvVarGetSevr( void *var );
-pvStat pvVarGetStat( void *var );
-char   *pvVarGetMess( void *var );
+epicsShareFunc pvStat epicsShareAPI pvVarMonitorOff( void *var, void *id );
+epicsShareFunc int    epicsShareAPI pvVarGetMagic( void *var );
+epicsShareFunc void   epicsShareAPI pvVarSetDebug( void *var, int debug );
+epicsShareFunc int    epicsShareAPI pvVarGetDebug( void *var );
+epicsShareFunc int    epicsShareAPI pvVarGetConnected( void *var );
+epicsShareFunc pvType epicsShareAPI pvVarGetType( void *var );
+epicsShareFunc int    epicsShareAPI pvVarGetCount( void *var );
+epicsShareFunc char * epicsShareAPI pvVarGetName( void *var );
+epicsShareFunc void   epicsShareAPI pvVarSetPrivate( void *var, void *priv );
+epicsShareFunc void * epicsShareAPI pvVarGetPrivate( void *var );
+epicsShareFunc int    epicsShareAPI pvVarGetStatus( void *var );
+epicsShareFunc pvSevr epicsShareAPI pvVarGetSevr( void *var );
+epicsShareFunc pvStat epicsShareAPI pvVarGetStat( void *var );
+epicsShareFunc char * epicsShareAPI pvVarGetMess( void *var );
 
 /*
  * Time utilities
  */
-int    pvTimeGetCurrentDouble( double *pTime );
+epicsShareFunc int    epicsShareAPI pvTimeGetCurrentDouble( double *pTime );
 
 /*
  * Misc utilities
  */
-char *Strdup( const char *s );
-char *Strdcpy( char *dst, const char *src );
+epicsShareFunc char * epicsShareAPI Strdup( const char *s );
+epicsShareFunc char * epicsShareAPI Strdcpy( char *dst, const char *src );
 
 #ifdef __cplusplus
 }
@@ -346,6 +347,9 @@ char *Strdcpy( char *dst, const char *src );
 
 /*
  * $Log: not supported by cvs2svn $
+ * Revision 1.1.1.1  2000/04/04 03:22:13  wlupton
+ * first commit of seq-2-0-0
+ *
  * Revision 1.18  2000/03/31 23:00:42  wlupton
  * added default attach and flush implementations; added setStatus
  *

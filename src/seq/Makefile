@@ -12,6 +12,8 @@ INC = seqCom.h
 
 #  seq library
 LIBRARY = seq
+seq_DLL_LIBS = pv Com
+pv_DIR=$(INSTALL_LIB)
 
 LIBSRCS = seq_main.c seq_task.c seq_ca.c seq_if.c seq_mac.c seq_prog.c \
 	  seq_qry.c seqVersion.c

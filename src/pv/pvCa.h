@@ -1,4 +1,4 @@
-/* $Id: pvCa.h,v 1.1.1.1 2000-04-04 03:22:14 wlupton Exp $
+/* $Id: pvCa.h,v 1.2 2000-04-14 21:53:28 jba Exp $
  *
  * Definitions for EPICS sequencer CA library (pvCa)
  *
@@ -8,10 +8,11 @@
 #ifndef INCLpvCah
 #define INCLpvCah
 
-#include "pv.h"
-
 #include "alarm.h"
 #include "cadef.h"
+
+#include "shareLib.h"
+#include "pv.h"
 
 /*
  * System
@@ -19,14 +20,14 @@
 class caSystem : public pvSystem {
 
 public:
-    caSystem( int debug = 0 );
-    ~caSystem();
+    epicsShareFunc caSystem( int debug = 0 );
+    epicsShareFunc ~caSystem();
 
-    virtual pvStat attach();
-    virtual pvStat flush();
-    virtual pvStat pend( double seconds = 0.0, int wait = FALSE );
+    epicsShareFunc virtual pvStat attach();
+    epicsShareFunc virtual pvStat flush();
+    epicsShareFunc virtual pvStat pend( double seconds = 0.0, int wait = FALSE );
 
-    virtual pvVariable *newVariable( const char *name, pvConnFunc func = NULL,
+    epicsShareFunc virtual pvVariable *newVariable( const char *name, pvConnFunc func = NULL,
 				     void *priv = NULL, int debug = 0 );
 
 private:
@@ -39,26 +40,26 @@ private:
 class caVariable : public pvVariable {
 
 public:
-    caVariable( caSystem *system, const char *name, pvConnFunc func = NULL,
+    epicsShareFunc caVariable( caSystem *system, const char *name, pvConnFunc func = NULL,
 		void *priv = NULL, int debug = 0 );
-    ~caVariable();
+    epicsShareFunc ~caVariable();
 
-    virtual pvStat get( pvType type, int count, pvValue *value );
-    virtual pvStat getNoBlock( pvType type, int count, pvValue *value );
-    virtual pvStat getCallback( pvType type, int count,
+    epicsShareFunc virtual pvStat get( pvType type, int count, pvValue *value );
+    epicsShareFunc virtual pvStat getNoBlock( pvType type, int count, pvValue *value );
+    epicsShareFunc virtual pvStat getCallback( pvType type, int count,
 		pvEventFunc func, void *arg = NULL );
-    virtual pvStat put( pvType type, int count, pvValue *value );
-    virtual pvStat putNoBlock( pvType type, int count, pvValue *value );
-    virtual pvStat putCallback( pvType type, int count, pvValue *value,
+    epicsShareFunc virtual pvStat put( pvType type, int count, pvValue *value );
+    epicsShareFunc virtual pvStat putNoBlock( pvType type, int count, pvValue *value );
+    epicsShareFunc virtual pvStat putCallback( pvType type, int count, pvValue *value,
 		pvEventFunc func, void *arg = NULL );
-    virtual pvStat monitorOn( pvType type, int count,
+    epicsShareFunc virtual pvStat monitorOn( pvType type, int count,
 		pvEventFunc func, void *arg = NULL,
 		pvCallback **pCallback = NULL );
-    virtual pvStat monitorOff( pvCallback *callback = NULL );
+    epicsShareFunc virtual pvStat monitorOff( pvCallback *callback = NULL );
 
-    virtual int getConnected() const;
-    virtual pvType getType() const;
-    virtual int getCount() const;
+    epicsShareFunc virtual int getConnected() const;
+    epicsShareFunc virtual pvType getType() const;
+    epicsShareFunc virtual int getCount() const;
 
 private:
     chid chid_;		/* channel access id */
@@ -68,6 +69,9 @@ private:
 
 /*
  * $Log: not supported by cvs2svn $
+ * Revision 1.1.1.1  2000/04/04 03:22:14  wlupton
+ * first commit of seq-2-0-0
+ *
  * Revision 1.11  2000/03/18 04:00:25  wlupton
  * converted to use new configure scheme
  *

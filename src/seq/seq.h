@@ -68,6 +68,7 @@
 
 #include	"pv.h"
 
+#include	"shareLib.h"
 #include	"seqCom.h"
 
 #define		OK 0
@@ -237,7 +238,7 @@ typedef struct auxiliary_args AUXARGS;
 #define THREAD_PRIORITY		threadPriorityMedium
 
 /* Function declarations for internal sequencer funtions */
-long	seq (struct seqProgram *, char *, unsigned int);
+epicsShareFunc long epicsShareAPI seq (struct seqProgram *, char *, unsigned int);
 void	seqWakeup (SPROG *, long);
 void	seqFree (SPROG *);
 long	seqStop(threadId tid);
@@ -252,7 +253,7 @@ long	seqShow (threadId);
 long	seqChanShow (threadId, char *);
 long	seqQueueShow (threadId tid);
 SPROG  *seqFindProg(threadId tid);
-SPROG  *seqFindProgByName(char *);
+epicsShareFunc SPROG  *epicsShareAPI seqFindProgByName(char *);
 
 
 #endif	/*INCLseqh*/
