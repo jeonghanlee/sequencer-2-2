@@ -13,6 +13,14 @@ Compiling and linking a state program under Unix.
 The exampleApp supplied with base demonstrates how to build sequence programs
 that work with epics databases.
 It also shows how to build a sequence program that runs without databases.
+When you run a standalone sequencer the -s option provides iocsh.
+If the -s option is not given no shell is started.
+For example
+     ./sncProgram -s "user=mrkHost"
+     epics>
+The iocsh shell provides a help command to see what commands are available.
+
+       
 
 test/simple also shows how to build a sequence program that runs 
 without databases running in the same process.
