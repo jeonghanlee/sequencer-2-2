@@ -5,7 +5,7 @@ include $(TOP)/configure/CONFIG
 #  ADD MACRO DEFINITIONS AFTER THIS LINE
 
 #  Generate snc main programs
-SNC = $(INSTALL_BIN)/snc
+SNC = $(INSTALL_HOST_BIN)/snc
 SNCFLAGS = +m
 
 #  Sequence programs and/or object files to create
