@@ -21,7 +21,7 @@ SNCFLAGS_RTEMS = +i
 PROD_DEFAULT = demo
 PROD_WIN32 = -nil-
 OBJS_vxWorks = demo
-OBJS_RTEMS = demo
+PROD_RTEMS = demo
 
 #  Sources (CA only)
 ifeq "$(PVCA)" "TRUE"
@@ -30,8 +30,8 @@ endif
 
 #  Includes and libraries
 PROD_LIBS += seqdev seq
-seq_DIR    = $(INSTALL_LIB)
-seqdev_DIR    = $(INSTALL_LIB)
+seq_DIR    = $(SEQ_LIB)
+seqdev_DIR    = $(SEQ_LIB)
 
 include $(TOP)/test/Makefile.pv
 
