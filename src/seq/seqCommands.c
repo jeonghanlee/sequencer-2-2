@@ -1,5 +1,5 @@
 /*
- * $Id: seqCommands.c,v 1.3 2000-05-04 17:57:58 norume Exp $
+ * $Id: seqCommands.c,v 1.4 2000-05-04 20:24:33 norume Exp $
  *
  * DESCRIPTION: EPICS sequencer commands
  *
@@ -22,7 +22,6 @@
 #include <cantProceed.h>
 
 #include <seqCom.h>
-#include <seqCommands.h>
 #include <ioccrf.h>
 
 /*
@@ -175,11 +174,8 @@ static void seqChanShowCallFunc(ioccrfArg **args)
     char *name = (char *)args[0]->value;
     char *chan = (char *)args[1]->value;
 
-    if (name != NULL) {
-        id = NULL;
-    } else if ((id = findThread (name)) != NULL)
-        return;
-    seqChanShow (id, chan);
+    if ((name != NULL) && ((id = findThread (name)) != NULL))
+        seqChanShow (id, chan);
 }
 
 /*
