@@ -87,6 +87,11 @@ void phase2()
 	extern	Expr	*ss_list;	/* state sets (from parse) */
 	extern	Expr	*global_c_list;	/* global C code */
 
+    /* Begin C++ declaration */
+    printf ("\n#ifdef __cplusplus\n");
+    printf ("extern \"C\" {\n");
+    printf ("#endif\n");
+
 	/* Count number of db channels and state sets defined */
 	num_queues = db_queue_count();
 	num_channels = db_chan_count();
@@ -123,6 +128,11 @@ void phase2()
 	/* Output global C code */
 	gen_global_c_code();
 
+    /* Finish off C++ declaration */
+    printf ("\n#ifdef __cplusplus\n");
+    printf ("}  /* extern \"C\" */\n");
+    printf ("#endif\n");
+
 	exit(0);
 }
 /* Generate preamble (includes, defines, etc.) */
@@ -130,7 +140,7 @@ void gen_preamble()
 {
 	extern char		*prog_name;
 	extern int		async_opt, conn_opt, debug_opt, reent_opt,
-				main_opt, newef_opt;
+				main_opt, newef_opt, init_reg_opt;
 
 	/* Program name (comment) */
 	printf("\n/* Program \"%s\" */\n", prog_name);
@@ -175,6 +185,20 @@ void gen_preamble()
 	    printf("    return seq((void *)&%s, macro_def, 0);\n", prog_name);
 	    printf("}\n");
 	}
+
+        /* Sequencer registration (if "init_register" option set) */
+    if (init_reg_opt) {
+        printf ("\n/* Register sequencer commands and program */\n");
+        printf ("#ifdef __cplusplus\n");
+        printf ("void seqRegisterSequencerCommands(void);\n");
+        printf ("void seqRegisterSequencerProgram(struct seqProgram *);\n");
+        printf ("\nclass %sInit {\n", prog_name);
+		printf ("public:\n");
+		printf ("    %sInit () { seqRegisterSequencerCommands(); seqRegisterSequencerProgram (&%s); }\n", prog_name, prog_name);
+		printf ("};\n");
+		printf ("static %sInit %sInit;\n", prog_name, prog_name);
+        printf ("#endif\n");
+    }
 
 	return;
 }
