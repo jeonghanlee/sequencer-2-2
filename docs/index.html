@@ -1,0 +1,242 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="Author" content="William Lupton">
+   <meta name="GENERATOR" content="Mozilla/4.5 [en] (X11; I; SunOS 5.6 sun4u) [Netscape]">
+   <meta name="Description" content="Information about the EPICS sequencer.">
+   <meta name="KeyWords" content="EPICS, sequencer, sequencing">
+   <title>EPICS Seq Module</title>
+</head>
+<body text="#000000" bgcolor="#FFFFFF" link="#0000EE" vlink="#551A8B" alink="#FF0000">
+<img SRC="logo101.gif" ALT="EPICS" HSPACE=5 height=101 width=101 align=RIGHT>
+<h1>
+EPICS Seq Module</h1>
+
+<dl>
+<dt>
+Module Owner:</dt>
+
+<dd>
+<a href="mailto:wlupton@keck.hawaii.edu">William Lupton</a></dd>
+</dl>
+This page is the home of the EPICS Seq module, which provides a state notation
+compiler and run-time support for implementing state transition diagrams
+in an EPICS environment. Versions prior to 2.0.0 can only run under VxWorks.
+Versions 2.0.0 or later can run in any environment which implements the
+OSI layer (introduced at EPICS R3.14).
+<p>This site gives access to the software source code, information on other
+modules which are needed to install and run it, and documentation on how
+to include and use it in your EPICS applications.
+<p>Please email any comments and bug reports to <a href="mailto:wlupton@keck.hawaii.edu">William
+Lupton</a> who is responsible for coordinating development and releases.
+<a href="mailto:rwright@lanl.gov">Rozelle
+Wright</a> and <a href="mailto:greg@slac.stanford.edu">Greg White</a> are
+also familiar with this module and may be willing to help with some problems.
+<h2>
+Where to Find it</h2>
+You can download the software by anonymous ftp from the W. M. Keck Observatory
+ftp site at <a href="ftp://ftp.keck.hawaii.edu/pub/epics/seq">ftp://ftp.keck.hawaii.edu/pub/epics/seq</a>,
+or directly from the links in the table below:
+<br>&nbsp;
+<table BORDER >
+<tr ALIGN=CENTER>
+<td><b>Module Version</b></td>
+
+<td><b>EPICS Release</b></td>
+
+<td><b>Filename</b></td>
+
+<td><b>Notes</b></td>
+</tr>
+
+<tr>
+<td>
+<center>1.9.4</center>
+</td>
+
+<td>R3.13.x&nbsp;</td>
+
+<td><a href="ftp://ftp.keck.hawaii.edu/pub/epics/seq/seq-1.9.4.tar.gz">seq-1.9.4.tar.gz</a></td>
+
+<td></td>
+</tr>
+
+<tr>
+<td>
+<center>2.0.0&nbsp;</center>
+</td>
+
+<td>R3.14.x</td>
+
+<td><a href="ftp://ftp.keck.hawaii.edu/pub/epics/seq/seq-2.0.0.tar.gz">seq-2.0.0.tar.gz</a></td>
+
+<td>Not yet available</td>
+</tr>
+</table>
+
+<h2>
+Required Modules</h2>
+Applications using this software will also need these other modules to
+be installed:
+<br>&nbsp;
+<table BORDER >
+<tr ALIGN=CENTER>
+<td><b>Seq Version&nbsp;</b></td>
+
+<td><b>Requires module</b></td>
+
+<td><b>Release needed</b></td>
+</tr>
+
+<tr>
+<td>
+<center>1.9.4</center>
+</td>
+
+<td><a href="http://www.aps.anl.gov/xfd/SoftDist/Welcome.html#EPICS_Releases">EPICS
+base</a></td>
+
+<td>R3.13.x&nbsp;</td>
+</tr>
+
+<tr>
+<td ROWSPAN="2">
+<center>2.0.0&nbsp;</center>
+</td>
+
+<td><a href="http://www.aps.anl.gov/xfd/SoftDist/Welcome.html#EPICS_Releases">EPICS
+base</a></td>
+
+<td>R3.14.x&nbsp;</td>
+</tr>
+</table>
+
+<h2>
+Site Installation and Building</h2>
+After obtaining a copy of the distribution, it must be installed and built
+for use at your site. These steps only need to be performed once for the
+site (unless versions of the module running under different releases of
+EPICS and/or the other required modules are needed).
+<ol>
+<li>
+Create an installation directory for the module; usually this will be of
+the form <tt><i>/path/to/module/</i>seq</tt>.</li>
+
+<li>
+Unpacking the distribution tar file produces a <tt>&lt;<i>supporttop</i>></tt>
+sub-directory named after the version number, <i>e.g.</i> <tt>seq-1.9.4</tt>.</li>
+
+<li>
+Edit the <tt>config/RELEASE</tt> file and set the paths to your installation
+of EPICS.</li>
+
+<li>
+Run <tt>gnumake</tt> in the top level directory and check for any compilation
+errors.</li>
+
+<li>
+Please email <a href="mailto:wlupton@keck.hawaii.edu">William Lupton</a>
+so he can keep track of which sites are using this software.</li>
+</ol>
+
+<h2>
+Application Installation</h2>
+To use the installed and built support software in an <tt>&lt;<i>ioctop</i>></tt>
+application, make the following changes to the application:
+<ol>
+<li>
+Ensure that it is not using the version of <tt>snc</tt> from EPICS base
+(EPICS base does not contain a file called <tt>libSeq</tt> so this is not
+a problem)</li>
+
+<li>
+Edit the <tt>config/RELEASE</tt> file and add the line</li>
+
+<ol><tt>SEQ=<i>/path/to/module/</i>seq<i>/version</i></tt></ol>
+
+<li>
+Edit the <tt>config/CONFIG_APP</tt> file and add the lines</li>
+
+<ol><tt>ifdef SEQ</tt>
+<br><tt>USR_INCLUDES += -I$(SEQ)/include</tt>
+<br><tt>SEQ_BIN = $(SEQ)/bin/$(T_A)</tt>
+<br><tt>endif</tt></ol>
+
+<li>
+In the application source directory if the EPICS base object files are
+linked together, edit Makefile.Vx and add</li>
+
+<ol><tt>ifdef SEQ</tt>
+<br><tt>LIBOJBS += $(SEQ_BIN)/seqLib</tt>
+<br><tt>endif</tt></ol>
+
+<li>
+Pending a better way of doing this, arrange to use the correct version
+of snc (state notation compiler) by editing <tt>config/CONFIG</tt> and
+adding</li>
+
+<ol><tt>ifdef SEQ</tt>
+<br><tt>SNC = $(SEQ)/bin/$(HOST_ARCH)/snc</tt>
+<br><tt>endif</tt></ol>
+
+<li>
+Rebuild the application and use the newly installed module as desired.</li>
+</ol>
+
+<h2>
+Documentation</h2>
+The following documentation is available:
+<ul>
+<li>
+State Notation Language and Sequencer Users Guide (<a href="snl_2_0_man.pdf">PDF
+- 190kB</a>) (<a href="snl_2_0_man.ps">PostScript - US Letter - 240kB</a>)</li>
+
+<li>
+Release notes (HTML) ... not yet available</li>
+</ul>
+
+<h2>
+In Use</h2>
+This software was originally developed by <a href="mailto:mkozubal@lanl.gov">Andy
+Kozubal</a> at <a href="http://mesa53.lanl.gov/lansce8/Epics/epics.htm">Los
+Alamos National Laboratory (LANL)</a>. It has subsequently been developed
+by <a href="mailto:wlupton@keck.hawaii.edu">William Lupton</a> at&nbsp;
+the <a href="http://www2.keck.hawaii.edu:3636/realpublic/epics/">W. M.
+Keck Observatory (Keck)</a>, with contributions by <a href="mailto:greg@slac.stanford.edu">Greg
+White</a> of <a href="http://www.slac.stanford.edu">Stanford Linear Accelerator
+Center (SLAC)</a>. Versions up to 1.9.2 were part of EPICS base and were
+or are being used at most EPICS sites.
+<p>Version 1.9.3 has been used at various EPICS sites, including
+<ul>
+<li>
+Keck</li>
+
+<li>
+JLAB?</li>
+
+<li>
+LANL?</li>
+
+<li>
+Gemini?</li>
+</ul>
+Version 1.9.4 is the first version to be distributed as an unbundled module.
+It is being used at the following EPICS sites:
+<ul>
+<li>
+none yet</li>
+</ul>
+Version 2.0.0 is the first version which runs under operating systems other
+than VxWorks. It is being used at the following EPICS sites:
+<ul>
+<li>
+none yet</li>
+</ul>
+
+<hr WIDTH="100%">
+<address>
+<a href="mailto:wlupton@keck.hawaii.edu">William Lupton</a>, 13-Oct-99</address>
+
+</body>
+</html>

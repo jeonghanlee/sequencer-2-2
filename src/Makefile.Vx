@@ -13,14 +13,14 @@ SRCS.c = $(NAMES:%=../%.c)
 OBJS   = $(NAMES:%=%.o) seqVersion.o
 
 #  Product
-PROD = seq
+PROD = seq seqLib
 
 include $(TOP)/config/RULES.Vx
 #----------------------------------------
 #  ADD RULES AFTER THIS LINE
 
-#  How to build the sequencer
-seq: $(OBJS)
+#  How to build the sequencer ("seq" is deprecated)
+seq seqLib: $(OBJS)
 	$(RM) $@
 	$(LINK.c) $@ $(OBJS) $(LDLIBS)
 
