@@ -1,4 +1,4 @@
-/* $Id: pvCa.cc,v 1.4 2001-03-21 15:03:35 mrk Exp $
+/* $Id: pvCa.cc,v 1.5 2001-03-21 19:42:45 mrk Exp $
  *
  * Implementation of EPICS sequencer CA library (pvCa)
  *
@@ -16,9 +16,9 @@
 
 /* handlers */
 extern "C" {
-static void connectionHandler( struct connection_handler_args args );
-static void accessHandler( struct event_handler_args args );
-static void monitorHandler( struct event_handler_args args );
+void pvCaConnectionHandler( struct connection_handler_args args );
+void pvCaAccessHandler( struct event_handler_args args );
+void pvCaMonitorHandler( struct event_handler_args args );
 }
 
 /* utilities */
@@ -166,7 +166,7 @@ epicsShareFunc caVariable::caVariable( caSystem *system, const char *name, pvCon
 		this, name, debug );
 
     if ( getFunc() != NULL )
-	INVOKE( ca_search_and_connect( name, &chid_, connectionHandler, this ));
+	INVOKE( ca_search_and_connect( name, &chid_, pvCaConnectionHandler, this ));
     else
 	INVOKE( ca_search_and_connect( name, &chid_, NULL, NULL ));
 }
@@ -247,7 +247,7 @@ epicsShareFunc pvStat caVariable::getCallback( pvType type, int count,
 					   getDebug() );
 
     INVOKE( ca_array_get_callback( typeToCA( type ), count, chid_,
-				   accessHandler, callback ) );
+				   pvCaAccessHandler, callback ) );
     return getStat();
 }
 
@@ -312,7 +312,7 @@ epicsShareFunc pvStat caVariable::putCallback( pvType type, int count, pvValue *
 					   getDebug() );
 
     INVOKE( ca_array_put_callback( typeToCA( type ), count, chid_, value,
-				   accessHandler, callback ) );
+				   pvCaAccessHandler, callback ) );
     return getStat();
 }
 
@@ -335,7 +335,7 @@ epicsShareFunc pvStat caVariable::monitorOn( pvType type, int count, pvEventFunc
 
     evid id = NULL;
     INVOKE( ca_add_masked_array_event( typeToCA( type ), count, chid_,
-			monitorHandler, callback, 0.0, 0.0, 0.0,
+			pvCaMonitorHandler, callback, 0.0, 0.0, 0.0,
 			&id, DBE_VALUE|DBE_ALARM  ) );
     callback->setPrivate( id );
 
@@ -413,13 +413,13 @@ epicsShareFunc int caVariable::getCount() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /*+
- * Routine:     connectionHandler
+ * Routine:     pvCaConnectionHandler
  *
  * Purpose:     CA connection handler
  *
  * Description:
  */
-static void connectionHandler( struct connection_handler_args args )
+void pvCaConnectionHandler( struct connection_handler_args args )
 {
     pvVariable *variable = ( pvVariable * ) ca_puser( args.chid );
     pvConnFunc func = variable->getFunc();
@@ -428,28 +428,28 @@ static void connectionHandler( struct connection_handler_args args )
 }
 
 /*+
- * Routine:     accessHandler
+ * Routine:     pvCaAccessHandler
  *
  * Purpose:     CA get/put callback event handler
  *
  * Description:
  */
-static void accessHandler( struct event_handler_args args )
+void pvCaAccessHandler( struct event_handler_args args )
 {
-    monitorHandler( args );
+    pvCaMonitorHandler( args );
 
     pvCallback *callback = ( pvCallback * ) args.usr;
     delete callback;
 }
 
 /*+
- * Routine:     monitorHandler
+ * Routine:     pvCaMonitorHandler
  *
  * Purpose:     CA monitor event handler
  *
  * Description:
  */
-static void monitorHandler( struct event_handler_args args )
+void pvCaMonitorHandler( struct event_handler_args args )
 {
     pvCallback *callback = ( pvCallback * ) args.usr;
     pvEventFunc func = callback->getFunc();
@@ -779,6 +779,9 @@ static void copyFromCA( int type, int count,
 
 /*
  * $Log: not supported by cvs2svn $
+ * Revision 1.4  2001/03/21 15:03:35  mrk
+ * declare extern "C"
+ *
  * Revision 1.3  2001/03/09 21:11:51  mrk
  * ca_pend no longer exists
  *
