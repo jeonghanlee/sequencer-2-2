@@ -1,6 +1,15 @@
-# $Id: RULES_BUILD,v 1.3 2001-02-23 22:01:03 mrk Exp $
+# $Id: RULES_BUILD,v 1.4 2001-02-27 22:43:25 jba Exp $
 #
 #	State notation language (snc) rules
+
+vpath %.st $(USR_VPATH) $(ALL_SRC_DIRS)
+vpath %.stt $(USR_VPATH) $(ALL_SRC_DIRS)
+
+STT_SRC_FILES = $(notdir $(filter %.stt,$(SRC_FILES)))
+ST_SRC_FILES = $(notdir $(filter %.st,$(SRC_FILES)))
+DEPENDS_SRC_FILES = $(filter-out %.st %.stt,$(SRC_FILES)) \
+                    $(STT_SRC_FILES:.stt=_snc.c) $(ST_SRC_FILES:.st=_snc.c) \
+                    $(STT_SRC_FILES:.stt=_sncreg.cpp) $(ST_SRC_FILES:.st=_sncreg.cpp)
 
 ifndef SNCSEQ
 SNCSEQ=$(TOP)
