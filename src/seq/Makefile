@@ -30,5 +30,4 @@ include $(TOP)/configure/RULES
 #  How to generate the version files
 seqVersion.c: $(TOP)/configure/CONFIG
 	$(RM) $@
-	sh ../$(basename $@) $(SEQ_VERSION) > $@
-
+	$(PERL) ../seqVersion.pl $(SEQ_VERSION) > $@
