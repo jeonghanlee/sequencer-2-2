@@ -32,7 +32,7 @@ snc$(OBJ): snc_lex.c
 #  How to generate the version file
 sncVersion.c: $(TOP)/configure/CONFIG
 	$(RM) $@
-	sh ../$(basename $@) $(SEQ_VERSION) > $@
+	$(PERL) ../sncVersion.pl $(SEQ_VERSION) > $@
 
 clean::
 	@$(RM) snc.c snc_lex.c
