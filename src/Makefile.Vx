@@ -10,7 +10,7 @@ INC = seqCom.h
 #  Source/object files
 NAMES  = seq_main seq_ca seq_qry seq_task seq_mac seq_prog seq_if
 SRCS.c = $(NAMES:%=../%.c)
-OBJS   = $(NAMES:%=%.o)
+OBJS   = $(NAMES:%=%.o) seqVersion.o
 
 #  Product
 PROD = seq
