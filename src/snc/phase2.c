@@ -182,6 +182,7 @@ void gen_preamble()
 	    printf("    macro_def = (argc>1)?argv[1]:NULL;\n");
 	    printf("    threadId = seq((void *)&%s, macro_def, 0);\n", prog_name);
             printf("    if(callIocsh) {\n");
+            printf("        seqRegisterSequencerCommands();\n");
             printf("        iocsh(0);\n");
             printf("    } else {\n");
             printf("        epicsThreadExitMain();\n");
