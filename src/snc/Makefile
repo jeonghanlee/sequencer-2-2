@@ -17,9 +17,10 @@ SRCS	= snc_main.c parse.c phase2.c gen_ss_code.c gen_tables.c snc.c \
           sncVersion.c
 
 #  Lex library
-SYS_PROD_LIBS_WIN32   += -nil-
-SYS_PROD_LIBS_Linux   += fl
-SYS_PROD_LIBS_DEFAULT += l
+SYS_PROD_LIBS_WIN32    += -nil-
+SYS_PROD_LIBS_cygwin32 += -nil-
+SYS_PROD_LIBS_Linux    += fl
+SYS_PROD_LIBS_DEFAULT  += l
 
 include $(TOP)/configure/RULES
 #----------------------------------------
