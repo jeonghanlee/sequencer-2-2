@@ -80,6 +80,13 @@ epicsShareFunc long seq_connect(SPROG *pSP)
 	int		status, i;
 	extern		void seq_conn_handler();
 
+	for (i = 0, pDB = pSP->pChan; i < pSP->numChans; i++, pDB++)
+	{
+		if (pDB->dbName == NULL || pDB->dbName[0] == 0)
+			continue; /* skip records without pv names */
+		pSP->assignCount += 1; /* keep track of number of *assigned* channels */
+		if (pDB->monFlag) pSP->numMonitoredChans++;/*do it before pvVarCreate*/
+	}
 	/*
 	 * For each channel: connect to db & issue monitor (if monFlag is TRUE).
 	 */
@@ -87,9 +94,6 @@ epicsShareFunc long seq_connect(SPROG *pSP)
 	{
 		if (pDB->dbName == NULL || pDB->dbName[0] == 0)
 			continue; /* skip records without pv names */
-		pDB->assigned = TRUE;
-		pSP->assignCount += 1; /* keep track of number of *assigned* channels */
-		if (pDB->monFlag) pSP->numMonitoredChans++;/*do it before pvVarCreate*/
 #ifdef	DEBUG
 		errlogPrintf("seq_connect: connect %s to %s\n", pDB->pVarName,
 			pDB->dbName);
@@ -108,6 +112,7 @@ epicsShareFunc long seq_connect(SPROG *pSP)
 				"%s\n", pDB->dbName, pvVarGetMess(pDB->pvid));
 			return status;
 		}
+		pDB->assigned = TRUE;
 		/* Clear monitor indicator */
 		pDB->monitored = FALSE;
 
