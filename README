@@ -32,6 +32,9 @@ Directory structure is:
 			run-time behaviour. A very brief header in each
 			file describes what they test
 
+        /demo		An application that has a database.
+			See demo/README for how to run the demo/
+
 	/bad		Files that contain deliberate errors, used for
 			testing snc compiler error handling 
 
