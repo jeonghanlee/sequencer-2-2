@@ -242,7 +242,6 @@ typedef struct auxiliary_args AUXARGS;
 epicsShareFunc epicsThreadId epicsShareAPI seq (struct seqProgram *, char *, unsigned int);
 void	seqWakeup (SPROG *, long);
 void	seqFree (SPROG *);
-long	seqStop(epicsThreadId tid);
 long	sequencer (SPROG *);
 long	sprogDelete (long);
 long	seqMacParse (char *, SPROG *);
@@ -250,9 +249,6 @@ char	*seqMacValGet (MACRO *, char *);
 void	seqMacEval (char *, char *, long, MACRO *);
 epicsStatus seq_log ();
 SPROG	*seqFindProg (epicsThreadId);
-long	seqShow (epicsThreadId);
-long	seqChanShow (epicsThreadId, char *);
-long	seqQueueShow (epicsThreadId tid);
 SPROG  *seqFindProg(epicsThreadId tid);
 epicsShareFunc SPROG  *epicsShareAPI seqFindProgByName(char *);
 
