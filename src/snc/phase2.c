@@ -684,8 +684,6 @@ void gen_init_reg()
 	if (init_reg_opt) {
 	    printf ("\n#else /* __cplusplus */\n");
 	    printf ("\n/* Register sequencer commands and program */\n\n");
-	    printf ("extern \"C\" void seqRegisterSequencerCommands(void);\n");
-	    printf ("extern \"C\" void seqRegisterSequencerProgram(struct seqProgram *);\n");
 	    printf ("\nclass %sInit {\n", prog_name);
 	    printf ("public:\n");
 	    printf ("    %sInit () { seqRegisterSequencerCommands(); seqRegisterSequencerProgram (&%s); }\n", prog_name, prog_name);
