@@ -11,11 +11,6 @@
 #
 #--------------------------------------------------------------
 #  Mod:
-#       9-Sep-99 Greg (greg@slac.stanford.edu)
-#       Added redefinition of SNC, so as to use snc in local makebaseApp 
-#       filesystem. William will take this out or fix it up.
-#       
-#
 #==============================================================
 #
 # default definition for local epics directory
@@ -25,10 +20,6 @@ include $(TOP)/config/CONFIG_APP
 #  ADD MACRO DEFINITIONS AFTER THIS LINE
 #
 #INC += xxx.h
-
-# This redefines the macro which invokes the snc compiler, to use the version
-# in this "makeBaseApp" filesystem.
-SNC = ${TOP}/bin/${HOST_ARCH}/snc
 
 USR_CFLAGS   += -O0
 
