@@ -843,6 +843,7 @@ char		*fname;
 	extern char		*src_file;
 
 	line_num = atoi(line);
+	if (fname != 0)
 	src_file = fname;
 }
 
