@@ -34,6 +34,7 @@
 ?????96,joh 	Fixed problem with delay calculations.
 22sep99,grw     Supported entry and exit actions; supported state options.
 15feb00,wfl	Fixed problem (introduced by wfl) with sequencer deletion.
+16feb00,wfl	Fixed further sequencer deletion problem (close of stdout).
 ***************************************************************************/
 /*#define		DEBUG*/
 
@@ -501,7 +502,9 @@ LOCAL long seq_cleanup(int tid, SPROG *pSP, SEM_ID cleanupSem)
 #ifdef	DEBUG_CLEANUP
 		logMsg("Closing log fd=%d\n", pSP->logFd, 0,0,0,0,0);
 #endif	/*DEBUG_CLEANUP*/
+#if 0	/* ref. "more on sequencer deletion", tech-talk, 2000/02/16 */
 		close(pSP->logFd);
+#endif
 		pSP->logFd = ioGlobalStdGet(1);
 	}
 
