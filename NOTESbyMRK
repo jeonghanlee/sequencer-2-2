@@ -1,4 +1,23 @@
-Version seq-2-0-5 of the sequencer
+Recent Changes
+--------------
+
+Version 2.0.5 of the sequencer contains the following changes:
+
+Replaced the C++ static constructor used for command registration with a
+generated registrar routine that must be listed in an IOC's xxxInclude.dbd file
+for use on on non-vxWorks systems.  This approach permits sequence programs to
+be placed in an external support library and pulled in automatically by adding
+the registrar() statement in the xxxInclude.dbd and linking the IOC application
+against that library.  For a sequence program that starts:
+    program demo ...
+the dbd file should contain the statement
+    registrar(demoRegistrar)
+This is only required for applications that use the iocshell, vxWorks IOCs will
+work as before.
+
+
+Modifications to the demo/test programs needed to run these under Base
+R3.14.3.
 
 The config directory has been removed.
 
