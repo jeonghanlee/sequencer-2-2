@@ -22,9 +22,7 @@ demo_SRCS_vxWorks += -nil-
 demo_OBJS_vxWorks += $(EPICS_BASE_BIN)/vxComLibrary
 
 demo_SRCS += demo.st
-demo_OBJS += $(INSTALL_BIN)/devSequencer.o
-demo_LIBS += seq pv
-#seq_DIR = $(SNCSEQ_LIB)
+demo_LIBS += seqDev seq pv
 demo_LIBS += $(EPICS_BASE_IOC_LIBS)
 
 include $(TOP)/configure/RULES
