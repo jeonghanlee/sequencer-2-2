@@ -28,7 +28,7 @@ LIBRARY_vxWorks = demo
 
 #  Sources (CA only)
 ifeq "$(PVCA)" "TRUE"
-demo_SRCS = demoMain
+demo_SRCS = demoMain.c
 endif
 
 #  Includes and libraries
