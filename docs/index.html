@@ -11,7 +11,7 @@
 <body text="#000000" bgcolor="#FFFFFF" link="#0000EE" vlink="#551A8B" alink="#FF0000">
 <img SRC="logo101.gif" ALT="EPICS" HSPACE=5 height=101 width=101 align=RIGHT>
 <h1>
-EPICS Seq Module</h1>
+EPICS seq Module</h1>
 
 <dl>
 <dt>
@@ -20,7 +20,7 @@ Module Owner:</dt>
 <dd>
 <a href="mailto:wlupton@keck.hawaii.edu">William Lupton</a></dd>
 </dl>
-This page is the home of the EPICS Seq module, which provides a state notation
+This page is the home of the EPICS seq module, which provides a state notation
 compiler and run-time support for implementing state transition diagrams
 in an EPICS environment. Versions prior to 2.0.0 can only run under VxWorks.
 Versions 2.0.0 or later can run in any environment which implements the
@@ -81,9 +81,9 @@ or directly from the links in the table below:
 
 <td>R3.14.x</td>
 
-<td><a href="ftp://ftp.keck.hawaii.edu/pub/epics/seq/seq-2.0.0.tar.gz">seq-2.0.0.tar.gz</a></td>
+<td><a href="seq-2.0.0.tar.gz">seq-2.0.0.tar.gz</a></td>
 
-<td>Not yet available</td>
+<td></td>
 </tr>
 </table>
 
@@ -139,8 +139,7 @@ base</a></td>
 Site Installation and Building</h2>
 After obtaining a copy of the distribution, it must be installed and built
 for use at your site. These steps only need to be performed once for the
-site (unless versions of the module running under different releases of
-EPICS and/or the other required modules are needed).
+site.
 <ol>
 <li>
 Create an installation directory for the module; usually this will be of
@@ -148,11 +147,15 @@ the form <tt><i>/path/to/module/</i>seq</tt>.</li>
 
 <li>
 Unpacking the distribution tar file produces a <tt>&lt;<i>supporttop</i>></tt>
-sub-directory named after the version number, <i>e.g.</i> <tt>seq-1.9.5</tt>.</li>
+sub-directory named after the version number, <i>e.g.</i> <tt>seq-2.0.0</tt>.</li>
 
 <li>
-Edit the <tt>config/RELEASE</tt> file and set the paths to your installation
-of EPICS.</li>
+Edit the <tt>configure/RELEASE</tt> file and set the <tt>EPICS_BASE</tt>
+and <tt>SEQ</tt> variables.</li>
+
+<li>
+Edit the <tt>configure/CONFIG</tt> file and set the <tt>CROSS_COMPILER_TARGET_ARCHS</tt>
+and <tt>PVXXX</tt> variables</li>
 
 <li>
 Run <tt>gnumake</tt> in the top level directory and check for any compilation
@@ -169,42 +172,26 @@ To use the installed and built support software in an <tt>&lt;<i>ioctop</i>></tt
 application, make the following changes to the application:
 <ol>
 <li>
-Ensure that it is not using the version of <tt>snc</tt> from EPICS base
-(EPICS base does not contain a file called <tt>libSeq</tt> so this is not
-a problem)</li>
+Edit the <tt>configure/RELEASE</tt> file and add the line</li>
+
+<ol><tt>SEQ=<i>/path/to/module/</i>seq-<i>version</i></tt></ol>
 
 <li>
-Edit the <tt>config/RELEASE</tt> file and add the line</li>
+Edit the <tt>configure/CONFIG</tt> file and add the line</li>
 
-<ol><tt>SEQ=<i>/path/to/module/</i>seq<i>/version</i></tt></ol>
-
-<li>
-Edit the <tt>config/CONFIG_APP</tt> file and add the lines</li>
-
-<ol><tt>ifdef SEQ</tt>
-<br><tt>USR_INCLUDES += -I$(SEQ)/include</tt>
-<br><tt>SEQ_BIN = $(SEQ)/bin/$(T_A)</tt>
-<br><tt>endif</tt></ol>
+<ol><tt>SNC=$(SEQ)/bin/$(EPICS_HOST_ARCH)/snc</tt></ol>
 
 <li>
-In the application source directory if the EPICS base object files are
-linked together, edit Makefile.Vx and add</li>
+In the application source directories, edit <tt>Makefile</tt> to search
+<tt>SEQ_LIB</tt>
+for sequencer libraries. <i>e.g.</i></li>
 
-<ol><tt>ifdef SEQ</tt>
-<br><tt>LIBOJBS += $(SEQ_BIN)/seqLib</tt>
-<br><tt>endif</tt></ol>
-
-<li>
-Pending a better way of doing this, arrange to use the correct version
-of snc (state notation compiler) by editing <tt>config/CONFIG</tt> and
-adding</li>
-
-<ol><tt>ifdef SEQ</tt>
-<br><tt>SNC = $(SEQ)/bin/$(HOST_ARCH)/snc</tt>
-<br><tt>endif</tt></ol>
+<ol><tt>PROD_LIBS += seq pv pvCa</tt>
+<br><tt>seq_DIR&nbsp;&nbsp;&nbsp; = $(SEQ_LIB)</tt></ol>
 
 <li>
-Rebuild the application and use the newly installed module as desired.</li>
+Rebuild the application (including its <tt>configure</tt> directory) and
+use the newly installed module as desired.</li>
 </ol>
 
 <h2>
@@ -212,11 +199,13 @@ Documentation</h2>
 The following documentation is available:
 <ul>
 <li>
-State Notation Language and Sequencer Users Guide (<a href="snl_2_0_man.pdf">PDF
-- 190kB</a>) (<a href="snl_2_0_man.ps">PostScript - US Letter - 240kB</a>)</li>
+<a href="Manual.html">State Notation Language and Sequencer Users'
+Guide</a> (<a href="Manual.pdf">PDF - 590kB</a>) (<a href="Manual.ps">PostScript
+- US Letter - 1.7MB</a>)</li>
 
 <li>
-Release notes (HTML) ... not yet available</li>
+<a href="Manual-2.html#pgfId-691773">Release notes</a> and <a href="Manual-9.html">installation
+instructions</a> are contained within the Users' Guide</li>
 </ul>
 
 <h2>
@@ -268,7 +257,7 @@ none yet</li>
 
 <hr WIDTH="100%">
 <address>
-<a href="mailto:wlupton@keck.hawaii.edu">William Lupton</a>, 15-Feb-00</address>
+<a href="mailto:wlupton@keck.hawaii.edu">William Lupton</a>, 03-Apr-00</address>
 
 </body>
 </html>
