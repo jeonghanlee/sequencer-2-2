@@ -1,4 +1,4 @@
-# $Id: RULES_BUILD,v 1.9 2001-03-23 20:58:29 jba Exp $
+# $Id: RULES_BUILD,v 1.10 2002-08-13 16:01:49 jba Exp $
 #
 #	State notation language (snc) rules
 # Each <name>.st (or <name>.stt) produces <name>.c and <name>_sncreg.cpp
@@ -46,7 +46,7 @@ vpath %.stt $(USR_VPATH) $(ALL_SRC_DIRS)
 SNC_SRC_FILES = $(basename $(notdir $(filter %.st %.stt,$(SRC_FILES))))
 SNC_CSRC_FILES =  $(addsuffix .c,$(SNC_SRC_FILES)) \
                          $(addsuffix _sncreg.cpp,$(SNC_SRC_FILES))
-DEPENDS_SRC_FILES = $(filter-out %.st %.stt,$(SRC_FILES))  $(SNC_CSRC_FILES)
+HDEPENDS_FILES_YES += $(addsuffix $(DEP),$(basename $(SNC_CSRC_FILES)))
 
 #--------------------------------------------------
 # Directory definitions
