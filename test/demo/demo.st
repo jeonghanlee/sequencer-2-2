@@ -1,4 +1,4 @@
-/* $Id: demo.st,v 1.1.1.1 2000-04-04 03:23:05 wlupton Exp $
+/* $Id: demo.st,v 1.1.1.2 2000-04-25 19:15:14 wlupton Exp $
  *
  * Demo EPICS sequence
  */
@@ -10,12 +10,12 @@
 
 #define PVSYS	 "pvsys=ktl"
 
-#define LIGHT	 "demoX.light"
-#define LIGHTON	 "demoX.lighton"
-#define LIGHTOFF "demoX.lightoff"
-#define VOLTAGE	 "demoX.voltage"
-#define LOLIMIT	 "demoX.lolimit"
-#define HILIMIT	 "demoX.hilimit"
+#define LIGHT	 "demo.light"
+#define LIGHTON	 "demo.lighton"
+#define LIGHTOFF "demo.lightoff"
+#define VOLTAGE	 "demo.voltage"
+#define LOLIMIT	 "demo.lolimit"
+#define HILIMIT	 "demo.hilimit"
 
 #else
 

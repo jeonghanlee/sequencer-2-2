@@ -4534,7 +4534,7 @@
  <DViewRect 24 26 738 889 >
  <DWindowRect 0 0 0 0 >
  <DViewScale  140.0%>
- <DNextUnique 806724>
+ <DNextUnique 806728>
  <DPageSize  8.5" 11.0">
  <DMenuBar `'>
  <DVoMenuBar `'>
@@ -21277,24 +21277,25 @@
     <FTag `Key word'>
     <FLocked No>
    > # end of Font
-   <String `$SUPPORT/lib/$EPICS_HOST_ARCH'>
+   <String `$SEQ/lib/$EPICS_HOST_ARCH'>
    <Font 
     <FTag `'>
     <FLocked No>
    > # end of Font
    <String `, where '>
-  > # end of ParaLine
-  <ParaLine 
    <Font 
     <FTag `Key word'>
     <FLocked No>
    > # end of Font
-   <String `SUPPORT'>
+   <String `SEQ'>
    <Font 
     <FTag `'>
     <FLocked No>
    > # end of Font
-   <String ` has the value that you gave it in '>
+   <String ` has the '>
+  > # end of ParaLine
+  <ParaLine 
+   <String `value that you gave it in '>
    <Font 
     <FTag `Key word'>
     <FLocked No>
@@ -21325,7 +21326,7 @@
     <FTag `Key word'>
     <FLocked No>
    > # end of Font
-   <String `$SUPPORT/bin/$EPICS_HOST_ARCH'>
+   <String `$SEQ/bin/$EPICS_HOST_ARCH'>
    <Font 
     <FTag `'>
     <FLocked No>
@@ -21401,7 +21402,7 @@
   <Unique 791731>
   <PgfTag `PROGRAM'>
   <ParaLine 
-   <String `###  @(#)Version R3.14.0.alpha $$Date: 2000-04-04 03:21:21 $$'>
+   <String `###  @(#)Version R3.14.0.alpha $$Date: 2000-04-25 19:13:01 $$'>
   > # end of ParaLine
  > # end of Para
  <Para 
@@ -22080,7 +22081,7 @@
     <XRefSrcText `30450: HEADING1: 3.8 Using makeBaseApp'>
     <XRefSrcIsElem No>
     <XRefSrcFile `<c\>Compiling.fm'>
-    <XRefLastUpdate  954813173 123908>
+    <XRefLastUpdate  954879845 50666>
     <Unique 792246>
    > # end of XRef
    <String `Section'>
@@ -22128,7 +22129,7 @@
     <XRefSrcText `30287: HEADING1: 8.4 Preparing to build'>
     <XRefSrcIsElem No>
     <XRefSrcFile `'>
-    <XRefLastUpdate  954813172 963557>
+    <XRefLastUpdate  956688162 569886>
     <Unique 792164>
    > # end of XRef
    <String `Section'>

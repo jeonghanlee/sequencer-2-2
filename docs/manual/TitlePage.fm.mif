@@ -4339,7 +4339,7 @@
  <DViewRect 24 26 747 891 >
  <DWindowRect 0 0 0 0 >
  <DViewScale  120.0%>
- <DNextUnique 822150>
+ <DNextUnique 822164>
  <DPageSize  8.5" 11.0">
  <DMenuBar `'>
  <DVoMenuBar `'>
@@ -51067,8 +51067,8 @@
   <Pen 15>
   <PenWidth  1.0 pt>
   <Overprint No>
-  <ShapeRect  1.0" 3.5" 6.75" 1.125">
-  <BRect  1.0" 3.5" 6.75" 1.125">
+  <ShapeRect  1.0" 3.5" 6.75" 1.25">
+  <BRect  1.0" 3.5" 6.75" 1.25">
   <TRNumColumns 1>
   <TRColumnGap  0.25">
   <TRColumnBalance No>
@@ -51092,8 +51092,8 @@
   <Pen 15>
   <PenWidth  1.0 pt>
   <Overprint No>
-  <ShapeRect  1.0" 4.875" 6.75" 5.0">
-  <BRect  1.0" 4.875" 6.75" 5.0">
+  <ShapeRect  1.0" 5.0" 6.75" 4.875">
+  <BRect  1.0" 5.0" 6.75" 4.875">
   <TRNumColumns 1>
   <TRColumnGap  0.25">
   <TRColumnBalance No>
@@ -51108,8 +51108,8 @@
   <PenWidth  0.5 pt>
   <Overprint No>
   <NumPoints 2>
-  <Point  1.0" 4.75">
-  <Point  7.75" 4.75">
+  <Point  1.0" 4.87731">
+  <Point  7.75" 4.87731">
  > # end of PolyLine
 > # end of Page
 <Page 
@@ -51802,10 +51802,10 @@
  > # end of TextRect
  <TextRect 
   <ID 41>
-  <Unique 790177>
+  <Unique 822157>
   <Overprint No>
-  <ShapeRect  1.0" 3.5" 6.75" 1.125">
-  <BRect  1.0" 3.5" 6.75" 1.125">
+  <ShapeRect  1.0" 3.5" 6.75" 1.25">
+  <BRect  1.0" 3.5" 6.75" 1.25">
   <TRNumColumns 1>
   <TRColumnGap  0.25">
   <TRColumnBalance No>
@@ -51816,10 +51816,10 @@
  > # end of TextRect
  <TextRect 
   <ID 42>
-  <Unique 790179>
+  <Unique 822159>
   <Overprint No>
-  <ShapeRect  1.0" 4.875" 6.75" 5.0">
-  <BRect  1.0" 4.875" 6.75" 5.0">
+  <ShapeRect  1.0" 5.0" 6.75" 4.875">
+  <BRect  1.0" 5.0" 6.75" 4.875">
   <TRNumColumns 1>
   <TRColumnGap  0.25">
   <TRColumnBalance No>
@@ -52963,7 +52963,7 @@
   <Unique 789625>
   <PgfTag `ADDRESS'>
   <ParaLine 
-   <String `March 2000'>
+   <String `April 2000'>
   > # end of ParaLine
  > # end of Para
  <Para 
@@ -52974,10 +52974,10 @@
   > # end of ParaLine
  > # end of Para
  <Para 
-  <Unique 789709>
-  <PgfTag `BODY'>
+  <Unique 822163>
+  <PgfTag `ADDRESS'>
   <ParaLine 
-   <TextRectID 42>
+   <String `Sequencer Version 2.0'>
   > # end of ParaLine
  > # end of Para
 > # end of TextFlow
@@ -52990,11 +52990,7 @@
   <Unique 799348>
   <Pgf 
    <PgfTag `Body'>
-   <PgfUseNextTag No>
-   <PgfNextTag `'>
-   <PgfSpBefore  0.0 pt>
-   <PgfSpAfter  0.0 pt>
-   <PgfBlockSize 1>
+   <PgfAlignment LeftRight>
    <PgfFont 
     <FTag `'>
     <FFamily `Times'>
@@ -53023,7 +53019,7 @@
     <FSeparation 0>
     <FColor `Black'>
    > # end of PgfFont
-   <PgfHyphenate Yes>
+   <PgfLineSpacing Fixed>
    <HyphenMinPrefix 2>
    <HyphenMinSuffix 2>
    <PgfMinWordSpace 75>

@@ -4534,7 +4534,7 @@
  <DViewRect 39 26 746 891 >
  <DWindowRect 0 0 0 0 >
  <DViewScale  140.0%>
- <DNextUnique 719128>
+ <DNextUnique 719134>
  <DPageSize  8.5" 11.0">
  <DMenuBar `'>
  <DVoMenuBar `'>
@@ -22944,7 +22944,7 @@
     <XRefSrcText `23466: UHEADING3: Overview'>
     <XRefSrcIsElem No>
     <XRefSrcFile `'>
-    <XRefLastUpdate  954813164 590453>
+    <XRefLastUpdate  956688158 601598>
     <Unique 703413>
    > # end of XRef
    <String `\xd2 '>
@@ -24154,7 +24154,7 @@
     <XRefSrcText `93844: UHEADING2: 6.5.2 Example'>
     <XRefSrcIsElem No>
     <XRefSrcFile `'>
-    <XRefLastUpdate  954813164 595205>
+    <XRefLastUpdate  956688158 602471>
     <Unique 704374>
    > # end of XRef
    <String `Section'>
@@ -24262,7 +24262,7 @@
     <XRefSrcText `62364: UHEADING3: pvNew.cc'>
     <XRefSrcIsElem No>
     <XRefSrcFile `'>
-    <XRefLastUpdate  954813164 591245>
+    <XRefLastUpdate  956688158 601891>
     <Unique 704335>
    > # end of XRef
    <String `\xd2 '>
@@ -24283,7 +24283,7 @@
    <String `Edit configure/'>
   > # end of ParaLine
   <ParaLine 
-   <String `RELEASE'>
+   <String `CONFIG'>
   > # end of ParaLine
  > # end of Para
  <Para 
@@ -24296,7 +24296,7 @@
     <FTag `Key word'>
     <FLocked No>
    > # end of Font
-   <String `configure/RELEASE'>
+   <String `configure/CONFIG'>
    <Font 
     <FTag `'>
     <FLocked No>
@@ -24311,20 +24311,20 @@
     <FTag `'>
     <FLocked No>
    > # end of Font
-   <String ` make '>
+   <String ` make macros. '>
   > # end of ParaLine
   <ParaLine 
-   <String `macros. See '>
+   <String `See '>
    <XRef 
     <XRefName `Heading & Page'>
     <XRefSrcText `99703: UHEADING3: configure/RELEASE'>
     <XRefSrcIsElem No>
     <XRefSrcFile `'>
-    <XRefLastUpdate  954813164 591509>
+    <XRefLastUpdate  956688158 602165>
     <Unique 704366>
    > # end of XRef
    <String `\xd2 '>
-   <String `configure/RELEASE'>
+   <String `configure/CONFIG'>
    <String `\xd3  on page'>
    <Char HardSpace>
    <String `51'>
@@ -24375,7 +24375,7 @@
     <XRefSrcText `86433: UHEADING3: pv/src/Makefile'>
     <XRefSrcIsElem No>
     <XRefSrcFile `'>
-    <XRefLastUpdate  954813164 595551>
+    <XRefLastUpdate  956688158 602764>
     <Unique 704462>
    > # end of XRef
    <String `\xd2 '>
@@ -24469,7 +24469,7 @@
     <XRefSrcText `82910: UHEADING3: test/pv/Makefile'>
     <XRefSrcIsElem No>
     <XRefSrcFile `'>
-    <XRefLastUpdate  954813164 596071>
+    <XRefLastUpdate  956688158 603369>
     <Unique 704564>
    > # end of XRef
    <String `\xd2 '>
@@ -25813,7 +25813,7 @@
     <MCurrPage `51'>
     <Unique 704365>
    > # end of Marker
-   <String `configure/RELEASE'>
+   <String `configure/CONFIG'>
   > # end of ParaLine
  > # end of Para
  <Para 
@@ -26285,7 +26285,7 @@
     <XRefSrcText `33834: HEADING1: 6.3 A tour of the API'>
     <XRefSrcIsElem No>
     <XRefSrcFile `'>
-    <XRefLastUpdate  954813164 595785>
+    <XRefLastUpdate  956688158 603062>
     <Unique 704503>
    > # end of XRef
    <String `Section'>
