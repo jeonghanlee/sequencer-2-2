@@ -23,8 +23,8 @@ endif
 #  Products
 PROD_DEFAULT = demo
 PROD_WIN32 = -nil-
-OBJS_vxWorks = demo
 PROD_RTEMS = demo
+LIBRARY_vxWorks = demo
 
 #  Sources (CA only)
 ifeq "$(PVCA)" "TRUE"
@@ -45,12 +45,11 @@ PROD_LIBS += iocsh miscIoc rsrvIoc dbtoolsIoc asIoc dbIoc registryIoc dbStaticIo
 endif
 
 # Unix objects (mostly CA only)
-demo_OBJS += demo.o
+demo_SRCS += demo.st
 
 ifeq "$(PVCA)" "TRUE"
 demo_SRCS_DEFAULT += demo_registerRecordDeviceDriver.cpp
-
-demo_OBJS_vxWorks += $(EPICS_BASE_BIN)/iocInit.o
+demo_SRCS_vxWorks +=  -nil-
 
 demo_OBJS += $(EPICS_BASE_BIN)/aoRecord.o
 demo_OBJS += $(EPICS_BASE_BIN)/boRecord.o
@@ -66,7 +65,6 @@ endif
 LIBRARY_vxWorks = demoIoc
 
 demoIoc_OBJS_vxWorks += $(EPICS_BASE_BIN)/iocCoreLibrary
-demoIoc_OBJS_vxWorks += $(EPICS_BASE_BIN)/iocInit.o
 
 demoIoc_OBJS += $(EPICS_BASE_BIN)/aoRecord.o
 demoIoc_OBJS += $(EPICS_BASE_BIN)/boRecord.o
