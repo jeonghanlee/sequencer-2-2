@@ -194,7 +194,7 @@ epicsShareFunc epicsThreadId epicsShareAPI seq (
 	/* Spawn the sequencer auxiliary thread */
 	if (seqAuxThreadId == (epicsThreadId) 0)
 	{
-		unsigned int auxStack = epicsThreadGetStackSize(epicsThreadStackSmall);
+		unsigned int auxStack = epicsThreadGetStackSize(epicsThreadStackMedium);
 		epicsThreadCreate("seqAux", THREAD_PRIORITY+1, auxStack,
 				(EPICSTHREADFUNC)seqAuxThread, &auxArgs);
 		while (seqAuxThreadId == (epicsThreadId) 0)
