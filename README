@@ -17,7 +17,7 @@ Directory structure is:
     README		This file (general notes at the top, followed by
 			release notes, most recent first)
 
-    /config		Configuration files (standard for makeBaseApp)
+    /configure		Configuration files (standard for makeBaseApp)
 
     /src		*.c, snc.y source of the compiler and sequencer
 
