@@ -1,4 +1,4 @@
-/* $Id: pvFile.h,v 1.1.1.1 2000-04-04 03:22:15 wlupton Exp $
+/* $Id: pvFile.h,v 1.2 2001-02-23 20:45:22 jba Exp $
  *
  * Definitions for demonstration EPICS sequencer file library (pvFile)
  *
@@ -7,8 +7,9 @@
 
 #ifndef INCLpvFileh
 #define INCLpvFileh
-
+#ifndef _WIN32
 #include <sys/time.h>
+#endif
 #include <sys/types.h>
 
 #include "pv.h"
@@ -68,6 +69,9 @@ private:
 
 /*
  * $Log: not supported by cvs2svn $
+ * Revision 1.1.1.1  2000/04/04 03:22:15  wlupton
+ * first commit of seq-2-0-0
+ *
  * Revision 1.1  2000/03/31 23:00:07  wlupton
  * initial insertion
  *
