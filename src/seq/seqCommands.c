@@ -1,5 +1,5 @@
 /*
- * $Id: seqCommands.c,v 1.2 2000-04-18 18:24:13 norume Exp $
+ * $Id: seqCommands.c,v 1.3 2000-05-04 17:57:58 norume Exp $
  *
  * DESCRIPTION: EPICS sequencer commands
  *
@@ -22,13 +22,14 @@
 #include <cantProceed.h>
 
 #include <seqCom.h>
-#include <CommandInterpreter.h>
+#include <seqCommands.h>
+#include <ioccrf.h>
 
 /*
  * Until the mechanism for registering sequencer programs and commands
  * has been finalized I've got a couple of different methods supported
  * in this source.  At the moment I'm using C++ constructors to generate
- * the calls.
+ * the calls, so SEQ_PROG_REG is defined.
  */
 #define SEQ_PROG_REG
 
@@ -52,7 +53,7 @@ static struct sequencerProgram *seqHead;
  * This routine is called before multitasking has started, so there's
  * no race condition in creating the linked list.
  */
-void
+void epicsShareAPI
 seqRegisterSequencerProgram (struct seqProgram *p)
 {
     struct sequencerProgram *sp;
@@ -64,34 +65,9 @@ seqRegisterSequencerProgram (struct seqProgram *p)
 }
 #endif
 
-static long
-seqWrapper (const char *table, char *macroDef, unsigned int stackSize)
-{
-#ifdef SEQ_PROG_REG
-    struct sequencerProgram *sp;
-#else
-    extern struct seqProgram * const seqPrograms[];
-    struct seqProgram * const *spp;
-#endif
-
-    if (*table == '&')
-        table++;
-#ifdef SEQ_PROG_REG
-    for (sp = seqHead ; sp != NULL ; sp = sp->next) {
-        if (!strcmp (table, sp->prog->pProgName)) {
-            seq (sp->prog, macroDef, stackSize);
-#else
-    for (spp = seqPrograms ; *spp != NULL ; spp++) {
-        if (!strcmp (table, (*spp)->pProgName)) {
-            seq (*spp, macroDef, stackSize);
-#endif
-            return 0;
-        }
-    }
-    printf ("Can't find sequencer `%s'.\n", table);
-    return 1;
-}
-
+/*
+ * Find a thread by name or ID number
+ */
 static threadId
 findThread (const char *name)
 {
@@ -108,98 +84,118 @@ findThread (const char *name)
     return NULL;
 }
 
-static long
-seqShowWrapper (int argc, char **argv)
+/* seq */
+static ioccrfArg seqArg0 = { "sequencer",ioccrfArgString,0};
+static ioccrfArg seqArg1 = { "macro definitions",ioccrfArgString,0};
+static ioccrfArg seqArg2 = { "stack size",ioccrfArgInt,0};
+static ioccrfArg *seqArgs[3] = { &seqArg0,&seqArg1,&seqArg2 };
+static ioccrfFuncDef seqFuncDef = {"seq",3,seqArgs};
+static void seqCallFunc(ioccrfArg **args)
 {
-    threadId id;
+    char *table = (char *)args[0]->value;
+    char *macroDef = (char *)args[1]->value;
+    int stackSize = *(int *)args[2]->value;
+#ifdef SEQ_PROG_REG
+    struct sequencerProgram *sp;
+#else
+    extern struct seqProgram * const seqPrograms[];
+    struct seqProgram * const *spp;
+#endif
 
-    if (argc == 1)
-        return seqShow (NULL);
-    if ((id = findThread (argv[1])) != NULL)
-        return seqShow (id);
-    return 0;
+    if (!table) {
+        printf ("No sequencer specified.\n");
+        return;
+    }
+    if (*table == '&')
+        table++;
+#ifdef SEQ_PROG_REG
+    for (sp = seqHead ; sp != NULL ; sp = sp->next) {
+        if (!strcmp (table, sp->prog->pProgName)) {
+            seq (sp->prog, macroDef, stackSize);
+#else
+    for (spp = seqPrograms ; *spp != NULL ; spp++) {
+        if (!strcmp (table, (*spp)->pProgName)) {
+            seq (*spp, macroDef, stackSize);
+#endif
+            return;
+        }
+    }
+    printf ("Can't find sequencer `%s'.\n", table);
 }
 
-static long
-seqQueueShowWrapper (int argc, char **argv)
+/* seqShow */
+static ioccrfArg seqShowArg0 = { "sequencer",ioccrfArgString,0};
+static ioccrfArg *seqShowArgs[1] = {&seqShowArg0};
+static ioccrfFuncDef seqShowFuncDef = {"seqShow",1,seqShowArgs};
+static void seqShowCallFunc(ioccrfArg **args)
 {
     threadId id;
+    char *name = (char *)args[0]->value;
 
-    if ((id = findThread (argv[1])) != NULL)
-        return seqQueueShow (id);
-    return 0;
+    if (name == NULL)
+        seqShow (NULL);
+    else if ((id = findThread (name)) != NULL)
+        seqShow (id);
 }
 
-static long
-seqStopWrapper (int argc, char **argv)
+/* seqQueueShow */
+static ioccrfArg seqQueueShowArg0 = { "sequencer",ioccrfArgString,0};
+static ioccrfArg *seqQueueShowArgs[1] = {&seqQueueShowArg0};
+static ioccrfFuncDef seqQueueShowFuncDef = {"seqQueueShow",1,seqQueueShowArgs};
+static void seqQueueShowCallFunc(ioccrfArg **args)
 {
     threadId id;
+    char *name = (char *)args[0]->value;
 
-    if ((id = findThread (argv[1])) != NULL)
-        return seqStop (id);
-    return 0;
+    if ((name != NULL) && ((id = findThread (name)) != NULL))
+        seqQueueShow (id);
 }
 
-static long
-seqChanShowWrapper (int argc, char **argv)
+/* seqStop */
+static ioccrfArg seqStopArg0 = { "sequencer",ioccrfArgString,0};
+static ioccrfArg *seqStopArgs[1] = {&seqStopArg0};
+static ioccrfFuncDef seqStopFuncDef = {"seqStop",1,seqStopArgs};
+static void seqStopCallFunc(ioccrfArg **args)
 {
     threadId id;
-    char *chan;
+    char *name = (char *)args[0]->value;
 
-    if (argc <= 2)
-        chan = NULL;
-    else
-        chan = argv[2];
-    if (argc == 1)
-        return seqChanShow (NULL, chan);
-    if ((id = findThread (argv[1])) != NULL)
-        return seqChanShow (id, chan);
-    return 0;
+    if ((name != NULL) && ((id = findThread (name)) != NULL))
+        seqStop (id);
 }
 
-/*
- * Command table
- */
-typedef long (*cmd)();
-static const struct CommandTableEntry CommandTable[] = {
-    { "seq",
-      "Start sequencer",
-      "**i",        (cmd)seqWrapper,             2, 4
-    },
+/* seqChanShow */
+static ioccrfArg seqChanShowArg0 = { "sequencer",ioccrfArgString,0};
+static ioccrfArg seqChanShowArg1 = { "channel",ioccrfArgString,0};
+static ioccrfArg *seqChanShowArgs[2] = {&seqChanShowArg0,&seqChanShowArg1};
+static ioccrfFuncDef seqChanShowFuncDef = {"seqChanShow",2,seqChanShowArgs};
+static void seqChanShowCallFunc(ioccrfArg **args)
+{
+    threadId id;
+    char *name = (char *)args[0]->value;
+    char *chan = (char *)args[1]->value;
 
-    { "seqShow",
-      "Show sequencer info",
-      NULL,            (cmd)seqShowWrapper,      1, 2
-    },
-
-    { "seqStop",
-      "Stop sequencer",
-      NULL,            (cmd)seqStopWrapper,      2, 2
-    },
-
-    { "seqQueueShow",
-      "Show sequencer queue info",
-      NULL,            (cmd)seqQueueShowWrapper, 2, 2
-    },
-
-    { "seqChanShow",
-      "Show sequencer channel info",
-      NULL,            (cmd)seqChanShowWrapper,  1, 3
-    },
-
-    { NULL,    NULL, NULL, NULL, 0, 0 },
-};
+    if (name != NULL) {
+        id = NULL;
+    } else if ((id = findThread (name)) != NULL)
+        return;
+    seqChanShow (id, chan);
+}
 
 /*
  * This routine is called before multitasking has started, so there's
- * no race condition in the test/set of firsTime.
+ * no race condition in the test/set of firstTime.
  */
-void
+void epicsShareAPI
 seqRegisterSequencerCommands (void)
 {
     static int firstTime = 1;
     if (firstTime) {
         firstTime = 0;
-        CommandInterpreterRegisterCommands (CommandTable);
+        ioccrfRegister(&seqFuncDef,seqCallFunc);
+        ioccrfRegister(&seqShowFuncDef,seqShowCallFunc);
+        ioccrfRegister(&seqQueueShowFuncDef,seqQueueShowCallFunc);
+        ioccrfRegister(&seqStopFuncDef,seqStopCallFunc);
+        ioccrfRegister(&seqChanShowFuncDef,seqChanShowCallFunc);
     }
 };
