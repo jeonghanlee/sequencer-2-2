@@ -1,4 +1,0 @@
-#RELEASE Location of external products
-EPICS_BASE=/home/phoebus/MRK/epics/base
-TEMPLATE_TOP=$(EPICS_BASE)/templates/makeBaseApp/top
-SHARE=/home/phoebus/MRK/epics/modules/soft/seq

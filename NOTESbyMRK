@@ -1,3 +1,9 @@
+Version seq-2-0-5 of the sequencer
+
+The config directory has been removed.
+
+Replaced devSequencer.c with version supplied by Kukhee Kim, SLAC
+
 Version seq-2-0-4 of the sequencer
 
 Changes have been made to follow the R3.14.2 build rules.
