@@ -4,7 +4,7 @@ include $(TOP)/configure/CONFIG
 #----------------------------------------
 #  ADD MACRO DEFINITIONS AFTER THIS LINE
 
-SNC = $(INSTALL_BIN)/snc
+SNC = $(INSTALL_HOST_BIN)/snc
 
 #  Generate snc main programs
 SNCFLAGS_DEFAULT += +m
