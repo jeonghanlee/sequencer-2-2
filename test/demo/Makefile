@@ -35,8 +35,8 @@ endif
 PROD_LIBS += seqdev seq
 PROD_LIBS += iocsh miscIoc rsrvIoc dbtoolsIoc asIoc dbIoc registryIoc dbStaticIoc ca Com readline curses
 
-seq_DIR    = $(SEQ_LIB)
-seqdev_DIR = $(SEQ_LIB)
+seq_DIR    = $(INSTALL_LIB)
+seqdev_DIR = $(INSTALL_LIB)
 
 include $(TOP)/test/Makefile.pv
 

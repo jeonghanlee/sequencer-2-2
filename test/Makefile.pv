@@ -1,35 +1,28 @@
-# $Id: Makefile.pv,v 1.4 2001-02-16 21:45:17 norume Exp $
+# $Id: Makefile.pv,v 1.5 2001-02-23 22:01:03 mrk Exp $
 #
 # Makefile fragment to define PROD_LIBS for linking against the PV libraries
 # (accounting for the enabled message systems)
 
-ifndef SEQ
-SEQ = $(TOP)
-endif
-ifndef SEQ_LIB
-SEQ_LIB = $(SEQ)/lib/$(T_A)
-endif
-
 PROD_LIBS_DEFAULT += pv
 PROD_LIBS_WIN32   += pv
-pv_DIR             = $(SEQ_LIB)
+pv_DIR             = $(INSTALL_LIB)
 
 ifeq "$(PVFILE)" "TRUE"
 PROD_LIBS_DEFAULT += pvFile 
-pvFile_DIR         = $(SEQ_LIB)
+pvFile_DIR         = $(INSTALL_LIB)
 endif
 
 ifeq "$(PVKTL)" "TRUE"
 PROD_LIBS_DEFAULT += pvKtl ktl ktlker
 PROD_LIBS_WIN32   += ktl ktlker
-pvKtl_DIR          = $(SEQ_LIB)
+pvKtl_DIR          = $(INSTALL_LIB)
 ktl_DIR            = $(KROOT)/rel/default/lib
 endif
 
 ifeq "$(PVCA)" "TRUE"
 PROD_LIBS_DEFAULT += pvCa ca
 PROD_LIBS_WIN32   += ca
-pvCa_DIR           = $(SEQ_LIB)
+pvCa_DIR           = $(INSTALL_LIB)
 endif
 
 PROD_LIBS_DEFAULT += Com

@@ -15,7 +15,7 @@ PROD = local
 
 #  Libraries
 PROD_LIBS += seq 
-seq_DIR    = $(SEQ_LIB)
+seq_DIR    = $(INSTALL_LIB)
 
 include $(TOP)/test/Makefile.pv
 
