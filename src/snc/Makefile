@@ -13,6 +13,9 @@ YACCOPT	= -d -v
 #  snc product
 PROD_HOST	= snc
 
+PROD_LIBS += $(EPICS_BASE_IOC_LIBS)
+
+
 SRCS	= snc_main.c parse.c phase2.c gen_ss_code.c gen_tables.c snc.c \
           sncVersion.c
 
