@@ -1,16 +1,14 @@
-# $Id: RULES_BUILD,v 1.5 2001-03-05 22:25:47 jba Exp $
+# $Id: RULES_BUILD,v 1.6 2001-03-19 20:48:58 mrk Exp $
 #
 #	State notation language (snc) rules
 
-TARGET_SNCFLAGS = $($(basename $@)_SNCFLAGS) $($(basename $@)_SNCFLAGS_$(OS_CLASS))
+TARGET_SNCFLAGS = $($(subst _sncreg,,$(basename $@))_SNCFLAGS) $($(subst _sncreg,,$(basename $@))_SNCFLAGS_$(OS_CLASS))
 CPPSNCFLAGS += $(CROSS_CPPFLAGS) $(POSIX_CPPFLAGS) $(EPICS_BASE_CPPFLAGS)\
  $(TARGET_CPPFLAGS) $(USR_CPPFLAGS) $(ARCH_DEP_CPPFLAGS)\
  $(OP_SYS_CPPFLAGS) $(CODE_CPPFLAGS)
 
 #--------------------------------------------------
 # snc (state notation language) flags
-# Use C++ constructors to register commands/programs (snc +i option)
-TARGET_SNCFLAGS += +i
 
 #  addons -  concat os specific sequencer flags
 ifneq ($(strip $(SNCFLAGS_$(OS_CLASS))),)

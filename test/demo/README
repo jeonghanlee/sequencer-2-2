@@ -1,5 +1,7 @@
 To run this example on a host IOC:
-    ../../bin/linux-x86/demo demo.vws
+   cd <top>/test/demo
+    ../../bin/<arch>/demo stcmd.host
 
-You'll get several warning messages about missing commands, but the demo
-application should work properly.
+To run this on vxWorks set startup script to <top>/test/demo/st.cmd
+
+Also st.cmd is loading for vxWorks-68040. You may have to change st.cmd

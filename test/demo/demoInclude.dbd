@@ -10,5 +10,5 @@ device(ao,CONSTANT,devAoSoft,"Soft Channel")
 device(bo,CONSTANT,devBoSoft,"Soft Channel")
 device(waveform,CONSTANT,devWfSoft,"Soft Channel")
 
-include "seq.dbd"
+include "devSequencer.dbd"
 
