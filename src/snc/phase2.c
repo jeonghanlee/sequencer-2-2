@@ -162,15 +162,7 @@ void gen_preamble()
 	gen_opt_defn(reent_opt, "REENT_OPT");
 
 	/* Forward references of tables: */
-	printf ("\n#ifdef __cplusplus\n");
-	printf("extern \"C\" {\n");
-	printf ("#endif /* __cplusplus */\n");
 	printf("\nextern struct seqProgram %s;\n", prog_name);
-	printf ("\n#ifdef __cplusplus\n");
-	printf("}\n");
-	printf ("#endif /* __cplusplus */\n");
-
-	printf ("\n#ifndef __cplusplus\n");
 
         /* Main program (if "main" option set) */
 	if (main_opt) {
@@ -689,13 +681,11 @@ void gen_init_reg()
 	extern int		main_opt, init_reg_opt;
 
 	if (init_reg_opt) {
-	    printf ("\n#else /* __cplusplus */\n");
-	    printf ("\n/* Register sequencer commands and program */\n\n");
-	    printf ("\nclass %sInit {\n", prog_name);
-	    printf ("public:\n");
-	    printf ("    %sInit () { seqRegisterSequencerCommands(); seqRegisterSequencerProgram (&%s); }\n", prog_name, prog_name);
-	    printf ("};\n");
-	    printf ("static %sInit %sInit;\n\n", prog_name, prog_name);
+	    printf ("\n\n/* Register sequencer commands and program */\n");
+	    printf ("\nvoid %sRegistrar (void) {\n", prog_name);
+	    printf ("    seqRegisterSequencerCommands();\n");
+	    printf ("    seqRegisterSequencerProgram (&%s);\n", prog_name);
+	    printf ("}\n");
+	    printf ("epicsExportRegistrar(%sRegistrar);\n\n", prog_name);
 	}
-	printf ("#endif /* __cplusplus */\n");
 }

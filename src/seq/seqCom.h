@@ -46,6 +46,7 @@
 #include	"pvAlarm.h"	/* status and severity defs */
 #include	"epicsThread.h"	/* time stamp defs */
 #include	"epicsTime.h"	/* time stamp defs */
+#include        "epicsExport.h" /* for Registrar routine */
 #endif
 
 #ifdef __cplusplus

@@ -12,3 +12,4 @@ device(waveform,CONSTANT,devWfSoft,"Soft Channel")
 
 include "devSequencer.dbd"
 
+registrar(demoRegistrar)

@@ -1,26 +1,13 @@
-# $Id: RULES_BUILD,v 1.10 2002-08-13 16:01:49 jba Exp $
+# $Id: RULES_BUILD,v 1.11 2003-09-08 18:22:29 anj Exp $
 #
 #	State notation language (snc) rules
-# Each <name>.st (or <name>.stt) produces <name>.c and <name>_sncreg.cpp
+# Each <name>.st (or <name>.stt) produces <name>.c
 
-
-#--------------------------------------------------
-# Object files
-
-# Add  *_sncreg$(OBJ) files
-TARGET_SNC = $(basename $(notdir $(filter %.stt %.st,$($*_SRCS))))
-TARGET_OBJS += $(addsuffix _sncreg$(OBJ),$(TARGET_SNC))
-
-PRODUCT_SNC = $(basename $(notdir $(filter %.stt %.st,$(SRCS) $(PROD_SRCS))))
-PRODUCT_OBJS += $(addsuffix _sncreg$(OBJ),$(PRODUCT_SNC))
-
-LIBRARY_SNC = $(basename $(notdir $(filter %.stt %.st,$(SRCS) $(LIB_SRCS) $(LIBSRCS))))
-LIBRARY_OBJS += $(addsuffix _sncreg$(OBJ),$(LIBRARY_SNC))
 
 #--------------------------------------------------
 # snc flags
 
-TARGET_SNCFLAGS = $($(subst _sncreg,,$(basename $@))_SNCFLAGS) $($(subst _sncreg,,$(basename $@))_SNCFLAGS_$(OS_CLASS))
+TARGET_SNCFLAGS = $($(basename $@)_SNCFLAGS) $($(basename $@)_SNCFLAGS_$(OS_CLASS))
 CPPSNCFLAGS += $(CROSS_CPPFLAGS) $(POSIX_CPPFLAGS) $(EPICS_BASE_CPPFLAGS)\
  $(TARGET_CPPFLAGS) $(USR_CPPFLAGS) $(ARCH_DEP_CPPFLAGS)\
  $(OP_SYS_CPPFLAGS) $(CODE_CPPFLAGS)
@@ -44,27 +31,14 @@ vpath %.stt $(USR_VPATH) $(ALL_SRC_DIRS)
 # depends rule needs .c files
 
 SNC_SRC_FILES = $(basename $(notdir $(filter %.st %.stt,$(SRC_FILES))))
-SNC_CSRC_FILES =  $(addsuffix .c,$(SNC_SRC_FILES)) \
-                         $(addsuffix _sncreg.cpp,$(SNC_SRC_FILES))
+SNC_CSRC_FILES =  $(addsuffix .c,$(SNC_SRC_FILES))
 HDEPENDS_FILES_YES += $(addsuffix $(DEP),$(basename $(SNC_CSRC_FILES)))
-
-#--------------------------------------------------
-# Directory definitions
-
-ifndef SNCSEQ
-SNCSEQ=$(TOP)
-SNCSEQ_LIB      = $(SNCSEQ)/lib/$(T_A)
-SNCSEQ_BIN      = $(SNCSEQ)/bin/$(T_A)
-endif
-
-seq_DIR=$(SNCSEQ_LIB)
-pv_DIR=$(SNCSEQ_LIB)
 
 #--------------------------------------------------
 # snc executable
 
 ifndef SNC
-SNC = $(SNCSEQ)/bin/$(EPICS_HOST_ARCH)/snc$(HOSTEXE)
+SNC = $(SNCSEQ_HOST_BIN)/snc$(HOSTEXE)
 endif
 
 #--------------------------------------------------
@@ -75,19 +49,15 @@ endif
 	@$(RM) $@
 	$(CPP) $(CPPSNCFLAGS) $(INCLUDES) $< > $@
 
-%_sncreg.cpp: %.i
+%.c: %.i
 	@echo "converting $<"
 	@$(RM) $@
 	$(SNC) $(TARGET_SNCFLAGS) $(SNCFLAGS) $< -o $@
 
-%_sncreg.cpp: ../%.stt
+%.c: ../%.stt
 	@echo "converting $< "
 	@$(RM) $@
 	$(SNC) $(TARGET_SNCFLAGS) $(SNCFLAGS) $< -o $@
-
-%.c: %_sncreg.cpp %_sncreg$(OBJ)
-	@$(RM) $@
-	@$(CP) $< $@
 
 clean::
 	@$(RM) $(SNC_CSRC_FILES)
