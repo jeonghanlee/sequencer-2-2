@@ -25,7 +25,7 @@ sncOpttVar_SRCS = sncOpttVar.st
 #  Libraries
 PROD_LIBS += seq
 PROD_LIBS += pv
-PROD_LIBS += $(EPICS_BASE_HOST_LIBS)
+PROD_LIBS += $(EPICS_BASE_IOC_LIBS)
 
 include $(TOP)/configure/RULES
 #----------------------------------------
