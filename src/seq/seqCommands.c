@@ -1,5 +1,5 @@
 /*
- * $ID: $
+ * $Id: seqCommands.c,v 1.2 2000-04-18 18:24:13 norume Exp $
  *
  * DESCRIPTION: EPICS sequencer commands
  *
