@@ -3,7 +3,7 @@
 	Copyright, 1989-93, The Regents of the University of California.
 		         Los Alamos National Laboratory
 
- 	$Id: proto.h,v 1.1.1.1 2000-04-04 03:22:32 wlupton Exp $
+ 	$Id: proto.h,v 1.2 2001-03-21 15:06:10 mrk Exp $
 	DESCRIPTION: Function prototypes for state notation language parser
 	ENVIRONMENT: UNIX
 	HISTORY:
@@ -36,5 +36,7 @@ extern void addVar(Var*);
 extern void print_line_num(int,char*);
 
 extern void traverseExprTree(Expr*,int,char*,void (*)(),void*);
+
+extern void snc_err(char *err_txt);
 
 #endif	/*INCLsnch*/

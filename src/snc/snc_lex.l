@@ -49,7 +49,7 @@
 #define	RETURN(param)	{ fprintf(stderr, "return(" #param ")\n"); \
 			  return(param); }
 #else
-#define	RETURN(param)	return(param);
+#define	RETURN(param)	return(param)
 #endif
 #define	STR_BFR_SIZE	1000
 
@@ -267,7 +267,7 @@ CCONST	\'.\'
 <SNL>.		RETURN(BAD_CHAR);
 # {		/* somehow "^#" doesn't work if it's first char */
 		BEGIN PP;
-		RETURN(PP_SYMBOL)
+		RETURN(PP_SYMBOL);
 }
 .|\n		{ line_num = 1; BEGIN SNL; yyless(0); }
 

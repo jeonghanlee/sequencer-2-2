@@ -37,6 +37,7 @@
 #include	"parse.h"
 #include	"proto.h"
 
+void encode_state_options(Expr *sp);
 void		gen_db_blocks();
 void		fill_db_block();
 void		gen_state_blocks();
@@ -343,7 +344,7 @@ char		*ss_name;
 /* Writes the state option bitmask into a state block. At present this f is
 extremely simple since there is only one permitted option and so there are
 no possible state option conflicts.  */
-encode_state_options(Expr *sp)
+void encode_state_options(Expr *sp)
 {
         Expr     *ep;
 	char     errMsg[BUFSIZ], *pc = NULL, *suppl;
@@ -359,17 +360,18 @@ encode_state_options(Expr *sp)
 	{
 	        for (pc = (char*)ep->left; *pc != NULL; pc++)
 		{
+			char *right = (char *)ep->right;
 		        /* Option not to reset timers on state entry from self */
 		        if ( *pc == 't' ) 
 		        {
 			       if ( optionSpec & OPT_NORESETTIMERS )
 				     duplicate = TRUE;
-                               if ( strchr(ep->right,'+') )
+                               if ( strchr(right,'+') )
 			       {
 				     /* No contradictions */
 				     /* Default, no bit to code */ 
 			       } 
-			       else if ( strchr(ep->right,'-') ) 
+			       else if ( strchr(right,'-') ) 
 			       {
 				     /* No contradictions */ 
 				     printf(" | OPT_NORESETTIMERS" );
@@ -381,11 +383,11 @@ encode_state_options(Expr *sp)
 		        {
 			       if ( optionSpec & OPT_DOENTRYFROMSELF )
 				     duplicate = TRUE;
-			       if ( strchr(ep->right,'+') )
+			       if ( strchr(right,'+') )
 				     /* No contradictions */ 
 				     /* Default, no opt bit to code */
 				     ;		
-			       else if ( strchr(ep->right,'-') )
+			       else if ( strchr(right,'-') )
 			       {
 				     /* No contradictions */
 		                     printf(" | OPT_DOENTRYFROMSELF" );
@@ -397,11 +399,11 @@ encode_state_options(Expr *sp)
 		        {
 			       if ( optionSpec & OPT_DOEXITTOSELF )
 				     duplicate = TRUE;
-			       if ( strchr(ep->right,'+') )
+			       if ( strchr(right,'+') )
 				     /* No contradictions */ 
 				     /* Default, no opt bit to code */
 				     ;		
-			       else if ( strchr(ep->right,'-') )
+			       else if ( strchr(right,'-') )
 			       {
 				     /* No contradictions */
 		                     printf(" | OPT_DOEXITTOSELF" );
@@ -412,7 +414,7 @@ encode_state_options(Expr *sp)
 		        else
 		        {
 			       sprintf(errMsg,"Unrecognized option in state %s: %s%c",
-				       sp->value, ep->right, *pc);
+				       sp->value, right, *pc);
 			       snc_err(errMsg);
 			}
 
@@ -427,7 +429,7 @@ encode_state_options(Expr *sp)
 			{
 			       sprintf(errMsg,
 				       "Contradictory option or option out of order %s%c in state %s:\n\t\t %s",
-                                       ep->right,*pc,sp->value,suppl);
+                                       right,*pc,sp->value,suppl);
 			       snc_err(errMsg);
 			}
 

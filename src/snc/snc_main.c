@@ -312,8 +312,7 @@ void print_usage()
 *
 *  NOTES:
 *-*************************************************************************/
-void snc_err(err_txt)
-char	*err_txt;
+void snc_err(char *err_txt)
 {
 	fprintf(stderr, "     %s\n", err_txt);
 	exit(1);

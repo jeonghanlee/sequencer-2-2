@@ -37,19 +37,43 @@
 #define FALSE   0
 #endif  /*TRUE*/
 
-void		gen_delay_func();
-void		eval_delay();
-void		gen_action_func();
-void		gen_event_func();
-void		eval_expr();
-void		indent();
-void		gen_ef_func();
-void		gen_pv_func();
-void		gen_entry_handler();
-void		gen_exit_handler();
+/* func_name_to_code - convert function name to a code */
+enum	fcode { F_DELAY, F_EFSET, F_EFTEST, F_EFCLEAR, F_EFTESTANDCLEAR,
+		F_PVGET, F_PVGETQ, F_PVFREEQ, F_PVPUT, F_PVTIMESTAMP, F_PVASSIGN,
+		F_PVMONITOR, F_PVSTOPMONITOR, F_PVCOUNT, F_PVINDEX, F_PVNAME,
+		F_PVSTATUS, F_PVSEVERITY, F_PVMESSAGE, F_PVFLUSH, F_PVERROR,
+		F_PVGETCOMPLETE, F_PVASSIGNED, F_PVCONNECTED, F_PVPUTCOMPLETE,
+		F_PVCHANNELCOUNT, F_PVCONNECTCOUNT, F_PVASSIGNCOUNT,
+		F_PVDISCONNECT, F_SEQLOG, F_MACVALUEGET, F_OPTGET,
+		F_NONE };
 
-int		state_block_index_from_name();
-int		special_func();
+char	*fcode_str[] = { "delay", "efSet", "efTest", "efClear", "efTestAndClear",
+		"pvGet", "pvGetQ", "pvFreeQ", "pvPut", "pvTimeStamp", "pvAssign",
+		"pvMonitor", "pvStopMonitor", "pvCount", "pvIndex", "pvName",
+		"pvStatus", "pvSeverity", "pvMessage", "pvFlush", "pvError",
+		"pvGetComplete", "pvAssigned", "pvConnected", "pvPutComplete",
+		"pvChannelCount", "pvConnectCount", "pvAssignCount",
+		"pvDisconnect", "seqLog", "macValueGet", "optGet",
+		NULL };
+
+void gen_delay_func(Expr *sp, Expr *ssp);
+void eval_delay(Expr *ep, Expr *sp);
+void gen_action_func(Expr *sp, Expr *ssp);
+void gen_event_func(Expr *sp, Expr *ssp);
+void eval_expr(int stmt_type, Expr *ep, Expr *sp, int level);
+void indent(int level);
+void gen_ef_func(int stmt_type,Expr *ep,Expr *sp,char *fname,
+    enum fcode func_code);
+void gen_pv_func(int stmt_type,Expr *ep,Expr *sp,
+    char *fname,enum fcode func_code,int add_length,int num_params);
+void gen_entry_handler(void);
+void gen_exit_handler(void);
+void gen_change_func(Expr *sp,Expr *ssp);
+void gen_entry_func(Expr *sp,Expr *ssp );
+void gen_exit_func(Expr *sp,Expr *ssp );
+
+int state_block_index_from_name(Expr *ssp,char *state_name);
+int special_func(int stmt_type,Expr *ep,Expr *sp);
 
 /*+************************************************************************
 *  NAME: gen_ss_code
@@ -110,9 +134,7 @@ void gen_ss_code()
 /* Generate functions for each state which perform the state entry and 
   * exit actions. 
   */
-gen_change_func(sp, ssp)
-Expr		*ssp;
-Expr		*sp;
+void gen_change_func(Expr *sp,Expr *ssp)
 {
         Expr		*ep;
 	int isEntry = FALSE, isExit = FALSE;
@@ -131,9 +153,7 @@ Expr		*sp;
 	if (isExit) gen_exit_func( sp, ssp );
 }
 
-gen_entry_func( sp, ssp )
-Expr		*sp;
-Expr		*ssp;			/* Parent state set */
+void gen_entry_func(Expr *sp,Expr *ssp )
 {	
         Expr	*ep,			/* Entry expression */
 		*xp;			/* statement expression walker */
@@ -167,9 +187,7 @@ Expr		*ssp;			/* Parent state set */
 	return;
 }
 
-gen_exit_func( sp, ssp )
-Expr		*sp;
-Expr		*ssp;			/* Parent state set */
+void gen_exit_func(Expr *sp,Expr *ssp )
 {	
         Expr	*ep,			/* Entry expression */
 		*xp;			/* statement expression walker */
@@ -208,9 +226,7 @@ Expr		*ssp;			/* Parent state set */
  * Each delay() call is assigned a unique id.  The maximum number of
  * delays is recorded in the state set structure.
  */
-void gen_delay_func(sp, ssp)
-Expr		*ssp;
-Expr		*sp;
+void gen_delay_func(Expr *sp, Expr *ssp)
 {
 	Expr		*tp;
 
@@ -235,9 +251,7 @@ Expr		*sp;
  * double.
  * Example:  seq_delayInit(ssId, 1, (double)(<some expression>));
  */
-void eval_delay(ep, sp)
-Expr		*ep;
-Expr		*sp;
+void eval_delay(Expr *ep, Expr *sp)
 {
 	Expr		*epf;
 	int		delay_id;
@@ -264,9 +278,7 @@ Expr		*sp;
    Each state has one action routine.  It's name is derived from the
    state set name and the state name.
 */
-void gen_action_func(sp, ssp)
-Expr		*sp;
-Expr		*ssp; /* Parent state set */
+void gen_action_func(Expr *sp, Expr *ssp)
 {
 	Expr		*tp;
 	Expr		*ap;
@@ -329,9 +341,7 @@ Expr		*ssp; /* Parent state set */
 }
 
 /* Generate a C function that checks events for a particular state */
-void gen_event_func(sp, ssp)
-Expr		*sp;
-Expr		*ssp;
+void gen_event_func(Expr *sp, Expr *ssp)
 {
 	Expr		*tp;
 	int		index, trans_num;
@@ -376,9 +386,7 @@ Expr		*ssp;
 
 /* Given a state name and state set struct, find the corresponding
    state struct and return its index (1-st one is 0) */
-int state_block_index_from_name(ssp, state_name)
-Expr		*ssp;
-char		*state_name;
+int state_block_index_from_name(Expr *ssp,char *state_name)
 {
 	Expr		*sp;
 	int		index;
@@ -394,11 +402,13 @@ char		*state_name;
 }
 /* Evaluate an expression.
 */
-void eval_expr(stmt_type, ep, sp, level)
-int		stmt_type;	/* EVENT_STMT, ACTION_STMT, or DELAY_STMT */
-Expr		*ep;		/* ptr to expression */
-Expr		*sp;		/* ptr to current State struct */
-int		level;		/* indentation level */
+void eval_expr(int stmt_type, Expr *ep, Expr *sp, int level)
+/*
+    stmt_type - EVENT_STMT, ACTION_STMT, or DELAY_STMT
+    ep 	  - ptr to expression
+    sp 	  - ptr to current State struct
+    level 	  - indentation level
+*/
 {
 	Expr		*epf;
 	int		nexprs;
@@ -571,30 +581,12 @@ int		level;		/* indentation level */
 	}
 }
 
-void indent(level)
-int		level;
+void indent(int level)
 {
 	while (level-- > 0)
 		printf("\t");
 }
-/* func_name_to_code - convert function name to a code */
-enum	fcode { F_DELAY, F_EFSET, F_EFTEST, F_EFCLEAR, F_EFTESTANDCLEAR,
-		F_PVGET, F_PVGETQ, F_PVFREEQ, F_PVPUT, F_PVTIMESTAMP, F_PVASSIGN,
-		F_PVMONITOR, F_PVSTOPMONITOR, F_PVCOUNT, F_PVINDEX, F_PVNAME,
-		F_PVSTATUS, F_PVSEVERITY, F_PVMESSAGE, F_PVFLUSH, F_PVERROR,
-		F_PVGETCOMPLETE, F_PVASSIGNED, F_PVCONNECTED, F_PVPUTCOMPLETE,
-		F_PVCHANNELCOUNT, F_PVCONNECTCOUNT, F_PVASSIGNCOUNT,
-		F_PVDISCONNECT, F_SEQLOG, F_MACVALUEGET, F_OPTGET,
-		F_NONE };
-
-char	*fcode_str[] = { "delay", "efSet", "efTest", "efClear", "efTestAndClear",
-		"pvGet", "pvGetQ", "pvFreeQ", "pvPut", "pvTimeStamp", "pvAssign",
-		"pvMonitor", "pvStopMonitor", "pvCount", "pvIndex", "pvName",
-		"pvStatus", "pvSeverity", "pvMessage", "pvFlush", "pvError",
-		"pvGetComplete", "pvAssigned", "pvConnected", "pvPutComplete",
-		"pvChannelCount", "pvConnectCount", "pvAssignCount",
-		"pvDisconnect", "seqLog", "macValueGet", "optGet",
-		NULL };
+
 
 enum fcode func_name_to_code(fname)
 char	*fname;
@@ -618,10 +610,12 @@ char	*fname;
 	 - macValueGet()
 	 - seqLog()
 */
-int special_func(stmt_type, ep, sp)
-int		stmt_type;	/* ACTION_STMT or EVENT_STMT */
-Expr		*ep;		/* ptr to function in the expression */
-Expr		*sp;		/* current State struct */
+int special_func(int stmt_type,Expr *ep,Expr *sp)
+/*
+    int		stmt_type;	 ACTION_STMT or EVENT_STMT
+    Expr	*ep;		 ptr to function in the expression
+    Expr	*sp;		 current State struct
+*/
 {
 	char		*fname; /* function name */
 	Expr		*ep1, *ep2, *ep3; /* parameters */
@@ -720,12 +714,14 @@ Expr		*sp;		/* current State struct */
 }
 
 /* Generate code for all event flag functions */
-void gen_ef_func(stmt_type, ep, sp, fname, func_code)
-int		stmt_type;	/* ACTION_STMT or EVENT_STMT */
-Expr		*ep;		/* ptr to function in the expression */
-Expr		*sp;		/* current State struct */
-char		*fname;		/* function name */
-enum		fcode func_code;/* function code */
+void gen_ef_func(int stmt_type,Expr *ep,Expr *sp,char *fname,enum fcode func_code)
+/*
+    int		stmt_type;	 ACTION_STMT or EVENT_STMT 
+    Expr	*ep;		 ptr to function in the expression 
+    Expr	*sp;		 current State struct 
+    char	*fname;		 function name 
+    enum	fcode func_code; function code 
+*/
 {
 	Expr		*ep1, *ep2, *ep3;
 	Var		*vp;
@@ -764,14 +760,17 @@ enum		fcode func_code;/* function code */
  * "add_length" => the array length (1 if not an array) follows the channel id 
  * "num_params > 0" => add default (zero) parameters up to the spec. number
  */
-void gen_pv_func(stmt_type, ep, sp, fname, func_code, add_length, num_params)
-int		stmt_type;	/* ACTION_STMT or EVENT_STMT */
-Expr		*ep;		/* ptr to function in the expression */
-Expr		*sp;		/* current State struct */
-char		*fname;		/* function name */
-enum		fcode func_code;/* function code */
-int		add_length;	/* add array length after channel id */
-int		num_params;	/* number of params to add (if omitted) */
+void gen_pv_func(int stmt_type,Expr *ep,Expr *sp,
+    char *fname,enum fcode func_code,int add_length,int num_params)
+/*
+    int		stmt_type;	 ACTION_STMT or EVENT_STMT 
+    Expr	*ep;		 ptr to function in the expression 
+    Expr	*sp;		 current State struct 
+    char	*fname;		 function name 
+    enum	fcode func_code; function code 
+    int		add_length;	 add array length after channel id 
+    int		num_params;	 number of params to add (if omitted) 
+*/
 {
 	Expr		*ep1, *ep2, *ep3;
 	Var		*vp;
