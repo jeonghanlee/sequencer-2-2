@@ -80,7 +80,7 @@ void		print_usage();
 *
 * This routine calls yyparse(), which never returns.
 *-*************************************************************************/
-void main(argc, argv)
+int main(argc, argv)
 int	argc;
 char	*argv[];
 {
@@ -116,6 +116,8 @@ char	*argv[];
 
 	/* Call the SNC parser */
 	Global_yyparse();
+        
+        return 0; /* never reached */
 }
 /*+************************************************************************
 *  NAME: get_args
