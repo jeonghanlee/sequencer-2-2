@@ -381,26 +381,36 @@ void seq_conn_handler(void *var,int connected)
 	/* If PV not connected */
 	if (!connected)
 	{
-		pDB->connected = FALSE;
-		pSP->connCount--;
-		pDB->monitored = FALSE;
 #ifdef	DEBUG
 		errlogPrintf("%s disconnected from %s\n", pDB->pVarName,
 			pDB->dbName);
 #endif	/*DEBUG*/
+		if(pDB->connected) {
+			pDB->connected = FALSE;
+			pSP->connCount--;
+			pDB->monitored = FALSE;
+		} else {
+			printf("%s disconnected but already disconnected %s\n",
+				pDB->pVarName,pDB->dbName);
+		}
 	}
 	else	/* PV connected */
 	{
-		pDB->connected = TRUE;
-		pSP->connCount++;
-		if (pDB->monFlag)
-			pDB->monitored = TRUE;
 #ifdef	DEBUG
 		errlogPrintf("%s connected to %s\n", pDB->pVarName,pDB->dbName);
 #endif	/*DEBUG*/
-		pDB->dbCount = pvVarGetCount(var);
-		if (pDB->dbCount > pDB->count)
-			pDB->dbCount = pDB->count;
+                if(!pDB->connected) {
+			pDB->connected = TRUE;
+			pSP->connCount++;
+			if (pDB->monFlag)
+				pDB->monitored = TRUE;
+			pDB->dbCount = pvVarGetCount(var);
+			if (pDB->dbCount > pDB->count)
+				pDB->dbCount = pDB->count;
+		} else {
+			printf("%s connected but already connected %s\n",
+				pDB->pVarName,pDB->dbName);
+		}
 	}
 
 	/* Wake up each state set that is waiting for event processing */
