@@ -1,4 +1,4 @@
-# $Id: RULES_BUILD,v 1.6 2001-03-19 20:48:58 mrk Exp $
+# $Id: RULES_BUILD,v 1.7 2001-03-20 23:08:54 jba Exp $
 #
 #	State notation language (snc) rules
 
@@ -31,7 +31,12 @@ DEPENDS_SRC_FILES = $(filter-out %.st %.stt,$(SRC_FILES)) \
 
 ifndef SNCSEQ
 SNCSEQ=$(TOP)
+SNCSEQ_LIB      = $(SNCSEQ)/lib/$(T_A)
+SNCSEQ_BIN      = $(SNCSEQ)/bin/$(T_A)
 endif
+
+seq_DIR=$(SNCSEQ_LIB)
+pv_DIR=$(SNCSEQ_LIB)
 
 ifndef SNC
 SNC = $(SNCSEQ)/bin/$(EPICS_HOST_ARCH)/snc$(HOSTEXE)
