@@ -1,0 +1,3 @@
+This directory contains examples of snl source file (.st) which
+have deliberate errors in them, in order to test the compilers error
+checking.

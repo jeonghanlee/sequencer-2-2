@@ -1,0 +1,54 @@
+#==============================================================
+#
+#  Abs:  Make file for IOC Components
+#      
+#  Name: Makefile.Vx 
+#
+#  Facility:  SLAC/PEP-II 
+#
+#  Auth: dd-mmm-yyyy, Author's Name  (USERNAME)
+#  Rev:  dd-mmm-yyyy, First Lastname (USERNAME)
+#
+#--------------------------------------------------------------
+#  Mod:
+#       9-Sep-99 Greg (greg@slac.stanford.edu)
+#       Added redefinition of SNC, so as to use snc in local makebaseApp 
+#       filesystem. William will take this out or fix it up.
+#       
+#
+#==============================================================
+#
+# default definition for local epics directory
+TOP = ../../..
+include $(TOP)/config/CONFIG_APP
+#----------------------------------------
+#  ADD MACRO DEFINITIONS AFTER THIS LINE
+#
+#INC += xxx.h
+
+# This redefines the macro which invokes the snc compiler, to use the version
+# in this "makeBaseApp" filesystem.
+SNC = ${TOP}/bin/${HOST_ARCH}/snc
+
+USR_CFLAGS   += -O0
+
+# Needed for sequences
+USR_CPPFLAGS += -I $(EPICS_BASE)/include
+
+# Sequences 
+SRCS.c += ../misplacedExit.st sncExOpt_DuplOpt.st
+
+# Sequences Objects
+OBJS += misplacedExit.o sncExOpt_DuplOpt.o
+
+# Install objects and executables
+PROD += misplacedExit.o sncExOpt_DuplOpt.o
+
+include $(TOP)/config/RULES.Vx
+#
+#----------------------------------------
+#  ADD RULES AFTER THIS LINE
+
+
+
+
