@@ -28,7 +28,6 @@ LIBRARY_DEFAULT      += pvKtl
 LIBRARY_WIN32        += -nil-
 pvKtl_SRCS_vxWorks   += -nil-
 pvKtl_SRCS_DEFAULT   += pvKtl.cc pvKtlCnv.cc
-pv_SRCS_WIN32        += pvKtl.cc pvKtlCnv.cc
 
 endif
 
@@ -42,10 +41,8 @@ INC               += pvCa.h
 
 LIBRARY_DEFAULT   += pvCa
 LIBRARY_WIN32     += -nil-
-pv_SRCS_vxWorks   += pvCa.cc
-pvCa_SRCS_DEFAULT += pvCa.cc
-pv_SRCS_WIN32     += pvCa.cc
-pv_DLL_LIBS       += ca
+pvCa_SRCS           += pvCa.cc
+pvCa_DLL_LIBS       += ca
 
 endif
 
@@ -60,7 +57,6 @@ INC               += pvFile.h
 LIBRARY_DEFAULT   += pvFile
 LIBRARY_WIN32     += -nil-
 pvFile_SRCS       += pvFile.cc
-pv_SRCS_WIN32     += $(pvFile_SRCS)
 
 endif
 
