@@ -1,0 +1,31 @@
+# $Id: RULES_BUILD,v 1.1 2001-02-23 20:21:21 mrk Exp $
+#
+#	State notation language (snc) rules
+
+ifndef SNC
+SNC = $(SNCSEQ)/bin/$(EPICS_HOST_ARCH)/snc$(HOSTEXE)
+endif
+
+%.i: ../%.st
+	@echo "preprocessing $<"
+	@$(RM) $@
+	$(CPP) $(CPPSNCFLAGS) $(INCLUDES) $< > $@
+
+%_sncreg.cpp: %.i
+	@echo "converting $<"
+	@$(RM) $@
+	$(SNC) $(TARGET_SNCFLAGS) $(SNCFLAGS) $< -o $@
+
+%_sncreg.cpp: ../%.stt
+	@echo "converting $< "
+	@$(RM) $@
+	$(SNC) $(TARGET_SNCFLAGS) $(SNCFLAGS) $< -o $@
+
+%_snc.c: %_sncreg.cpp
+	@$(RM) $@
+	@$(CP) $< $@
+
+%$(OBJ): %_snc$(OBJ) %_sncreg$(OBJ)
+	@$(RM) $@
+	$(LD) -o $@ $^
+
