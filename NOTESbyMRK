@@ -21,6 +21,7 @@ in src/dev
 in src/snc
     The generated main program is different. See below
     New option -i. See below
+    Made many changes to get rid of warning messages.
 
 in src/seq
     seq now returns an epicsThreadId
@@ -28,6 +29,13 @@ in src/seq
     several epicsPrintf replaced with printf.
     Got rid of simple shell supplied by seq. No longer needed.
 
+in src/pv
+
+    Only LIBRARY = pv is generated. It includes the stuff
+    that was in pvKtl, pvCa, and pvFile if they are requested.
+    This was done because the old way caused a circircular dependency
+    that is not accepted by windows.
+    
 
 cd <top>/test/simple/O.<arch>
 sncExample -s "user=???" 
