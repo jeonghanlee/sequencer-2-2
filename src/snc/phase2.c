@@ -162,7 +162,14 @@ void gen_preamble()
 	gen_opt_defn(reent_opt, "REENT_OPT");
 
 	/* Forward references of tables: */
+	printf ("\n#ifdef __cplusplus\n");
+	printf("extern \"C\" {\n");
+	printf ("#endif /* __cplusplus */\n");
 	printf("\nextern struct seqProgram %s;\n", prog_name);
+	printf ("\n#ifdef __cplusplus\n");
+	printf("}\n");
+	printf ("#endif /* __cplusplus */\n");
+
 	printf ("\n#ifndef __cplusplus\n");
 
         /* Main program (if "main" option set) */
