@@ -20,6 +20,8 @@ LIBSRCS = seq_main.c seq_task.c seq_ca.c seq_if.c seq_mac.c seq_prog.c \
 
 LIBSRCS += $(seq_NAMS:%=%.c)
 
+LIBSRCS_RTEMS += seqCommands.c
+
 include $(TOP)/configure/RULES
 #----------------------------------------
 #  ADD RULES AFTER THIS LINE
