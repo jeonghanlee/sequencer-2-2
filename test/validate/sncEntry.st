@@ -2,7 +2,7 @@ program sncentry
 /* snc test program to test entry and exit condition execution.
 */
 
-%%#include "taskLib.h"
+%%#include "osiThread.h"
 
 float v;
 /* assign v to "grw:xxxExample";
@@ -19,7 +19,7 @@ ss ss1
 	    entry 
 	    { 
 		printf("Also pause on entry to low\n");
-		taskDelay(60);
+		threadSleep(1.0);
 	    }
 	    when(v>5.0)
 	    {

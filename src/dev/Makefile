@@ -1,0 +1,27 @@
+TOP = ../..
+
+include $(TOP)/configure/CONFIG
+#----------------------------------------
+#  ADD MACRO DEFINITIONS AFTER THIS LINE
+
+#  Include files
+INC =
+
+#  Include files
+USR_CPPFLAGS = -I../../seq
+
+#  Internal debug control
+#USR_CPPFLAGS += -DDEBUG=TRUE
+
+#  seqdev library
+LIBRARY = seqdev
+
+LIBSRCS = dev.c
+
+#  Device support declarations
+DBDINSTALL = seq.dbd
+
+include $(TOP)/configure/RULES
+#----------------------------------------
+#  ADD RULES AFTER THIS LINE
+

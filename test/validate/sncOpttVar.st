@@ -10,7 +10,6 @@ option +r;
  *      and on each entry when +t is in effect (the default). 
  *   iii. Re-entrant code, variable d is assigned properly in entry{}.
  */
-%%#include "taskLib.h"
 
 float d; /* Delay variable for managing low state*/
 float v; /* Iteration Counter for managing high state*/

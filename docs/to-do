@@ -48,3 +48,16 @@ general:
 - cleanup code has a problem (in CA?); if delete a sequencer, get
   errors when deleting the next one (memPartAlloc errors in free());
   MAYBE only when second one is a cloned copy?
+
+from "aaareadme":
+
+- have to finish Makefiles and test for test (move test directory descr from
+  top to test's README)
+
+- have to merge Greg's docs into the manual
+
+- files to watch: parse.c/.h (E_DECL)
+		seq_delay and clearDelay etc.
+
+- do rigorous diffs between Unix version pre-and-post merge
+

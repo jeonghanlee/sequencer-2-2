@@ -1,0 +1,21 @@
+# $Id: Makefile.pv,v 1.1.1.1 2000-04-04 03:22:42 wlupton Exp $
+#
+# Makefile fragment to define PROD_LIBS for linking against the PV libraries
+# (accounting for the enabled message systems)
+
+PROD_LIBS += pv
+pv_DIR     = $(SUPPORT_LIB)
+
+ifeq "$(PVFILE)" "TRUE"
+PROD_LIBS += pvFile 
+endif
+
+ifeq "$(PVKTL)" "TRUE"
+PROD_LIBS += pvKtl ktl ktlker
+ktl_DIR    = $(KROOT)/rel/default/lib
+endif
+
+ifeq "$(PVCA)" "TRUE"
+PROD_LIBS += pvCa ca
+endif
+

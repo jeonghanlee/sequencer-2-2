@@ -1,5 +1,4 @@
 #RELEASE Location of external products
-EPICS_BASE=/usr/local/epics/latest/base
-TEMPLATE_TOP=/usr/local/epics/latest/base/templates/makeBaseApp/top
-SHARE=/usr/local/epics/latest/base_shareR1.0
-#SHARE=
+EPICS_BASE=/home/wlupton/epics/anl/base
+TEMPLATE_TOP=$(EPICS_BASE)/templates/makeBaseApp/top
+SHARE=/home/wlupton/epics/seq

@@ -9,12 +9,14 @@ endif
 #Other share areas can be added similar to following
 #ifdef <share_top>
 #USR_INCLUDES += -I$(<share_top>)/include
-#<share_top>BIN = $(<share_top>)/bin/$(T_A)
+#<share_top>_BIN = $(<share_top>)/bin/$(T_A)
+#<share_top>_LIB = $(<share_top>)/lib/$(T_A)
 #endif
 
 ifdef SHARE
 USR_INCLUDES += -I$(SHARE)/include
 SHARE_BIN = $(SHARE)/bin/$(T_A)
+SHARE_LIB = $(SHARE)/lib/$(T_A)
 USER_DBDFLAGS += -I .. -I $(SHARE)/dbd -I $(EPICS_BASE)/dbd
 endif
 

@@ -1,3 +1,7 @@
-TOP=..
-include $(TOP)/config/CONFIG_APP
-include $(TOP)/config/RULES_ARCHS
+TOP = ..
+include $(TOP)/configure/CONFIG
+DIRS += pv
+DIRS += seq
+DIRS += dev
+DIRS += snc
+include $(TOP)/configure/RULES_DIRS

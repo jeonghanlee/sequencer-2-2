@@ -1,0 +1,21 @@
+#CONFIG
+include $(TOP)/configure/CONFIG_APP
+# Add any changes to make rules here
+
+#CROSS_COMPILER_TARGET_ARCHS = vxWorks-68040
+CROSS_COMPILER_TARGET_ARCHS =
+
+# shareable library version (from CONFIG_BASE)
+SHRLIB_VERSION = $(EPICS_VERSION).$(EPICS_REVISION)
+
+# sequencer version number (replaces old Version file)
+SEQ_VERSION = 2.0.0
+
+# override to use snc from SEQ
+SNC = $(SEQ)/bin/$(EPICS_HOST_ARCH)/snc
+
+# which message systems to support (comment to disable)
+PVCA = TRUE
+#PVFILE = TRUE
+#PVKTL = TRUE
+

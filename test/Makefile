@@ -1,8 +1,11 @@
 #Makefile one level down from top of application tree
 TOP = ..
-include $(TOP)/config/CONFIG_APP
+include $(TOP)/configure/CONFIG_APP
 
 #directories in which to build
-DIRS += simple validate
+DIRS += simple 
+DIRS += validate
+DIRS += demo
 
-include $(TOP)/config/RULES_TOP
+include $(TOP)/configure/RULES_TOP
+

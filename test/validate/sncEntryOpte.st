@@ -1,9 +1,9 @@
 program sncentryopte
 /* snc test program to test entry and exit condition execution, with -e
  * option. Test -e, that entry will be executed on each iteration.
-*/
+ */
 
-%%#include "taskLib.h"
+%%#include "osiThread.h"
 
 float v;
 
@@ -15,7 +15,7 @@ ss ss1
 	    entry 
 	    { 
 		printf("Pause on each entry to low, including 'iterations'\n");
-		taskDelay(60);
+		threadSleep(1.0);
 	    }
 	    when(v>5.0)
 	    {

@@ -1,0 +1,4 @@
+#RELEASE Location of external products
+EPICS_BASE=/home/wlupton/epics/anl/base
+TEMPLATE_TOP=$(EPICS_BASE)/templates/makeBaseApp/top
+SEQ=/home/wlupton/epics/seq

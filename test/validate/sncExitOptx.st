@@ -1,9 +1,9 @@
 program sncexitoptx
 /* snc test program to test entry and exit condition execution, with -e
  * option. Test -e, that entry will be executed on each iteration.
-*/
+ */
 
-%%#include "taskLib.h"
+%%#include "osiThread.h"
 
 float v;
 
@@ -25,7 +25,7 @@ ss ss1
 	    exit 
 	    { 
 		printf("Pause on each exit of low, including 'iterations'\n");
-		taskDelay(60);
+		threadSleep(1.0);
 	    }
 
 	}

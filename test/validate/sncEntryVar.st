@@ -4,8 +4,6 @@ program sncentryvar
  * In this case, CD01:FD:PERIOD has units "seconds", and lopr = 10, hopr = 360.
  */
 
-%%#include "taskLib.h"
-
 float v;
 assign v to "CD01:FD:PERIOD";
 monitor v;
