@@ -12,7 +12,6 @@ SNCFLAGS_vxWorks += -nil-
 #  Sequence programs and/or object files to create
 SEQS = sncDelay sncEntry sncEntryOpte sncEntryVar sncExitOptx sncOptt sncOpttVar
 PROD_HOST = $(SEQS)
-OBJS_vxWorks = $(SEQS)
 
 sncDelay_SRCS = sncDelay.st
 sncEntry_SRCS = sncEntry.st
@@ -25,16 +24,7 @@ sncOpttVar_SRCS = sncOpttVar.st
 #  Libraries
 PROD_LIBS += seq
 PROD_LIBS += pv
-PROD_LIBS += iocsh
-PROD_LIBS += miscIoc
-PROD_LIBS += rsrvIoc
-PROD_LIBS += dbtoolsIoc
-PROD_LIBS += asIoc
-PROD_LIBS += dbIoc
-PROD_LIBS += registryIoc
-PROD_LIBS += dbStaticIoc
-PROD_LIBS += ca
-PROD_LIBS += Com
+PROD_LIBS += $(EPICS_BASE_HOST_LIBS)
 
 include $(TOP)/configure/RULES
 #----------------------------------------
