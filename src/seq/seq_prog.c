@@ -82,7 +82,7 @@ SPROG *seqFindProg(epicsThreadId threadId)
 /*
  * seqFindProgByName() - find a program in the state program list by name.
  */
-epicsShareFunc SPROG *epicsShareAPI seqFindProgByName(char *pProgName)
+SPROG *seqFindProgByName(char *pProgName)
 {
 	PROG_NODE	*pNode;
 	SPROG		*pSP;
