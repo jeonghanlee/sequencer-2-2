@@ -17,8 +17,6 @@ PROD = control
 PROD_LIBS += seq
 seq_DIR    = $(INSTALL_LIB)
 
-include $(TOP)/test/Makefile.pv
-
 include $(TOP)/configure/RULES
 #----------------------------------------
 #  ADD RULES AFTER THIS LINE

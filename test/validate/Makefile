@@ -24,6 +24,7 @@ sncOpttVar_SRCS = sncOpttVar.st
 
 #  Libraries
 PROD_LIBS += seq
+PROD_LIBS += pv
 PROD_LIBS += iocsh
 PROD_LIBS += miscIoc
 PROD_LIBS += rsrvIoc
@@ -34,8 +35,6 @@ PROD_LIBS += registryIoc
 PROD_LIBS += dbStaticIoc
 PROD_LIBS += ca
 PROD_LIBS += Com
-
-include $(TOP)/test/Makefile.pv
 
 include $(TOP)/configure/RULES
 #----------------------------------------

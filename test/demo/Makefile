@@ -19,7 +19,6 @@ demo_SRCS += demo.st
 #  Libraries
 PROD_LIBS += seq
 PROD_LIBS += pv
-PROD_LIBS += pvCa
 PROD_LIBS += iocsh
 PROD_LIBS += miscIoc
 PROD_LIBS += rsrvIoc
@@ -39,7 +38,6 @@ demo_SRCS_vxWorks += -nil-
 demo_OBJS_vxWorks += $(EPICS_BASE_BIN)/iocCoreLibrary
 demo_OBJS_vxWorks += $(INSTALL_BIN)/seqLibrary
 demo_OBJS_vxWorks += $(INSTALL_BIN)/pvLibrary
-demo_OBJS_vxWorks += $(INSTALL_BIN)/pvCaLibrary
 
 
 demo_OBJS += $(EPICS_BASE_BIN)/aoRecord.o
