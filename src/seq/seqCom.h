@@ -186,7 +186,7 @@ epicsShareFunc long	epicsShareAPI seq_pvAssignCount(SS_ID);	/* returns number of
 epicsShareFunc long	epicsShareAPI seq_pvCount(SS_ID, long);	/* returns number of elements in arr */
 epicsShareFunc void	epicsShareAPI seq_pvFlush();			/* flush put/get requests */
 epicsShareFunc long	epicsShareAPI seq_pvIndex(SS_ID, long);	/* returns index of pv */
-epicsShareFunc long	epicsShareAPI seq_seqLog();			/* Logging: variable number of params */
+epicsShareFunc long	epicsShareAPI seq_seqLog(SS_ID, const char *, ...);	/* Logging */
 epicsShareFunc void	epicsShareAPI seq_delayInit(SS_ID, long, double);/* initialize a delay entry */
 epicsShareFunc long	epicsShareAPI seq_delay(SS_ID, long);		/* test a delay entry */
 epicsShareFunc char   *epicsShareAPI seq_macValueGet(SS_ID, char *);	/* Given macro name, return ptr to val*/

@@ -75,6 +75,7 @@
 #include	<errno.h>
 #include	<fcntl.h>
 #include 	<string.h>
+#include 	<stdarg.h>
 
 /* #include 	<unistd.h>*/
 
@@ -673,16 +674,13 @@ SPROG		*pSP;
 	}
 }
 /*
- * seq_log
+ * seq_logv
  * Log a message to the console or a file with thread name, date, & time of day.
  * The format looks like "mythread 12/13/93 10:07:43: Hello world!".
  */
 #define	LOG_BFR_SIZE	200
 
-epicsStatus seq_log(pSP, fmt, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
-SPROG		*pSP;
-char		*fmt;		/* format string */
-int		arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8; /* arguments */
+epicsStatus seq_logv(SPROG *pSP, const char *fmt, va_list args)
 {
 	int		count, status;
 	TS_STAMP	timeStamp;
@@ -706,7 +704,7 @@ int		arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8; /* arguments */
 	*pBfr++ = ' ';
 
 	/* Append the user's msg to the buffer */
-	sprintf(pBfr, fmt, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
+	vsprintf(pBfr, fmt, args);
 	pBfr += strlen(pBfr);
 
 	/* Write the msg */
@@ -735,13 +733,13 @@ int		arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8; /* arguments */
  * seq_seqLog() - State program interface to seq_log().
  * Does not require ptr to state program block.
  */
-epicsShareFunc long epicsShareAPI seq_seqLog(ssId, fmt, arg1,arg2, arg3, arg4, arg5, arg6, arg7, arg8)
-SS_ID		ssId;
-char		*fmt;		/* format string */
-int		arg1,arg2, arg3, arg4, arg5, arg6, arg7, arg8; /* arguments */
+epicsShareFunc long epicsShareAPI seq_seqLog(SS_ID ssId, const char *fmt, ...)
 {
 	SPROG		*pSP;
+    va_list     args;
 
+    va_start (args, fmt);
 	pSP = ((SSCB *)ssId)->sprog;
-	return seq_log(pSP, fmt, arg1,arg2, arg3, arg4, arg5, arg6, arg7, arg8);
+	return seq_logv(pSP, fmt, args);
+    va_end (args);
 }
