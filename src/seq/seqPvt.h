@@ -241,7 +241,5 @@ void	seqMacEval (char *, char *, long, MACRO *);
 epicsStatus seq_log ();
 SPROG	*seqFindProg (epicsThreadId);
 SPROG  *seqFindProg(epicsThreadId tid);
-SPROG  *seqFindProgByName(char *);
-
 
 #endif	/*INCLseqPvth*/
