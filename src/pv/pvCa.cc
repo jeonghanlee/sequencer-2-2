@@ -1,4 +1,4 @@
-/* $Id: pvCa.cc,v 1.3 2001-03-09 21:11:51 mrk Exp $
+/* $Id: pvCa.cc,v 1.4 2001-03-21 15:03:35 mrk Exp $
  *
  * Implementation of EPICS sequencer CA library (pvCa)
  *
@@ -15,9 +15,11 @@
 #include "pvCa.h"
 
 /* handlers */
+extern "C" {
 static void connectionHandler( struct connection_handler_args args );
 static void accessHandler( struct event_handler_args args );
 static void monitorHandler( struct event_handler_args args );
+}
 
 /* utilities */
 static pvSevr sevrFromCA( int status );	/* CA severity as pvSevr */
@@ -777,6 +779,9 @@ static void copyFromCA( int type, int count,
 
 /*
  * $Log: not supported by cvs2svn $
+ * Revision 1.3  2001/03/09 21:11:51  mrk
+ * ca_pend no longer exists
+ *
  * Revision 1.2  2000/04/14 21:53:28  jba
  * Changes for win32 build.
  *
