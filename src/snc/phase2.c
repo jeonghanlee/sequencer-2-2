@@ -186,8 +186,8 @@ void gen_preamble()
         /* Sequencer registration (if "init_register" option set) */
 	if (init_reg_opt && !main_opt) {
 	    printf ("\n/* Register sequencer commands and program */\n");
-	    printf ("void seqRegisterSequencerCommands(void);\n");
-	    printf ("void seqRegisterSequencerProgram(struct seqProgram *);\n");
+	    printf ("extern \"C\" void seqRegisterSequencerCommands(void);\n");
+	    printf ("extern \"C\" void seqRegisterSequencerProgram(struct seqProgram *);\n");
 	    printf ("\nclass %sInit {\n", prog_name);
 	    printf ("public:\n");
 	    printf ("    %sInit () { seqRegisterSequencerCommands(); seqRegisterSequencerProgram (&%s); }\n", prog_name, prog_name);
