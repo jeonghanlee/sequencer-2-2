@@ -11,7 +11,7 @@ INC     += pv.h pvAlarm.h
 
 LIBRARY += pv
 pv_SRCS += pvNew.cc pv.cc
-pv_DLL_LIBS = Com
+pv_LIBS += ca Com
 
 # For R3.13 compatibility only
 OBJLIB_vxWorks=pv
@@ -42,7 +42,6 @@ USR_CPPFLAGS      += -DPVCA
 INC               += pvCa.h
 
 pv_SRCS           += pvCa.cc
-pv_DLL_LIBS       += ca
 
 endif
 
