@@ -1,3 +1,10 @@
+Version seq-2-0-4 of the sequencer
+
+Changes have been made to follow the R3.14.2 build rules.
+Generate an example application to see how to build sequencer applications.
+Note that this version requires R3.14.2 of base.
+
+
 Version 2.0.1 of the Sequencer
 
 Marty Kraimer
