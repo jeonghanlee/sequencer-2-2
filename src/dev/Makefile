@@ -4,12 +4,17 @@ include $(TOP)/configure/CONFIG
 #----------------------------------------
 #  ADD MACRO DEFINITIONS AFTER THIS LINE
 
-USR_CPPFLAGS = -I../../seq
-
-OBJS_IOC += devSequencer
-
 #  Device support declarations
 DBD = devSequencer.dbd
+
+USR_CFLAGS += -I../../seq
+
+LIBRARY = seqDev
+seqDev_LIBS += seq pv 
+seqDev_LIBS += $(EPICS_BASE_IOC_LIBS)
+seq_DIR=$(INSTALL_LIB)
+
+LIBSRCS = devSequencer.c
 
 include $(TOP)/configure/RULES
 #----------------------------------------
