@@ -5,7 +5,7 @@ include $(TOP)/configure/CONFIG
 #  ADD MACRO DEFINITIONS AFTER THIS LINE
 
 #  Include files
-INC = seqCom.h seq.h
+INC = seqCom.h
 
 #  Internal debug control
 #USR_CPPFLAGS = -DDEBUG=TRUE

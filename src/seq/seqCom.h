@@ -38,6 +38,7 @@
 #ifndef	INCLseqComh
 #define	INCLseqComh
 
+#ifndef SEQ_UGLY_WINDOWS_HACK
 #include	<stdio.h>	/* standard i/o defs */
 #include	<stdlib.h>	/* standard library defs */
 
@@ -45,6 +46,7 @@
 #include	"pvAlarm.h"	/* status and severity defs */
 #include	"epicsThread.h"	/* time stamp defs */
 #include	"epicsTime.h"	/* time stamp defs */
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -162,7 +164,6 @@ struct	seqProgram
  * The SNC must generate these modules--see gen_ss_code.c.
  */
 #ifndef INCLseqh /* prefer more-specific seq.h prototype */
-epicsShareFunc epicsThreadId epicsShareAPI seq(void *, char *, unsigned int);/* initiate state program */
 #endif
 epicsShareFunc void	epicsShareAPI seq_efSet(SS_ID, long);		/* set an event flag */
 epicsShareFunc long	epicsShareAPI seq_efTest(SS_ID, long);	/* test an event flag */
@@ -204,6 +205,8 @@ epicsShareFunc long epicsShareAPI seqStop (epicsThreadId);
 epicsShareFunc void epicsShareAPI
     seqRegisterSequencerProgram (struct seqProgram *p);
 epicsShareFunc void epicsShareAPI seqRegisterSequencerCommands (void);
+epicsShareFunc epicsThreadId epicsShareAPI
+    seq(struct seqProgram *, char *, unsigned int);
 
 #ifdef __cplusplus
 } /* extern "C" */
