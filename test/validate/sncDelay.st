@@ -3,7 +3,7 @@ program sncdelay
    using external events.
 */
 
-%%#include "osiThread.h"
+%%#include "epicsThread.h"
  
 float v;
 /* assign v to "grw:xxxExample"; 
@@ -16,12 +16,12 @@ ss ss1
 	    when(v>5.0)
 	    {
 		printf("low, v = %g, now changing to high\n",v);
-		threadSleep(2.0);
+		epicsThreadSleep(2.0);
 	    } state high
 	    when( v<5.0 )
 	    {
 		printf("low, v = %g, now transition to low again\n",v);
-		threadSleep(0.1);
+		epicsThreadSleep(0.1);
 		v = 5.1;
 	    } state low
 	}
@@ -33,7 +33,7 @@ ss ss1
 	    } state low
 	    when(v>5.0)
 	    {
-		threadSleep(1.0);
+		epicsThreadSleep(1.0);
 		printf("high, v = %g, now changing to low\n",v);
 		v = 4.9;
 	    } state low

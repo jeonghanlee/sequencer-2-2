@@ -3,7 +3,7 @@ program sncentryopte
  * option. Test -e, that entry will be executed on each iteration.
  */
 
-%%#include "osiThread.h"
+%%#include "epicsThread.h"
 
 float v;
 
@@ -15,7 +15,7 @@ ss ss1
 	    entry 
 	    { 
 		printf("Pause on each entry to low, including 'iterations'\n");
-		threadSleep(1.0);
+		epicsThreadSleep(1.0);
 	    }
 	    when(v>5.0)
 	    {
