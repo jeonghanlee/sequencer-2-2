@@ -4,8 +4,9 @@ include $(TOP)/configure/CONFIG
 #----------------------------------------
 #  ADD MACRO DEFINITIONS AFTER THIS LINE
 
-#  Generate snc main programs (not needed under VxWorks)
+SNC = $(TOP)/bin/$(EPICS_HOST_ARCH)/snc
 
+#  Generate snc main programs (not needed under VxWorks)
 SNCFLAGS_DEFAULT += +m
 SNCFLAGS_vxWorks += -nil-
 

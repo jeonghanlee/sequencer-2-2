@@ -4,14 +4,13 @@ include $(TOP)/configure/CONFIG
 #----------------------------------------
 #  ADD MACRO DEFINITIONS AFTER THIS LINE
 
-#  Generate snc main programs
+SNC = $(TOP)/bin/$(EPICS_HOST_ARCH)/snc
 
 
 DBD += demo.dbd
 
 #  Products
 PROD_IOC = demo
-
 
 # <name>_registerRecordDeviceDriver.cpp will be created from <name>.dbd
 demo_SRCS += demo_registerRecordDeviceDriver.cpp
