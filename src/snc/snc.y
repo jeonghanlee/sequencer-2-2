@@ -455,6 +455,7 @@ for_stmt
 pp_code		/* pre-processor code (e.g. # 1 "test.st") */
 :	PP_SYMBOL NUMBER STRING CR		{ pp_code($2, $3, ""); }
 |	PP_SYMBOL NUMBER STRING NUMBER CR	{ pp_code($2, $3, $4); }
+|	PP_SYMBOL STRING CR	{ /* Silently consume #pragma lines */ } 
 ;
 
 pp_codes	/* one or more pp_code */
