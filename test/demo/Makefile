@@ -36,7 +36,7 @@ PROD_LIBS += seqdev seq
 PROD_LIBS += iocsh miscIoc rsrvIoc dbtoolsIoc asIoc dbIoc registryIoc dbStaticIoc ca Com readline curses
 
 seq_DIR    = $(SEQ_LIB)
-seqdev_DIR    = $(SEQ_LIB)
+seqdev_DIR = $(SEQ_LIB)
 
 include $(TOP)/test/Makefile.pv
 
@@ -64,9 +64,6 @@ endif
 
 #  VxWorks library
 LIBRARY_vxWorks = demoIoc
-demo_LIBRARY_RTEMS = demoIoc
-# demoIoc_OBJS_RTEMS += registerRecordDeviceDriver.o
-
 
 demoIoc_OBJS_vxWorks += $(EPICS_BASE_BIN)/iocCoreLibrary
 demoIoc_OBJS_vxWorks += $(EPICS_BASE_BIN)/iocInit.o
