@@ -142,10 +142,8 @@ Expr		*ssp;			/* Parent state set */
 	/* Entry function declaration */
 	printf("\n/* Entry function for state \"%s\" in state set \"%s\" */\n",
  		sp->value, ssp->value);
-	printf("static void I_%s_%s(ssId, pVar)\n",
+	printf("static void I_%s_%s(SS_ID ssId, struct UserVar *pVar)\n{\n",
 		ssp->value, sp->value);
-	printf("SS_ID\tssId;\n");
-	printf("struct UserVar\t*pVar;\n{");
 
 	for ( ep = sp->left; ep != NULL; ep = ep->next )
 	{
@@ -180,10 +178,8 @@ Expr		*ssp;			/* Parent state set */
 	/* Exit function declaration */
 	printf("\n/* Exit function for state \"%s\" in state set \"%s\" */\n",
  		sp->value, ssp->value);
-	printf("static void O_%s_%s(ssId, pVar)\n",
+	printf("static void O_%s_%s(SS_ID ssId, struct UserVar *pVar)\n{\n",
 		ssp->value, sp->value);
-	printf("SS_ID\tssId;\n");
-	printf("struct UserVar\t*pVar;\n{");
 
 	for ( ep = sp->left; ep != NULL; ep = ep->next )
 	{
@@ -220,9 +216,7 @@ Expr		*sp;
 
 	printf("\n/* Delay function for state \"%s\" in state set \"%s\" */\n",
 	 sp->value, ssp->value);
-	printf("static void D_%s_%s(ssId, pVar)\n", ssp->value, sp->value);
-	printf("SS_ID\tssId;\n");
-	printf("struct UserVar\t*pVar;\n{\n");
+	printf("static void D_%s_%s(SS_ID ssId, struct UserVar *pVar)\n{\n", ssp->value, sp->value);
 
 	/* For each transition: */
 	for (tp = sp->left; tp != NULL; tp = tp->next)
@@ -283,11 +277,8 @@ Expr		*ssp; /* Parent state set */
 	/* Action function declaration */
 	printf("\n/* Action function for state \"%s\" in state set \"%s\" */\n",
 	 sp->value, ssp->value);
-	printf("static void A_%s_%s(ssId, pVar, transNum)\n",
+	printf("static void A_%s_%s(SS_ID ssId, struct UserVar *pVar, short transNum)\n{\n",
 	 ssp->value, sp->value);
-	printf("SS_ID\tssId;\n");
-	printf("struct UserVar\t*pVar;\n");
-	printf("short\ttransNum;\n{\n");
 
 	/* "switch" statment based on the transition number */
 	printf("\tswitch(transNum)\n\t{\n");
@@ -347,11 +338,8 @@ Expr		*ssp;
 
 	printf("\n/* Event function for state \"%s\" in state set \"%s\" */\n",
 	 sp->value, ssp->value);
-	printf("static long E_%s_%s(ssId, pVar, pTransNum, pNextState)\n",
+	printf("static long E_%s_%s(SS_ID ssId, struct UserVar *pVar, short *pTransNum, short *pNextState)\n{\n",
 	 ssp->value, sp->value);
-	printf("SS_ID\tssId;\n");
-	printf("struct UserVar\t*pVar;\n");
-	printf("short\t*pTransNum, *pNextState;\n{\n");
 	trans_num = 0;
 	/* For each transition generate an "if" statement ... */
 	for (tp = sp->left; tp != NULL; tp = tp->next)
@@ -918,9 +906,7 @@ void gen_entry_handler()
 	Expr		*ep;
 
 	printf("\n/* Entry handler */\n");
-	printf("static void entry_handler(ssId, pVar)\n");
-	printf("int\tssId;\n");
-	printf("struct UserVar\t*pVar;\n{\n");
+	printf("static void entry_handler(SS_ID ssId, struct UserVar *pVar)\n{\n");
 	for (ep = entry_code_list; ep != 0; ep = ep->next)
 	{
 		eval_expr(ENTRY_STMT, ep, (Expr *)NULL, 1);
@@ -935,9 +921,7 @@ void gen_exit_handler()
 	Expr		*ep;
 
 	printf("\n/* Exit handler */\n");
-	printf("static void exit_handler(ssId, pVar)\n");
-	printf("int\tssId;\n");
-	printf("struct UserVar\t*pVar;\n{\n");
+	printf("static void exit_handler(SS_ID ssId, struct UserVar *pVar)\n{\n");
 	for (ep = exit_code_list; ep != 0; ep = ep->next)
 	{
 		eval_expr(EXIT_STMT, ep, (Expr *)NULL, 1);
