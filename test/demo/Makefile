@@ -4,26 +4,28 @@ include $(TOP)/configure/CONFIG
 #----------------------------------------
 #  ADD MACRO DEFINITIONS AFTER THIS LINE
 
-DBD += demo.dbd
-
 #  Generate snc main programs
 
+
+DBD += demo.dbd
+
 #  Products
-PROD_HOST = demo
+PROD_IOC = demo
 
-demo_SRCS += demo.st
-
-#  Libraries
-PROD_LIBS += seq
-PROD_LIBS += pv
-PROD_LIBS += $(EPICS_BASE_IOC_LIBS)
 
 # <name>_registerRecordDeviceDriver.cpp will be created from <name>.dbd
-demo_SRCS_DEFAULT += demo_registerRecordDeviceDriver.cpp
+demo_SRCS += demo_registerRecordDeviceDriver.cpp
 demo_SRCS_DEFAULT += demoMain.c
 demo_SRCS_vxWorks += -nil-
 
+#The following adds support from base/src/vxWorks
+demo_OBJS_vxWorks += $(EPICS_BASE_BIN)/vxComLibrary
+
+demo_SRCS += demo.st
 demo_OBJS += $(INSTALL_BIN)/devSequencer.o
+demo_LIBS += seq pv
+#seq_DIR = $(SNCSEQ_LIB)
+demo_LIBS += $(EPICS_BASE_IOC_LIBS)
 
 include $(TOP)/configure/RULES
 #----------------------------------------
