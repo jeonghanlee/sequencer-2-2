@@ -23,6 +23,7 @@
 
 #define epicsExportSharedSymbols
 #include	"seq.h"
+#include	<string.h>
 
 LOCAL	epicsMutexId seqProgListSemId;
 LOCAL	int	    seqProgListInited = FALSE;

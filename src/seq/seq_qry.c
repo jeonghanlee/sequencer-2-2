@@ -89,9 +89,10 @@ long seqShow(epicsThreadId tid)
 		printf("  user variables: address = %lu = 0x%lx, length = %ld "
 		       "= 0x%lx bytes\n", (unsigned long)pSP->pVar,
 		       (unsigned long)pSP->pVar, pSP->varSize, pSP->varSize);
-	printf("  log file fd = %d\n", fileno(pSP->logFd));
-	printf("  log file name = \"%s\"\n", pSP->pLogFile);
-
+	if (pSP->logFd) {
+        printf("  log file fd = %d\n", fileno(pSP->logFd));
+        printf("  log file name = \"%s\"\n", pSP->pLogFile);
+    }
 	printf("\n");
 
 	/* Print state set info */
@@ -319,8 +320,10 @@ LOCAL int wait_rtn()
 	printf("Next? (+/- skip count)\n");
 	for (i = 0;  i < 10; i++)
 	{
-		read(0, &bfr[i], 1);
-		if (bfr[i] == '\n')
+        int c = getchar ();
+        if (c == EOF)
+            break;
+        if ((bfr[i] = c) == '\n')
 			break;
 	}
 	bfr[i] = 0;

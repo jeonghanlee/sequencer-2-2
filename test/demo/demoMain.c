@@ -1,53 +1,27 @@
-/* $Id: demoMain.c,v 1.1.1.1 2000-04-04 03:23:05 wlupton Exp $
- *
+/* demoMain.c */
+/* Author:  Marty Kraimer Date:    17MAR2000 */
+
+/********************COPYRIGHT NOTIFICATION**********************************
+This software was developed under a United States Government license
+described on the COPYRIGHT_UniversityOfChicago file included as part
+of this distribution.
+****************************************************************************/
+
+/*
  * Main program for demo sequencer
  */
-
+#include <stddef.h>
+#include <stdlib.h>
+#include <stddef.h>
 #include <string.h>
-#include <unistd.h>
+#include <stdio.h>
 
-#include "osiThread.h"
-#include "dbAccess.h"
-#include "errlog.h"
-#include "taskwd.h"
+#include "ioccrf.h"
 
-#include "seqCom.h"
-
-/* reference sequencer definition */
-extern struct seqProgram demo;
-
-/* main program */
-int main(int argc,char *argv[]) {
-    char macro_def[256];
-
-    /* append ", shell=T" to macro definitions */
-    sprintf(macro_def, "%s%s%s", (argc>1)?argv[1]:"", (argc>1)?", ":"",
-	    "shell=T");
-
-    /* initialize thread subsystem */
-    threadInit();
-
-    /* change directory to the install directory */
-    chdir("/home/wlupton/epics/seq");
-
-    /* load database definitions */
-    dbLoadDatabase("dbd/records.dbd", NULL, NULL);
-
-    /* register records, device support and drivers */
-    registerRecordDeviceDriver(pdbbase);
-
-    /* load record instances */
-    dbLoadRecords("dbd/demo.db", NULL);
-
-    /* initialize IOC */
-    iocInit();
-
-    /* create sequencer ("shell" macro will cause it to run shell) */
-    seq((void *)&demo, macro_def, 0);
-
-threadSleep(1);
-threadShowAll(0);
-
-    return 0;
+int main(int argc,char *argv[])
+{
+    if(argc>=2)
+        ioccrf(argv[1]);
+    ioccrf(NULL);
+    return(0);
 }
-

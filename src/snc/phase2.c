@@ -87,11 +87,6 @@ void phase2()
 	extern	Expr	*ss_list;	/* state sets (from parse) */
 	extern	Expr	*global_c_list;	/* global C code */
 
-    /* Begin C++ declaration */
-    printf ("\n#ifdef __cplusplus\n");
-    printf ("extern \"C\" {\n");
-    printf ("#endif\n");
-
 	/* Count number of db channels and state sets defined */
 	num_queues = db_queue_count();
 	num_channels = db_chan_count();
@@ -111,15 +106,12 @@ void phase2()
 	assign_delay_ids();
 
 	/* Generate preamble code */
-        printf ("\n#ifdef __cplusplus\n");
-        printf ("}\n");
-        printf ("#endif\n");
 	gen_preamble();
-        printf ("\n#ifdef __cplusplus\n");
-        printf ("extern \"C\" {\n");
-        printf ("#endif\n");
 
 	/* Generate variable declarations */
+	printf ("\n#ifdef __cplusplus\n");
+	printf ("extern \"C\" {\n");
+	printf ("#endif\n");
 	gen_var_decl();
 
 	/* Generate definition C code */
@@ -192,18 +184,16 @@ void gen_preamble()
 	}
 
         /* Sequencer registration (if "init_register" option set) */
-    if (init_reg_opt) {
-        printf ("\n/* Register sequencer commands and program */\n");
-        printf ("#ifdef __cplusplus\n");
-        printf ("void seqRegisterSequencerCommands(void);\n");
-        printf ("void seqRegisterSequencerProgram(struct seqProgram *);\n");
-        printf ("\nclass %sInit {\n", prog_name);
-		printf ("public:\n");
-		printf ("    %sInit () { seqRegisterSequencerCommands(); seqRegisterSequencerProgram (&%s); }\n", prog_name, prog_name);
-		printf ("};\n");
-		printf ("static %sInit %sInit;\n", prog_name, prog_name);
-        printf ("#endif\n");
-    }
+	if (init_reg_opt && !main_opt) {
+	    printf ("\n/* Register sequencer commands and program */\n");
+	    printf ("void seqRegisterSequencerCommands(void);\n");
+	    printf ("void seqRegisterSequencerProgram(struct seqProgram *);\n");
+	    printf ("\nclass %sInit {\n", prog_name);
+	    printf ("public:\n");
+	    printf ("    %sInit () { seqRegisterSequencerCommands(); seqRegisterSequencerProgram (&%s); }\n", prog_name, prog_name);
+	    printf ("};\n");
+	    printf ("static %sInit %sInit;\n", prog_name, prog_name);
+	}
 
 	return;
 }

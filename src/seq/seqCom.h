@@ -45,6 +45,10 @@
 #include	"pvAlarm.h"	/* status and severity defs */
 #include	"epicsTime.h"	/* time stamp defs */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define	MAGIC	20000315	/* current magic number for SPROG (yyyymmdd) */
 
 /* Bit encoding for run-time options */
@@ -192,5 +196,8 @@ epicsShareFunc long	epicsShareAPI seq_delay(SS_ID, long);		/* test a delay entry
 epicsShareFunc char   *epicsShareAPI seq_macValueGet(SS_ID, char *);	/* Given macro name, return ptr to val*/
 epicsShareFunc long	epicsShareAPI seq_optGet (SS_ID ssId, char *opt); /* check an option for TRUE/FALSE */
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif	/*INCLseqComh*/

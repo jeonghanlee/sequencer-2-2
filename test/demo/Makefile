@@ -11,11 +11,14 @@ include $(TOP)/configure/CONFIG
 #USR_CPPFLAGS = -DKTL
 USR_CPPFLAGS = -DCA
 
+# FIXME -- I don't know why this is necessary -- should the seq_DIR below
+# not generate the proper -L argument??       Eric Norum  2001-02-16
+#USR_LDFLAGS += -L$(INSTALL_LIB)
+
 #  Generate Unix main program (not CA only)
 ifneq "$(PVCA)" "TRUE"
 SNCFLAGS = +m
 endif
-SNCFLAGS_RTEMS = +i
 
 #  Products
 PROD_DEFAULT = demo
@@ -30,20 +33,22 @@ endif
 
 #  Includes and libraries
 PROD_LIBS += seqdev seq
+PROD_LIBS += iocsh miscIoc rsrvIoc dbtoolsIoc asIoc dbIoc registryIoc dbStaticIoc ca Com readline curses
+
 seq_DIR    = $(SEQ_LIB)
 seqdev_DIR    = $(SEQ_LIB)
 
 include $(TOP)/test/Makefile.pv
 
 ifeq "$(PVCA)" "TRUE"
-PROD_LIBS += iocsh dbtoolsIoc miscIoc asIoc dbIoc registryIoc dbStaticIoc rsrvIoc Com
+PROD_LIBS += iocsh miscIoc rsrvIoc dbtoolsIoc asIoc dbIoc registryIoc dbStaticIoc ca Com
 endif
 
 # Unix objects (mostly CA only)
 demo_OBJS += demo.o
 
 ifeq "$(PVCA)" "TRUE"
-demo_OBJS += registerRecordDeviceDriver.o
+demo_SRCS_DEFAULT += demo_registerRecordDeviceDriver.cpp
 
 demo_OBJS_vxWorks += $(EPICS_BASE_BIN)/iocInit.o
 
@@ -59,8 +64,9 @@ endif
 
 #  VxWorks library
 LIBRARY_vxWorks = demoIoc
-LIBRARY_RTEMS = demoIoc
-demoIoc_OBJS += registerRecordDeviceDriver.o
+demo_LIBRARY_RTEMS = demoIoc
+# demoIoc_OBJS_RTEMS += registerRecordDeviceDriver.o
+
 
 demoIoc_OBJS_vxWorks += $(EPICS_BASE_BIN)/iocCoreLibrary
 demoIoc_OBJS_vxWorks += $(EPICS_BASE_BIN)/iocInit.o
@@ -74,9 +80,8 @@ demoIoc_OBJS += $(EPICS_BASE_BIN)/devAoSoft.o
 demoIoc_OBJS += $(EPICS_BASE_BIN)/devBoSoft.o
 
 #  Databases
-DBDEXPAND  = records.dbd
-DBDNAME    = records.dbd
-DBDINSTALL = demo.db
+DBD += demo.dbd
+DBD += demo.db
 
 #  Scripts
 SCRIPTS = demo.vws
@@ -84,6 +89,4 @@ SCRIPTS = demo.vws
 include $(TOP)/configure/RULES
 #----------------------------------------
 #  ADD RULES AFTER THIS LINE
-
-demo.c: ../Makefile
 

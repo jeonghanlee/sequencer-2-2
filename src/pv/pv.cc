@@ -1,4 +1,4 @@
-/* $Id: pv.cc,v 1.3 2001-02-16 18:45:39 mrk Exp $
+/* $Id: pv.cc,v 1.4 2001-02-16 21:45:16 norume Exp $
  *
  * Implementation of EPICS sequencer message system-independent library (pv)
  * (NB, "pv" = "process variable").
@@ -32,7 +32,7 @@ epicsShareFunc pvSystem::pvSystem( int debug ) :
     lock_( epicsMutexMustCreate() )
 {
     if ( getDebug() > 0 )
-	printf( "%8p: pvSystem::pvSystem( %d )\n", this, debug );
+	printf( "%8p: pvSystem::pvSystem( %d )\n", (void *)this, debug );
 }
 
 /*+
@@ -45,7 +45,7 @@ epicsShareFunc pvSystem::pvSystem( int debug ) :
 epicsShareFunc pvSystem::~pvSystem()
 {
     if ( getDebug() > 0 )
-	printf( "%8p: pvSystem::~pvSystem()\n", this );
+	printf( "%8p: pvSystem::~pvSystem()\n", (void *)this );
 }
 
 /*+
@@ -62,7 +62,7 @@ epicsShareFunc void pvSystem::lock()
     epicsMutexMustLock( lock_ );
 
     if ( getDebug() > 1 )
-	printf( "%8p: pvSystem::lock()\n", this );
+	printf( "%8p: pvSystem::lock()\n", (void *)this );
 }
 
 epicsShareFunc void pvSystem::unlock()
@@ -70,7 +70,7 @@ epicsShareFunc void pvSystem::unlock()
     epicsMutexUnlock( lock_ );
 
     if ( getDebug() > 1 )
-	printf( "%8p: pvSystem::unlock()\n", this );
+	printf( "%8p: pvSystem::unlock()\n", (void *)this );
 }
 
 /*+
@@ -117,7 +117,7 @@ pvVariable::pvVariable( pvSystem *system, const char *name, pvConnFunc func,
 
     if ( getDebug() > 0 )
 	printf( "%8p: pvVariable::pvVariable( %s, %d )\n",
-		this, name, debug );
+		(void *)this, name, debug );
 }
 
 /*+
@@ -130,7 +130,7 @@ pvVariable::pvVariable( pvSystem *system, const char *name, pvConnFunc func,
 pvVariable::~pvVariable()
 {
     if ( getDebug() > 0 )
-        printf( "%8p: pvVariable::~pvVariable()\n", this );
+        printf( "%8p: pvVariable::~pvVariable()\n", (void *)this );
 
     if ( name_ != NULL )
 	free( name_ );
@@ -176,7 +176,7 @@ pvCallback::pvCallback( pvVariable *variable, pvType type, int count,
     // should be associated with a system?
     if ( getDebug() > 0 )
 	printf( "%8p: pvCallback::pvCallback( %d, %d, %p, %p, %d )\n",
-		this, type, count, func, arg, debug );
+		(void *)this, type, count, (void *)func, arg, debug );
 }
 
 /*+
@@ -189,7 +189,7 @@ pvCallback::pvCallback( pvVariable *variable, pvType type, int count,
 pvCallback::~pvCallback()
 {
     if ( getDebug() > 0 )
-        printf( "%8p: pvCallback::~pvCallback()\n", this );
+        printf( "%8p: pvCallback::~pvCallback()\n", (void *)this );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -403,7 +403,7 @@ epicsShareFunc char *epicsShareAPI pvVarGetMess( void *var ) {
  * Time utilities
  */
 epicsShareFunc int epicsShareAPI pvTimeGetCurrentDouble( double *pTime ) {
-    TS_STAMP stamp;
+    epicsTimeStamp stamp;
 
     *pTime = 0.0;
     if ( epicsTimeGetCurrent( &stamp ) == epicsTimeERROR )
@@ -437,6 +437,9 @@ epicsShareFunc char * epicsShareAPI Strdcpy( char *dst, const char *src ) {
 
 /*
  * $Log: not supported by cvs2svn $
+ * Revision 1.3  2001/02/16 18:45:39  mrk
+ * changes for latest version of 3.14
+ *
  * Revision 1.2  2000/04/14 21:53:28  jba
  * Changes for win32 build.
  *

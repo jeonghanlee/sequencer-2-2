@@ -1,5 +1,5 @@
 /*
- * $Id: seqCommands.c,v 1.5 2001-02-16 18:45:40 mrk Exp $
+ * $Id: seqCommands.c,v 1.6 2001-02-16 21:45:16 norume Exp $
  *
  * DESCRIPTION: EPICS sequencer commands
  *
@@ -16,6 +16,7 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <ctype.h>
 
 #include <epicsThread.h>
@@ -84,16 +85,16 @@ findThread (const char *name)
 }
 
 /* seq */
-static ioccrfArg seqArg0 = { "sequencer",ioccrfArgString,0};
-static ioccrfArg seqArg1 = { "macro definitions",ioccrfArgString,0};
-static ioccrfArg seqArg2 = { "stack size",ioccrfArgInt,0};
-static ioccrfArg *seqArgs[3] = { &seqArg0,&seqArg1,&seqArg2 };
-static ioccrfFuncDef seqFuncDef = {"seq",3,seqArgs};
-static void seqCallFunc(ioccrfArg **args)
+static const ioccrfArg seqArg0 = { "sequencer",ioccrfArgString};
+static const ioccrfArg seqArg1 = { "macro definitions",ioccrfArgString};
+static const ioccrfArg seqArg2 = { "stack size",ioccrfArgInt};
+static const ioccrfArg * const seqArgs[3] = { &seqArg0,&seqArg1,&seqArg2 };
+static const ioccrfFuncDef seqFuncDef = {"seq",3,seqArgs};
+static void seqCallFunc(const ioccrfArgBuf *args)
 {
-    char *table = (char *)args[0]->value;
-    char *macroDef = (char *)args[1]->value;
-    int stackSize = *(int *)args[2]->value;
+    char *table = args[0].sval;
+    char *macroDef = args[1].sval;
+    int stackSize = args[2].ival;
 #ifdef SEQ_PROG_REG
     struct sequencerProgram *sp;
 #else
@@ -123,13 +124,13 @@ static void seqCallFunc(ioccrfArg **args)
 }
 
 /* seqShow */
-static ioccrfArg seqShowArg0 = { "sequencer",ioccrfArgString,0};
-static ioccrfArg *seqShowArgs[1] = {&seqShowArg0};
-static ioccrfFuncDef seqShowFuncDef = {"seqShow",1,seqShowArgs};
-static void seqShowCallFunc(ioccrfArg **args)
+static const ioccrfArg seqShowArg0 = { "sequencer",ioccrfArgString};
+static const ioccrfArg * const seqShowArgs[1] = {&seqShowArg0};
+static const ioccrfFuncDef seqShowFuncDef = {"seqShow",1,seqShowArgs};
+static void seqShowCallFunc(const ioccrfArgBuf *args)
 {
     epicsThreadId id;
-    char *name = (char *)args[0]->value;
+    char *name = args[0].sval;
 
     if (name == NULL)
         seqShow (NULL);
@@ -138,41 +139,41 @@ static void seqShowCallFunc(ioccrfArg **args)
 }
 
 /* seqQueueShow */
-static ioccrfArg seqQueueShowArg0 = { "sequencer",ioccrfArgString,0};
-static ioccrfArg *seqQueueShowArgs[1] = {&seqQueueShowArg0};
-static ioccrfFuncDef seqQueueShowFuncDef = {"seqQueueShow",1,seqQueueShowArgs};
-static void seqQueueShowCallFunc(ioccrfArg **args)
+static const ioccrfArg seqQueueShowArg0 = { "sequencer",ioccrfArgString};
+static const ioccrfArg * const seqQueueShowArgs[1] = {&seqQueueShowArg0};
+static const ioccrfFuncDef seqQueueShowFuncDef = {"seqQueueShow",1,seqQueueShowArgs};
+static void seqQueueShowCallFunc(const ioccrfArgBuf *args)
 {
     epicsThreadId id;
-    char *name = (char *)args[0]->value;
+    char *name = args[0].sval;
 
     if ((name != NULL) && ((id = findThread (name)) != NULL))
         seqQueueShow (id);
 }
 
 /* seqStop */
-static ioccrfArg seqStopArg0 = { "sequencer",ioccrfArgString,0};
-static ioccrfArg *seqStopArgs[1] = {&seqStopArg0};
-static ioccrfFuncDef seqStopFuncDef = {"seqStop",1,seqStopArgs};
-static void seqStopCallFunc(ioccrfArg **args)
+static const ioccrfArg seqStopArg0 = { "sequencer",ioccrfArgString};
+static const ioccrfArg * const seqStopArgs[1] = {&seqStopArg0};
+static const ioccrfFuncDef seqStopFuncDef = {"seqStop",1,seqStopArgs};
+static void seqStopCallFunc(const ioccrfArgBuf *args)
 {
     epicsThreadId id;
-    char *name = (char *)args[0]->value;
+    char *name = args[0].sval;
 
     if ((name != NULL) && ((id = findThread (name)) != NULL))
         seqStop (id);
 }
 
 /* seqChanShow */
-static ioccrfArg seqChanShowArg0 = { "sequencer",ioccrfArgString,0};
-static ioccrfArg seqChanShowArg1 = { "channel",ioccrfArgString,0};
-static ioccrfArg *seqChanShowArgs[2] = {&seqChanShowArg0,&seqChanShowArg1};
-static ioccrfFuncDef seqChanShowFuncDef = {"seqChanShow",2,seqChanShowArgs};
-static void seqChanShowCallFunc(ioccrfArg **args)
+static const ioccrfArg seqChanShowArg0 = { "sequencer",ioccrfArgString};
+static const ioccrfArg seqChanShowArg1 = { "channel",ioccrfArgString};
+static const ioccrfArg * const seqChanShowArgs[2] = {&seqChanShowArg0,&seqChanShowArg1};
+static const ioccrfFuncDef seqChanShowFuncDef = {"seqChanShow",2,seqChanShowArgs};
+static void seqChanShowCallFunc(const ioccrfArgBuf *args)
 {
     epicsThreadId id;
-    char *name = (char *)args[0]->value;
-    char *chan = (char *)args[1]->value;
+    char *name = args[0].sval;
+    char *chan = args[1].sval;
 
     if ((name != NULL) && ((id = findThread (name)) != NULL))
         seqChanShow (id, chan);
@@ -194,4 +195,4 @@ seqRegisterSequencerCommands (void)
         ioccrfRegister(&seqStopFuncDef,seqStopCallFunc);
         ioccrfRegister(&seqChanShowFuncDef,seqChanShowCallFunc);
     }
-};
+}

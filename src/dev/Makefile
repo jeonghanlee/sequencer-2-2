@@ -20,7 +20,7 @@ LIBRARY_WIN32 = -nil-
 LIBSRCS = dev.c
 
 #  Device support declarations
-DBDINSTALL = seq.dbd
+DBD = seq.dbd
 
 include $(TOP)/configure/RULES
 #----------------------------------------

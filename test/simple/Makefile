@@ -14,7 +14,7 @@ PROD = $(SEQS)
 OBJS_vxWorks = $(SEQS)
 
 #  Libraries
-PROD_LIBS += seq
+PROD_LIBS += seq iocsh miscIoc rsrvIoc dbtoolsIoc asIoc dbIoc registryIoc dbStaticIoc ca Com
 seq_DIR    = $(SEQ_LIB)
 
 include $(TOP)/test/Makefile.pv

@@ -6,4 +6,3 @@
 
 EPICS_BASE=/home/phoebus/MRK/epics/base
 TEMPLATE_TOP=/home/phoebus/MRK/epics/base/templates/makeBaseApp/top
-MSI=/home/epics/CLS/epics/extensions/bin/$(EPICS_HOST_ARCH)/msi

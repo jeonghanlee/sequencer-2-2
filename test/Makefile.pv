@@ -1,8 +1,11 @@
-# $Id: Makefile.pv,v 1.3 2000-04-20 21:46:59 jba Exp $
+# $Id: Makefile.pv,v 1.4 2001-02-16 21:45:17 norume Exp $
 #
 # Makefile fragment to define PROD_LIBS for linking against the PV libraries
 # (accounting for the enabled message systems)
 
+ifndef SEQ
+SEQ = $(TOP)
+endif
 ifndef SEQ_LIB
 SEQ_LIB = $(SEQ)/lib/$(T_A)
 endif
