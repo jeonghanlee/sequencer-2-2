@@ -30,7 +30,7 @@
 #ifndef	INCLseqComh
 #define	INCLseqComh
 
-#define	MAGIC	960811		/* current magic number for SPROG */
+#define	MAGIC	000215		/* current magic number for SPROG */
 
 #include	"tsDefs.h"	/* time stamp defs */
 #include	"stdio.h"	/* standard i/o defs */

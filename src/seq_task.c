@@ -33,6 +33,7 @@
 20jul95,ajk	Add user-specified task priority to taskSpwan().
 ?????96,joh 	Fixed problem with delay calculations.
 22sep99,grw     Supported entry and exit actions; supported state options.
+15feb00,wfl	Fixed problem (introduced by wfl) with sequencer deletion.
 ***************************************************************************/
 /*#define		DEBUG*/
 
@@ -481,24 +482,11 @@ LOCAL long seq_cleanup(int tid, SPROG *pSP, SEM_ID cleanupSem)
 
 	seq_disconnect(pSP);
 
-	/* Owing to persistent problems with ca_import() and ca_import_cancel(),
-	   temporarily suppress them altogether (WFL, 13-Oct-97) */
-#if 0
-	/* Cancel the CA context for each state set task (have to re-import
-	   the context each time because ca_import_cancel() deletes the
-	   ca_static task variable) */
+	/* Cancel the CA context for each state set task */
 	for (nss = 0, pSS = pSP->pSS; nss < pSP->numSS; nss++, pSS++)
 	{
-		extern		int seqAuxTaskId;
-
 		if (pSS->taskId == 0)
 			continue;
-
-#ifdef	DEBUG_CLEANUP
-		logMsg("   ca_import(0x%x)\n", seqAuxTaskId, 0,0,0,0,0);
-#endif	/*DEBUG_CLEANUP*/
-		SEVCHK (ca_import(seqAuxTaskId),
-			"seq_cleanup:ca_import() failed")
 
 #ifdef	DEBUG_CLEANUP
 		logMsg("   ca_import_cancel(0x%x)\n", pSS->taskId, 0,0,0,0,0);
@@ -506,7 +494,6 @@ LOCAL long seq_cleanup(int tid, SPROG *pSP, SEM_ID cleanupSem)
 		SEVCHK (ca_import_cancel(pSS->taskId),
 			"seq_cleanup:ca_import_cancel() failed")
 	}
-#endif
 
 	/* Close the log file */
 	if ( (pSP->logFd > 0) && (pSP->logFd != ioGlobalStdGet(1)) )
