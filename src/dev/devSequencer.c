@@ -1,4 +1,4 @@
-/* $Id: devSequencer.c,v 1.2 2003-03-31 16:05:14 mrk Exp $
+/* $Id: devSequencer.c,v 1.3 2003-04-02 13:03:25 mrk Exp $
  *
  * Device support to permit database access to sequencer internals
  *
@@ -25,6 +25,7 @@
 #include "dbScan.h"
 
 #include "stringinRecord.h"
+#include "epicsExport.h"
 
 typedef struct {
     long	number;
@@ -40,7 +41,7 @@ typedef struct {
 LOCAL long siInit( struct stringinRecord *pRec );
 LOCAL long siRead( struct stringinRecord *pRec );
 LOCAL DSET  devSiSeq = { 5, NULL, NULL, siInit, NULL, siRead };
-dset *pdevSiSeq = (dset *)&devSiSeq;
+epicsExportAddress(dset,devSiSeq);
 
 LOCAL long siInit( struct stringinRecord *pRec )
 {
@@ -84,6 +85,9 @@ LOCAL long siRead( struct stringinRecord *pRec )
 
 /*
  * $Log: not supported by cvs2svn $
+ * Revision 1.2  2003/03/31 16:05:14  mrk
+ * changes for regsitering devSup
+ *
  * Revision 1.1  2001/03/19 20:59:36  mrk
  * changes for base 3.14
  *

@@ -48,11 +48,13 @@ record(bo,"demo:light") {
 }
 
 record(stringin,"ss0") {
+    field(DTYP,"Sequencer Internals")
     field(INP,"@demo 0")
     field(SCAN,"1 second")
 }
 
 record(stringin,"ss1") {
+    field(DTYP,"Sequencer Internals")
     field(INP,"@demo 1")
     field(SCAN,"1 second")
 }
