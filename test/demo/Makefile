@@ -17,7 +17,8 @@ SNCFLAGS = +m
 endif
 
 #  Products
-PROD = demo
+PROD_DEFAULT = demo
+PROD_WIN32 = -nil-
 OBJS_vxWorks = demo
 
 #  Sources (CA only)
@@ -27,15 +28,14 @@ endif
 
 #  Includes and libraries
 PROD_LIBS += seqdev seq
-seq_DIR    = $(SEQ_LIB)
+seq_DIR    = $(INSTALL_LIB)
+seqdev_DIR    = $(INSTALL_LIB)
 
 include $(TOP)/test/Makefile.pv
 
 ifeq "$(PVCA)" "TRUE"
 PROD_LIBS += dbtoolsIoc miscIoc asIoc dbIoc registryIoc dbStaticIoc rsrvIoc
 endif
-
-PROD_LIBS += Com
 
 # Unix objects (mostly CA only)
 demo_OBJS += demo.o

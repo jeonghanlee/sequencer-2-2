@@ -25,8 +25,6 @@ seq_DIR    = $(SEQ_LIB)
 
 include $(TOP)/test/Makefile.pv
 
-PROD_LIBS += Com
-
 #  Extra requirements for tcsSeq
 tcsSeq_SRCS = tcsSeq.c pvload.c
 tcsSeq_LIBS = tcs

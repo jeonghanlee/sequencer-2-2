@@ -19,8 +19,6 @@ seq_DIR    = $(SEQ_LIB)
 
 include $(TOP)/test/Makefile.pv
 
-PROD_LIBS += Com
-
 include $(TOP)/configure/RULES
 #----------------------------------------
 #  ADD RULES AFTER THIS LINE
