@@ -312,23 +312,21 @@ LOCAL long seq_waitConnect(SPROG *pSP, SSCB *pSS)
 	double		delay;
 
 	delay = 10.0; /* 10, 20, 30, 40, 40,... sec */
-	while (pSP->connCount < pSP->assignCount
-        || pSP->firstMonitorCount < pSP->numMonitoredChans)
-	{
-		status = epicsEventWaitWithTimeout(pSS->syncSemId, delay);
-		if ((status != OK) && (pSP->threadId == pSS->threadId))
-		{
-			errlogPrintf("%d of %d assigned channels have conn"
-				"ected\n", pSP->connCount, pSP->assignCount);
-		}
-		if (delay < 40.0)
+	while (1) {
+		status = epicsEventWaitWithTimeout(
+                    pSS->allFirstConnectAndMonitorSemId, delay);
+		if(status==OK) break;
+		if (delay < 40.0) {
 			delay += 10.0;
-
+			errlogPrintf("numMonitoredChans %ld firstMonitorCount %ld",
+				pSP->numMonitoredChans,pSP->firstMonitorCount);
+			errlogPrintf(" assignCount %ld firstConnectCount %ld\n",
+				pSP->assignCount,pSP->firstConnectCount);
+		}
 		/* Check whether we have been asked to exit */
 		if (epicsEventTryWait(pSS->death1SemId) == epicsEventWaitOK)
 			return ERROR;
 	}
-
 	return OK;
 }
 /*
@@ -523,6 +521,8 @@ long epicsShareAPI seqStop(epicsThreadId tid)
 	/* Delete state-set semaphores */
 	for (nss = 0, pSS = pSP->pSS; nss < pSP->numSS; nss++, pSS++)
 	{
+		if (pSS->allFirstConnectAndMonitorSemId != NULL)
+			epicsEventDestroy(pSS->allFirstConnectAndMonitorSemId);
 		if (pSS->syncSemId != NULL)
 			epicsEventDestroy(pSS->syncSemId);
 		if (pSS->getSemId != NULL)

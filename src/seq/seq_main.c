@@ -350,8 +350,9 @@ SPROG			*pSP;
 		printf("init_sscb: SS Name=%s, num States=%d, pSS=%p\n",
 			pSS->pSSName, pSS->numStates, pSS);
 #endif	/*DEBUG*/
+		pSS->allFirstConnectAndMonitorSemId = epicsEventMustCreate(epicsEventEmpty);
 		/* Create a binary semaphore for synchronizing events in a SS */
-		pSS->syncSemId = epicsEventMustCreate(epicsEventFull);
+		pSS->syncSemId = epicsEventMustCreate(epicsEventEmpty);
 
 		/* Create binary semaphores for synchronous pvGet() and
 		   pvPut() */

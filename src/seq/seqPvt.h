@@ -106,6 +106,7 @@ struct	db_channel
 	short		putType;	/* db put type (e.g. DBR_INT) */
 	char		*message;	/* last db access error message */
         epicsBoolean    gotFirstMonitor;
+        epicsBoolean    gotFirstConnect;
 	epicsBoolean	monitored;	/* TRUE if channel IS monitored */
 	void		*evid;		/* event id (supplied by PV lib) */
 	struct state_program *sprog;	/* state program that owns this struct*/
@@ -145,6 +146,7 @@ struct	state_set_control_block
 	epicsThreadId	threadId;	/* thread id */
 	unsigned int	threadPriority;	/* thread priority */
 	unsigned int	stackSize;	/* stack size */
+	epicsEventId	allFirstConnectAndMonitorSemId;
 	epicsEventId	syncSemId;	/* semaphore for event sync */
 	epicsEventId	getSemId;	/* semaphore id for async get */
 	epicsEventId	putSemId;	/* semaphore id for async put */
@@ -188,8 +190,10 @@ struct	state_program
 	long		numChans;	/* number of db channels, incl. unass */
 	long		assignCount;	/* number of db channels assigned */
 	long		connCount;	/* number of channels connected */
+	long		firstConnectCount;
         long		numMonitoredChans;
         long		firstMonitorCount;
+        epicsBoolean	allFirstConnectAndMonitor;
 	SSCB		*pSS;		/* array of state set control blocks */
 	long		numSS;		/* number of state sets */
 	char		*pVar;		/* ptr to user variable area */

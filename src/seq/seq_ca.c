@@ -161,12 +161,20 @@ epicsShareFunc void seq_mon_handler(void *var, pvType type, int count, pvValue *
 	CHAN *pCHAN = (CHAN *)arg;
         SPROG *pSP = pCHAN->sprog;
 
+	/* Process event handling in each state set */
+	proc_db_events(pValue, type, pCHAN, MON_COMPLETE);
         if(!pCHAN->gotFirstMonitor) {
 		pCHAN->gotFirstMonitor = 1;
 		pSP->firstMonitorCount++;
+		if((pSP->firstMonitorCount==pSP->numMonitoredChans)
+		&& (pSP->firstConnectCount==pSP->assignCount)) {
+			SSCB *pSS;
+			int i;
+			for(i=0, pSS=pSP->pSS; i<pSP->numSS; i++,pSS++) {
+				epicsEventSignal(pSS->allFirstConnectAndMonitorSemId);
+			}
+		}
 	}
-	/* Process event handling in each state set */
-	proc_db_events(pValue, type, pCHAN, MON_COMPLETE);
 }
 
 /* Common code for completion and monitor handling */
@@ -418,6 +426,18 @@ void seq_conn_handler(void *var,int connected)
 		} else {
 			printf("%s connected but already connected %s\n",
 				pDB->pVarName,pDB->dbName);
+		}
+	        if(!pDB->gotFirstConnect) {
+			pDB->gotFirstConnect = 1;
+			pSP->firstConnectCount++;
+			if((pSP->firstMonitorCount==pSP->numMonitoredChans)
+			&& (pSP->firstConnectCount==pSP->assignCount)) {
+				SSCB *pSS;
+				int i;
+				for(i=0, pSS=pSP->pSS; i<pSP->numSS; i++,pSS++) {
+					epicsEventSignal(pSS->allFirstConnectAndMonitorSemId);
+				}
+			}
 		}
 	}
 
