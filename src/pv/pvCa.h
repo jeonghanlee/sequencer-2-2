@@ -1,4 +1,4 @@
-/* $Id: pvCa.h,v 1.2 2000-04-14 21:53:28 jba Exp $
+/* $Id: pvCa.h,v 1.3 2001-07-05 14:42:16 mrk Exp $
  *
  * Definitions for EPICS sequencer CA library (pvCa)
  *
@@ -31,7 +31,7 @@ public:
 				     void *priv = NULL, int debug = 0 );
 
 private:
-    caClientCtx context_; /* channel access context of creator */
+    struct ca_client_context *context_; /* channel access context of creator */
 };
 
 /*
@@ -69,6 +69,9 @@ private:
 
 /*
  * $Log: not supported by cvs2svn $
+ * Revision 1.2  2000/04/14 21:53:28  jba
+ * Changes for win32 build.
+ *
  * Revision 1.1.1.1  2000/04/04 03:22:14  wlupton
  * first commit of seq-2-0-0
  *

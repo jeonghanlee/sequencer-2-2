@@ -1,4 +1,4 @@
-/* $Id: pvCa.cc,v 1.5 2001-03-21 19:42:45 mrk Exp $
+/* $Id: pvCa.cc,v 1.6 2001-07-05 14:42:15 mrk Exp $
  *
  * Implementation of EPICS sequencer CA library (pvCa)
  *
@@ -64,7 +64,6 @@ epicsShareFunc caSystem::caSystem( int debug ) :
 	printf( "%8p: caSystem::caSystem( %d )\n", this, debug );
 
     INVOKE( ca_task_initialize() );
-    INVOKE( ca_current_context( &context_ ) );
 }
 
 /*+
@@ -779,6 +778,9 @@ static void copyFromCA( int type, int count,
 
 /*
  * $Log: not supported by cvs2svn $
+ * Revision 1.5  2001/03/21 19:42:45  mrk
+ * handlers must be C callable and external to satisfy all compilers
+ *
  * Revision 1.4  2001/03/21 15:03:35  mrk
  * declare extern "C"
  *
