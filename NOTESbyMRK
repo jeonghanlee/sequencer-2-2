@@ -1,5 +1,42 @@
-Recent Changes
+The following breifly describes changes to the existing SEQ documentation
+in order to built sequence programs with the EPICS base 3.14 releases.
+
+New Compiler Option
+
++i Code will be generated to automatically register sequence functions
+and state programs. This is the default
+
+-i Do not generate registration code. Only useful on vxWorks to save a small amount of memory.
+
+Compiling and linking a state program under Unix.
+
+The exampleApp supplied with base demonstrates how to build sequence programs
+that work with epics databases.
+It also shows how to build a sequence program that runs without databases.
+
+test/simple also shows how to build a sequence program that runs 
+without databases running in the same process.
+
+Release History for releases that work with EPICS base 3.14.
 --------------
+
+Version 2.0.9 contains the following changes
+
+seq_connect now initializes assignCount and numMonitoredChans BEFORE connecting
+to the PVs. With the previous versions it was possible to signal that everything
+was connected and the first monitor received before it actually happened.
+
+Version 2.0.8 contains the following changes
+
+seq_main.c was casting a pointer to an int. On some architectures this caused
+a warning message.
+
+Support for cygwin32 om windows was added.
+
+test/pv/ was still still using osiThread.h. This is replaced bt epicsThread.
+
+test/simple and test/validate now use EPICS_BASE_IOC_LIBS instead
+of EPICS_BASE_HOST_LIBS.
 
 Version 2.0.7 contains the following changes
 
@@ -54,7 +91,6 @@ the changes we made.
 
 We did not update the SNL/SEQ manual. The following breifly describes
 documentation changes needed for the 2.0.0 reference manual.
-
 
 New Compiler Option
 
