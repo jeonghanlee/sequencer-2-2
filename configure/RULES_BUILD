@@ -1,4 +1,4 @@
-# $Id: RULES_BUILD,v 1.1 2001-02-23 20:21:21 mrk Exp $
+# $Id: RULES_BUILD,v 1.2 2001-02-23 20:41:55 jba Exp $
 #
 #	State notation language (snc) rules
 
@@ -26,6 +26,16 @@ endif
 	@$(CP) $< $@
 
 %$(OBJ): %_snc$(OBJ) %_sncreg$(OBJ)
-	@$(RM) $@
-	$(LD) -o $@ $^
+	$(RM) $@
+ifdef WIN32
+	$(CP) $*_snc$(OBJ) $@
+	type $*_sncreg$(OBJ) >> $@
+else 
+	$(LDCMD)
+endif
 
+clean::
+	@$(RM) %.i %_sncreg.cpp %_snc.c
+
+.PRECIOUS: %.i %_sncreg.cpp %_snc.c
+ 
