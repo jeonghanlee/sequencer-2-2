@@ -49,6 +49,7 @@ int		async_opt = FALSE;	/* do pvGet() asynchronously */
 int		conn_opt = TRUE;	/* wait for all conns to complete */
 int		debug_opt = FALSE;	/* run-time debug */
 int		newef_opt = TRUE;	/* new event flag mode */
+int		init_reg_opt = FALSE;	/* emit code to perform initial registration */
 int		line_opt = TRUE;	/* line numbering */
 int		main_opt = FALSE;	/* main program */
 int		reent_opt = FALSE;	/* reentrant at run-time */
@@ -198,6 +199,10 @@ char		*s;
 
 	case 'e':
 		newef_opt = opt_val;
+		break;
+
+	case 'i':
+		init_reg_opt = opt_val;
 		break;
 
 	case 'l':
