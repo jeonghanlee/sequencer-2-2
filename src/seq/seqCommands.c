@@ -1,5 +1,5 @@
 /*
- * $Id: seqCommands.c,v 1.7 2001-03-15 15:13:45 norume Exp $
+ * $Id: seqCommands.c,v 1.8 2001-03-22 15:50:26 mrk Exp $
  *
  * DESCRIPTION: EPICS sequencer commands
  *
@@ -25,13 +25,6 @@
 #include <seqCom.h>
 #include <ioccrf.h>
 
-/*
- * Prototypes (these probably belong in seqCom.h)
- */
-long seqShow (epicsThreadId);
-long seqChanShow (epicsThreadId, char *);
-long seqQueueShow (epicsThreadId tid);
-long seqStop (epicsThreadId);
 
 struct sequencerProgram {
     struct seqProgram *prog;
@@ -44,8 +37,7 @@ static struct sequencerProgram *seqHead;
  * This routine is called before multitasking has started, so there's
  * no race condition in creating the linked list.
  */
-void epicsShareAPI
-seqRegisterSequencerProgram (struct seqProgram *p)
+void epicsShareAPI seqRegisterSequencerProgram (struct seqProgram *p)
 {
     struct sequencerProgram *sp;
 
@@ -162,8 +154,7 @@ static void seqChanShowCallFunc(const ioccrfArgBuf *args)
  * This routine is called before multitasking has started, so there's
  * no race condition in the test/set of firstTime.
  */
-void epicsShareAPI
-seqRegisterSequencerCommands (void)
+void epicsShareAPI seqRegisterSequencerCommands (void)
 {
     static int firstTime = 1;
     if (firstTime) {

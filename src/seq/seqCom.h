@@ -197,6 +197,14 @@ epicsShareFunc long	epicsShareAPI seq_delay(SS_ID, long);		/* test a delay entry
 epicsShareFunc char   *epicsShareAPI seq_macValueGet(SS_ID, char *);	/* Given macro name, return ptr to val*/
 epicsShareFunc long	epicsShareAPI seq_optGet (SS_ID ssId, char *opt); /* check an option for TRUE/FALSE */
 
+epicsShareFunc long epicsShareAPI seqShow (epicsThreadId);
+epicsShareFunc long epicsShareAPI seqChanShow (epicsThreadId, char *);
+epicsShareFunc long epicsShareAPI seqQueueShow (epicsThreadId tid);
+epicsShareFunc long epicsShareAPI seqStop (epicsThreadId);
+epicsShareFunc void epicsShareAPI
+    seqRegisterSequencerProgram (struct seqProgram *p);
+epicsShareFunc void epicsShareAPI seqRegisterSequencerCommands (void);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

@@ -426,7 +426,7 @@ SSCB		*pSS;
 /*
  * Delete all state-set threads and do general clean-up.
  */
-long seqStop(epicsThreadId tid)
+long epicsShareAPI seqStop(epicsThreadId tid)
 {
 	SPROG		*pSP;
 	SSCB		*pSS;

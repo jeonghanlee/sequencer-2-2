@@ -52,7 +52,7 @@ LOCAL	void seqShowAll();
  * If a non-zero thread id is specified then print the information about
  * the state program, otherwise print a brief summary of all state programs
  */
-long seqShow(epicsThreadId tid)
+long epicsShareAPI seqShow(epicsThreadId tid)
 {
 	SPROG		*pSP;
 	SSCB		*pSS;
@@ -140,7 +140,7 @@ long seqShow(epicsThreadId tid)
 /*
  * seqChanShow() - Show channel information for a state program.
  */
-long seqChanShow(epicsThreadId tid, char *pStr)
+long epicsShareAPI seqChanShow(epicsThreadId tid, char *pStr)
 {
 	SPROG		*pSP;
 	CHAN		*pDB;
@@ -249,7 +249,7 @@ long seqChanShow(epicsThreadId tid, char *pStr)
 /*
  * seqQueueShow() - Show syncQ queue information for a state program.
  */
-long seqQueueShow(epicsThreadId tid)
+long epicsShareAPI seqQueueShow(epicsThreadId tid)
 {
 	SPROG		*pSP;
 	ELLLIST		*pQueue;
