@@ -50,6 +50,7 @@
 		was not being allocated.
 03jun96,ajk	Now compiles with -wall and -pedantic switches.
 09aug96,wfl	Added initialization of syncQ queues.
+17may99,wfl	Moved misplaced event array initialization.
 ***************************************************************************/
 /*#define	DEBUG	1*/
 
@@ -280,11 +281,11 @@ SPROG			*pSP;
 		nWords = 1;
 	pSP->pEvents = (bitMask *)calloc(nWords,  sizeof(bitMask));
 	for (i = 0; i < nWords; i++)
+		pSP->pEvents[i] = 0;
 
 	/* Allocate and initialize syncQ queues */
 	pSP->numQueues = pSeqProg->numQueues;
 	pSP->pQueues = NULL;
-		pSP->pEvents[i] = 0;
 
 	if (pSP->numQueues > 0 )
 	{
