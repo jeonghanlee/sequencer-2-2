@@ -5,7 +5,7 @@
 # top directory each time changes are made to this file
 
 EPICS_BASE=/home/phoebus/MRK/epics/base
-TEMPLATE_TOP=/home/phoebus/MRK/epics/base/templates/makeBaseApp/top
+TEMPLATE_TOP=$(EPICS_BASE)/templates/makeBaseApp/top
 
 #
 # Enable appropriate process variable access methods
