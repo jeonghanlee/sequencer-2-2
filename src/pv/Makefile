@@ -24,10 +24,8 @@ USR_INCLUDES_DEFAULT += -I$(KROOT)/rel/default/include
 
 INC                  += pvKtl.h pvKtlCnv.h
 
-LIBRARY_DEFAULT      += pvKtl
-LIBRARY_WIN32        += -nil-
-pvKtl_SRCS_vxWorks   += -nil-
-pvKtl_SRCS_DEFAULT   += pvKtl.cc pvKtlCnv.cc
+pv_SRCS_vxWorks   += -nil-
+pv_SRCS_DEFAULT   += pvKtl.cc pvKtlCnv.cc
 
 endif
 
@@ -39,10 +37,8 @@ USR_CPPFLAGS      += -DPVCA
 
 INC               += pvCa.h
 
-LIBRARY_DEFAULT   += pvCa
-LIBRARY_WIN32     += -nil-
-pvCa_SRCS           += pvCa.cc
-pvCa_DLL_LIBS       += ca
+pv_SRCS           += pvCa.cc
+pv_DLL_LIBS       += ca
 
 endif
 
@@ -54,9 +50,7 @@ USR_CPPFLAGS      += -DPVFILE
 
 INC               += pvFile.h
 
-LIBRARY_DEFAULT   += pvFile
-LIBRARY_WIN32     += -nil-
-pvFile_SRCS       += pvFile.cc
+pv_SRCS       += pvFile.cc
 
 endif
 
