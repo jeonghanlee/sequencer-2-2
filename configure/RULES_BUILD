@@ -1,14 +1,29 @@
-# $Id: RULES_BUILD,v 1.7 2001-03-20 23:08:54 jba Exp $
+# $Id: RULES_BUILD,v 1.8 2001-03-23 16:25:41 jba Exp $
 #
 #	State notation language (snc) rules
+# Each <name>.st (or <name>.stt) produces <name>.c and <name>_sncreg.cpp
+
+
+#--------------------------------------------------
+# Object files
+
+# Add  *_sncreg$(OBJ) files
+TARGET_SNC = $(basename $(notdir $(filter %.stt %.st,$($*_SRCS))))
+TARGET_OBJS += $(addsuffix _sncreg$(OBJ),$(TARGET_SNC))
+
+PRODUCT_SNC = $(basename $(notdir $(filter %.stt %.st,$(SRCS) $(PROD_SRCS))))
+PRODUCT_OBJS += $(addsuffix _sncreg$(OBJ),$(PRODUCT_SNC))
+
+LIBRARY_SNC = $(basename $(notdir $(filter %.stt %.st,$(SRCS) $(LIB_SRCS) $(LIBSRCS))))
+LIBRARY_OBJS += $(addsuffix _sncreg$(OBJ),$(LIBRARY_SNC))
+
+#--------------------------------------------------
+# snc flags
 
 TARGET_SNCFLAGS = $($(subst _sncreg,,$(basename $@))_SNCFLAGS) $($(subst _sncreg,,$(basename $@))_SNCFLAGS_$(OS_CLASS))
 CPPSNCFLAGS += $(CROSS_CPPFLAGS) $(POSIX_CPPFLAGS) $(EPICS_BASE_CPPFLAGS)\
  $(TARGET_CPPFLAGS) $(USR_CPPFLAGS) $(ARCH_DEP_CPPFLAGS)\
  $(OP_SYS_CPPFLAGS) $(CODE_CPPFLAGS)
-
-#--------------------------------------------------
-# snc (state notation language) flags
 
 #  addons -  concat os specific sequencer flags
 ifneq ($(strip $(SNCFLAGS_$(OS_CLASS))),)
@@ -19,15 +34,22 @@ SNCFLAGS += $(SNCFLAGS_DEFAULT)
 endif
 endif
 
+#--------------------------------------------------
+# vpath
+
 vpath %.st $(USR_VPATH) $(ALL_SRC_DIRS)
 vpath %.stt $(USR_VPATH) $(ALL_SRC_DIRS)
 
-# depends rule uses .c and .cpp files
-STT_SRC_FILES = $(notdir $(filter %.stt,$(SRC_FILES)))
-ST_SRC_FILES = $(notdir $(filter %.st,$(SRC_FILES)))
+#--------------------------------------------------
+# depends rule needs .c files
+
+SNC_SRC_FILES = $(basename $(notdir $(filter %.st %.stt,$(SRC_FILES))))
 DEPENDS_SRC_FILES = $(filter-out %.st %.stt,$(SRC_FILES)) \
-                    $(STT_SRC_FILES:.stt=_snc.c) $(ST_SRC_FILES:.st=_snc.c) \
-                    $(STT_SRC_FILES:.stt=_sncreg.cpp) $(ST_SRC_FILES:.st=_sncreg.cpp)
+                    $(addsuffix .c,$(SNC_SRC_FILES)) \
+                    $(addsuffix _sncreg.cpp,$(SNC_SRC_FILES))
+
+#--------------------------------------------------
+# Directory definitions
 
 ifndef SNCSEQ
 SNCSEQ=$(TOP)
@@ -38,9 +60,15 @@ endif
 seq_DIR=$(SNCSEQ_LIB)
 pv_DIR=$(SNCSEQ_LIB)
 
+#--------------------------------------------------
+# snc executable
+
 ifndef SNC
 SNC = $(SNCSEQ)/bin/$(EPICS_HOST_ARCH)/snc$(HOSTEXE)
 endif
+
+#--------------------------------------------------
+# Rules
 
 %.i: ../%.st
 	@echo "preprocessing $<"
@@ -57,21 +85,12 @@ endif
 	@$(RM) $@
 	$(SNC) $(TARGET_SNCFLAGS) $(SNCFLAGS) $< -o $@
 
-%_snc.c: %_sncreg.cpp
+%.c: %_sncreg.cpp %_sncreg$(OBJ)
 	@$(RM) $@
 	@$(CP) $< $@
 
-%$(OBJ): %_snc$(OBJ) %_sncreg$(OBJ)
-	$(RM) $@
-ifdef WIN32
-	$(CP) $*_snc$(OBJ) $@
-	type $*_sncreg$(OBJ) >> $@
-else 
-	$(LDCMD)
-endif
-
 clean::
-	@$(RM) %.i %_sncreg.cpp %_snc.c
+	@$(RM) %.i %_sncreg.cpp %.c
 
-.PRECIOUS: %.i %_sncreg.cpp %_snc.c
+.PRECIOUS: %.i %_sncreg.cpp %.c
  
