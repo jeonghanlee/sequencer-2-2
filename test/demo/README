@@ -1,0 +1,5 @@
+To run this example on a host IOC:
+    ../../bin/linux-x86/demo demo.vws
+
+You'll get several warning messages about missing commands, but the demo
+application should work properly.
