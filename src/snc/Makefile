@@ -11,7 +11,7 @@ include $(TOP)/configure/CONFIG
 YACCOPT	= -d -v
 
 #  snc product
-PROD	= snc
+PROD_HOST	= snc
 
 SRCS	= snc_main.c parse.c phase2.c gen_ss_code.c gen_tables.c snc.c \
           sncVersion.c

@@ -11,7 +11,7 @@ SNCFLAGS_vxWorks += -nil-
 
 #  Sequence programs and/or object files to create
 SEQS = sncDelay sncEntry sncEntryOpte sncEntryVar sncExitOptx sncOptt sncOpttVar
-PROD = $(SEQS)
+PROD_HOST = $(SEQS)
 OBJS_vxWorks = $(SEQS)
 
 sncDelay_SRCS = sncDelay.st

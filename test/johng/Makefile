@@ -14,7 +14,7 @@ USR_CPPFLAGS += -DKTL
 SNCFLAGS = +m
 
 #  Products
-PROD = johng
+PROD_HOST = johng
 
 #  Libraries
 PROD_LIBS += seq

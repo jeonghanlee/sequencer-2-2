@@ -5,7 +5,7 @@ include $(TOP)/configure/CONFIG
 #  ADD MACRO DEFINITIONS AFTER THIS LINE
 
 # Products
-PROD += 
+PROD_HOST += 
 
 include $(TOP)/configure/RULES
 #----------------------------------------

@@ -15,8 +15,8 @@ include $(TOP)/configure/CONFIG
 SNCFLAGS = +m
 
 #  Products
-#PROD = testCA pvtest arrput arrputCA
-PROD = pvsimpleCC pvsimpleC pvtest arrput gphtest
+#PROD_HOST = testCA pvtest arrput arrputCA
+PROD_HOST = pvsimpleCC pvsimpleC pvtest arrput gphtest
 
 #  Libraries
 PROD_LIBS += seq

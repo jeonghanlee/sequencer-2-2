@@ -13,6 +13,10 @@ LIBRARY += pv
 pv_SRCS += pvNew.cc pv.cc
 pv_DLL_LIBS = Com
 
+# For R3.13 compatibility only
+OBJLIB_vxWorks=pv
+OBJLIB_SRCS = $(pv_SRCS)
+
 #----------------------------------------
 #  KTL (Keck Task Library) supported? (never under VxWorks)
 ifeq "$(PVKTL)" "TRUE"

@@ -11,7 +11,7 @@ SNCFLAGS_vxWorks += -nil-
 
 #  Sequence programs and/or object files to create
 SEQS = sncExample sncExEntry sncExOpt
-PROD = $(SEQS)
+PROD_HOST = $(SEQS)
 OBJS_vxWorks = $(SEQS)
 sncExample_SRCS = sncExample.st
 sncExEntry_SRCS = sncExEntry.st

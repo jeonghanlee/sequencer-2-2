@@ -21,6 +21,10 @@ LIBSRCS = seq_main.c seq_task.c seq_ca.c seq_if.c seq_mac.c seq_prog.c \
 
 LIBSRCS += $(seq_NAMS:%=%.c)
 
+# For R3.13 compatibility only
+OBJLIB_vxWorks=seq
+OBJLIB_SRCS = $(LIBSRCS)
+
 include $(TOP)/configure/RULES
 #----------------------------------------
 #  ADD RULES AFTER THIS LINE

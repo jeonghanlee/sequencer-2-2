@@ -17,7 +17,7 @@ USR_CPPFLAGS += -I$(KROOT)/rel/dcs/default/include
 SNCFLAGS = +m
 
 #  Products
-PROD = etcSeq tcsSeq
+PROD_HOST = etcSeq tcsSeq
 
 #  Libraries
 PROD_LIBS += seq

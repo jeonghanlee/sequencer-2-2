@@ -11,7 +11,7 @@ include $(TOP)/configure/CONFIG
 SNCFLAGS = +m
 
 #  Products
-PROD = control
+PROD_HOST = control
 
 #  Libraries
 PROD_LIBS += seq
