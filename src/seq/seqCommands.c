@@ -1,5 +1,5 @@
 /*
- * $Id: seqCommands.c,v 1.6 2001-02-16 21:45:16 norume Exp $
+ * $Id: seqCommands.c,v 1.7 2001-03-15 15:13:45 norume Exp $
  *
  * DESCRIPTION: EPICS sequencer commands
  *
@@ -26,14 +26,6 @@
 #include <ioccrf.h>
 
 /*
- * Until the mechanism for registering sequencer programs and commands
- * has been finalized I've got a couple of different methods supported
- * in this source.  At the moment I'm using C++ constructors to generate
- * the calls, so SEQ_PROG_REG is defined.
- */
-#define SEQ_PROG_REG
-
-/*
  * Prototypes (these probably belong in seqCom.h)
  */
 long seqShow (epicsThreadId);
@@ -41,7 +33,6 @@ long seqChanShow (epicsThreadId, char *);
 long seqQueueShow (epicsThreadId tid);
 long seqStop (epicsThreadId);
 
-#ifdef SEQ_PROG_REG
 struct sequencerProgram {
     struct seqProgram *prog;
     struct sequencerProgram *next;
@@ -63,7 +54,6 @@ seqRegisterSequencerProgram (struct seqProgram *p)
     sp->next = seqHead;
     seqHead = sp;
 }
-#endif
 
 /*
  * Find a thread by name or ID number
@@ -95,12 +85,7 @@ static void seqCallFunc(const ioccrfArgBuf *args)
     char *table = args[0].sval;
     char *macroDef = args[1].sval;
     int stackSize = args[2].ival;
-#ifdef SEQ_PROG_REG
     struct sequencerProgram *sp;
-#else
-    extern struct seqProgram * const seqPrograms[];
-    struct seqProgram * const *spp;
-#endif
 
     if (!table) {
         printf ("No sequencer specified.\n");
@@ -108,15 +93,9 @@ static void seqCallFunc(const ioccrfArgBuf *args)
     }
     if (*table == '&')
         table++;
-#ifdef SEQ_PROG_REG
     for (sp = seqHead ; sp != NULL ; sp = sp->next) {
         if (!strcmp (table, sp->prog->pProgName)) {
             seq (sp->prog, macroDef, stackSize);
-#else
-    for (spp = seqPrograms ; *spp != NULL ; spp++) {
-        if (!strcmp (table, (*spp)->pProgName)) {
-            seq (*spp, macroDef, stackSize);
-#endif
             return;
         }
     }
