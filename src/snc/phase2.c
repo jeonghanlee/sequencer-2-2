@@ -60,6 +60,7 @@ void	reconcile_states();
 void	gen_var_decl();
 void	gen_defn_c_code();
 void	gen_global_c_code();
+void	gen_init_reg();
 void	assign_ef_bits();
 void	assign_delay_ids();
 void	assign_next_delay_id();
@@ -109,9 +110,6 @@ void phase2()
 	gen_preamble();
 
 	/* Generate variable declarations */
-	printf ("\n#ifdef __cplusplus\n");
-	printf ("extern \"C\" {\n");
-	printf ("#endif\n");
 	gen_var_decl();
 
 	/* Generate definition C code */
@@ -126,10 +124,8 @@ void phase2()
 	/* Output global C code */
 	gen_global_c_code();
 
-    /* Finish off C++ declaration */
-    printf ("\n#ifdef __cplusplus\n");
-    printf ("}  /* extern \"C\" */\n");
-    printf ("#endif\n");
+    /* Sequencer registration (if "init_register" option set) */
+    gen_init_reg ();
 
 	exit(0);
 }
@@ -167,6 +163,7 @@ void gen_preamble()
 
 	/* Forward references of tables: */
 	printf("\nextern struct seqProgram %s;\n", prog_name);
+    printf ("\n#ifndef __cplusplus\n");
 
         /* Main program (if "main" option set) */
 	if (main_opt) {
@@ -181,18 +178,6 @@ void gen_preamble()
 	    printf("    taskwdInit();\n");
 	    printf("    return seq((void *)&%s, macro_def, 0);\n", prog_name);
 	    printf("}\n");
-	}
-
-        /* Sequencer registration (if "init_register" option set) */
-	if (init_reg_opt && !main_opt) {
-	    printf ("\n/* Register sequencer commands and program */\n");
-	    printf ("extern \"C\" void seqRegisterSequencerCommands(void);\n");
-	    printf ("extern \"C\" void seqRegisterSequencerProgram(struct seqProgram *);\n");
-	    printf ("\nclass %sInit {\n", prog_name);
-	    printf ("public:\n");
-	    printf ("    %sInit () { seqRegisterSequencerCommands(); seqRegisterSequencerProgram (&%s); }\n", prog_name, prog_name);
-	    printf ("};\n");
-	    printf ("static %sInit %sInit;\n", prog_name, prog_name);
 	}
 
 	return;
@@ -679,3 +664,22 @@ void		*argp;		/* ptr to argument to pass on to function */
 	}
 }
 
+
+void gen_init_reg()
+{
+	extern char		*prog_name;
+	extern int		main_opt, init_reg_opt;
+
+	if (init_reg_opt && !main_opt) {
+        printf ("\n#else /* __cplusplus */\n");
+	    printf ("\n/* Register sequencer commands and program */\n\n");
+	    printf ("extern \"C\" void seqRegisterSequencerCommands(void);\n");
+	    printf ("extern \"C\" void seqRegisterSequencerProgram(struct seqProgram *);\n");
+	    printf ("\nclass %sInit {\n", prog_name);
+	    printf ("public:\n");
+	    printf ("    %sInit () { seqRegisterSequencerCommands(); seqRegisterSequencerProgram (&%s); }\n", prog_name, prog_name);
+	    printf ("};\n");
+	    printf ("static %sInit %sInit;\n\n", prog_name, prog_name);
+	}
+    printf ("#endif /* __cplusplus */\n");
+}
