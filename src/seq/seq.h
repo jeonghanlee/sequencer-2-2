@@ -239,7 +239,7 @@ typedef struct auxiliary_args AUXARGS;
 #define THREAD_PRIORITY		epicsThreadPriorityMedium
 
 /* Function declarations for internal sequencer funtions */
-epicsShareFunc long epicsShareAPI seq (struct seqProgram *, char *, unsigned int);
+epicsShareFunc epicsThreadId epicsShareAPI seq (struct seqProgram *, char *, unsigned int);
 void	seqWakeup (SPROG *, long);
 void	seqFree (SPROG *);
 long	seqStop(epicsThreadId tid);

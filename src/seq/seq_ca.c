@@ -332,7 +332,7 @@ epicsShareFunc long seq_disconnect(SPROG *pSP)
 
 	pDB = pSP->pChan;
 #ifdef	DEBUG_DISCONNECT
-	errlogPrintf("seq_disconnect: pSP = 0x%x, pDB = 0x%x\n", pSP, pDB);
+	errlogPrintf("seq_disconnect: pSP = %p, pDB = %p\n", pSP, pDB);
 #endif	/*DEBUG_DISCONNECT*/
 
 	for (i = 0; i < pSP->numChans; i++, pDB++)

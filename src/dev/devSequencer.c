@@ -1,4 +1,4 @@
-/* $Id: dev.c,v 1.1.1.1 2000-04-04 03:22:41 wlupton Exp $
+/* $Id: devSequencer.c,v 1.1 2001-03-19 20:59:36 mrk Exp $
  *
  * Device support to permit database access to sequencer internals
  *
@@ -47,10 +47,10 @@ LOCAL long siInit( struct stringinRecord *pRec )
 
     /* check that link is of type INST_IO */
     if ( pLink->type != INST_IO ) {
-	return ERROR;
+	return -1;
     }
 
-    return OK;
+    return 0;
 }
 
 LOCAL long siRead( struct stringinRecord *pRec )
@@ -63,26 +63,29 @@ LOCAL long siRead( struct stringinRecord *pRec )
 
     /* parse the string as a sequencer name and an integer (n) */
     if ( sscanf( pInstio->string, "%s %d", name, &i ) != 2 ) {
-	return ERROR;
+	return -1;
     }
 
     /* return the name of this sequencer's nth state set */
     prog = seqFindProgByName( name );
     if ( prog == NULL ) {
-	return ERROR;
+	return -1;
     }
 
     if ( i < 0 || i >= prog->numSS ) {
-	return ERROR;
+	return -1;
     }
 
     strcpy( pRec->val, prog->pSS[i].pSSName );
 
-    return OK;
+    return 0;
 }
 
 /*
  * $Log: not supported by cvs2svn $
+ * Revision 1.1.1.1  2000/04/04 03:22:41  wlupton
+ * first commit of seq-2-0-0
+ *
  * Revision 1.1  2000/03/29 01:57:50  wlupton
  * initial insertion
  *

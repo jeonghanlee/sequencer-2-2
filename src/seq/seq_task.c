@@ -114,7 +114,7 @@ SPROG		*pSP;	/* ptr to original (global) state program table */
 			(EPICSTHREADFUNC)ss_entry,		/* entry point */
 			pSS);				/* parameter */
 
-		errlogPrintf("Spawning thread 0x%x: \"%s\"\n", tid,
+		errlogPrintf("Spawning thread %p: \"%s\"\n", tid,
 			    threadName);
 	}
 
@@ -299,7 +299,7 @@ int	phase;
 	/* Phase 2: unregister the thread with the EPICS watchdog */
 	else if (phase == 2)
 	{
-	    DEBUG("   taskwdRemove(0x%x)\n", pSS->threadId);
+	    DEBUG("   taskwdRemove(%p)\n", pSS->threadId);
 	    taskwdRemove(pSS->threadId);
 	}
 
@@ -438,7 +438,7 @@ long seqStop(epicsThreadId tid)
 	if (pSP == NULL)
 		return -1;
 
-	DEBUG("Stop %s: pSP=%d=0x%x, tid=0x%x\n", pSP->pProgName, pSP, pSP,tid);
+	DEBUG("Stop %s: pSP=%p, tid=%p\n", pSP->pProgName, pSP,tid);
 
 	/* Ask all state-set threads to exit (phase 1) */
 	DEBUG("   Asking state-set threads to exit (phase 1):\n");
@@ -449,7 +449,7 @@ long seqStop(epicsThreadId tid)
 			continue;
 
 		/* Ask the thread to exit */
-		DEBUG("      tid=0x%x\n", pSS->threadId);
+		DEBUG("      tid=%p\n", pSS->threadId);
 		epicsEventSignal(pSS->death1SemId);
 	}
 
@@ -466,13 +466,13 @@ long seqStop(epicsThreadId tid)
 
 		if (epicsEventWaitWithTimeout(pSS->death2SemId,10.0) != epicsEventWaitOK)
 		{
-			errlogPrintf("Timeout waiting for thread 0x%x "
+			errlogPrintf("Timeout waiting for thread %p "
 				     "(\"%s\") death phase 1 (ignored)\n",
 				     pSS->threadId, pSS->pSSName);
 		}
 		else
 		{
-			DEBUG("      tid=0x%x\n", pSS->threadId);
+			DEBUG("      tid=%p\n", pSS->threadId);
 		}
 	}
 
@@ -483,7 +483,7 @@ long seqStop(epicsThreadId tid)
 		if (pSS->threadId == 0)
 			continue;
 
-		DEBUG("      tid=0x%x\n", pSS->threadId);
+		DEBUG("      tid=%p\n", pSS->threadId);
 		epicsEventSignal(pSS->death3SemId);
 	}
 
@@ -496,13 +496,13 @@ long seqStop(epicsThreadId tid)
 
 		if (epicsEventWaitWithTimeout(pSS->death4SemId,10.0) != epicsEventWaitOK)
 		{
-			errlogPrintf("Timeout waiting for thread 0x%x "
+			errlogPrintf("Timeout waiting for thread %p "
 				     "(\"%s\") death phase 2 (ignored)\n",
 				     pSS->threadId, pSS->pSSName);
 		}
 		else
 		{
-			DEBUG("      tid=0x%x\n", pSS->threadId);
+			DEBUG("      tid=%p\n", pSS->threadId);
 		}
 	}
 

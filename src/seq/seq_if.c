@@ -213,7 +213,7 @@ epicsShareFunc long epicsShareAPI seq_pvPut(SS_ID ssId, long pvId, long compType
 	pSP = pSS->sprog;
 	pDB = pSP->pChan + pvId;
 #ifdef	DEBUG
-	errlogPrintf("seq_pvPut: pv name=%s, pVar=0x%x\n", pDB->dbName,
+	errlogPrintf("seq_pvPut: pv name=%s, pVar=%p\n", pDB->dbName,
 		pDB->pVar);
 #endif	/*DEBUG*/
 
@@ -668,7 +668,7 @@ epicsShareFunc void epicsShareAPI seq_efSet(SS_ID ssId, long ev_flag)
 	LOCK;
 
 #ifdef	DEBUG
-	errlogPrintf("seq_efSet: pSP=0x%x, pSS=0x%x, ev_flag=0x%x\n", pSP, pSS,
+	errlogPrintf("seq_efSet: pSP=%p, pSS=%p, ev_flag=%p\n", pSP, pSS,
 		ev_flag);
 #endif	/*DEBUG*/
 
@@ -701,7 +701,7 @@ epicsShareFunc long epicsShareAPI seq_efTest(SS_ID ssId, long ev_flag)
 	isSet = bitTest(pSP->pEvents, ev_flag);
 
 #ifdef	DEBUG
-	errlogPrintf("seq_efTest: ev_flag=%d, event=0x%x, isSet=%d\n",
+	errlogPrintf("seq_efTest: ev_flag=%d, event=%p, isSet=%d\n",
 		ev_flag, pSP->pEvents[0], isSet);
 #endif	/*DEBUG*/
 

@@ -49,7 +49,7 @@ int		async_opt = FALSE;	/* do pvGet() asynchronously */
 int		conn_opt = TRUE;	/* wait for all conns to complete */
 int		debug_opt = FALSE;	/* run-time debug */
 int		newef_opt = TRUE;	/* new event flag mode */
-int		init_reg_opt = FALSE;	/* emit code to perform initial registration */
+int		init_reg_opt = TRUE;	/* register commands/programs */
 int		line_opt = TRUE;	/* line numbering */
 int		main_opt = FALSE;	/* main program */
 int		reent_opt = FALSE;	/* reentrant at run-time */
@@ -290,6 +290,7 @@ void print_usage()
 	fprintf(stderr, "  -e           - don't use new event flag mode\n");
 	fprintf(stderr, "  -l           - suppress line numbering\n");
 	fprintf(stderr, "  +m           - generate main program\n");
+	fprintf(stderr, "  -i           - don't register commands/programs\n");
 	fprintf(stderr, "  +r           - make reentrant at run-time\n");
 	fprintf(stderr, "  -w           - suppress compiler warnings\n");
 	fprintf(stderr, "example:\n snc +a -c vacuum.st\n");

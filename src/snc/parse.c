@@ -157,7 +157,7 @@ void option_stmt(option, value)
 char		*option; /* "a", "r", ... */
 int		value;	/* TRUE means +, FALSE means - */
 {
-	extern int	async_opt, conn_opt, debug_opt, line_opt, 
+	extern int	async_opt, conn_opt, debug_opt, line_opt, init_reg_opt,
 			reent_opt, warn_opt, newef_opt, main_opt;
 
 	switch(*option)
@@ -173,6 +173,9 @@ int		value;	/* TRUE means +, FALSE means - */
 		break;
 	    case 'e':
 		newef_opt = value;
+		break;
+	    case 'i':
+		init_reg_opt = value;
 		break;
 	    case 'l':
 		line_opt = value;

@@ -1,6 +1,6 @@
 program snctest
 float v;
-assign v to "grw:xxxExample";
+assign v to "{user}:xxxExample";
 monitor v;
 
 ss ss1

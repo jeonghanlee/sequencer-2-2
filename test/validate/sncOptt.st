@@ -5,7 +5,7 @@ program sncoptt
 %%#include "epicsThread.h"
 
 float v;
-/* assign v to "grw:xxxExample";
+/* assign v to "{user}:xxxExample";
 monitor v;
 */
 ss ss1

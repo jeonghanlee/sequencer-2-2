@@ -69,14 +69,12 @@ long seqShow(epicsThreadId tid)
 
 	/* Print info about state program */
 	printf("State Program: \"%s\"\n", pSP->pProgName);
-	printf("  initial thread id = %lu = 0x%lx\n", 
-		(unsigned long) pSP->threadId, (unsigned long) pSP->threadId);
+	printf("  initial thread id = %p\n", pSP->threadId);
 	printf("  thread priority = %d\n", pSP->threadPriority);
 	printf("  number of state sets = %ld\n", pSP->numSS);
 	printf("  number of syncQ queues = %d\n", pSP->numQueues);
 	if (pSP->numQueues > 0)
-		printf("  queue array address = %d = 0x%x\n",
-		  (int)pSP->pQueues, (unsigned int)pSP->pQueues);
+		printf("  queue array address = %p\n",pSP->pQueues);
 	printf("  number of channels = %ld\n", pSP->numChans);
 	printf("  number of channels assigned = %ld\n", pSP->assignCount);
 	printf("  number of channels connected = %ld\n", pSP->connCount);
@@ -151,8 +149,7 @@ long seqChanShow(epicsThreadId tid, char *pStr)
 	int		match, showAll;
 
 	pSP = seqQryFind(tid);
-	if (tid == (epicsThreadId) 0)
-		return 0;
+	if(!pSP) return 0;
 
 	printf("State Program: \"%s\"\n", pSP->pProgName);
 	printf("Number of channels=%ld\n", pSP->numChans);
@@ -260,8 +257,7 @@ long seqQueueShow(epicsThreadId tid)
 	char		tsBfr[50];
 
 	pSP = seqQryFind(tid);
-	if (tid == (epicsThreadId) 0)
-		return 0;
+	if(!pSP) return 0;
 
 	printf("State Program: \"%s\"\n", pSP->pProgName);
 	printf("Number of queues = %d\n", pSP->numQueues);
@@ -450,8 +446,8 @@ SPROG		*pSP;
 		else
 			epicsThreadGetName(pSS->threadId, threadName,
 				      sizeof(threadName));
-		printf("%-16s %-10lx %-16s %-16s\n", progName,
-		    (unsigned long) pSS->threadId, threadName, pSS->pSSName );
+		printf("%-16s %-10p %-16s %-16s\n", progName,
+		    pSS->threadId, threadName, pSS->pSSName );
 		progName = "";
 	}
 	printf("\n");

@@ -163,20 +163,31 @@ void gen_preamble()
 
 	/* Forward references of tables: */
 	printf("\nextern struct seqProgram %s;\n", prog_name);
-    printf ("\n#ifndef __cplusplus\n");
+	printf ("\n#ifndef __cplusplus\n");
 
         /* Main program (if "main" option set) */
 	if (main_opt) {
 	    printf("\n/* Main program */\n");
+	    printf("#include <string.h>\n");
 	    printf("#include \"epicsThread.h\"\n");
-	    printf("#include \"errlog.h\"\n");
-	    printf("#include \"taskwd.h\"\n");
+	    printf("#include \"ioccrf.h\"\n");
 	    printf("\n");
 	    printf("int main(int argc,char *argv[]) {\n");
-	    printf("    char *macro_def = (argc>1)?argv[1]:NULL;\n");
-	    printf("    errlogInit(10000);\n");
-	    printf("    taskwdInit();\n");
-	    printf("    return seq((void *)&%s, macro_def, 0);\n", prog_name);
+            printf("    char * macro_def;\n");
+            printf("    epicsThreadId threadId;\n");
+            printf("    int callIoccrf = 0;\n");
+            printf("    if(argc>1 && strcmp(argv[1],\"-s\")==0) {\n");
+            printf("        callIoccrf=1;\n");
+            printf("        --argc; ++argv;\n");
+            printf("    }\n");
+	    printf("    macro_def = (argc>1)?argv[1]:NULL;\n");
+	    printf("    threadId = seq((void *)&%s, macro_def, 0);\n", prog_name);
+            printf("    if(callIoccrf) {\n");
+            printf("        ioccrf(0);\n");
+            printf("    } else {\n");
+            printf("        epicsThreadExitMain();\n");
+            printf("    }\n");
+            printf("    return(0);\n");
 	    printf("}\n");
 	}
 
@@ -670,8 +681,8 @@ void gen_init_reg()
 	extern char		*prog_name;
 	extern int		main_opt, init_reg_opt;
 
-	if (init_reg_opt && !main_opt) {
-        printf ("\n#else /* __cplusplus */\n");
+	if (init_reg_opt) {
+	    printf ("\n#else /* __cplusplus */\n");
 	    printf ("\n/* Register sequencer commands and program */\n\n");
 	    printf ("extern \"C\" void seqRegisterSequencerCommands(void);\n");
 	    printf ("extern \"C\" void seqRegisterSequencerProgram(struct seqProgram *);\n");
@@ -681,5 +692,5 @@ void gen_init_reg()
 	    printf ("};\n");
 	    printf ("static %sInit %sInit;\n\n", prog_name, prog_name);
 	}
-    printf ("#endif /* __cplusplus */\n");
+	printf ("#endif /* __cplusplus */\n");
 }

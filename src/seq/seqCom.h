@@ -43,6 +43,7 @@
 
 #include	"shareLib.h" /* reset share lib defines */
 #include	"pvAlarm.h"	/* status and severity defs */
+#include	"epicsThread.h"	/* time stamp defs */
 #include	"epicsTime.h"	/* time stamp defs */
 
 #ifdef __cplusplus
@@ -161,7 +162,7 @@ struct	seqProgram
  * The SNC must generate these modules--see gen_ss_code.c.
  */
 #ifndef INCLseqh /* prefer more-specific seq.h prototype */
-epicsShareFunc long	epicsShareAPI seq(void *, char *, unsigned int);/* initiate state program */
+epicsShareFunc epicsThreadId epicsShareAPI seq(void *, char *, unsigned int);/* initiate state program */
 #endif
 epicsShareFunc void	epicsShareAPI seq_efSet(SS_ID, long);		/* set an event flag */
 epicsShareFunc long	epicsShareAPI seq_efTest(SS_ID, long);	/* test an event flag */

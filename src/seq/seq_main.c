@@ -115,7 +115,7 @@ epicsThreadId seqAuxThreadId = (epicsThreadId) 0;
  * Creates the initial state program thread and returns its thread id.
  * Most initialization is performed here.
  */
-epicsShareFunc long epicsShareAPI seq (
+epicsShareFunc epicsThreadId epicsShareAPI seq (
     struct seqProgram *pSeqProg, char *macroDef, unsigned int stackSize)
 {
 	epicsThreadId	tid;
@@ -126,9 +126,8 @@ epicsShareFunc long epicsShareAPI seq (
 	AUXARGS		auxArgs;
 	extern		void *seqAuxThread(void *);
 
-printf("seq pSeqProg %p macroDef %s stackSize %u\n",pSeqProg,macroDef,stackSize);
 	/* Print version & date of sequencer */
-	errlogPrintf("%s\n", seqVersion);
+	printf("%s\n", seqVersion);
 
 	/* Exit if no parameters specified */
 	if (pSeqProg == 0)
@@ -144,7 +143,7 @@ printf("seq pSeqProg %p macroDef %s stackSize %u\n",pSeqProg,macroDef,stackSize)
 			"versions\n");
 		errlogPrintf(" - Re-compile your program?\n");
 		epicsThreadSleep( 1.0 );	/* let error messages get printed */
-		return -1;
+		return 0;
 	}
 
 	/* Initialize the sequencer tables */
@@ -209,16 +208,16 @@ printf("seq pSeqProg %p macroDef %s stackSize %u\n",pSeqProg,macroDef,stackSize)
 		if (seqAuxThreadId == (epicsThreadId) -1)
 		{
 		    epicsThreadSleep( 1.0 );	/* let error messages get printed */
-		    return -1;
+		    return 0;
 		}
 #ifdef	DEBUG
-	errlogPrintf("thread seqAux spawned, tid=0x%x\n", (int) seqAuxThreadId);
+	printf("thread seqAux spawned, tid=%p\n", (int) seqAuxThreadId);
 #endif	/*DEBUG*/
 	}
 
 	/* Spawn the initial sequencer thread */
 #ifdef	DEBUG
-	errlogPrintf("Spawning thread %s, stackSize=%d\n", pThreadName,
+	printf("Spawning thread %s, stackSize=%d\n", pThreadName,
 		pSP->stackSize);
 #endif	/*DEBUG*/
 	/* Specify thread priority */
@@ -234,58 +233,10 @@ printf("seq pSeqProg %p macroDef %s stackSize %u\n",pSeqProg,macroDef,stackSize)
 	tid = epicsThreadCreate(pThreadName, pSP->threadPriority, pSP->stackSize,
 			      (EPICSTHREADFUNC)sequencer, pSP);
 
-	errlogPrintf("Spawning state program \"%s\", thread 0x%x: \"%s\"\n",
+	printf("Spawning state program \"%s\", thread %p: \"%s\"\n",
 		     pSP->pProgName, tid, pThreadName);
 
-	/* If main program was generated or "shell" macro was specified, run
-	   simple command shell and exit on end of file */
-	if (pSP->options & OPT_MAIN ||
-				seqMacValGet(pSP->pMacros, "shell") != NULL)
-	{
-		while (TRUE) {
-			int l;
-			char s[133] = "";
-			if (scanf("%s",s) <= 0)
-				break;
-			l = strlen(s);
-			if (strncmp(s,"i",l) == 0)
-				epicsThreadShowAll(0);
-			else if (strncmp(s,"all",l) == 0)
-				seqShow(NULL);
-			else if (strncmp(s,"channels",l) == 0)
-				seqChanShow(tid,NULL);
-			else if (strncmp(s,"+",l) == 0)
-				seqChanShow(tid,"+");
-			else if (strncmp(s,"-",l) == 0)
-				seqChanShow(tid,"-");
-			else if (strncmp(s,"queues",l) == 0)
-				seqQueueShow(tid);
-			else if (strncmp(s,"statesets",l) == 0)
-				seqShow(tid);
-			else
-			{
-				printf("commands (abbreviable):\n");
-				printf("  i         - show all threads\n");
-				printf("  all       - show all sequencers\n");
-				printf("  channels  - show all channels\n");
-				printf("  +         - show conn. channels\n");
-				printf("  -         - show disc. channels\n");
-				printf("  queues    - show queues\n");
-				printf("  statesets - show state-sets\n");
-				printf("  <EOF>     - exit\n");
-			}
-		
-		}
-		seqStop(tid);
-		epicsThreadExitMain();
-		return 0;
-	}
-
-	/* Otherwise, return thread id to calling program */
-	else
-	{
-		return (long) tid;
-	}
+	return tid;
 }
 /* seqInitTables - initialize sequencer tables */
 LOCAL SPROG *seqInitTables(pSeqProg)
@@ -334,7 +285,7 @@ SPROG			*pSP;
 		pSP->pVar = (char *)calloc(pSP->varSize, 1);
 
 #ifdef	DEBUG
-	errlogPrintf("init_sprog: num SS=%d, num Chans=%d, num Events=%d, "
+	printf("init_sprog: num SS=%d, num Chans=%d, num Events=%d, "
 		"Prog Name=%s, var Size=%d\n", pSP->numSS, pSP->numChans,
 		pSP->numEvents, pSP->pProgName, pSP->varSize);
 #endif	/*DEBUG*/
@@ -400,7 +351,7 @@ SPROG			*pSP;
 		pvTimeGetCurrentDouble(&pSS->timeEntered);
 		pSS->sprog = pSP;
 #ifdef	DEBUG
-		errlogPrintf("init_sscb: SS Name=%s, num States=%d, pSS=0x%x\n",
+		printf("init_sscb: SS Name=%s, num States=%d, pSS=%p\n",
 			pSS->pSSName, pSS->numStates, pSS);
 #endif	/*DEBUG*/
 		/* Create a binary semaphore for synchronizing events in a SS */
@@ -434,14 +385,14 @@ SPROG			*pSP;
 			pState->pEventMask = pSeqState->pEventMask;
                         pState->options = pSeqState->options;
 #ifdef	DEBUG
-		errlogPrintf("init_sscb: State Name=%s, Event Mask=0x%x\n",
+		printf("init_sscb: State Name=%s, Event Mask=%p\n",
 			pState->pStateName, *pState->pEventMask);
 #endif	/*DEBUG*/
 		}
 	}
 
 #ifdef	DEBUG
-	errlogPrintf("init_sscb: numSS=%d\n", pSP->numSS);
+	printf("init_sscb: numSS=%d\n", pSP->numSS);
 #endif	/*DEBUG*/
 	return;
 }
@@ -465,7 +416,7 @@ SPROG			*pSP;
 	for (nchan = 0; nchan < pSP->numChans; nchan++, pDB++, pSeqChan++)
 	{
 #ifdef	DEBUG
-		errlogPrintf("init_chan: pDB=0x%x\n", pDB);
+		printf("init_chan: pDB=%p\n", pDB);
 #endif	/*DEBUG*/
 		pDB->sprog = pSP;
 		pDB->sset = NULL;	/* set temporarily during get/put */
@@ -494,12 +445,12 @@ SPROG			*pSP;
 		if ((pSP->options & OPT_REENT) != 0)
 			pDB->pVar += (int)pSP->pVar;
 #ifdef	DEBUG
-		errlogPrintf(" Assigned Name=%s, VarName=%s, VarType=%s, "
+		printf(" Assigned Name=%s, VarName=%s, VarType=%s, "
 			"count=%d\n", pDB->dbAsName, pDB->pVarName,
 			pDB->pVarType, pDB->count);
-		errlogPrintf("   size=%d, dbOffset=%d\n", pDB->size,
+		printf("   size=%d, dbOffset=%d\n", pDB->size,
 			pDB->dbOffset);
-		errlogPrintf("   efId=%d, monFlag=%d, eventNum=%d\n",
+		printf("   efId=%d, monFlag=%d, eventNum=%d\n",
 			pDB->efId, pDB->monFlag, pDB->eventNum);
 #endif	/*DEBUG*/
 	}
@@ -516,7 +467,7 @@ SPROG		*pSP;
 
 	pSP->pMacros = pMac = (MACRO *)calloc(MAX_MACROS, sizeof (MACRO));
 #ifdef	DEBUG
-	errlogPrintf("init_mac: pMac=0x%x\n", pMac);
+	printf("init_mac: pMac=%p\n", pMac);
 #endif	/*DEBUG*/
 
 	for (i = 0 ; i < MAX_MACROS; i++, pMac++)
@@ -541,7 +492,7 @@ SPROG		*pSP;
 		pDB->dbName = calloc(1, MACRO_STR_LEN);
 		seqMacEval(pDB->dbAsName, pDB->dbName, MACRO_STR_LEN, pSP->pMacros);
 #ifdef	DEBUG
-		errlogPrintf("seqChanNameEval: \"%s\" evaluated to \"%s\"\n",
+		printf("seqChanNameEval: \"%s\" evaluated to \"%s\"\n",
 			pDB->dbAsName, pDB->dbName);
 #endif	/*DEBUG*/
 	}
@@ -735,11 +686,13 @@ epicsStatus seq_logv(SPROG *pSP, const char *fmt, va_list args)
  */
 epicsShareFunc long epicsShareAPI seq_seqLog(SS_ID ssId, const char *fmt, ...)
 {
-	SPROG		*pSP;
+    SPROG	*pSP;
     va_list     args;
+    long rtn;
 
     va_start (args, fmt);
-	pSP = ((SSCB *)ssId)->sprog;
-	return seq_logv(pSP, fmt, args);
+    pSP = ((SSCB *)ssId)->sprog;
+    rtn = seq_logv(pSP, fmt, args);
     va_end (args);
+    return(rtn);
 }

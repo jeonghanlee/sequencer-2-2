@@ -5,16 +5,35 @@ include $(TOP)/configure/CONFIG
 #  ADD MACRO DEFINITIONS AFTER THIS LINE
 
 #  Generate snc main programs (not needed under VxWorks)
-SNCFLAGS = +m
+
+SNCFLAGS_DEFAULT += +m
+SNCFLAGS_vxWorks += -nil-
 
 #  Sequence programs and/or object files to create
 SEQS = sncDelay sncEntry sncEntryOpte sncEntryVar sncExitOptx sncOptt sncOpttVar
 PROD = $(SEQS)
 OBJS_vxWorks = $(SEQS)
 
-#  Sequencer and EPICS libraries
-PROD_LIBS += seq iocsh miscIoc rsrvIoc dbtoolsIoc asIoc dbIoc registryIoc dbStaticIoc ca Com
-seq_DIR    = $(INSTALL_LIB)
+sncDelay_SRCS = sncDelay.st
+sncEntry_SRCS = sncEntry.st
+sncEntryOpte_SRCS = sncEntryOpte.st
+sncEntryVar_SRCS = sncEntryVar.st
+sncExitOptx_SRCS = sncExitOptx.st
+sncOptt_SRCS = sncOptt.st
+sncOpttVar_SRCS = sncOpttVar.st
+
+#  Libraries
+PROD_LIBS += seq
+PROD_LIBS += iocsh
+PROD_LIBS += miscIoc
+PROD_LIBS += rsrvIoc
+PROD_LIBS += dbtoolsIoc
+PROD_LIBS += asIoc
+PROD_LIBS += dbIoc
+PROD_LIBS += registryIoc
+PROD_LIBS += dbStaticIoc
+PROD_LIBS += ca
+PROD_LIBS += Com
 
 include $(TOP)/test/Makefile.pv
 
