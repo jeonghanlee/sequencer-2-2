@@ -4,7 +4,7 @@
 # You should do a "gnumake clean uninstall install" in the application
 # top directory each time changes are made to this file
 
-EPICS_BASE=/home/phoebus/MRK/epics/base
+EPICS_BASE=$(TOP)/../../../base
 TEMPLATE_TOP=$(EPICS_BASE)/templates/makeBaseApp/top
 
 #
