@@ -7,5 +7,5 @@ DIRS += simple
 DIRS += validate
 DIRS += demo
 
-include $(TOP)/configure/RULES
+include $(TOP)/configure/RULES_DIRS
 
