@@ -28,6 +28,14 @@ without databases running in the same process.
 Release History for releases that work with EPICS base 3.14.
 --------------
 
+Version 2.0.11 contains the following changes:
+
+A bugfix in src/seq/seq_ca.c found by Stephanie Allison and Till Straumann.
+
+Moved the PV build configuration variables from configure/RELEASE to the new
+CONFIG_SITE file, and moved CONFIG_APP functionality into CONFIG. Also set
+CHECK_RELEASE to YES by default in configure/Makefile.
+
 Version 2.0.10 contains the new diagnostic
 
 seqcar(verbosity)
