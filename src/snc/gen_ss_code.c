@@ -253,9 +253,7 @@ void gen_delay_func(Expr *sp, Expr *ssp)
  */
 void eval_delay(Expr *ep, Expr *sp)
 {
-	Expr		*epf;
 	int		delay_id;
-	extern char	*stype[];
 
 #ifdef	DEBUG
 	fprintf(stderr, "eval_delay: type=%s\n", stype[ep->type]);
@@ -283,8 +281,7 @@ void gen_action_func(Expr *sp, Expr *ssp)
 	Expr		*tp;
 	Expr		*ap;
 	int		trans_num;
-	extern char	*prog_name;
-	extern		line_num;
+	extern int	line_num;
 
 	/* Action function declaration */
 	printf("\n/* Action function for state \"%s\" in state set \"%s\" */\n",
@@ -618,9 +615,7 @@ int special_func(int stmt_type,Expr *ep,Expr *sp)
 */
 {
 	char		*fname; /* function name */
-	Expr		*ep1, *ep2, *ep3; /* parameters */
-	Chan		*cp;
-	Var		*vp;
+	Expr		*ep1; /* parameters */
 	enum		fcode func_code;
 	int		delay_id;
 
@@ -723,9 +718,8 @@ void gen_ef_func(int stmt_type,Expr *ep,Expr *sp,char *fname,enum fcode func_cod
     enum	fcode func_code; function code 
 */
 {
-	Expr		*ep1, *ep2, *ep3;
+	Expr		*ep1;
 	Var		*vp;
-	Chan		*cp;
 
 	ep1 = ep->left; /* ptr to 1-st parameters */
 	if (ep1 != 0 && ep1->type == E_COMMA)
@@ -776,7 +770,6 @@ void gen_pv_func(int stmt_type,Expr *ep,Expr *sp,
 	Var		*vp;
 	char		*vn;
 	int		id;
-	int		len;
 	Chan		*cp;
 	int		num;
 
@@ -851,7 +844,7 @@ void gen_pv_func(int stmt_type,Expr *ep,Expr *sp,
 	{
 		if (vp != 0 && ep1->type != E_SUBSCR)
 		{
-			printf(", %ld", vp->length1);
+			printf(", %d", vp->length1);
 		}
 		else
 		{

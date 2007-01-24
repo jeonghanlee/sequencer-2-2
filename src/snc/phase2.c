@@ -84,9 +84,7 @@ int	db_chan_count();
 *-*************************************************************************/
 void phase2()
 {
-	extern	Var	*var_list;	/* variables (from parse) */
 	extern	Expr	*ss_list;	/* state sets (from parse) */
-	extern	Expr	*global_c_list;	/* global C code */
 
 	/* Count number of db channels and state sets defined */
 	num_queues = db_queue_count();
@@ -242,7 +240,6 @@ void connect_variable(ep)
 Expr		*ep;
 {
 	Var		*vp;
-	extern char	*stype[];
 	extern int	warn_opt;
 
 	if (ep->type != E_VAR)
@@ -280,7 +277,7 @@ void reconcile_states()
 	extern Expr		*ss_list;
 
 	extern int	num_errors;
-	Expr		*ssp, *sp, *sp1, tr;
+	Expr		*ssp, *sp, *sp1;
 
 	for (ssp = ss_list; ssp != 0; ssp = ssp->next)
 	{

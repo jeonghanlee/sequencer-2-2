@@ -203,7 +203,6 @@ char	*db_name;	/* ptr to db name */
 {
 	Chan		*cp;
 	Var		*vp;
-	int		subNum;
 	extern int	line_num;
 
 #ifdef	DEBUG
@@ -810,8 +809,6 @@ Expr *link_expr(ep1, ep2)
 Expr		*ep1;	/* beginning of 1-st structure or list */
 Expr		*ep2;	/* beginning 2-nd (append it to 1-st) */
 {
-	Expr		*ep;
-
 	if (ep1 == 0 && ep2 == 0)
 	        return NULL;
 	else if (ep1 == 0)

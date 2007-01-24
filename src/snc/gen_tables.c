@@ -68,9 +68,6 @@ int		find_error_state();
 
 void gen_tables()
 {
-	extern	Expr	*ss_list;	/* state sets (from parse) */
-	extern	char	*global_c_code;	/* global C code */
-
 	printf("\f/************************ Tables ***********************/\n");
 
 	/* Generate DB blocks */
@@ -140,11 +137,10 @@ Chan		*cp;
 int		elem_num;
 {
 	Var		*vp;
-	char		*type_string, *suffix, elem_str[20], *db_name;
-	extern char	*prog_name;
+	char		*suffix, elem_str[20], *db_name;
 	extern int	reent_opt;
 	extern int	num_events;
-	int		size, count, ef_num, mon_flag;
+	int		ef_num, mon_flag;
 	char		*db_type_str();
 
 	vp = cp->var;
@@ -155,7 +151,7 @@ int		elem_num;
 	else if (vp->class == VC_ARRAY2)
 		sprintf(elem_str, "[%d][0]", elem_num);
 	else
-		sprintf(elem_str, "");
+		elem_str[0] = '\0';
 
 	if (vp->type == V_STRING)
 		suffix = "[0]";
@@ -456,9 +452,6 @@ void gen_prog_table()
 	extern int reent_opt;
 
 	extern char		*prog_name;
-	extern Expr		entry_code_list;
-	extern Expr		exit_code_list;
-	int			i;
 
 	printf("\n/* State Program table (global) */\n");
 
@@ -524,7 +517,7 @@ void gen_ss_array()
 {
 	extern Expr		*ss_list;
 	Expr			*ssp;
-	int			nss, nstates, n;
+	int			nss, nstates;
 
 	printf("\n/* State Set Blocks */\n");
 	printf("static struct seqSS seqSS[NUM_SS] = {\n");

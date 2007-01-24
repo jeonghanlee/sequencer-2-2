@@ -116,7 +116,7 @@ CCONST	\'.\'
 			 line_num);
 		line_num++;
 }
-<PP>{FPNUM} {	yylval.pchar = strdup(yytext);
+<PP>{FPNUM} {	yylval.pchar = strdup((char *)yytext);
 		RETURN(NUMBER);
 }
 <PP>\"		{ pStr = strBfr; BEGIN PP_STR; }
@@ -198,7 +198,7 @@ CCONST	\'.\'
 		RETURN(NUMBER);
 }
 <SNL>{NAME} {
-		yylval.pchar = strdup(yytext);
+		yylval.pchar = strdup((char *)yytext);
 		RETURN(NAME);
 }
 <SNL>"++"	RETURN(AUTO_INCR);
@@ -248,19 +248,19 @@ CCONST	\'.\'
 <SNL>")"	RETURN(R_PAREN);
 <SNL>","	RETURN(COMMA);
 <SNL>{HEX} {
-		yylval.pchar = strdup(yytext);
+		yylval.pchar = strdup((char *)yytext);
 		RETURN(NUMBER);
 }
 <SNL>{OCTAL} {
-		yylval.pchar = strdup(yytext);
+		yylval.pchar = strdup((char *)yytext);
 		RETURN(NUMBER);
 }
 <SNL>{FPNUM} {
-		yylval.pchar = strdup(yytext);
+		yylval.pchar = strdup((char *)yytext);
 		RETURN(NUMBER);
 }
 <SNL>{CCONST} {
-		yylval.pchar = strdup(yytext);
+		yylval.pchar = strdup((char *)yytext);
 		RETURN(CHAR_CONST);
 }
 <SNL>[\f\t\ ]*	/* no action */ ;
