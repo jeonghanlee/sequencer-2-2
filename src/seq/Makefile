@@ -12,7 +12,7 @@ INC = seqCom.h
 
 #  seq library
 LIBRARY = seq
-seq_LIBS = pv iocsh Com
+seq_LIBS = pv Com
 
 LIBSRCS = seq_main.c seq_task.c seq_ca.c seq_if.c seq_mac.c seq_prog.c \
 	  seq_qry.c seqVersion.c seqCommands.c
