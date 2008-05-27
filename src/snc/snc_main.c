@@ -109,8 +109,8 @@ char	*argv[];
 	src_file = in_file;
 
 	/* Use line buffered output */
-	setvbuf(stdout, NULL, _IOLBF, 0);
- 	setvbuf(stderr, NULL, _IOLBF, 0);
+	setvbuf(stdout, NULL, _IOLBF, BUFSIZ);
+	setvbuf(stderr, NULL, _IOLBF, BUFSIZ);
 	
 	printf("/* %s: %s */\n", sncVersion, in_file);
 
