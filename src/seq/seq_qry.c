@@ -297,6 +297,13 @@ long epicsShareAPI seqcar(int level)
 	       stats.nProgs, stats.nChans, stats.nConn, diss);
 	return diss;
 }
+
+void epicsShareAPI seqcaStats(int *pchans, int *pdiscon) {
+	struct seqStats stats = {0, 0, 0, 0};
+	seqTraverseProg(seqcarCollect, (void *) &stats);
+	if (pchans)  *pchans  = stats.nChans;
+	if (pdiscon) *pdiscon = stats.nChans - stats.nConn;
+}
 /*
  * seqQueueShow() - Show syncQ queue information for a state program.
  */

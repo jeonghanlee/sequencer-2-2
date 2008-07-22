@@ -202,6 +202,7 @@ epicsShareFunc long	epicsShareAPI seq_optGet (SS_ID ssId, char *opt); /* check a
 epicsShareFunc long epicsShareAPI seqShow (epicsThreadId);
 epicsShareFunc long epicsShareAPI seqChanShow (epicsThreadId, char *);
 epicsShareFunc long epicsShareAPI seqcar(int level);
+epicsShareFunc void epicsShareAPI seqcaStats(int *pchans, int *pdiscon);
 epicsShareFunc long epicsShareAPI seqQueueShow (epicsThreadId tid);
 epicsShareFunc long epicsShareAPI seqStop (epicsThreadId);
 epicsShareFunc void epicsShareAPI
