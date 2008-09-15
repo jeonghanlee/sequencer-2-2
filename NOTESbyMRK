@@ -1,32 +1,16 @@
-The following breifly describes changes to the existing SEQ documentation
-in order to built sequence programs with the EPICS base 3.14 releases.
-
-New Compiler Option
-
-+i Code will be generated to automatically register sequence functions
-and state programs. This is the default
-
--i Do not generate registration code. Only useful on vxWorks to save a small amount of memory.
-
-Compiling and linking a state program under Unix.
-
-The exampleApp supplied with base demonstrates how to build sequence programs
-that work with epics databases.
-It also shows how to build a sequence program that runs without databases.
-When you run a standalone sequencer the -s option provides iocsh.
-If the -s option is not given no shell is started.
-For example
-     ./sncProgram -s "user=mrkHost"
-     epics>
-The iocsh shell provides a help command to see what commands are available.
-
-       
-
-test/simple also shows how to build a sequence program that runs 
-without databases running in the same process.
-
 Release History for releases that work with EPICS base 3.14.
 --------------
+
+Version 2.0.12 contains the following changes:
+
+Directory dependencies to permit building with the parallel make option -j.
+
+Library dependencies changes to match EPICS Base R3.14.10.
+
+Added the routine seqcaStats to src/seq/seq_qry.c
+
+Cleaned up compiler warnings in src/snc
+
 
 Version 2.0.11 contains the following changes:
 
@@ -36,6 +20,7 @@ Moved the PV build configuration variables from configure/RELEASE to the new
 CONFIG_SITE file, and moved CONFIG_APP functionality into CONFIG. Also set
 CHECK_RELEASE to YES by default in configure/Makefile.
 
+
 Version 2.0.10 contains the new diagnostic
 
 seqcar(verbosity)
@@ -43,11 +28,13 @@ seqcar(verbosity)
 This produces report about all the channel access connections from sequence
 programs.
 
+
 Version 2.0.9 contains the following changes
 
 seq_connect now initializes assignCount and numMonitoredChans BEFORE connecting
 to the PVs. With the previous versions it was possible to signal that everything
 was connected and the first monitor received before it actually happened.
+
 
 Version 2.0.8 contains the following changes
 
@@ -61,16 +48,19 @@ test/pv/ was still still using osiThread.h. This is replaced bt epicsThread.
 test/simple and test/validate now use EPICS_BASE_IOC_LIBS instead
 of EPICS_BASE_HOST_LIBS.
 
+
 Version 2.0.7 contains the following changes
 
 A sequence program could wait up to 20 seconds before all PVs connect and
 the first monitor occurs for each monitored PV. This could happen even
 if all PVs are local. This is now fixed.
 
+
 Version 2.0.6 contains the following changes.
 
 When looking to see if all PVs have connected it now looks for first monitor coming back as well as all PVs connecting. This prevents the chance of using the
 value of a PV before it is given a value.
+
 
 Version 2.0.5 of the sequencer contains the following changes:
 
@@ -93,6 +83,7 @@ R3.14.3.
 The config directory has been removed.
 
 Replaced devSequencer.c with version supplied by Kukhee Kim, SLAC
+
 
 Version seq-2-0-4 of the sequencer
 
