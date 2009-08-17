@@ -474,7 +474,7 @@ LOCAL SPROG *seqQryFind(epicsThreadId tid)
 	pSP = seqFindProg(tid);
 	if (pSP == NULL)
 	{
-		printf("No state program exists for thread id %d\n", (int)tid);
+		printf("No state program exists for thread id %ld\n", (long)tid);
 		return NULL;
 	}
 
