@@ -41,7 +41,6 @@
 #ifndef	INCLseqComh
 #define	INCLseqComh
 
-#ifndef SEQ_UGLY_WINDOWS_HACK
 #include	<stdio.h>	/* standard i/o defs */
 #include	<stdlib.h>	/* standard library defs */
 
@@ -49,7 +48,7 @@
 #include	"pvAlarm.h"	/* status and severity defs */
 #include	"epicsThread.h"	/* time stamp defs */
 #include	"epicsTime.h"	/* time stamp defs */
-#include	"epicsExport.h"	/* for Registrar routine */
+#include        "epicsExport.h" /* for Registrar routine */
 #endif
 
 #ifdef __cplusplus
