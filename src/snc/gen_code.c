@@ -255,6 +255,7 @@ static void gen_global_c_code(Expr *global_c_list)
 static void gen_init_reg(char *prog_name)
 {
 	printf("\n/* Register sequencer commands and program */\n\n");
+	printf("#include \"epicsExport.h\"\n");
 	printf("void %sRegistrar (void) {\n", prog_name);
 	printf("    seqRegisterSequencerCommands();\n");
 	printf("    seqRegisterSequencerProgram (&%s);\n", prog_name);
