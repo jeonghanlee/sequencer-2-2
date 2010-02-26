@@ -1,4 +1,4 @@
-/* $Id: demo.st,v 1.1.1.2 2000-04-25 19:15:14 wlupton Exp $
+/* demo.st,v 1.1.1.2 2000/04/25 19:15:14 wlupton Exp
  *
  * Demo EPICS sequence
  */

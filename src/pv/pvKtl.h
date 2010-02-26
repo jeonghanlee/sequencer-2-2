@@ -1,4 +1,4 @@
-/* $Id: pvKtl.h,v 1.2 2000-04-14 21:53:29 jba Exp $
+/* pvKtl.h,v 1.2 2000/04/14 21:53:29 jba Exp
  *
  * Definitions for EPICS sequencer KTL library (pvKtl)
  *
@@ -228,7 +228,10 @@ private:
 #endif /* INCLpvKtlh */
 
 /*
- * $Log: not supported by cvs2svn $
+ * pvKtl.h,v
+ * Revision 1.2  2000/04/14 21:53:29  jba
+ * Changes for win32 build.
+ *
  * Revision 1.1.1.1  2000/04/04 03:22:15  wlupton
  * first commit of seq-2-0-0
  *

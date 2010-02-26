@@ -1,4 +1,4 @@
-/* $Id: devSequencer.c,v 1.4 2003-08-07 14:34:37 mrk Exp $
+/* devSequencer.c,v 1.4 2003/08/07 14:34:37 mrk Exp
  *
  * Device support to permit database access to sequencer internals
  *
@@ -424,7 +424,10 @@ LOCAL long siGetIoInitInfo(int cmd, struct stringinRecord *pRec, IOSCANPVT *ppvt
 }
 
 /*
- * $Log: not supported by cvs2svn $
+ * devSequencer.c,v
+ * Revision 1.4  2003/08/07 14:34:37  mrk
+ * version obtained from Kukhee Kim,
+ *
  *
  * Revision 1.2  2003/05/23 18:44:22 KHKIM
  * change to support I/O interrupt mode

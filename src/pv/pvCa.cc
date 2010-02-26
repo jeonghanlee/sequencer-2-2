@@ -1,4 +1,4 @@
-/* $Id: pvCa.cc,v 1.7 2001-10-04 18:33:25 jhill Exp $
+/* pvCa.cc,v 1.7 2001/10/04 18:33:25 jhill Exp
  *
  * Implementation of EPICS sequencer CA library (pvCa)
  *
@@ -778,7 +778,10 @@ static void copyFromCA( int type, int count,
 }
 
 /*
- * $Log: not supported by cvs2svn $
+ * pvCa.cc,v
+ * Revision 1.7  2001/10/04 18:33:25  jhill
+ * context_ variable wasnt initialized
+ *
  * Revision 1.6  2001/07/05 14:42:15  mrk
  * ca changed client contect
  *

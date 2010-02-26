@@ -1,4 +1,4 @@
-// $Id: gphtest.cc,v 1.1.1.1 2000-04-04 03:23:09 wlupton Exp $
+// gphtest.cc,v 1.1.1.1 2000/04/04 03:23:09 wlupton Exp
 //
 // gpHash test program
 
