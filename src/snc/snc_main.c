@@ -333,8 +333,7 @@ void snc_err(char *err_txt)
 *
 *  NOTES:
 *-*************************************************************************/
-void yyerror(err)
-char	*err;
+void yyerror(char *err)
 {
 	fprintf(stderr, "%s: line no. %d (%s)\n", err, line_num, src_file);
 	return;

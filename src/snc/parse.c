@@ -66,10 +66,10 @@ Chan	*chan_tail = NULL;	/* tail of DB channel list */
 
 Expr	*global_c_list;		/* global C code following state program */
 
-Chan	*build_db_struct();
-void	alloc_db_lists();
-void	addVar();
-void	addChan();
+Chan	*build_db_struct(Var *vp);
+void	alloc_db_lists(Chan *cp, int length);
+void	addVar(Var *vp);
+void	addChan(Chan *cp);
 
 /*+************************************************************************
 *  NAME: program_name
@@ -84,8 +84,7 @@ void	addChan();
 *  FUNCTION: Save program name for global use.
 *
 *-*************************************************************************/
-void program_name(pname, pparam)
-char	*pname, *pparam;
+void program_name(char *pname, char *pparam)
 {
 	prog_name = pname;
 	prog_param = pparam;
@@ -96,13 +95,14 @@ char	*pname, *pparam;
 }
 
 /* Parsing a declaration statement */
-void decl_stmt(type, class, name, s_length1, s_length2, value)
-int	type;		/* variable type (e.g. V_FLOAT) */
-int	class;		/* variable class (e.g. VC_ARRAY) */
-char	*name;		/* ptr to variable name */
-char	*s_length1;	/* array lth (1st dim, arrays only) */
-char	*s_length2;	/* array lth (2nd dim, [n]x[m] arrays only) */
-char	*value;		/* initial value or NULL */
+void decl_stmt(
+	int	type,		/* variable type (e.g. V_FLOAT) */
+	int	class,		/* variable class (e.g. VC_ARRAY) */
+	char	*name,		/* ptr to variable name */
+	char	*s_length1,	/* array lth (1st dim, arrays only) */
+	char	*s_length2,	/* array lth (2nd dim, [n]x[m] arrays only) */
+	char	*value		/* initial value or NULL */
+)
 {
 	Var		*vp;
 	int		length1, length2;
@@ -153,9 +153,10 @@ char	*value;		/* initial value or NULL */
 }
 
 /* Option statement */
-void option_stmt(option, value)
-char		*option; /* "a", "r", ... */
-int		value;	/* TRUE means +, FALSE means - */
+void option_stmt(
+	char		*option,	/* "a", "r", ... */
+	int		value		/* TRUE means +, FALSE means - */
+)
 {
 	extern int	async_opt, conn_opt, debug_opt, line_opt, init_reg_opt,
 			reent_opt, warn_opt, newef_opt, main_opt;
@@ -197,9 +198,10 @@ int		value;	/* TRUE means +, FALSE means - */
  * Format: assign <variable> to <string;
  * Note: Variable may be subscripted.
  */
-void assign_single(name, db_name)
-char	*name;		/* ptr to variable name */
-char	*db_name;	/* ptr to db name */
+void assign_single(
+	char	*name,		/* ptr to variable name */
+	char	*db_name	/* ptr to db name */
+)
 {
 	Chan		*cp;
 	Var		*vp;
@@ -238,10 +240,11 @@ char	*db_name;	/* ptr to db name */
 
 /* "Assign" statement: assign an array element to a DB channel.
  * Format: assign <variable>[<subscr>] to <string>; */
-void assign_subscr(name, subscript, db_name)
-char	*name;		/* ptr to variable name */
-char	*subscript;	/* subscript value or NULL */
-char	*db_name;	/* ptr to db name */
+void assign_subscr(
+	char	*name,		/* ptr to variable name */
+	char	*subscript,	/* subscript value or NULL */
+	char	*db_name	/* ptr to db name */
+)
 {
 	Chan		*cp;
 	Var		*vp;
@@ -312,9 +315,10 @@ char	*db_name;	/* ptr to db name */
  * If db name list contains fewer names than the array dimension,
  * the remaining elements receive NULL assignments.
  */
-void assign_list(name, db_name_list)
-char	*name;		/* ptr to variable name */
-Expr	*db_name_list;	/* ptr to db name list */
+void assign_list(
+	char	*name,		/* ptr to variable name */
+	Expr	*db_name_list	/* ptr to db name list */
+)
 {
 	Chan		*cp;
 	Var		*vp;
@@ -376,8 +380,7 @@ Expr	*db_name_list;	/* ptr to db name list */
 }
 
 /* Build a db structure for this variable */
-Chan *build_db_struct(vp)
-Var		*vp;
+Chan *build_db_struct(Var *vp)
 {
 	Chan		*cp;
 
@@ -402,9 +405,7 @@ Var		*vp;
 }
 
 /* Allocate lists for assigning multiple pv's to a variable */
-void alloc_db_lists(cp, length)
-Chan		*cp;
-int		length;
+void alloc_db_lists(Chan *cp, int length)
 {
 	/* allocate an array of pv names */
 	cp->db_name_list = (char **)calloc(sizeof(char **), length);
@@ -427,9 +428,10 @@ int		length;
  * 	monitor <var>; - monitor a single variable or all elements in an array.
  * 	monitor <var>[<m>]; - monitor m-th element of an array.
  */
-void monitor_stmt(name, subscript)
-char		*name;		/* variable name (should be assigned) */
-char		*subscript;	/* element number or NULL */
+void monitor_stmt(
+	char	*name,		/* variable name (should be assigned) */
+	char	*subscript	/* element number or NULL */
+)
 {
 	Var		*vp;
 	Chan		*cp;
@@ -497,10 +499,7 @@ char		*subscript;	/* element number or NULL */
 }
 	
 /* Parsing "sync" statement */
-void sync_stmt(name, subscript, ef_name)
-char		*name;
-char		*subscript;
-char		*ef_name;
+void sync_stmt(char *name, char *subscript, char *ef_name)
 {
 	Chan		*cp;
 	Var		*vp;
@@ -568,11 +567,7 @@ char		*ef_name;
 }
 
 /* Parsing "syncq" statement */
-void syncq_stmt(name, subscript, ef_name, maxQueueSize)
-char		*name;
-char		*subscript;
-char		*ef_name;
-char		*maxQueueSize;
+void syncq_stmt(char *name, char *subscript, char *ef_name, char *maxQueueSize)
 {
 	Chan		*cp;
 	Var		*vp;
@@ -664,8 +659,9 @@ char		*maxQueueSize;
 	
 
 /* Definition C code */
-void defn_c_stmt(c_list)
-Expr		*c_list; /* ptr to C code */
+void defn_c_stmt(
+	Expr *c_list	/* ptr to C code */
+)
 {
 #ifdef	DEBUG
 	fprintf(stderr, "defn_c_stmt\n");
@@ -679,8 +675,9 @@ Expr		*c_list; /* ptr to C code */
 }
 
 /* Global C code (follows state program) */
-void global_c_stmt(c_list)
-Expr		*c_list; /* ptr to C code */
+void global_c_stmt(
+	Expr		*c_list		/* ptr to C code */
+)
 {
 	global_c_list = c_list;
 
@@ -689,8 +686,7 @@ Expr		*c_list; /* ptr to C code */
 
 
 /* Add a variable to the variable linked list */
-void addVar(vp)
-Var		*vp;
+void addVar(Var *vp)
 {
 	if (var_list == NULL)
 		var_list = vp;
@@ -702,8 +698,7 @@ Var		*vp;
 	
 /* Find a variable by name;  returns a pointer to the Var struct;
 	returns 0 if the variable is not found. */
-Var *findVar(name)
-char		*name;
+Var *findVar(char *name)
 {
 	Var		*vp;
 
@@ -718,8 +713,7 @@ char		*name;
 }
 
 /* Add a channel to the channel linked list */
-void addChan(cp)
-Chan		*cp;
+void addChan(Chan *cp)
 {
 	if (chan_list == NULL)
 		chan_list = cp;
@@ -730,15 +724,13 @@ Chan		*cp;
 }
 
 /* Set debug print opt */
-void set_debug_print(opt)
-char	*opt;
+void set_debug_print(char *opt)
 {
 	debug_print_opt = atoi(opt);
 }
 
 /* Parsing "program" statement */
-void program(prog_list)
-Expr		*prog_list;
+void program(Expr *prog_list)
 {
 	ss_list = prog_list;
 #ifdef	DEBUG
@@ -750,16 +742,14 @@ Expr		*prog_list;
 }
 
 /* Entry code */
-int entry_code(ep)
-Expr		*ep;
+int entry_code(Expr *ep)
 {
 	entry_code_list = ep;
 	return 0;
 }
 
 /* Exit code */
-int exit_code(ep)
-Expr		*ep;
+int exit_code(Expr *ep)
 {
 	exit_code_list = ep;
 	return 0;
@@ -768,11 +758,12 @@ Expr		*ep;
 /* Build an expression list (hierarchical):
 	Builds a node on a binary tree for each expression primitive.
  */
-Expr *expression(type, value, left, right)
-int		type;		/* E_BINOP, E_ASGNOP, etc */
-char		*value;		/* "==", "+=", var name, constant, etc. */	
-Expr		*left;		/* LH side */
-Expr		*right;		/* RH side */
+Expr *expression(
+	int	type,		/* E_BINOP, E_ASGNOP, etc */
+	char	*value,		/* "==", "+=", var name, constant, etc. */	
+	Expr	*left,		/* LH side */
+	Expr	*right		/* RH side */
+)
 {
 	Expr		*ep;
 	extern int	line_num, c_line_num;
@@ -805,9 +796,10 @@ Expr		*right;		/* RH side */
 
 /* Link two expression structures and/or lists.  Returns ptr to combined list.
    Note:  ->last ptrs are correct only for 1-st and last structures in the list */
-Expr *link_expr(ep1, ep2)
-Expr		*ep1;	/* beginning of 1-st structure or list */
-Expr		*ep2;	/* beginning 2-nd (append it to 1-st) */
+Expr *link_expr(
+	Expr	*ep1,	/* beginning of 1-st structure or list */
+	Expr	*ep2	/* beginning 2-nd (append it to 1-st) */
+)
 {
 	if (ep1 == 0 && ep2 == 0)
 	        return NULL;
@@ -832,9 +824,7 @@ Expr		*ep2;	/* beginning 2-nd (append it to 1-st) */
 }
 
 /* Interpret pre-processor code */
-void pp_code(line, fname)
-char		*line;
-char		*fname;
+void pp_code(char *line, char *fname)
 {
 	extern int		line_num;
 	extern char		*src_file;
