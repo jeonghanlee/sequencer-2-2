@@ -316,7 +316,7 @@ Expr		*sp;	/* beginning of state list */
 /* Generate a C variable declaration for each variable declared in SNL */
 void gen_var_decl()
 {
-	extern Var	*var_list;
+	extern Var	*global_var_list;
 	Var		*vp;
 	char		*vstr;
 	int		nv;
@@ -327,7 +327,7 @@ void gen_var_decl()
 	/* Convert internal type to `C' type */
 	if (reent_opt)
 		printf("struct UserVar {\n");
-	for (nv=0, vp = var_list; vp != NULL; nv++, vp = vp->next)
+	for (nv=0, vp = global_var_list; vp != NULL; nv++, vp = vp->next)
 	{
 		switch (vp->type)
 		{
@@ -480,12 +480,12 @@ int db_chan_count()
  */
 int db_queue_count()
 {
-	extern	Var	*var_list;
+	extern	Var	*global_var_list;
 	int		nqueue;
 	Var		*vp;
 
 	nqueue = 0;
-	for (vp = var_list; vp != NULL; vp = vp->next)
+	for (vp = global_var_list; vp != NULL; vp = vp->next)
 	{
 		if (vp->type != V_EVFLAG && vp->queued)
 		{
@@ -504,7 +504,7 @@ int db_queue_count()
  */
 void assign_ef_bits()
 {
-	extern Var	*var_list;
+	extern Var	*global_var_list;
 	extern	Chan	*chan_list;
 	Var		*vp;
 	Chan		*cp;
@@ -514,7 +514,7 @@ void assign_ef_bits()
 	/* Assign event flag numbers (starting at 1) */
 	printf("\n/* Event flags */\n");
 	num_events = 0;
-	for (vp = var_list; vp != NULL; vp = vp->next)
+	for (vp = global_var_list; vp != NULL; vp = vp->next)
 	{
 		if (vp->type == V_EVFLAG)
 		{

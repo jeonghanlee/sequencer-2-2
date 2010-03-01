@@ -58,8 +58,8 @@ Expr	*entry_code_list;	/* Start of entry code list */
 
 Expr	*exit_code_list;	/* Start of exit code list */
 
-Var	*var_list = NULL;	/* start of variable list */
-Var	*var_tail = NULL;	/* tail of variable list */
+Var	*global_var_list = NULL;	/* start of global variable list */
+Var	*global_var_tail = NULL;	/* tail of global variable list */
 
 Chan	*chan_list = NULL;	/* start of DB channel list */
 Chan	*chan_tail = NULL;	/* tail of DB channel list */
@@ -688,11 +688,11 @@ void global_c_stmt(
 /* Add a variable to the variable linked list */
 void addVar(Var *vp)
 {
-	if (var_list == NULL)
-		var_list = vp;
+	if (global_var_list == NULL)
+		global_var_list = vp;
 	else
-		var_tail->next = vp;
-	var_tail = vp;
+		global_var_tail->next = vp;
+	global_var_tail = vp;
 	vp->next = NULL;
 }
 	
@@ -702,7 +702,7 @@ Var *findVar(char *name)
 {
 	Var		*vp;
 
-	for (vp = var_list; vp != NULL; vp = vp->next)
+	for (vp = global_var_list; vp != NULL; vp = vp->next)
 	{
 		if (strcmp(vp->name, name) == 0)
 		{
