@@ -25,8 +25,6 @@
 29apr99,wfl	Removed unused vx_opt option.
 06jul99,wfl	Supported "+m" (main) option; minor cosmetic changes.
 ***************************************************************************/
-extern	char *sncVersion;	/* snc version and date created */
-
 #include	<stdio.h>
 #include	<stdlib.h>
 #include	<string.h>
@@ -38,9 +36,11 @@ extern	char *sncVersion;	/* snc version and date created */
 #define	FALSE 0
 #endif
 
+extern char	*sncVersion;	/* snc version and date created */
+
 /* SNC Globals: */
-char		in_file[200];	/* input file name */
-char		out_file[200];	/* output file name */
+static char	in_file[200];	/* input file name */
+static char	out_file[200];	/* output file name */
 char		*src_file;	/* ptr to (effective) source file name */
 int		line_num;	/* current src file line number */
 int		c_line_num;	/* line number for beginning of C code */
@@ -55,11 +55,11 @@ int		main_opt = FALSE;	/* main program */
 int		reent_opt = FALSE;	/* reentrant at run-time */
 int		warn_opt = TRUE;	/* compiler warnings */
 
-void		get_args();
-void		get_options();
-void		get_in_file();
-void		get_out_file();
-void		print_usage();
+static void get_args(int argc, char *argv[]);
+static void get_options(char *s);
+static void get_in_file(char *s);
+static void get_out_file(char *s);
+static void print_usage(void);
 
 /*+************************************************************************
 *  NAME: main
@@ -80,9 +80,7 @@ void		print_usage();
 *
 * This routine calls yyparse(), which never returns.
 *-*************************************************************************/
-int main(argc, argv)
-int	argc;
-char	*argv[];
+int main(int argc, char *argv[])
 {
 	FILE	*infp, *outfp;
 
@@ -115,8 +113,8 @@ char	*argv[];
 	printf("/* %s: %s */\n", sncVersion, in_file);
 
 	/* Call the SNC parser */
-	Global_yyparse();
-        
+	global_yyparse();
+
         return 0; /* never reached */
 }
 /*+************************************************************************
@@ -135,9 +133,7 @@ char	*argv[];
 *  ".c" is appended to the input file to form the output file name.
 *  Sets the globals in_file[] and out_file[].
 *-*************************************************************************/
-void get_args(argc, argv)
-int	argc;
-char	*argv[];
+static void get_args(int argc, char *argv[])
 {
 	char	*s;
 
@@ -175,8 +171,7 @@ char	*argv[];
 	}
 }
 
-void get_options(s)
-char		*s;
+static void get_options(char *s)
 {
 	int		opt_val;
 
@@ -229,8 +224,7 @@ char		*s;
 	}
 }
 
-void get_in_file(s)
-char		*s;
+static void get_in_file(char *s)
 {				
 	int		ls;
 
@@ -267,8 +261,7 @@ char		*s;
 	return;
 }
 
-void get_out_file(s)
-char		*s;
+static void get_out_file(char *s)
 {
 	if (s == NULL)
 	{
@@ -280,7 +273,7 @@ char		*s;
 	return;
 }
 
-void print_usage()
+static void print_usage(void)
 {
 	fprintf(stderr, "%s\n", sncVersion);
 	fprintf(stderr, "usage: snc <options> <infile>\n");
@@ -355,9 +348,7 @@ void yyerror(char *err)
 *
 *  NOTES:
 *-*************************************************************************/
-void print_line_num(line_num, src_file)
-int		line_num;
-char		*src_file;
+void print_line_num(int line_num, char *src_file)
 {
 	if (line_opt)
 		printf("# line %d \"%s\"\n", line_num, src_file);

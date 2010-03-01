@@ -52,24 +52,22 @@ int	num_ss = 0;		/* number of state sets */
 int	max_delays = 0;		/* maximum number of delays per state */
 int	num_errors = 0;		/* number of errors detected in phase 2 processing */
 
-void	gen_preamble();
-void	gen_opt_defn();
-void	reconcile_variables();
-void	connect_variable();
-void	reconcile_states();
-void	gen_var_decl();
-void	gen_defn_c_code();
-void	gen_global_c_code();
-void	gen_init_reg();
-void	assign_ef_bits();
-void	assign_delay_ids();
-void	assign_next_delay_id();
-void	traverseExprTree();
+static void gen_preamble(void);
+static void gen_opt_defn(int opt, char *defn_name);
+static void reconcile_variables(void);
+static void connect_variable(Expr *ep);
+static void reconcile_states(void);
+static void gen_var_decl(void);
+static void gen_defn_c_code(void);
+static void gen_global_c_code(void);
+static void gen_init_reg(void);
+static void assign_ef_bits(void);
+static void assign_delay_ids(void);
+static void assign_next_delay_id(Expr *ep, int *delay_id);
+static int db_queue_count(void);
+static int db_chan_count(void);
 
-int	db_queue_count();
-int	db_chan_count();
-
-/*+************************************************************************
+/*+************************************************************************
 *  NAME: phase2
 *
 *  CALLING SEQUENCE
@@ -89,7 +87,7 @@ void phase2()
 	/* Count number of db channels and state sets defined */
 	num_queues = db_queue_count();
 	num_channels = db_chan_count();
-	num_ss = exprCount(ss_list);
+	num_ss = expr_count(ss_list);
 	num_queues = db_queue_count();
 
 	/* Reconcile all variable and tie each to the appropriate VAR struct */
@@ -127,8 +125,8 @@ void phase2()
 
 	exit(0);
 }
-/* Generate preamble (includes, defines, etc.) */
-void gen_preamble()
+/* Generate preamble (includes, defines, etc.) */
+static void gen_preamble()
 {
 	extern char		*prog_name;
 	extern int		async_opt, conn_opt, debug_opt, reent_opt,
@@ -193,9 +191,7 @@ void gen_preamble()
 }
 
 /* Generate defines for compiler options */
-void gen_opt_defn(opt, defn_name)
-int		opt;
-char		*defn_name;
+static void gen_opt_defn(int opt, char *defn_name)
 {
 	if (opt)
 		printf("#define %s TRUE\n", defn_name);
@@ -203,12 +199,12 @@ char		*defn_name;
 		printf("#define %s FALSE\n", defn_name);
 }
 
-/* Reconcile all variables in an expression,
+/* Reconcile all variables in an expression,
  * and tie each to the appropriate VAR structure.
  */
 int	printTree = FALSE; /* For debugging only */
 
-void reconcile_variables()
+static void reconcile_variables(void)
 {
 	extern Expr		*ss_list, *entry_code_list, *exit_code_list;
 	Expr			*ssp, *ep;
@@ -218,26 +214,25 @@ void reconcile_variables()
 #ifdef	DEBUG
 		fprintf(stderr, "reconcile_variables: ss=%s\n", ssp->value);
 #endif	/*DEBUG*/
-		traverseExprTree(ssp, E_VAR, 0, connect_variable, 0);
+		traverse_expr_tree(ssp, E_VAR, 0, connect_variable, 0);
 	}
 
 	/* Same for entry procedure */
 	for (ep = entry_code_list; ep != 0; ep = ep->next)
 	{
-		traverseExprTree(ep, E_VAR, 0, connect_variable, 0);
+		traverse_expr_tree(ep, E_VAR, 0, connect_variable, 0);
 	}
 
 	/* Same for exit procedure */
 	for (ep = exit_code_list; ep != 0; ep = ep->next)
 	{
-		traverseExprTree(ep, E_VAR, 0, connect_variable, 0);
+		traverse_expr_tree(ep, E_VAR, 0, connect_variable, 0);
 	}
 
 }
 
 /* Connect a variable in an expression to the the Var structure */
-void connect_variable(ep)
-Expr		*ep;
+static void connect_variable(Expr *ep)
 {
 	Var		*vp;
 	extern int	warn_opt;
@@ -247,7 +242,7 @@ Expr		*ep;
 #ifdef	DEBUG
 	fprintf(stderr, "connect_variable: \"%s\", line %d\n", ep->value, ep->line_num);
 #endif	/*DEBUG*/
-	vp = (Var *)findVar(ep->value);
+	vp = (Var *)find_var(ep->value);
 #ifdef	DEBUG
 	fprintf(stderr, "\t \"%s\" was %s\n", ep->value, vp ? "found" : "not found" );
 #endif	/*DEBUG*/
@@ -258,7 +253,7 @@ Expr		*ep;
 			 "Warning:  variable \"%s\" is used but not declared.\n",
 			 ep->value);
 		vp = allocVar();
-		addVar(vp);
+		add_var(vp);
 		vp->name = ep->value;
 		vp->type = V_NONE; /* undeclared type */
 		vp->length1 = 1;
@@ -271,7 +266,7 @@ Expr		*ep;
 } 
 
 /* Reconcile state names */
-void reconcile_states()
+static void reconcile_states(void)
 {
 
 	extern Expr		*ss_list;
@@ -298,23 +293,8 @@ void reconcile_states()
 	}
 }
 
-/* Find a state by name */
-Expr *find_state(name, sp)
-char		*name;	/* state name */
-Expr		*sp;	/* beginning of state list */
-{
-	while (sp != 0)
-	{
-		if (strcmp(name, sp->value) == 0)
-			return sp;
-		sp = sp->next;
-	}
-	return 0;
-}
-
-
 /* Generate a C variable declaration for each variable declared in SNL */
-void gen_var_decl()
+static void gen_var_decl(void)
 {
 	extern Var	*global_var_list;
 	Var		*vp;
@@ -415,9 +395,9 @@ void gen_var_decl()
 	}
 	return;
 }		
-
+
 /* Generate definition C code (C code in definition section) */
-void gen_defn_c_code()
+static void gen_defn_c_code(void)
 {
 	extern Expr	*defn_c_list;
 	Expr		*ep;
@@ -435,7 +415,7 @@ void gen_defn_c_code()
 	return;
 }
 /* Generate global C code (C code following state program) */
-void gen_global_c_code()
+static void gen_global_c_code(void)
 {
 	extern Expr	*global_c_list;
 	Expr		*ep;
@@ -452,10 +432,10 @@ void gen_global_c_code()
 	}
 	return;
 }
-
+
 /* Sets cp->index for each variable, & returns number of db channels defined. 
  */
-int db_chan_count()
+static int db_chan_count(void)
 {
 	extern	Chan	*chan_list;
 	int	nchan;
@@ -474,11 +454,11 @@ int db_chan_count()
 	return nchan;
 }
 
-
+
 /* Sets vp->queueIndex for each syncQ'd variable, & returns number of
  * syncQ queues defined. 
  */
-int db_queue_count()
+static int db_queue_count(void)
 {
 	extern	Var	*global_var_list;
 	int		nqueue;
@@ -497,12 +477,12 @@ int db_queue_count()
 	return nqueue;
 }
 
-
+
 
 /* Assign event bits to event flags and associate db channels with
  * event flags.
  */
-void assign_ef_bits()
+static void assign_ef_bits(void)
 {
 	extern Var	*global_var_list;
 	extern	Chan	*chan_list;
@@ -553,7 +533,7 @@ void assign_ef_bits()
 }
 
 /* Assign a delay id to each "delay()" in an event (when()) expression */
-void assign_delay_ids()
+static void assign_delay_ids(void)
 {
 	extern Expr		*ss_list;
 	Expr			*ssp, *sp, *tp;
@@ -574,7 +554,7 @@ void assign_delay_ids()
 					continue;
 
 				/* traverse event expression only */
-				traverseExprTree(tp->left, E_FUNC, "delay",
+				traverse_expr_tree(tp->left, E_FUNC, "delay",
 				 assign_next_delay_id, &delay_id);
 			}
 
@@ -585,23 +565,23 @@ void assign_delay_ids()
 	}
 }
 
-void assign_next_delay_id(ep, delay_id)
-Expr			*ep;
-int			*delay_id;
+static void assign_next_delay_id(Expr *ep, int *delay_id)
 {
 	ep->right = (Expr *)*delay_id;
 	*delay_id += 1;
 }
-/* Traverse the expression tree, and call the supplied
+
+/* Traverse the expression tree, and call the supplied
  * function whenever type = ep->type AND value matches ep->value.
  * The condition value = 0 matches all.
  * The function is called with the current ep and a supplied argument (argp) */
-void traverseExprTree(ep, type, value, funcp, argp)
-Expr		*ep;		/* ptr to start of expression */
-int		type;		/* to search for */
-char		*value;		/* with optional matching value */
-void		(*funcp)();	/* function to call */
-void		*argp;		/* ptr to argument to pass on to function */
+void traverse_expr_tree(
+	Expr	*ep,		/* ptr to start of expression */
+	int	type,		/* to search for */
+	char	*value,		/* with optional matching value */
+	void	(*funcp)(),	/* function to call */
+	void	*argp		/* ptr to argument to pass on to function */
+)
 {
 	Expr		*ep1;
 	extern char	*stype[];
@@ -610,7 +590,7 @@ void		*argp;		/* ptr to argument to pass on to function */
 		return;
 
 	if (printTree)
-		fprintf(stderr, "traverseExprTree: type=%s, value=%s\n",
+		fprintf(stderr, "traverse_expr_tree: type=%s, value=%s\n",
 		 stype[ep->type], ep->value);
 
 	/* Call the function? */
@@ -642,7 +622,7 @@ void		*argp;		/* ptr to argument to pass on to function */
 	case E_POST:
 		for (ep1 = ep->left; ep1 != 0;	ep1 = ep1->next)
 		{
-			traverseExprTree(ep1, type, value, funcp, argp);
+			traverse_expr_tree(ep1, type, value, funcp, argp);
 		}
 		break;
 
@@ -659,21 +639,20 @@ void		*argp;		/* ptr to argument to pass on to function */
 	case E_X:
 		for (ep1 = ep->left; ep1 != 0;	ep1 = ep1->next)
 		{
-			traverseExprTree(ep1, type, value, funcp, argp);
+			traverse_expr_tree(ep1, type, value, funcp, argp);
 		}
 		for (ep1 = ep->right; ep1 != 0;	ep1 = ep1->next)
 		{
-			traverseExprTree(ep1, type, value, funcp, argp);
+			traverse_expr_tree(ep1, type, value, funcp, argp);
 		}
 		break;
 
 	default:
-		fprintf(stderr, "traverseExprTree: type=%d???\n", ep->type);
+		fprintf(stderr, "traverse_expr_tree: type=%d???\n", ep->type);
 	}
 }
 
-
-void gen_init_reg()
+static void gen_init_reg(void)
 {
 	extern char		*prog_name;
 	extern int		main_opt, init_reg_opt;
@@ -686,4 +665,14 @@ void gen_init_reg()
 	    printf ("}\n");
 	    printf ("epicsExportRegistrar(%sRegistrar);\n\n", prog_name);
 	}
+}
+
+/* Count the number of linked expressions */
+int expr_count(Expr *ep)
+{
+	int		count;
+
+	for (count = 0; ep != 0; ep = ep->next)
+		count++;
+	return count;
 }

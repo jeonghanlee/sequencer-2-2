@@ -47,7 +47,7 @@
 #include	<stdio.h>
 #include	<ctype.h>
 #include	"parse.h"
-#include	"parsedefs.h"
+#include	"snc_main.h"
 
 #ifndef	TRUE
 #define	TRUE	1
@@ -478,7 +478,7 @@ escaped_c_list
 static int yyparse (void);
 
 /* yyparse() is static, so we create global access to it */
-void Global_yyparse (void)
+void global_yyparse (void)
 {
 	yyparse ();
 }

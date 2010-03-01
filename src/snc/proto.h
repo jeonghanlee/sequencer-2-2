@@ -21,21 +21,27 @@
 #endif
 
 /* Prototypes for external functions */
-extern void Global_yyparse (void);
+extern void global_yyparse(void);
 
 extern void phase2(void);
 
-extern int  exprCount(Expr*);
+extern int  expr_count(Expr*);
 
 extern void gen_ss_code(void);
 
 extern void gen_tables(void);
 
-extern void addVar(Var*);
+extern void add_var(Var*);
 
 extern void print_line_num(int,char*);
 
-extern void traverseExprTree(Expr*,int,char*,void (*)(),void*);
+extern void traverse_expr_tree(
+	Expr	*ep,		/* ptr to start of expression */
+	int	type,		/* to search for */
+	char	*value,		/* with optional matching value */
+	void	(*funcp)(),	/* function to call */
+	void	*argp		/* ptr to argument to pass on to function */
+);
 
 extern void snc_err(char *err_txt);
 

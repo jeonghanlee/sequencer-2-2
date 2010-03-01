@@ -37,20 +37,20 @@
 #include	"parse.h"
 #include	"proto.h"
 
-void encode_state_options(Expr *sp);
-void		gen_db_blocks();
-void		fill_db_block();
-void		gen_state_blocks();
-void		fill_state_block();
-void		gen_prog_params();
-void		gen_prog_table();
-void		encode_options();
-void		gen_ss_array();
-void		eval_state_event_mask();
-void		eval_event_mask();
-void		eval_event_mask_subscr();
-
-int		find_error_state();
+static void encode_state_options(Expr *sp);
+static void gen_db_blocks(void);
+static void fill_db_block(Chan *cp, int elem_num);
+static void gen_state_blocks(void);
+static void fill_state_block(Expr *sp, char *ss_name);
+static void gen_prog_params(void);
+static void gen_prog_table(void);
+static void encode_options(void);
+static void gen_ss_array(void);
+static void eval_state_event_mask(Expr *sp, bitMask *pEventWords, int numEventWords);
+static void eval_event_mask(Expr *ep, bitMask *pEventWords);
+static void eval_event_mask_subscr(Expr *ep, bitMask *pEventWords);
+static int find_error_state(Expr *ssp);
+static char *db_type_str(int type);
 
 /*+************************************************************************
 *  NAME: gen_tables
@@ -66,7 +66,7 @@ int		find_error_state();
 *  NOTES: All inputs are external globals.
 *-*************************************************************************/
 
-void gen_tables()
+void gen_tables(void)
 {
 	printf("\f/************************ Tables ***********************/\n");
 
@@ -88,7 +88,7 @@ void gen_tables()
 	return;
 }
 /* Generate database blocks with structure and data for each defined channel */
-void gen_db_blocks()
+static void gen_db_blocks(void)
 {
 	extern		Chan *chan_list;
 	Chan		*cp;
@@ -132,16 +132,13 @@ void gen_db_blocks()
 }
 
 /* Fill in a db block with data (all elements for "seqChan" struct) */
-void fill_db_block(cp, elem_num)
-Chan		*cp;
-int		elem_num;
+static void fill_db_block(Chan *cp, int elem_num)
 {
 	Var		*vp;
 	char		*suffix, elem_str[20], *db_name;
 	extern int	reent_opt;
 	extern int	num_events;
 	int		ef_num, mon_flag;
-	char		*db_type_str();
 
 	vp = cp->var;
 
@@ -217,8 +214,7 @@ int		elem_num;
 }
 
 /* Convert variable type to db type as a string */
-char *db_type_str(type)
-int		type;
+static char *db_type_str(int type)
 {
 	switch (type)
 	{
@@ -238,7 +234,7 @@ int		type;
 }
 
 /* Generate structure and data for state blocks */
-void gen_state_blocks()
+static void gen_state_blocks(void)
 {
 	extern Expr		*ss_list;
 	Expr			*ssp;
@@ -285,9 +281,7 @@ void gen_state_blocks()
 }
 
 /* Fill in data for a state block (see seqState in seqCom.h) */
-void fill_state_block(sp, ss_name)
-Expr		*sp;
-char		*ss_name;
+static void fill_state_block(Expr *sp, char *ss_name)
 {
         Expr *ep;
 	int isEntry = FALSE, isExit = FALSE;
@@ -340,7 +334,7 @@ char		*ss_name;
 /* Writes the state option bitmask into a state block. At present this f is
 extremely simple since there is only one permitted option and so there are
 no possible state option conflicts.  */
-void encode_state_options(Expr *sp)
+static void encode_state_options(Expr *sp)
 {
         Expr     *ep;
 	char     errMsg[BUFSIZ], *pc = NULL, *suppl = NULL;
@@ -437,7 +431,7 @@ void encode_state_options(Expr *sp)
 
 
 /* Generate the program parameter list */
-void gen_prog_params()
+static void gen_prog_params(void)
 {
 	extern char		*prog_param;
 
@@ -447,7 +441,7 @@ void gen_prog_params()
 }
 
 /* Generate the structure with data for a state program table (SPROG) */
-void gen_prog_table()
+static void gen_prog_table(void)
 {
 	extern int reent_opt;
 
@@ -490,7 +484,7 @@ void gen_prog_table()
 	return;
 }
 
-void encode_options()
+static void encode_options(void)
 {
 	extern int	async_opt, debug_opt, reent_opt, newef_opt, conn_opt,
 			main_opt;
@@ -513,7 +507,7 @@ void encode_options()
 	return;
 }
 /* Generate an array of state set blocks, one entry for each state set */
-void gen_ss_array()
+static void gen_ss_array(void)
 {
 	extern Expr		*ss_list;
 	Expr			*ssp;
@@ -534,7 +528,7 @@ void gen_ss_array()
 
 		printf("\t/* ptr to state block */ state_%s,\n", ssp->value);
 
-		nstates = exprCount(ssp->left);
+		nstates = expr_count(ssp->left);
 		printf("\t/* number of states */   %d,\n", nstates);
 
 		printf("\t/* error state */        %d},\n", find_error_state(ssp));
@@ -545,8 +539,7 @@ void gen_ss_array()
 }
 
 /* Find the state named "error" in a state set */
-int find_error_state(ssp)
-Expr		*ssp;
+static int find_error_state(Expr *ssp)
 {
 	Expr		*sp;
 	int		error_state;
@@ -559,10 +552,7 @@ Expr		*ssp;
 }
 
 /* Evaluate composite event mask for a single state */
-void eval_state_event_mask(sp, pEventWords, numEventWords)
-Expr		*sp;
-bitMask		*pEventWords;
-int		numEventWords;
+static void eval_state_event_mask(Expr *sp, bitMask *pEventWords, int numEventWords)
 {
 	int		n;
 	Expr		*tp;
@@ -584,10 +574,10 @@ int		numEventWords;
 		continue;
 
 	    /* look for simple variables, e.g. "when(x > 0)" */
-	    traverseExprTree(tp->left, E_VAR, 0, eval_event_mask, pEventWords);
+	    traverse_expr_tree(tp->left, E_VAR, 0, eval_event_mask, pEventWords);
 
 	    /* look for subscripted variables, e.g. "when(x[i] > 0)" */
-	    traverseExprTree(tp->left, E_SUBSCR, 0, eval_event_mask_subscr, pEventWords);
+	    traverse_expr_tree(tp->left, E_SUBSCR, 0, eval_event_mask_subscr, pEventWords);
 	}
 #ifdef	DEBUG
 	fprintf(stderr, "Event mask for state %s is", sp->value);
@@ -598,11 +588,9 @@ int		numEventWords;
 }
 
 /* Evaluate the event mask for a given transition (when() statement). 
- * Called from traverseExprTree() when ep->type==E_VAR.
+ * Called from traverse_expr_tree() when ep->type==E_VAR.
  */
-void eval_event_mask(ep, pEventWords)
-Expr		*ep;
-bitMask		*pEventWords;
+static void eval_event_mask(Expr *ep, bitMask *pEventWords)
 {
 	Chan		*cp;
 	Var		*vp;
@@ -670,11 +658,9 @@ bitMask		*pEventWords;
 
 /* Evaluate the event mask for a given transition (when() statement)
  * for subscripted database variables. 
- * Called from traverseExprTree() when ep->type==E_SUBSCR.
+ * Called from traverse_expr_tree() when ep->type==E_SUBSCR.
  */
-void eval_event_mask_subscr(ep, pEventWords)
-Expr		*ep;
-bitMask		*pEventWords;
+static void eval_event_mask_subscr(Expr *ep, bitMask *pEventWords)
 {
 	extern int	num_events;
 
@@ -734,15 +720,3 @@ bitMask		*pEventWords;
 
 	return;
 }
-
-/* Count the number of linked expressions */
-int exprCount(ep)
-Expr		*ep;
-{
-	int		count;
-
-	for (count = 0; ep != 0; ep = ep->next)
-		count++;
-	return count;
-}
-

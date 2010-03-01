@@ -30,8 +30,6 @@
 ***************************************************************************/
 
 /*====================== Includes, globals, & defines ====================*/
-#include	<ctype.h>
-#include	<math.h>
 #include	<stdio.h>
 #include	<stdlib.h>
 #include	<string.h>
@@ -66,10 +64,9 @@ Chan	*chan_tail = NULL;	/* tail of DB channel list */
 
 Expr	*global_c_list;		/* global C code following state program */
 
-Chan	*build_db_struct(Var *vp);
-void	alloc_db_lists(Chan *cp, int length);
-void	addVar(Var *vp);
-void	addChan(Chan *cp);
+static Chan *build_db_struct(Var *vp);
+static void alloc_db_lists(Chan *cp, int length);
+static void add_chan(Chan *cp);
 
 /*+************************************************************************
 *  NAME: program_name
@@ -132,7 +129,7 @@ void decl_stmt(
 	fprintf(stderr, "length1=%d, length2=%d\n", length1, length2);
 #endif	/*DEBUG*/
 	/* See if variable already declared */
-	vp = (Var *)findVar(name);
+	vp = (Var *)find_var(name);
 	if (vp != 0)
 	{
 		fprintf(stderr, "variable %s already declared, line %d\n",
@@ -141,7 +138,7 @@ void decl_stmt(
 	}
 	/* Build a struct for this variable */
 	vp = allocVar();
-	addVar(vp); /* add to var list */
+	add_var(vp); /* add to var list */
 	vp->name = name;
 	vp->class = class;
 	vp->type = type;
@@ -154,8 +151,8 @@ void decl_stmt(
 
 /* Option statement */
 void option_stmt(
-	char		*option,	/* "a", "r", ... */
-	int		value		/* TRUE means +, FALSE means - */
+	char	*option,	/* "a", "r", ... */
+	int	value		/* TRUE means +, FALSE means - */
 )
 {
 	extern int	async_opt, conn_opt, debug_opt, line_opt, init_reg_opt,
@@ -211,7 +208,7 @@ void assign_single(
 	fprintf(stderr, "assign %s to \"%s\";\n", name, db_name);
 #endif	/*DEBUG*/
 	/* Find the variable */
-	vp = (Var *)findVar(name);
+	vp = (Var *)find_var(name);
 	if (vp == 0)
 	{
 		fprintf(stderr, "assign: variable %s not declared, line %d\n",
@@ -255,7 +252,7 @@ void assign_subscr(
 	fprintf(stderr, "assign %s[%s] to \"%s\";\n", name, subscript, db_name);
 #endif	/*DEBUG*/
 	/* Find the variable */
-	vp = (Var *)findVar(name);
+	vp = (Var *)find_var(name);
 	if (vp == 0)
 	{
 		fprintf(stderr, "assign: variable %s not declared, line %d\n",
@@ -329,7 +326,7 @@ void assign_list(
 	fprintf(stderr, "assign %s to {", name);
 #endif	/*DEBUG*/
 	/* Find the variable */
-	vp = (Var *)findVar(name);
+	vp = (Var *)find_var(name);
 	if (vp == 0)
 	{
 		fprintf(stderr, "assign: variable %s not declared, line %d\n",
@@ -380,12 +377,12 @@ void assign_list(
 }
 
 /* Build a db structure for this variable */
-Chan *build_db_struct(Var *vp)
+static Chan *build_db_struct(Var *vp)
 {
 	Chan		*cp;
 
 	cp = allocChan();
-	addChan(cp);		/* add to Chan list */
+	add_chan(cp);		/* add to Chan list */
 
 	/* make connections between Var & Chan structures */
 	cp->var = vp;
@@ -405,7 +402,7 @@ Chan *build_db_struct(Var *vp)
 }
 
 /* Allocate lists for assigning multiple pv's to a variable */
-void alloc_db_lists(Chan *cp, int length)
+static void alloc_db_lists(Chan *cp, int length)
 {
 	/* allocate an array of pv names */
 	cp->db_name_list = (char **)calloc(sizeof(char **), length);
@@ -445,7 +442,7 @@ void monitor_stmt(
 #endif	/*DEBUG*/
 
 	/* Find the variable */
-	vp = (Var *)findVar(name);
+	vp = (Var *)find_var(name);
 	if (vp == 0)
 	{
 		fprintf(stderr, "assign: variable %s not declared, line %d\n",
@@ -511,7 +508,7 @@ void sync_stmt(char *name, char *subscript, char *ef_name)
 	 name, subscript?subscript:"(no subscript)", ef_name);
 #endif	/*DEBUG*/
 
-	vp = (Var *)findVar(name);
+	vp = (Var *)find_var(name);
 	if (vp == 0)
 	{
 		fprintf(stderr, "sync: variable %s not declared, line %d\n",
@@ -528,7 +525,7 @@ void sync_stmt(char *name, char *subscript, char *ef_name)
 	}
 
 	/* Find the event flag varible */
-	vp = (Var *)findVar(ef_name);
+	vp = (Var *)find_var(ef_name);
 	if (vp == 0 || vp->type != V_EVFLAG)
 	{
 		fprintf(stderr, "sync: e-f variable %s not declared, line %d\n",
@@ -581,7 +578,7 @@ void syncq_stmt(char *name, char *subscript, char *ef_name, char *maxQueueSize)
 #endif	/*DEBUG*/
 
 	/* Find the variable and check it's assigned */
-	vp = (Var *)findVar(name);
+	vp = (Var *)find_var(name);
 	if (vp == 0)
 	{
 		fprintf(stderr, "syncQ: variable %s not declared, line %d\n",
@@ -606,7 +603,7 @@ void syncq_stmt(char *name, char *subscript, char *ef_name, char *maxQueueSize)
 	}
 
 	/* Find the event flag variable */
-	efp = (Var *)findVar(ef_name);
+	efp = (Var *)find_var(ef_name);
 	if (efp == 0 || efp->type != V_EVFLAG)
 	{
 		fprintf(stderr, "syncQ: e-f variable %s not declared, "
@@ -676,7 +673,7 @@ void defn_c_stmt(
 
 /* Global C code (follows state program) */
 void global_c_stmt(
-	Expr		*c_list		/* ptr to C code */
+	Expr	*c_list		/* ptr to C code */
 )
 {
 	global_c_list = c_list;
@@ -686,7 +683,7 @@ void global_c_stmt(
 
 
 /* Add a variable to the variable linked list */
-void addVar(Var *vp)
+void add_var(Var *vp)
 {
 	if (global_var_list == NULL)
 		global_var_list = vp;
@@ -695,10 +692,10 @@ void addVar(Var *vp)
 	global_var_tail = vp;
 	vp->next = NULL;
 }
-	
+
 /* Find a variable by name;  returns a pointer to the Var struct;
 	returns 0 if the variable is not found. */
-Var *findVar(char *name)
+Var *find_var(char *name)
 {
 	Var		*vp;
 
@@ -713,7 +710,7 @@ Var *findVar(char *name)
 }
 
 /* Add a channel to the channel linked list */
-void addChan(Chan *cp)
+static void add_chan(Chan *cp)
 {
 	if (chan_list == NULL)
 		chan_list = cp;

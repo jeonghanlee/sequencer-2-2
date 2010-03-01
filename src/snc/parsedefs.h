@@ -46,14 +46,14 @@ void defn_c_stmt(
 	Expr *c_list	/* ptr to C code */
 );
 void option_stmt(
-	char		*option,	/* "a", "r", ... */
-	int		value		/* TRUE means +, FALSE means - */
+	char	*option,	/* "a", "r", ... */
+	int	value		/* TRUE means +, FALSE means - */
 );
 int entry_code(Expr *ep);
 int exit_code(Expr *ep);
 void pp_code(char *line, char *fname);
 void global_c_stmt(
-	Expr		*c_list		/* ptr to C code */
+	Expr	*c_list		/* ptr to C code */
 );
 
 #endif	/*INCLparsedefsh*/
