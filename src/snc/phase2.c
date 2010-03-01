@@ -429,7 +429,7 @@ void gen_defn_c_code()
 		for (; ep != NULL; ep = ep->next)
 		{
 			print_line_num(ep->line_num, ep->src_file);
-			printf("%s\n", ep->left);
+			printf("%s\n", (char *)ep->left);
 		}
 	}
 	return;
@@ -447,7 +447,7 @@ void gen_global_c_code()
 		print_line_num(ep->line_num, ep->src_file);
 		for (; ep != NULL; ep = ep->next)
 		{
-			printf("%s\n", ep->left);
+			printf("%s\n", (char *)ep->left);
 		}
 	}
 	return;
