@@ -45,27 +45,21 @@
 #define FALSE   0
 #endif  /*TRUE*/
 
-int	num_channels = 0;	/* number of db channels */
-int	num_events = 0;		/* number of event flags */
-int	num_queues = 0;		/* number of syncQ queues */
-int	num_ss = 0;		/* number of state sets */
-int	max_delays = 0;		/* maximum number of delays per state */
-int	num_errors = 0;		/* number of errors detected in phase 2 processing */
-
-static void gen_preamble(void);
+static void gen_preamble(char *prog_name,
+	int num_ss, int num_channels, int num_events, int num_queues);
 static void gen_opt_defn(int opt, char *defn_name);
-static void reconcile_variables(void);
-static void connect_variable(Expr *ep);
-static void reconcile_states(void);
-static void gen_var_decl(void);
-static void gen_defn_c_code(void);
-static void gen_global_c_code(void);
-static void gen_init_reg(void);
-static void assign_ef_bits(void);
-static void assign_delay_ids(void);
+static void reconcile_variables(Expr *expr_list);
+static void connect_variable(Expr *ep, void *dummy);
+static void reconcile_states(Expr *ss_list);
+static void gen_var_decl(Var *var_list);
+static void gen_defn_c_code(Expr *defn_c_list);
+static void gen_global_c_code(Expr *global_c_list);
+static void gen_init_reg(char *prog_name);
+static int assign_ef_bits(Var *var_list, Chan *chan_list);
+static void assign_delay_ids(Expr *ss_list);
 static void assign_next_delay_id(Expr *ep, int *delay_id);
-static int db_queue_count(void);
-static int db_chan_count(void);
+static int db_queue_count(Var *var_list);
+static int db_chan_count(Chan *chan_list);
 
 /*+************************************************************************
 *  NAME: phase2
@@ -77,60 +71,65 @@ static int db_chan_count(void);
 *  RETURNS: n/a
 *
 *  FUNCTION: Generate C code from parsing lists.
-*
-*  NOTES: All inputs are external globals.
 *-*************************************************************************/
-void phase2()
+void phase2(Parse *parse)
 {
-	extern	Expr	*ss_list;	/* state sets (from parse) */
-
 	/* Count number of db channels and state sets defined */
-	num_queues = db_queue_count();
-	num_channels = db_chan_count();
-	num_ss = expr_count(ss_list);
-	num_queues = db_queue_count();
+	parse->num_queues = db_queue_count(parse->global_var_list);
+	parse->num_channels = db_chan_count(parse->chan_list);
+	parse->num_ss = expr_count(parse->ss_list);
 
 	/* Reconcile all variable and tie each to the appropriate VAR struct */
-	reconcile_variables();
+	reconcile_variables(parse->ss_list);
+	reconcile_variables(parse->entry_code_list);
+	reconcile_variables(parse->exit_code_list);
 
 	/* reconcile all state names, including next state in transitions */
-	reconcile_states();
+	reconcile_states(parse->ss_list);
 
 	/* Assign bits for event flags */
-	assign_ef_bits();
+	parse->num_events = assign_ef_bits(parse->global_var_list, parse->chan_list);
+
+#ifdef	DEBUG
+	fprintf(stderr, "gen_tables:\n");
+	fprintf(stderr, " num_channels = %d\n", parse->num_channels);
+	fprintf(stderr, " num_events = %d\n", parse->num_events);
+	fprintf(stderr, " num_queues = %d\n", parse->num_queues);
+	fprintf(stderr, " num_ss = %d\n", parse->num_ss);
+#endif	/*DEBUG*/
 
 	/* Assign delay id's */
-	assign_delay_ids();
+	assign_delay_ids(parse->ss_list);
 
 	/* Generate preamble code */
-	gen_preamble();
+	gen_preamble(parse->prog_name, parse->num_ss,
+		parse->num_channels, parse->num_events, parse->num_queues);
 
 	/* Generate variable declarations */
-	gen_var_decl();
+	gen_var_decl(parse->global_var_list);
 
 	/* Generate definition C code */
-	gen_defn_c_code();
+	gen_defn_c_code(parse->defn_c_list);
 
 	/* Generate code for each state set */
-	gen_ss_code();
+	gen_ss_code(parse);
 
 	/* Generate tables */
-	gen_tables();
+	gen_tables(parse);
 
 	/* Output global C code */
-	gen_global_c_code();
+	gen_global_c_code(parse->global_c_list);
 
-    /* Sequencer registration (if "init_register" option set) */
-    gen_init_reg ();
+	/* Sequencer registration (if "init_register" option set) */
+	gen_init_reg(parse->prog_name);
 
 	exit(0);
 }
 /* Generate preamble (includes, defines, etc.) */
-static void gen_preamble()
+static void gen_preamble(char *prog_name,
+	int num_ss, int num_channels, int num_events, int num_queues)
 {
-	extern char		*prog_name;
-	extern int		async_opt, conn_opt, debug_opt, reent_opt,
-				main_opt, newef_opt;
+	Options *options = globals->options;
 
 	/* Program name (comment) */
 	printf("\n/* Program \"%s\" */\n", prog_name);
@@ -150,18 +149,18 @@ static void gen_preamble()
 
 	/* #define's for compiler options */
 	printf("\n");
-	gen_opt_defn(async_opt, "ASYNC_OPT");
-	gen_opt_defn(conn_opt,  "CONN_OPT" );
-	gen_opt_defn(debug_opt, "DEBUG_OPT");
-	gen_opt_defn(main_opt,  "MAIN_OPT" );
-	gen_opt_defn(newef_opt, "NEWEF_OPT" );
-	gen_opt_defn(reent_opt, "REENT_OPT");
+	gen_opt_defn(options->async, "ASYNC_OPT");
+	gen_opt_defn(options->conn,  "CONN_OPT" );
+	gen_opt_defn(options->debug, "DEBUG_OPT");
+	gen_opt_defn(options->main,  "MAIN_OPT" );
+	gen_opt_defn(options->newef, "NEWEF_OPT" );
+	gen_opt_defn(options->reent, "REENT_OPT");
 
 	/* Forward references of tables: */
 	printf("\nextern struct seqProgram %s;\n", prog_name);
 
         /* Main program (if "main" option set) */
-	if (main_opt) {
+	if (options->main) {
 	    printf("\n/* Main program */\n");
 	    printf("#include <string.h>\n");
 	    printf("#include \"epicsThread.h\"\n");
@@ -204,38 +203,20 @@ static void gen_opt_defn(int opt, char *defn_name)
  */
 int	printTree = FALSE; /* For debugging only */
 
-static void reconcile_variables(void)
+static void reconcile_variables(Expr *expr_list)
 {
-	extern Expr		*ss_list, *entry_code_list, *exit_code_list;
-	Expr			*ssp, *ep;
+	Expr			*ep;
 
-	for (ssp = ss_list; ssp != 0; ssp = ssp->next)
-	{
-#ifdef	DEBUG
-		fprintf(stderr, "reconcile_variables: ss=%s\n", ssp->value);
-#endif	/*DEBUG*/
-		traverse_expr_tree(ssp, E_VAR, 0, connect_variable, 0);
-	}
-
-	/* Same for entry procedure */
-	for (ep = entry_code_list; ep != 0; ep = ep->next)
+	for (ep = expr_list; ep != 0; ep = ep->next)
 	{
 		traverse_expr_tree(ep, E_VAR, 0, connect_variable, 0);
 	}
-
-	/* Same for exit procedure */
-	for (ep = exit_code_list; ep != 0; ep = ep->next)
-	{
-		traverse_expr_tree(ep, E_VAR, 0, connect_variable, 0);
-	}
-
 }
 
 /* Connect a variable in an expression to the the Var structure */
-static void connect_variable(Expr *ep)
+static void connect_variable(Expr *ep, void *dummy)
 {
 	Var		*vp;
-	extern int	warn_opt;
 
 	if (ep->type != E_VAR)
 		return;
@@ -248,7 +229,7 @@ static void connect_variable(Expr *ep)
 #endif	/*DEBUG*/
 	if (vp == 0)
 	{	/* variable not declared; add it to the variable list */
-		if (warn_opt)
+		if (globals->options->warn)
 			fprintf(stderr,
 			 "Warning:  variable \"%s\" is used but not declared.\n",
 			 ep->value);
@@ -266,12 +247,8 @@ static void connect_variable(Expr *ep)
 } 
 
 /* Reconcile state names */
-static void reconcile_states(void)
+static void reconcile_states(Expr *ss_list)
 {
-
-	extern Expr		*ss_list;
-
-	extern int	num_errors;
 	Expr		*ssp, *sp, *sp1;
 
 	for (ssp = ss_list; ssp != 0; ssp = ssp->next)
@@ -286,7 +263,6 @@ static void reconcile_states(void)
 			    fprintf(stderr,
 			       "State \"%s\" is duplicated in state set \"%s\"\n",
 			       sp->value, ssp->value);
-			    num_errors++;
 			}
 		}		
 	    }
@@ -294,20 +270,18 @@ static void reconcile_states(void)
 }
 
 /* Generate a C variable declaration for each variable declared in SNL */
-static void gen_var_decl(void)
+static void gen_var_decl(Var *var_list)
 {
-	extern Var	*global_var_list;
 	Var		*vp;
 	char		*vstr;
 	int		nv;
-	extern int	reent_opt;
 
 	printf("\n/* Variable declarations */\n");
 
 	/* Convert internal type to `C' type */
-	if (reent_opt)
+	if (globals->options->reent)
 		printf("struct UserVar {\n");
-	for (nv=0, vp = global_var_list; vp != NULL; nv++, vp = vp->next)
+	for (nv=0, vp = var_list; vp != NULL; nv++, vp = vp->next)
 	{
 		switch (vp->type)
 		{
@@ -355,7 +329,7 @@ static void gen_var_decl(void)
 		if (vstr == NULL)
 			continue;
 
-		if (reent_opt)
+		if (globals->options->reent)
 			printf("\t");
 		else
 			printf("static ");
@@ -381,11 +355,11 @@ static void gen_var_decl(void)
 
 		printf(";\n");
 	}
-	if (reent_opt)
+	if (globals->options->reent)
 		printf("};\n");
 
 	/* Avoid compilation warnings if not re-entrant */
-	if (!reent_opt)
+	if (!globals->options->reent)
 	{
 		printf("\n");
 		printf("/* Not used (avoids compilation warnings) */\n");
@@ -397,9 +371,8 @@ static void gen_var_decl(void)
 }		
 
 /* Generate definition C code (C code in definition section) */
-static void gen_defn_c_code(void)
+static void gen_defn_c_code(Expr *defn_c_list)
 {
-	extern Expr	*defn_c_list;
 	Expr		*ep;
 
 	ep = defn_c_list;
@@ -415,9 +388,8 @@ static void gen_defn_c_code(void)
 	return;
 }
 /* Generate global C code (C code following state program) */
-static void gen_global_c_code(void)
+static void gen_global_c_code(Expr *global_c_list)
 {
-	extern Expr	*global_c_list;
 	Expr		*ep;
 
 	ep = global_c_list;
@@ -435,9 +407,8 @@ static void gen_global_c_code(void)
 
 /* Sets cp->index for each variable, & returns number of db channels defined. 
  */
-static int db_chan_count(void)
+static int db_chan_count(Chan *chan_list)
 {
-	extern	Chan	*chan_list;
 	int	nchan;
 	Chan	*cp;
 
@@ -454,18 +425,16 @@ static int db_chan_count(void)
 	return nchan;
 }
 
-
 /* Sets vp->queueIndex for each syncQ'd variable, & returns number of
  * syncQ queues defined. 
  */
-static int db_queue_count(void)
+static int db_queue_count(Var *var_list)
 {
-	extern	Var	*global_var_list;
 	int		nqueue;
 	Var		*vp;
 
 	nqueue = 0;
-	for (vp = global_var_list; vp != NULL; vp = vp->next)
+	for (vp = var_list; vp != NULL; vp = vp->next)
 	{
 		if (vp->type != V_EVFLAG && vp->queued)
 		{
@@ -477,24 +446,20 @@ static int db_queue_count(void)
 	return nqueue;
 }
 
-
-
 /* Assign event bits to event flags and associate db channels with
  * event flags.
  */
-static void assign_ef_bits(void)
+static int assign_ef_bits(Var *var_list, Chan *chan_list)
 {
-	extern Var	*global_var_list;
-	extern	Chan	*chan_list;
 	Var		*vp;
 	Chan		*cp;
-	extern int	num_events;
 	int		n;
+	int		num_events;
 
 	/* Assign event flag numbers (starting at 1) */
 	printf("\n/* Event flags */\n");
 	num_events = 0;
-	for (vp = global_var_list; vp != NULL; vp = vp->next)
+	for (vp = var_list; vp != NULL; vp = vp->next)
 	{
 		if (vp->type == V_EVFLAG)
 		{
@@ -529,13 +494,12 @@ static void assign_ef_bits(void)
 		}
 	}
 
-	return;
+	return num_events;
 }
 
 /* Assign a delay id to each "delay()" in an event (when()) expression */
-static void assign_delay_ids(void)
+static void assign_delay_ids(Expr *ss_list)
 {
-	extern Expr		*ss_list;
 	Expr			*ssp, *sp, *tp;
 	int			delay_id;
 
@@ -555,12 +519,8 @@ static void assign_delay_ids(void)
 
 				/* traverse event expression only */
 				traverse_expr_tree(tp->left, E_FUNC, "delay",
-				 assign_next_delay_id, &delay_id);
+					assign_next_delay_id, &delay_id);
 			}
-
-			/* Keep track of number of delay id's requied */
-			if (delay_id > max_delays)
-				max_delays = delay_id;
 		}
 	}
 }
@@ -576,22 +536,21 @@ static void assign_next_delay_id(Expr *ep, int *delay_id)
  * The condition value = 0 matches all.
  * The function is called with the current ep and a supplied argument (argp) */
 void traverse_expr_tree(
-	Expr	*ep,		/* ptr to start of expression */
-	int	type,		/* to search for */
-	char	*value,		/* with optional matching value */
-	void	(*funcp)(),	/* function to call */
-	void	*argp		/* ptr to argument to pass on to function */
+	Expr	    *ep,	/* ptr to start of expression */
+	int	    type,	/* to search for */
+	char	    *value,	/* with optional matching value */
+	expr_fun    *funcp,	/* function to call */
+	void	    *argp	/* ptr to argument to pass on to function */
 )
 {
 	Expr		*ep1;
-	extern char	*stype[];
 
 	if (ep == 0)
 		return;
 
 	if (printTree)
 		fprintf(stderr, "traverse_expr_tree: type=%s, value=%s\n",
-		 stype[ep->type], ep->value);
+		 expr_type_names[ep->type], ep->value);
 
 	/* Call the function? */
 	if ((ep->type == type) && (value == 0 || strcmp(ep->value, value) == 0) )
@@ -652,18 +611,15 @@ void traverse_expr_tree(
 	}
 }
 
-static void gen_init_reg(void)
+static void gen_init_reg(char *prog_name)
 {
-	extern char		*prog_name;
-	extern int		main_opt, init_reg_opt;
-
-	if (init_reg_opt) {
-	    printf ("\n\n/* Register sequencer commands and program */\n");
-	    printf ("\nvoid %sRegistrar (void) {\n", prog_name);
-	    printf ("    seqRegisterSequencerCommands();\n");
-	    printf ("    seqRegisterSequencerProgram (&%s);\n", prog_name);
-	    printf ("}\n");
-	    printf ("epicsExportRegistrar(%sRegistrar);\n\n", prog_name);
+	if (globals->options->init_reg) {
+		printf("\n\n/* Register sequencer commands and program */\n");
+		printf("\nvoid %sRegistrar (void) {\n", prog_name);
+		printf("    seqRegisterSequencerCommands();\n");
+		printf("    seqRegisterSequencerProgram (&%s);\n", prog_name);
+		printf("}\n");
+		printf("epicsExportRegistrar(%sRegistrar);\n\n", prog_name);
 	}
 }
 

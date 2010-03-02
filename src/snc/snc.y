@@ -54,7 +54,7 @@
 #define	FALSE	0
 #endif
 
-extern	int line_num; /* input file line no. */
+static void pp_code(char *line, char *fname);
 %}
 
 %start	state_program
@@ -132,7 +132,6 @@ defn_stmt	/* individual definitions for SNL (preceeds state sets) */
 :	assign_stmt
 |	monitor_stmt
 |	decl_stmt
-|	debug_stmt
 |	sync_stmt
 |	syncq_stmt
 |	option_stmt
@@ -168,10 +167,6 @@ monitor_stmt	/* variable to be monitored; delta is optional */
 
 subscript	/* e.g. [10] */
 :	L_SQ_BRACKET NUMBER R_SQ_BRACKET	{ $$ = $2; }
-;
-
-debug_stmt
-:	DEBUG_PRINT NUMBER SEMI_COLON		{ set_debug_print($2); }
 ;
 
 decl_stmt	/* variable declarations (e.g. float x[20];)
@@ -478,8 +473,15 @@ escaped_c_list
 static int yyparse (void);
 
 /* yyparse() is static, so we create global access to it */
-void global_yyparse (void)
+void compile (void)
 {
 	yyparse ();
 }
 
+/* Interpret pre-processor code */
+static void pp_code(char *line, char *fname)
+{
+	globals->line_num = atoi(line);
+	if (fname != 0)
+	globals->src_file = fname;
+}

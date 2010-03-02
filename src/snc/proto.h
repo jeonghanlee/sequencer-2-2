@@ -14,35 +14,33 @@
 #ifndef INCLsnch
 #define INCLsnch
 
-/* Don't require parse.h to have been included */
-#ifndef INCLparseh
-#define Expr void
-#define Var  void
-#endif
+#include "parse.h"
 
 /* Prototypes for external functions */
-extern void global_yyparse(void);
+void compile(void);
 
-extern void phase2(void);
+void phase2(Parse *parse);
 
-extern int  expr_count(Expr*);
+int  expr_count(Expr*);
 
-extern void gen_ss_code(void);
+void gen_ss_code(Parse *parse);
 
-extern void gen_tables(void);
+void gen_tables(Parse *parse);
 
-extern void add_var(Var*);
+void add_var(Var*);
 
-extern void print_line_num(int,char*);
+void print_line_num(int,char*);
 
-extern void traverse_expr_tree(
-	Expr	*ep,		/* ptr to start of expression */
-	int	type,		/* to search for */
-	char	*value,		/* with optional matching value */
-	void	(*funcp)(),	/* function to call */
-	void	*argp		/* ptr to argument to pass on to function */
+typedef void expr_fun(Expr *, void *);
+
+void traverse_expr_tree(
+	Expr	    *ep,	/* ptr to start of expression */
+	int	    type,	/* to search for */
+	char	    *value,	/* with optional matching value */
+	expr_fun    *funcp,	/* function to call */
+	void	    *argp	/* ptr to argument to pass on to function */
 );
 
-extern void snc_err(char *err_txt);
+void snc_err(char *err_txt);
 
 #endif	/*INCLsnch*/

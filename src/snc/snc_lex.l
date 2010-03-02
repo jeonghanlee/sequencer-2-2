@@ -40,6 +40,8 @@
 
 #include	<string.h>
 #include	<unistd.h>
+#include	<stdlib.h>
+#include	"snc_main.h"
 
 #ifndef	TRUE
 #define	TRUE	1
@@ -54,12 +56,9 @@
 #endif
 #define	STR_BFR_SIZE	1000
 
-extern int	line_num, c_line_num;	/* input line number */
-extern int	warn_opt;		/* compiler warning flag */
-char		strBfr[STR_BFR_SIZE];	/* holding place for strings */
-char		*pStr;			/* current ptr to strBfr */
-double		atof();
-int		one_line_c_code;	/* TRUE for %%; FALSE for %{...}% */
+static char		strBfr[STR_BFR_SIZE];	/* holding place for strings */
+static char		*pStr;			/* current ptr to strBfr */
+static int		one_line_c_code;	/* TRUE for %%; FALSE for %{...}% */
 
 %}
 
@@ -82,8 +81,8 @@ CCONST	\'.\'
 <C_CODE>.	*pStr++ = yytext[0];
 <C_CODE>\n {
 		*pStr++ = 0;
-		line_num++;
-		c_line_num = line_num;
+		globals->line_num++;
+		globals->c_line_num = globals->line_num;
 		yylval.pchar = strdup(strBfr);
 		pStr = strBfr;
 		if (one_line_c_code)
@@ -96,7 +95,7 @@ CCONST	\'.\'
 		BEGIN SNL;
 		RETURN(C_STMT);
 }
-<COMMENT>\n	line_num++;
+<COMMENT>\n	globals->line_num++;
 <COMMENT>"*/"	BEGIN SNL;
 <COMMENT>.	;
 <STR>"\\\"" {
@@ -112,10 +111,10 @@ CCONST	\'.\'
 }
 <STR>.		{ *pStr++ = yytext[0]; }
 <STR>\n	{	*pStr++ = '?';
-		if (warn_opt)
+		if (globals->options->warn)
 			fprintf(stderr, "Warning:  newline in string, line %d\n",
-			 line_num);
-		line_num++;
+			 globals->line_num);
+		globals->line_num++;
 }
 <PP>{FPNUM} {	yylval.pchar = strdup((char *)yytext);
 		RETURN(NUMBER);
@@ -135,18 +134,18 @@ CCONST	\'.\'
 		RETURN(STRING);
 }
 <PP_STR>.	{ *pStr++ = yytext[0]; }
-<PP_STR>\n	{ *pStr++ = '?'; line_num++; }
-<SNL>\n		{ line_num++; }
+<PP_STR>\n	{ *pStr++ = '?'; globals->line_num++; }
+<SNL>\n		{ globals->line_num++; }
 <SNL>"%{" {
 		pStr = strBfr;
 		one_line_c_code = FALSE;
-		c_line_num = line_num;
+		globals->c_line_num = globals->line_num;
 		BEGIN C_CODE;
 }
 <SNL>"%%" {
 		pStr = strBfr;
 		one_line_c_code = TRUE;
-		c_line_num = line_num;
+		globals->c_line_num = globals->line_num;
 		BEGIN C_CODE;
 }
 <SNL>^# {
@@ -270,5 +269,5 @@ CCONST	\'.\'
 		BEGIN PP;
 		RETURN(PP_SYMBOL);
 }
-.|\n		{ line_num = 1; BEGIN SNL; yyless(0); }
+.|\n		{ globals->line_num = 1; BEGIN SNL; yyless(0); }
 

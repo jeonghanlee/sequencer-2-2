@@ -42,33 +42,27 @@
 #define	FALSE	0
 #endif	/*TRUE*/
 
-int	debug_print_opt = 0;	/* Debug level (set by source file) */
-
-char	*prog_name;		/* ptr to program name (string) */
-
-char	*prog_param;		/* parameter string for program stmt */
-
-Expr	*defn_c_list;		/* definition C code list */
-
-Expr	*ss_list;		/* Start of state set list */
-
-Expr	*entry_code_list;	/* Start of entry code list */
-
-Expr	*exit_code_list;	/* Start of exit code list */
-
-Var	*global_var_list = NULL;	/* start of global variable list */
-Var	*global_var_tail = NULL;	/* tail of global variable list */
-
-Chan	*chan_list = NULL;	/* start of DB channel list */
-Chan	*chan_tail = NULL;	/* tail of DB channel list */
-
-Expr	*global_c_list;		/* global C code following state program */
-
 static Chan *build_db_struct(Var *vp);
 static void alloc_db_lists(Chan *cp, int length);
 static void add_chan(Chan *cp);
 
-/*+************************************************************************
+static Parse global_parse = {0,0,0,0,0,0,0,0,0,0,0};
+
+Parse *parse = &global_parse;
+
+/* Parsing "program" statement */
+void program(Expr *prog_list)
+{
+	parse->ss_list = prog_list;
+#ifdef	DEBUG
+	fprintf(stderr, "----Phase2---\n");
+#endif	/*DEBUG*/
+	phase2(parse);
+
+	exit(0);
+}
+
+/*+************************************************************************
 *  NAME: program_name
 *
 *  CALLING SEQUENCE: none
@@ -83,10 +77,10 @@ static void add_chan(Chan *cp);
 *-*************************************************************************/
 void program_name(char *pname, char *pparam)
 {
-	prog_name = pname;
-	prog_param = pparam;
+	parse->prog_name = pname;
+	parse->prog_param = pparam;
 #ifdef	DEBUG
-	fprintf(stderr, "program name = %s\n", prog_name);
+	fprintf(stderr, "program name = %s\n", parse->prog_name);
 #endif	/*DEBUG*/
 	return;
 }
@@ -103,7 +97,6 @@ void decl_stmt(
 {
 	Var		*vp;
 	int		length1, length2;
-	extern int	line_num;
 
 #ifdef	DEBUG
 	fprintf(stderr, 
@@ -133,7 +126,7 @@ void decl_stmt(
 	if (vp != 0)
 	{
 		fprintf(stderr, "variable %s already declared, line %d\n",
-		 name, line_num);
+		 name, globals->line_num);
 		return;
 	}
 	/* Build a struct for this variable */
@@ -155,37 +148,35 @@ void option_stmt(
 	int	value		/* TRUE means +, FALSE means - */
 )
 {
-	extern int	async_opt, conn_opt, debug_opt, line_opt, init_reg_opt,
-			reent_opt, warn_opt, newef_opt, main_opt;
-
+	Options *options = globals->options;
 	switch(*option)
 	{
 	    case 'a':
-		async_opt = value;
+		options->async = value;
 		break;
 	    case 'c':
-		conn_opt = value;
+		options->conn = value;
 		break;
 	    case 'd':
-		debug_opt = value;
+		options->debug = value;
 		break;
 	    case 'e':
-		newef_opt = value;
+		options->newef = value;
 		break;
 	    case 'i':
-		init_reg_opt = value;
+		options->init_reg = value;
 		break;
 	    case 'l':
-		line_opt = value;
+		options->line = value;
 		break;
 	    case 'm':
-		main_opt = value;
+		options->main = value;
 		break;
 	    case 'r':
-		reent_opt = value;
+		options->reent = value;
 		break;
 	    case 'w':
-		warn_opt = value;
+		options->warn = value;
 		break;
 	}
 	return;
@@ -202,7 +193,6 @@ void assign_single(
 {
 	Chan		*cp;
 	Var		*vp;
-	extern int	line_num;
 
 #ifdef	DEBUG
 	fprintf(stderr, "assign %s to \"%s\";\n", name, db_name);
@@ -212,7 +202,7 @@ void assign_single(
 	if (vp == 0)
 	{
 		fprintf(stderr, "assign: variable %s not declared, line %d\n",
-		 name, line_num);
+		 name, globals->line_num);
 		return;
 	}
 
@@ -220,7 +210,7 @@ void assign_single(
 	if (cp != NULL)
 	{
 		fprintf(stderr, "assign: %s already assigned, line %d\n",
-		 name, line_num);
+		 name, globals->line_num);
 		return;
 	}
 
@@ -246,7 +236,6 @@ void assign_subscr(
 	Chan		*cp;
 	Var		*vp;
 	int		subNum;
-	extern int	line_num;
 
 #ifdef	DEBUG
 	fprintf(stderr, "assign %s[%s] to \"%s\";\n", name, subscript, db_name);
@@ -256,14 +245,14 @@ void assign_subscr(
 	if (vp == 0)
 	{
 		fprintf(stderr, "assign: variable %s not declared, line %d\n",
-		 name, line_num);
+		 name, globals->line_num);
 		return;
 	}
 
 	if (vp->class != VC_ARRAY1 && vp->class != VC_ARRAY2)
 	{
 		fprintf(stderr, "assign: variable %s not an array, line %d\n",
-		 name, line_num);
+		 name, globals->line_num);
 		return;
 	}
 
@@ -276,7 +265,7 @@ void assign_subscr(
 	else if (cp->db_name != NULL)
 	{
 		fprintf(stderr, "assign: array %s already assigned, line %d\n",
-		 name, line_num);
+		 name, globals->line_num);
 		return;
 	}
 
@@ -285,7 +274,7 @@ void assign_subscr(
 	{
 		fprintf(stderr, 
 		 "assign: subscript %s[%d] is out of range, line %d\n",
-		 name, subNum, line_num);
+		 name, subNum, globals->line_num);
 		return;
 	}
 
@@ -294,7 +283,7 @@ void assign_subscr(
 	else if (cp->db_name_list[subNum] != NULL)
 	{
 		fprintf(stderr, "assign: %s[%d] already assigned, line %d\n",
-		 name, subNum, line_num);
+		 name, subNum, globals->line_num);
 		return;
 	}
 	
@@ -320,7 +309,6 @@ void assign_list(
 	Chan		*cp;
 	Var		*vp;
 	int		elem_num;
-	extern int	line_num;
 
 #ifdef	DEBUG
 	fprintf(stderr, "assign %s to {", name);
@@ -330,14 +318,14 @@ void assign_list(
 	if (vp == 0)
 	{
 		fprintf(stderr, "assign: variable %s not declared, line %d\n",
-		 name, line_num);
+		 name, globals->line_num);
 		return;
 	}
 
 	if (vp->class != VC_ARRAY1 && vp->class != VC_ARRAY2)
 	{
 		fprintf(stderr, "assign: variable %s is not an array, line %d\n",
-		 name, line_num);
+		 name, globals->line_num);
 		return;
 	}
 
@@ -345,7 +333,7 @@ void assign_list(
 	if (cp != NULL)
 	{
 		fprintf(stderr, "assign: variable %s already assigned, line %d\n",
-		 name, line_num);
+		 name, globals->line_num);
 		return;
 	}
 
@@ -433,7 +421,6 @@ void monitor_stmt(
 	Var		*vp;
 	Chan		*cp;
 	int		subNum;
-	extern int	line_num;
 
 #ifdef	DEBUG
 	fprintf(stderr, "monitor_stmt: name=%s", name);
@@ -446,7 +433,7 @@ void monitor_stmt(
 	if (vp == 0)
 	{
 		fprintf(stderr, "assign: variable %s not declared, line %d\n",
-		 name, line_num);
+		 name, globals->line_num);
 		return;
 	}
 
@@ -455,7 +442,7 @@ void monitor_stmt(
 	if (cp == 0)
 	{
 		fprintf(stderr, "monitor: variable %s not assigned, line %d\n",
-		 name, line_num);
+		 name, globals->line_num);
 		return;
 	}
 
@@ -480,14 +467,14 @@ void monitor_stmt(
 	if (subNum < 0 || subNum >= cp->num_elem)
 	{
 		fprintf(stderr, "monitor: subscript of %s out of range, line %d\n",
-		 name, line_num);
+		 name, globals->line_num);
 		return;
 	}
 
 	if (cp->num_elem == 0 || cp->db_name_list[subNum] == NULL)
 	{
 		fprintf(stderr, "monitor: %s[%d] not assigned, line %d\n",
-		 name, subNum, line_num);
+		 name, subNum, globals->line_num);
 		return;
 	}
 
@@ -500,7 +487,6 @@ void sync_stmt(char *name, char *subscript, char *ef_name)
 {
 	Chan		*cp;
 	Var		*vp;
-	extern int	line_num;
 	int		subNum;
 
 #ifdef	DEBUG
@@ -512,7 +498,7 @@ void sync_stmt(char *name, char *subscript, char *ef_name)
 	if (vp == 0)
 	{
 		fprintf(stderr, "sync: variable %s not declared, line %d\n",
-		 name, line_num);
+		 name, globals->line_num);
 		return;
 	}
 
@@ -520,7 +506,7 @@ void sync_stmt(char *name, char *subscript, char *ef_name)
 	if (cp == 0)
 	{
 		fprintf(stderr, "sync: variable %s not assigned, line %d\n",
-		 name, line_num);
+		 name, globals->line_num);
 		return;
 	}
 
@@ -529,7 +515,7 @@ void sync_stmt(char *name, char *subscript, char *ef_name)
 	if (vp == 0 || vp->type != V_EVFLAG)
 	{
 		fprintf(stderr, "sync: e-f variable %s not declared, line %d\n",
-		 ef_name, line_num);
+		 ef_name, globals->line_num);
 		return;
 	}
 
@@ -555,7 +541,7 @@ void sync_stmt(char *name, char *subscript, char *ef_name)
 	{
 		fprintf(stderr,
 		 "sync: subscript %s[%d] out of range, line %d\n",
-		 name, subNum, line_num);
+		 name, subNum, globals->line_num);
 		return;
 	}
 	cp->ef_var_list[subNum] = vp; /* sync to a specific element of the array */
@@ -569,7 +555,6 @@ void syncq_stmt(char *name, char *subscript, char *ef_name, char *maxQueueSize)
 	Chan		*cp;
 	Var		*vp;
 	Var		*efp;
-	extern int	line_num;
 	int		subNum;
 
 #ifdef	DEBUG
@@ -582,7 +567,7 @@ void syncq_stmt(char *name, char *subscript, char *ef_name, char *maxQueueSize)
 	if (vp == 0)
 	{
 		fprintf(stderr, "syncQ: variable %s not declared, line %d\n",
-		 name, line_num);
+		 name, globals->line_num);
 		return;
 	}
 
@@ -590,7 +575,7 @@ void syncq_stmt(char *name, char *subscript, char *ef_name, char *maxQueueSize)
 	if (cp == 0)
 	{
 		fprintf(stderr, "syncQ: variable %s not assigned, line %d\n",
-		 name, line_num);
+		 name, globals->line_num);
 		return;
 	}
 
@@ -598,7 +583,7 @@ void syncq_stmt(char *name, char *subscript, char *ef_name, char *maxQueueSize)
 	if (vp->queued)
 	{
 		fprintf(stderr, "syncQ: variable %s already syncQ'd, "
-		 "line %d\n", name, line_num);
+		 "line %d\n", name, globals->line_num);
 		return;
 	}
 
@@ -607,7 +592,7 @@ void syncq_stmt(char *name, char *subscript, char *ef_name, char *maxQueueSize)
 	if (efp == 0 || efp->type != V_EVFLAG)
 	{
 		fprintf(stderr, "syncQ: e-f variable %s not declared, "
-		 "line %d\n", ef_name, line_num);
+		 "line %d\n", ef_name, globals->line_num);
 		return;
 	}
 
@@ -615,7 +600,7 @@ void syncq_stmt(char *name, char *subscript, char *ef_name, char *maxQueueSize)
 	if (efp->queued)
 	{
 		fprintf(stderr, "syncQ: e-f variable %s already syncQ'd, "
-		 "line %d\n", ef_name, line_num);
+		 "line %d\n", ef_name, globals->line_num);
 		return;
 	}
 
@@ -646,7 +631,7 @@ void syncq_stmt(char *name, char *subscript, char *ef_name, char *maxQueueSize)
 	{
 		fprintf(stderr,
 		 "syncQ: subscript %s[%d] out of range, line %d\n",
-		 name, subNum, line_num);
+		 name, subNum, globals->line_num);
 		return;
 	}
 	cp->ef_var_list[subNum] = efp; /* sync to a specific element of the array */
@@ -663,10 +648,10 @@ void defn_c_stmt(
 #ifdef	DEBUG
 	fprintf(stderr, "defn_c_stmt\n");
 #endif	/*DEBUG*/
-	if (defn_c_list == 0)
-		defn_c_list = c_list;
+	if (parse->defn_c_list == 0)
+		parse->defn_c_list = c_list;
 	else
-		link_expr(defn_c_list, c_list);	
+		link_expr(parse->defn_c_list, c_list);	
 	
 	return;
 }
@@ -676,7 +661,7 @@ void global_c_stmt(
 	Expr	*c_list		/* ptr to C code */
 )
 {
-	global_c_list = c_list;
+	parse->global_c_list = c_list;
 
 	return;
 }
@@ -685,11 +670,11 @@ void global_c_stmt(
 /* Add a variable to the variable linked list */
 void add_var(Var *vp)
 {
-	if (global_var_list == NULL)
-		global_var_list = vp;
+	if (parse->global_var_list == NULL)
+		parse->global_var_list = vp;
 	else
-		global_var_tail->next = vp;
-	global_var_tail = vp;
+		parse->global_var_tail->next = vp;
+	parse->global_var_tail = vp;
 	vp->next = NULL;
 }
 
@@ -699,7 +684,7 @@ Var *find_var(char *name)
 {
 	Var		*vp;
 
-	for (vp = global_var_list; vp != NULL; vp = vp->next)
+	for (vp = parse->global_var_list; vp != NULL; vp = vp->next)
 	{
 		if (strcmp(vp->name, name) == 0)
 		{
@@ -712,43 +697,25 @@ Var *find_var(char *name)
 /* Add a channel to the channel linked list */
 static void add_chan(Chan *cp)
 {
-	if (chan_list == NULL)
-		chan_list = cp;
+	if (parse->chan_list == NULL)
+		parse->chan_list = cp;
 	else
-		chan_tail->next = cp;
-	chan_tail = cp;
+		parse->chan_tail->next = cp;
+	parse->chan_tail = cp;
 	cp->next = NULL;
-}
-
-/* Set debug print opt */
-void set_debug_print(char *opt)
-{
-	debug_print_opt = atoi(opt);
-}
-
-/* Parsing "program" statement */
-void program(Expr *prog_list)
-{
-	ss_list = prog_list;
-#ifdef	DEBUG
-	fprintf(stderr, "----Phase2---\n");
-#endif	/*DEBUG*/
-	phase2();
-
-	exit(0);
 }
 
 /* Entry code */
 int entry_code(Expr *ep)
 {
-	entry_code_list = ep;
+	parse->entry_code_list = ep;
 	return 0;
 }
 
 /* Exit code */
 int exit_code(Expr *ep)
 {
-	exit_code_list = ep;
+	parse->exit_code_list = ep;
 	return 0;
 }
 
@@ -763,17 +730,14 @@ Expr *expression(
 )
 {
 	Expr		*ep;
-	extern int	line_num, c_line_num;
-	extern char	*src_file;
 #ifdef	DEBUG
-	extern char	*stype[];
 #endif	/*DEBUG*/
 	/* Allocate a structure for this item or expression */
 	ep = allocExpr();
 #ifdef	DEBUG
 	fprintf(stderr,
-	 "expression: ep=%d, type=%s, value=\"%s\", left=%d, right=%d\n",
-	 ep, stype[type], value, left, right);
+		"expression: ep=%p, type=%s, value=\"%s\", left=%p, right=%p\n",
+		ep, expr_type_names[type], value, left, right);
 #endif	/*DEBUG*/
 	/* Fill in the structure */
 	ep->next = (Expr *)0;
@@ -783,10 +747,10 @@ Expr *expression(
 	ep->left = left;
 	ep->right = right;
 	if (type == E_TEXT)
-		ep->line_num = c_line_num;
+		ep->line_num = globals->c_line_num;
 	else
-		ep->line_num = line_num;
-	ep->src_file = src_file;
+		ep->line_num = globals->line_num;
+	ep->src_file = globals->src_file;
 
 	return ep;
 }
@@ -798,6 +762,10 @@ Expr *link_expr(
 	Expr	*ep2	/* beginning 2-nd (append it to 1-st) */
 )
 {
+#ifdef	DEBUG
+	Expr	*ep;
+#endif
+
 	if (ep1 == 0 && ep2 == 0)
 	        return NULL;
 	else if (ep1 == 0)
@@ -811,7 +779,7 @@ Expr *link_expr(
 	fprintf(stderr, "link_expr(");
 	for (ep = ep1; ; ep = ep->next)
 	{
-		fprintf(stderr, "%d, ", ep);
+		fprintf(stderr, "%p, ", ep);
 		if (ep == ep1->last)
 			break;
 	}
@@ -820,21 +788,11 @@ Expr *link_expr(
 	return ep1;
 }
 
-/* Interpret pre-processor code */
-void pp_code(char *line, char *fname)
-{
-	extern int		line_num;
-	extern char		*src_file;
-
-	line_num = atoi(line);
-	if (fname != 0)
-	src_file = fname;
-}
-
 /* The ordering of this list must correspond with the ordering in parse.h */
-char	*stype[] = {
+char *expr_type_names[E_NUM_TYPES] = {
 	"E_EMPTY", "E_CONST", "E_VAR", "E_FUNC", "E_STRING", "E_UNOP", "E_BINOP",
 	"E_ASGNOP", "E_PAREN", "E_SUBSCR", "E_TEXT", "E_STMT", "E_CMPND",
 	"E_IF", "E_ELSE", "E_WHILE", "E_SS", "E_STATE", "E_WHEN",
 	"E_FOR", "E_X", "E_PRE", "E_POST", "E_BREAK", "E_COMMA", "E_DECL",
-	"E_ENTRY", "E_EXIT", "E_OPTION", "E_?", "E_?", "E_?", "E_?", "E_?" };
+	"E_ENTRY", "E_EXIT", "E_OPTION"
+};

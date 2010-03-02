@@ -30,6 +30,7 @@
 #include	<string.h>
 
 #include	"proto.h"
+#include	"snc_main.h"
 
 #ifndef	TRUE
 #define	TRUE 1
@@ -38,22 +39,28 @@
 
 extern char	*sncVersion;	/* snc version and date created */
 
-/* SNC Globals: */
+static Options	default_options =
+{
+	FALSE,	/* async */
+	TRUE,	/* conn */
+	FALSE,	/* debug */
+	TRUE,	/* newef */
+	TRUE,	/* init_reg */
+	TRUE,	/* line */
+	FALSE,	/* main */
+	FALSE,	/* reent */
+	TRUE	/* warn */
+};
+
+static Globals	default_globals =
+{
+	0,0,0,&default_options
+};
+
+Globals *globals = &default_globals;
+
 static char	in_file[200];	/* input file name */
 static char	out_file[200];	/* output file name */
-char		*src_file;	/* ptr to (effective) source file name */
-int		line_num;	/* current src file line number */
-int		c_line_num;	/* line number for beginning of C code */
-/* Compile & run-time options: */
-int		async_opt = FALSE;	/* do pvGet() asynchronously */
-int		conn_opt = TRUE;	/* wait for all conns to complete */
-int		debug_opt = FALSE;	/* run-time debug */
-int		newef_opt = TRUE;	/* new event flag mode */
-int		init_reg_opt = TRUE;	/* register commands/programs */
-int		line_opt = TRUE;	/* line numbering */
-int		main_opt = FALSE;	/* main program */
-int		reent_opt = FALSE;	/* reentrant at run-time */
-int		warn_opt = TRUE;	/* compiler warnings */
 
 static void get_args(int argc, char *argv[]);
 static void get_options(char *s);
@@ -104,7 +111,7 @@ int main(int argc, char *argv[])
 	}
 
 	/* src_file is used to mark the output file for snc & cc errors */
-	src_file = in_file;
+	globals->src_file = in_file;
 
 	/* Use line buffered output */
 	setvbuf(stdout, NULL, _IOLBF, BUFSIZ);
@@ -113,11 +120,11 @@ int main(int argc, char *argv[])
 	printf("/* %s: %s */\n", sncVersion, in_file);
 
 	/* Call the SNC parser */
-	global_yyparse();
+	compile();
 
         return 0; /* never reached */
 }
-/*+************************************************************************
+/*+************************************************************************
 *  NAME: get_args
 *
 *  CALLING SEQUENCE
@@ -174,50 +181,39 @@ static void get_args(int argc, char *argv[])
 static void get_options(char *s)
 {
 	int		opt_val;
+	Options		*opt = globals->options;
 
-	if (*s == '+')
-		opt_val = TRUE;
-	else
-		opt_val = FALSE;
+	opt_val = (*s == '+');
 
 	switch (s[1])
 	{
 	case 'a':
-		async_opt = opt_val;
+		opt->async = opt_val;
 		break;
-
 	case 'c':
-		conn_opt = opt_val;
+		opt->conn = opt_val;
 		break;
-
 	case 'd':
-		debug_opt = opt_val;
+		opt->debug = opt_val;
 		break;
-
 	case 'e':
-		newef_opt = opt_val;
+		opt->newef = opt_val;
 		break;
-
 	case 'i':
-		init_reg_opt = opt_val;
+		opt->init_reg = opt_val;
 		break;
-
 	case 'l':
-		line_opt = opt_val;
+		opt->line = opt_val;
 		break;
-
 	case 'm':
-		main_opt = opt_val;
+		opt->main = opt_val;
 		break;
-
 	case 'r':
-		reent_opt = opt_val;
+		opt->reent = opt_val;
 		break;
-
 	case 'w':
-		warn_opt = opt_val;
+		opt->warn = opt_val;
 		break;
-
 	default:
 		fprintf(stderr, "Unknown option ignored: \"%s\"\n", s);
 		break;
@@ -291,7 +287,7 @@ static void print_usage(void)
 	fprintf(stderr, "example:\n snc +a -c vacuum.st\n");
 }
 
-/*+************************************************************************
+/*+************************************************************************
 *  NAME: snc_err
 *
 *  CALLING SEQUENCE
@@ -312,7 +308,8 @@ void snc_err(char *err_txt)
 	fprintf(stderr, "     %s\n", err_txt);
 	exit(1);
 }
-/*+************************************************************************
+
+/*+************************************************************************
 *  NAME: yyerror
 *
 *  CALLING SEQUENCE
@@ -328,7 +325,8 @@ void snc_err(char *err_txt)
 *-*************************************************************************/
 void yyerror(char *err)
 {
-	fprintf(stderr, "%s: line no. %d (%s)\n", err, line_num, src_file);
+	fprintf(stderr, "%s: line no. %d (%s)\n", err,
+		globals->line_num, globals->src_file);
 	return;
 }
 
@@ -350,7 +348,7 @@ void yyerror(char *err)
 *-*************************************************************************/
 void print_line_num(int line_num, char *src_file)
 {
-	if (line_opt)
+	if (globals->options->line)
 		printf("# line %d \"%s\"\n", line_num, src_file);
 	return;
 }

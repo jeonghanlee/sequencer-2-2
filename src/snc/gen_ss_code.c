@@ -31,9 +31,10 @@
 
 #include	"parse.h"
 #include	"proto.h"
+#include	"snc_main.h"
 
 #ifndef TRUE
-#define TRUE    1
+#define TRUE	1
 #define FALSE   0
 #endif  /*TRUE*/
 
@@ -70,8 +71,8 @@ static void gen_ef_func(int stmt_type, Expr *ep, Expr *sp, char *fname,
 	enum fcode func_code);
 static void gen_pv_func(int stmt_type, Expr *ep, Expr *sp,
 	char *fname, enum fcode func_code, int add_length, int num_params);
-static void gen_entry_handler(void);
-static void gen_exit_handler(void);
+static void gen_entry_handler(Expr *expr_list);
+static void gen_exit_handler(Expr *expr_list);
 static void gen_change_func(Expr *sp, Expr *ssp);
 static void gen_entry_func(Expr *sp, Expr *ssp);
 static void gen_exit_func(Expr *sp, Expr *ssp);
@@ -88,8 +89,6 @@ static int special_func(int stmt_type, Expr *ep, Expr *sp);
 *  RETURNS:
 *
 *  FUNCTION: Generate state set C code from tables.
-*
-*  NOTES: All inputs are external globals.
 *-*************************************************************************/
 /*#define	DEBUG		1*/
 
@@ -99,17 +98,16 @@ static int special_func(int stmt_type, Expr *ep, Expr *sp);
 #define	ENTRY_STMT	4
 #define	EXIT_STMT	5
 
-void gen_ss_code(void)
+void gen_ss_code(Parse *parse)
 {
-	extern Expr		*ss_list;
 	Expr			*ssp;
 	Expr			*sp;
 
 	/* Generate entry handler code */
-	gen_entry_handler();
+	gen_entry_handler(parse->entry_code_list);
 
 	/* For each state set ... */
-	for (ssp = ss_list; ssp != NULL; ssp = ssp->next)
+	for (ssp = parse->ss_list; ssp != NULL; ssp = ssp->next)
 	{
 		/* For each state ... */
 		for (sp = ssp->left; sp != NULL; sp = sp->next)
@@ -118,7 +116,7 @@ void gen_ss_code(void)
 			 sp->value, ssp->value);
 
 			/* Generate entry and exit functions */
-                        gen_change_func(sp, ssp);
+			gen_change_func(sp, ssp);
 
 			/* Generate function to set up for delay processing */
 			gen_delay_func(sp, ssp);
@@ -132,14 +130,14 @@ void gen_ss_code(void)
 	}
 
 	/* Generate exit handler code */
-	gen_exit_handler();
+	gen_exit_handler(parse->exit_code_list);
 }
-/* Generate functions for each state which perform the state entry and 
+/* Generate functions for each state which perform the state entry and 
   * exit actions. 
   */
 static void gen_change_func(Expr *sp, Expr *ssp)
 {
-        Expr		*ep;
+	Expr		*ep;
 	int isEntry = FALSE, isExit = FALSE;
 
 	/* Don't write code for an entry or exit function unless there
@@ -148,9 +146,9 @@ static void gen_change_func(Expr *sp, Expr *ssp)
 	for ( ep = sp->left; ep != NULL; ep = ep->next )
 	{
 		if ( ep->type == E_ENTRY )
-		       isEntry = TRUE;
+			isEntry = TRUE;
 		else if ( ep->type == E_EXIT )
-		       isExit = TRUE;
+			isExit = TRUE;
 	}
 	if (isEntry) gen_entry_func( sp, ssp );
 	if (isExit) gen_exit_func( sp, ssp );
@@ -158,7 +156,7 @@ static void gen_change_func(Expr *sp, Expr *ssp)
 
 static void gen_entry_func(Expr *sp, Expr *ssp)
 {	
-        Expr	*ep,			/* Entry expression */
+	Expr	*ep,			/* Entry expression */
 		*xp;			/* statement expression walker */
 	int	entryI =  0, line_num = -1;
 
@@ -174,13 +172,13 @@ static void gen_entry_func(Expr *sp, Expr *ssp)
 		{
 			printf("/* Entry %d: */\n", ++entryI);
 			for (xp = ep->right; xp != NULL; xp = xp->next)
-		        {
-		                 if (line_num != xp->line_num) 
-                                 { 
-                                         print_line_num(xp->line_num, xp->src_file); 
-                                         line_num = xp->line_num; 
-                                 } 
-				 eval_expr(ACTION_STMT, xp, sp, 1);
+			{
+				if (line_num != xp->line_num) 
+				{ 
+					print_line_num(xp->line_num, xp->src_file); 
+					line_num = xp->line_num; 
+				} 
+				eval_expr(ACTION_STMT, xp, sp, 1);
 			}
 		}
 	}
@@ -192,7 +190,7 @@ static void gen_entry_func(Expr *sp, Expr *ssp)
 
 static void gen_exit_func(Expr *sp, Expr *ssp)
 {	
-        Expr	*ep,			/* Entry expression */
+	Expr	*ep,			/* Entry expression */
 		*xp;			/* statement expression walker */
 	int	exitI =  0, line_num = -1;
 
@@ -209,12 +207,12 @@ static void gen_exit_func(Expr *sp, Expr *ssp)
  			 printf("/* Exit %d: */\n", ++exitI);
 			 for (xp = ep->right; xp != NULL; xp = xp->next)
 			 {
-		                 if (line_num != xp->line_num) 
-                                 { 
-                                         print_line_num(xp->line_num, xp->src_file); 
-                                         line_num = xp->line_num; 
-                                 } 
-				 eval_expr(ACTION_STMT, xp, sp, 1);
+				if (line_num != xp->line_num) 
+				{ 
+					print_line_num(xp->line_num, xp->src_file); 
+					line_num = xp->line_num; 
+				}
+				eval_expr(ACTION_STMT, xp, sp, 1);
 			 }
 		}
 	}
@@ -223,7 +221,7 @@ static void gen_exit_func(Expr *sp, Expr *ssp)
 	return;
 }
 
-/* Generate a function for each state that sets up delay processing:
+/* Generate a function for each state that sets up delay processing:
  * This function gets called prior to the event function to guarantee
  * that the initial delay value specified in delay() calls are used.
  * Each delay() call is assigned a unique id.  The maximum number of
@@ -234,16 +232,17 @@ static void gen_delay_func(Expr *sp, Expr *ssp)
 	Expr		*tp;
 
 	printf("\n/* Delay function for state \"%s\" in state set \"%s\" */\n",
-	 sp->value, ssp->value);
-	printf("static void D_%s_%s(SS_ID ssId, struct UserVar *pVar)\n{\n", ssp->value, sp->value);
+		sp->value, ssp->value);
+	printf("static void D_%s_%s(SS_ID ssId, struct UserVar *pVar)\n{\n",
+		ssp->value, sp->value);
 
 	/* For each transition: */
 	for (tp = sp->left; tp != NULL; tp = tp->next)
 	{
-       		if ( tp->type == E_WHEN )
+		if ( tp->type == E_WHEN )
 		{
-		        print_line_num(tp->line_num, tp->src_file);
-		        traverse_expr_tree(tp, E_FUNC, "delay", eval_delay, sp);
+			print_line_num(tp->line_num, tp->src_file);
+			traverse_expr_tree(tp, E_FUNC, "delay", eval_delay, sp);
 		}
 	}
 	printf("}\n");
@@ -259,7 +258,7 @@ static void eval_delay(Expr *ep, Expr *sp)
 	int		delay_id;
 
 #ifdef	DEBUG
-	fprintf(stderr, "eval_delay: type=%s\n", stype[ep->type]);
+	fprintf(stderr, "eval_delay: type=%s\n", expr_type_names[ep->type]);
 #endif	/*DEBUG*/
 
 	/* Generate 1-st part of function w/ 1-st 2 parameters */
@@ -273,9 +272,7 @@ static void eval_delay(Expr *ep, Expr *sp)
 	printf("));\n");
 }
 
-
-
-/* Generate action processing functions:
+/* Generate action processing functions:
    Each state has one action routine.  It's name is derived from the
    state set name and the state name.
 */
@@ -284,7 +281,6 @@ static void gen_action_func(Expr *sp, Expr *ssp)
 	Expr		*tp;
 	Expr		*ap;
 	int		trans_num;
-	extern int	line_num;
 
 	/* Action function declaration */
 	printf("\n/* Action function for state \"%s\" in state set \"%s\" */\n",
@@ -295,7 +291,7 @@ static void gen_action_func(Expr *sp, Expr *ssp)
 	/* "switch" statment based on the transition number */
 	printf("\tswitch(transNum)\n\t{\n");
 	trans_num = 0;
-	line_num = 0;
+	globals->line_num = 0;
 	/* For each transition ("when" statement) ... */
 	for (tp = sp->left; tp != NULL; tp = tp->next)
 	{
@@ -305,9 +301,9 @@ static void gen_action_func(Expr *sp, Expr *ssp)
 			printf("\t\t%s\n", (char *)tp->left);
 		}
 
-	        else if (tp->type == E_WHEN) 
+		else if (tp->type == E_WHEN) 
 		{
-		         /* "case" for each transition */ 
+			 /* "case" for each transition */ 
 		         printf("\tcase %d:\n", trans_num); 
 
 			 /* block within case permits local variables */
@@ -316,10 +312,10 @@ static void gen_action_func(Expr *sp, Expr *ssp)
 		         /* For each action statement insert action code */
 		         for (ap = tp->right; ap != NULL; ap = ap->next) 
                          { 
-		                 if (line_num != ap->line_num) 
+		                 if (globals->line_num != ap->line_num) 
                                  { 
                                          print_line_num(ap->line_num, ap->src_file); 
-                                         line_num = ap->line_num; 
+                                         globals->line_num = ap->line_num; 
                                  } 
                                  /* Evaluate statements */ 
                                  eval_expr(ACTION_STMT, ap, sp, 3); 
@@ -400,7 +396,8 @@ static int state_block_index_from_name(Expr *ssp, char *state_name)
 	}
 	return -1; /* State name non-existant */
 }
-/* Evaluate an expression.
+
+/* Evaluate an expression.
 */
 static void eval_expr(
 	int stmt_type,		/* EVENT_STMT, ACTION_STMT, or DELAY_STMT */
@@ -411,8 +408,6 @@ static void eval_expr(
 {
 	Expr		*epf;
 	int		nexprs;
-	extern int	reent_opt;
-	extern int	line_num;
 
 	if (ep == 0)
 		return;
@@ -429,25 +424,25 @@ static void eval_expr(
 			eval_expr(stmt_type, ep->right, sp, 0);
 		}
 		printf(";\n");
-		line_num += 1;
+		globals->line_num += 1;
 		break;
 	case E_CMPND:
 		indent(level);
 		printf("{\n");
-		line_num += 1;
+		globals->line_num += 1;
 		for (epf = ep->left; epf != 0;	epf = epf->next)
 		{
 			eval_expr(stmt_type, epf, sp, level+1);
 		}
 		indent(level);
 		printf("}\n");
-		line_num += 1;
+		globals->line_num += 1;
 		break;
 	case E_STMT:
 		indent(level);
 		eval_expr(stmt_type, ep->left, sp, 0);
 		printf(";\n");
-		line_num += 1;
+		globals->line_num += 1;
 		break;
 	case E_IF:
 	case E_WHILE:
@@ -458,7 +453,7 @@ static void eval_expr(
 			printf("while (");
 		eval_expr(stmt_type, ep->left, sp, 0);
 		printf(")\n");
-		line_num += 1;
+		globals->line_num += 1;
 		epf = ep->right;
 		if (epf->type == E_CMPND)
 			eval_expr(stmt_type, ep->right, sp, level);
@@ -474,7 +469,7 @@ static void eval_expr(
 		printf("; ");
 		eval_expr(stmt_type, ep->right->left, sp, 0);
 		printf(")\n");
-		line_num += 1;
+		globals->line_num += 1;
 		epf = ep->right->right;
 		if (epf->type == E_CMPND)
 			eval_expr(stmt_type, epf, sp, level);
@@ -484,7 +479,7 @@ static void eval_expr(
 	case E_ELSE:
 		indent(level);
 		printf("else\n");
-		line_num += 1;
+		globals->line_num += 1;
 		epf = ep->left;
 		/* Is it "else if" ? */
 		if (epf->type == E_IF || epf->type == E_CMPND)
@@ -497,7 +492,7 @@ static void eval_expr(
 		fprintf(stderr, "E_VAR: %s\n", ep->value);
 		fprintf(stderr, "ep->left is %s\n",ep->left ? "non-null" : "null");
 #endif	/*DEBUG*/
-		if(reent_opt)
+		if(globals->options->reent)
 		{	/* Make variables point to allocated structure */
 			Var		*vp;
 			vp = (Var *)ep->left;
@@ -518,7 +513,7 @@ static void eval_expr(
 	case E_BREAK:
 		indent(level);
 		printf("break;\n");
-		line_num += 1;
+		globals->line_num += 1;
 		break;
 	case E_FUNC:
 #ifdef	DEBUG
@@ -569,7 +564,7 @@ static void eval_expr(
 		break;
 	case E_TEXT:
 		printf("%s\n", (char *)ep->left);
-		line_num += 1;
+		globals->line_num += 1;
 		break;
 	default:
 		if (stmt_type == EVENT_STMT)
@@ -585,7 +580,6 @@ static void indent(int level)
 	while (level-- > 0)
 		printf("\t");
 }
-
 
 static enum fcode func_name_to_code(char *fname)
 {
@@ -746,7 +740,7 @@ static void gen_ef_func(
 
 	return;
 }
-
+
 /* Generate code for pv functions requiring a database variable.
  * The channel id (index into channel array) is substituted for the variable
  *
@@ -888,15 +882,14 @@ static void gen_pv_func(
 	return;
 }
 
-/* Generate entry handler code */
-static void gen_entry_handler(void)
+/* Generate entry handler code */
+static void gen_entry_handler(Expr *expr_list)
 {
-	extern Expr	*entry_code_list;
 	Expr		*ep;
 
 	printf("\n/* Entry handler */\n");
 	printf("static void entry_handler(SS_ID ssId, struct UserVar *pVar)\n{\n");
-	for (ep = entry_code_list; ep != 0; ep = ep->next)
+	for (ep = expr_list; ep != 0; ep = ep->next)
 	{
 		eval_expr(ENTRY_STMT, ep, (Expr *)NULL, 1);
 	}
@@ -904,14 +897,13 @@ static void gen_entry_handler(void)
 }
 
 /* Generate exit handler code */
-static void gen_exit_handler(void)
+static void gen_exit_handler(Expr *expr_list)
 {
-	extern Expr	*exit_code_list;
 	Expr		*ep;
 
 	printf("\n/* Exit handler */\n");
 	printf("static void exit_handler(SS_ID ssId, struct UserVar *pVar)\n{\n");
-	for (ep = exit_code_list; ep != 0; ep = ep->next)
+	for (ep = expr_list; ep != 0; ep = ep->next)
 	{
 		eval_expr(EXIT_STMT, ep, (Expr *)NULL, 1);
 	}
