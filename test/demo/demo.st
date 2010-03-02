@@ -64,7 +64,6 @@ monitor hiLimit;
 evflag	hiFlag;
 sync	hiLimit  to hiFlag;
 
-#if 0
 double  x[2][100];
 assign  x to {"apple", "orange"};
 monitor x;
@@ -73,15 +72,12 @@ sync	x[0] xFlag;
 
 %%TS_STAMP t;
 long    i;
-#endif
 
 /* temporary timer stuff */
-#if 0
 double frac;
 long done;
 %%void doStuff( double frac );
 %%double getFractionalSecond();
-#endif
 
 /* entry handler (called in context of first state-set before other threads
    are created) */
@@ -170,7 +166,6 @@ ss limit {
     }
 }
 
-#if 0
 /* apples and oranges */
 ss apples {
     state init {
@@ -188,9 +183,7 @@ ss apples {
 	} state init
     }
 }
-#endif
 
-#if 0
 /* test timers */
 ss timer {
 
@@ -215,9 +208,14 @@ ss timer {
 	    done = FALSE;
 	} state DONE
     }
+
+    state DONE {
+	when (done) {
+	} state DONE
+    }
 }
 
-%%#include <sys/time.h>
+%%#include <time.h>
 
 %{
 
@@ -232,4 +230,3 @@ void doStuff( double frac ) {
 }
 
 }%
-#endif
