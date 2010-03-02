@@ -34,8 +34,9 @@
 #include	<stdlib.h>
 #include	<string.h>
 
-#include	"parse.h"	/* defines linked list structures */
-#include	"proto.h"	/* function prototypes */
+#include	"parse.h"
+#include	"phase2.h"
+#include	"snc_main.h"
 
 #ifndef	TRUE
 #define	TRUE	1

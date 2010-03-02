@@ -38,7 +38,10 @@
 #include	<string.h>
 
 #include	"parse.h"
-#include	"proto.h"	/* function prototypes */
+#include	"phase2.h"
+#include	"gen_ss_code.h"
+#include	"gen_tables.h"
+#include	"snc_main.h"
 
 #ifndef TRUE
 #define TRUE    1

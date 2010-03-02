@@ -28,5 +28,6 @@ extern Globals *globals;
 
 void yyerror(char *err);
 void snc_err(char *err_txt);
+void print_line_num(int line_num, char *src_file);
 
 #endif	/*INCLsncmainh*/

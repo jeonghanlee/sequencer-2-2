@@ -30,7 +30,7 @@
 #include	<string.h>
 
 #include	"parse.h"
-#include	"proto.h"
+#include	"phase2.h"
 #include	"snc_main.h"
 
 #ifndef TRUE

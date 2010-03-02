@@ -29,7 +29,6 @@
 #include	<stdlib.h>
 #include	<string.h>
 
-#include	"proto.h"
 #include	"snc_main.h"
 
 #ifndef	TRUE
@@ -38,6 +37,8 @@
 #endif
 
 extern char	*sncVersion;	/* snc version and date created */
+
+extern void compile(void);	/* defined in snc.y */
 
 static Options	default_options =
 {

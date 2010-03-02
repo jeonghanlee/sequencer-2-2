@@ -35,7 +35,8 @@
 
 #include	"seqCom.h"
 #include	"parse.h"
-#include	"proto.h"
+#include	"phase2.h"
+#include	"snc_main.h"
 
 typedef struct eval_event_mask_args {
 	bitMask	*event_words;
