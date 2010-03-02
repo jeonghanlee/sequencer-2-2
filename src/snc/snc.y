@@ -89,8 +89,12 @@ static void pp_code(char *line, char *fname);
 %token	IF ELSE WHILE FOR BREAK
 %token	PP_SYMBOL CR
 %type	<ival>	type
+%type	<pchar>	program_name program_param
 %type	<pchar>	subscript binop asgnop unop
-%type	<pexpr> state_set_list state_set state_list state transition_list transition
+%type	<pexpr> global_entry_code global_exit_code
+%type	<pexpr> optional_global_c global_c
+%type	<pexpr> state_set_list state_set state_list state
+%type	<pexpr> transition_list transition
 %type	<pexpr> expr compound_expr assign_list bracked_expr
 %type	<pexpr> statement stmt_list compound_stmt if_stmt else_stmt while_stmt
 %type	<pexpr> for_stmt escaped_c_list local_decl_stmt
@@ -111,17 +115,27 @@ static void pp_code(char *line, char *fname);
 %%	/* Begin rules */
 
 state_program 	/* define a state program */
-:	program_name definitions state_set_list			{ program($3); }
-|	program_name definitions state_set_list global_c	{ program($3); }
-|	pp_codes program_name definitions state_set_list	{ program($4); }
-|	pp_codes program_name definitions state_set_list global_c{ program($4); }
-|	error { snc_err("state program"); }
+:	optional_pp_codes	/* $1 */
+	program_name		/* $2 */
+	program_param		/* $3 */
+	definitions		/* $4 */
+	global_entry_code	/* $5 */
+	state_set_list		/* $6 */
+	global_exit_code	/* $7 */
+	optional_pp_codes	/* $8 */
+	optional_global_c	/* $9 */
+{
+	program($2,$3,$5,$6,$7,$9);
+}
 ;
 
 program_name 	/* program name */
-:	PROGRAM NAME { program_name($2, ""); }
-|	PROGRAM NAME L_PAREN STRING R_PAREN { program_name($2, $4); }
+:	PROGRAM NAME			{ $$ = $2; }
 ;
+
+program_param
+:					{ $$ = ""; }
+|	L_PAREN STRING R_PAREN		{ $$ = $2; }
 
 definitions 	/* definitions block */
 :	defn_stmt
@@ -240,6 +254,16 @@ option_stmt	/* option +/-<option>;  e.g. option +a; */
 |	OPTION MINUS NAME SEMI_COLON	{ option_stmt($3, FALSE); }
 ;
 
+global_entry_code
+:						{ $$ = 0; }
+|	ENTRY L_BRACKET stmt_list R_BRACKET	{ $$ = $3; }
+;
+
+global_exit_code
+:						{ $$ = 0; }
+|	EXIT L_BRACKET stmt_list R_BRACKET	{ $$ = $3; }
+;
+
 state_set_list 	/* a program body is one or more state sets */
 :	state_set			{ $$ = $1; }
 |	state_set_list state_set	{ $$ = link_expr($1, $2); }
@@ -248,10 +272,6 @@ state_set_list 	/* a program body is one or more state sets */
 state_set 	/* define a state set */
 :	STATE_SET NAME L_BRACKET state_list R_BRACKET
 				{ $$ = expression(E_SS, $2, $4, 0); }
-|	ENTRY L_BRACKET stmt_list R_BRACKET
-				{ entry_code($3); $$ = 0; }
-|	EXIT L_BRACKET stmt_list R_BRACKET
-				{ exit_code($3); $$ = 0; }
 |	pp_code				{ $$ = 0; }
 |	error { snc_err("state set"); }
 ;
@@ -285,7 +305,7 @@ state_option /* An option for a state */
 ;
 
 condition_list /* Conditions and resulting actions */
-:	entry_list transition_list exit_list	
+:	entry_list transition_list exit_list
 				{ $$ = link_expr( link_expr($1,$2), $3 ); }
 |	error			{ snc_err("state condition list"); }
 ;
@@ -454,13 +474,21 @@ pp_code		/* pre-processor code (e.g. # 1 "test.st") */
 |	PP_SYMBOL STRING CR		{ /* Silently consume #pragma lines */ }
 ;
 
+optional_pp_codes
+:	/* optional */
+|	pp_codes
+
 pp_codes	/* one or more pp_code */
 :	pp_code
 |	pp_codes pp_code
 ;
 
+optional_global_c
+:	/* optional */		{ $$ = 0; }
+|	global_c		{ $$ = $1; }
+
 global_c
-:	escaped_c_list		{ global_c_stmt($1); }
+:	escaped_c_list		{ $$ = $1; }
 ;
 
 escaped_c_list

@@ -159,8 +159,14 @@ typedef struct parse Parse;
 
 extern char *expr_type_names[E_NUM_TYPES];
 
-void program(Expr *prog_list);
-void program_name(char *pname, char *pparam);
+void program(
+	char *pname,
+	char *pparam,
+	Expr *entry_list,
+	Expr *prog_list,
+	Expr *exit_list,
+	Expr *c_list
+);
 void assign_single(
 	char	*name,		/* ptr to variable name */
 	char	*db_name	/* ptr to db name */
@@ -201,11 +207,6 @@ void defn_c_stmt(
 void option_stmt(
 	char	*option,	/* "a", "r", ... */
 	int	value		/* TRUE means +, FALSE means - */
-);
-int entry_code(Expr *ep);
-int exit_code(Expr *ep);
-void global_c_stmt(
-	Expr	*c_list		/* ptr to C code */
 );
 void add_var(Var *vp);
 Var *find_var(char *name);

@@ -49,41 +49,30 @@ static void add_chan(Chan *cp);
 
 static Parse global_parse = {0,0,0,0,0,0,0,0,0,0,0};
 
-Parse *parse = &global_parse;
+static Parse *parse = &global_parse;
 
 /* Parsing "program" statement */
-void program(Expr *prog_list)
+void program(
+	char *pname,
+	char *pparam,
+	Expr *entry_list,
+	Expr *prog_list,
+	Expr *exit_list,
+	Expr *c_list
+)
 {
+	parse->prog_name = pname;
+	parse->prog_param = pparam;
+	parse->entry_code_list = entry_list;
 	parse->ss_list = prog_list;
+	parse->exit_code_list = exit_list;
+	parse->global_c_list = c_list;
 #ifdef	DEBUG
 	fprintf(stderr, "----Phase2---\n");
 #endif	/*DEBUG*/
 	phase2(parse);
 
 	exit(0);
-}
-
-/*+************************************************************************
-*  NAME: program_name
-*
-*  CALLING SEQUENCE: none
-*	type		argument	I/O	description
-*	-----------------------------------------------------------------
-*	char		*pname		I	ptr to program name string
-*
-*  RETURNS:
-*
-*  FUNCTION: Save program name for global use.
-*
-*-*************************************************************************/
-void program_name(char *pname, char *pparam)
-{
-	parse->prog_name = pname;
-	parse->prog_param = pparam;
-#ifdef	DEBUG
-	fprintf(stderr, "program name = %s\n", parse->prog_name);
-#endif	/*DEBUG*/
-	return;
 }
 
 /* Parsing a declaration statement */
@@ -657,17 +646,6 @@ void defn_c_stmt(
 	return;
 }
 
-/* Global C code (follows state program) */
-void global_c_stmt(
-	Expr	*c_list		/* ptr to C code */
-)
-{
-	parse->global_c_list = c_list;
-
-	return;
-}
-
-
 /* Add a variable to the variable linked list */
 void add_var(Var *vp)
 {
@@ -704,20 +682,6 @@ static void add_chan(Chan *cp)
 		parse->chan_tail->next = cp;
 	parse->chan_tail = cp;
 	cp->next = NULL;
-}
-
-/* Entry code */
-int entry_code(Expr *ep)
-{
-	parse->entry_code_list = ep;
-	return 0;
-}
-
-/* Exit code */
-int exit_code(Expr *ep)
-{
-	parse->exit_code_list = ep;
-	return 0;
 }
 
 /* Build an expression list (hierarchical):
