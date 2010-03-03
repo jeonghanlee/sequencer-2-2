@@ -98,9 +98,9 @@ static void pp_code(char *line, char *fname);
 %type	<pexpr> expr compound_expr assign_list bracked_expr
 %type	<pexpr> statement stmt_list compound_stmt if_stmt else_stmt while_stmt
 %type	<pexpr> for_stmt escaped_c_list local_decl_stmt
-%type   <pexpr> state_option_list state_option
-%type   <pexpr> condition_list
-%type   <pexpr> entry_list exit_list entry exit
+%type	<pexpr> state_option_list state_option
+%type	<pexpr> condition_list
+%type	<pexpr> entry_list exit_list entry exit
 /* precedence rules for expr evaluation */
 
 %right	EQUAL COMMA
@@ -227,7 +227,7 @@ type		/* types for variables defined in SNL */
 |	DOUBLE		{ $$ = V_DOUBLE; }
 |	STRING_DECL	{ $$ = V_STRING; }
 |	EVFLAG		{ $$ = V_EVFLAG; }
-|       error { snc_err("type specifier"); }
+|	error { snc_err("type specifier"); }
 ;
 
 sync_stmt	/* sync <variable> <event flag> */
@@ -271,26 +271,26 @@ state_set_list 	/* a program body is one or more state sets */
 
 state_set 	/* define a state set */
 :	STATE_SET NAME L_BRACKET state_list R_BRACKET
-				{ $$ = expression(E_SS, $2, $4, 0); }
+					{ $$ = expression(E_SS, $2, $4, 0); }
 |	pp_code				{ $$ = 0; }
-|	error { snc_err("state set"); }
+|	error				{ snc_err("state set"); }
 ;
 
 state_list /* define a state set body (one or more states) */
 :	state				{ $$ = $1; }
 |	state_list state		{ $$ = link_expr($1, $2); }
-|	error { snc_err("state list"); }
+|	error				{ snc_err("state list"); }
 ;
 
 state	/* a block that defines a single state */
 : 	STATE NAME L_BRACKET state_option_list condition_list R_BRACKET
 			{ $$ = expression(E_STATE, $2, $5, $4); }
 |	pp_code				{ $$ = 0; }
-|	error { snc_err("state block"); }
+|	error				{ snc_err("state block"); }
 ;
 
 state_option_list /* A list of options for a single state */
-:       /* Optional */                  { $$ = NULL; }
+:	/* Optional */			{ $$ = NULL; }
 |	state_option			{ $$ = $1; }
 |	state_option_list state_option	{ $$ = link_expr($1, $2); }
 |	error				{ snc_err("state option list"); }
@@ -323,33 +323,33 @@ entry_list
 exit_list
 :	/* optional */		{ $$ = NULL; }
 |	exit			{ $$ = $1; }
-|	exit_list exit 	        { $$ = link_expr( $1, $2 ); }
+|	exit_list exit		{ $$ = link_expr( $1, $2 ); }
 ;
 
 entry	/* On entry to a state, do this */
 :	ENTRY L_BRACKET stmt_list R_BRACKET
-			        { $$ = expression( E_ENTRY, "entry", 0, $3 ); } 
-|	error		        { snc_err("entry block"); }
+				{ $$ = expression( E_ENTRY, "entry", 0, $3 ); } 
+|	error			{ snc_err("entry block"); }
 ;
 
 exit	/* On exit from a state, do this */
 :	EXIT L_BRACKET stmt_list R_BRACKET
-			        { $$ = expression( E_EXIT, "exit", 0, $3 ); } 
-|	error	 	        { snc_err("exit block"); }
+				{ $$ = expression( E_EXIT, "exit", 0, $3 ); } 
+|	error			{ snc_err("exit block"); }
 ;
 
 transition_list	/* all transitions for one state */
 :	transition			{ $$ = $1; }
 |	transition_list transition	{ $$ = link_expr($1, $2); }
-|	error                           { snc_err("when transition list"); }
+|	error				{ snc_err("when transition list"); }
 ;
 
 transition /* define a transition condition and action */
 :	WHEN L_PAREN expr R_PAREN L_BRACKET stmt_list R_BRACKET STATE NAME
-			                { $$ = expression(E_WHEN, $9, $3, $6); }
+					{ $$ = expression(E_WHEN, $9, $3, $6); }
 |	local_decl_stmt			{ $$ = $1; }
 |	pp_code				{ $$ = 0; }
-|       error                           { snc_err("when transition block"); }
+|	error				{ snc_err("when transition block"); }
 ;
 
 expr	/* general expr: e.g. (-b+2*a/(c+d)) != 0 || (func1(x,y) < 5.0) */

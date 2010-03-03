@@ -732,7 +732,7 @@ Expr *link_expr(
 #endif
 
 	if (ep1 == 0 && ep2 == 0)
-	        return NULL;
+		return NULL;
 	else if (ep1 == 0)
 		return ep2; 
 	else if (ep2 == 0)

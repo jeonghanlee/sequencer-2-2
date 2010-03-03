@@ -354,7 +354,7 @@ static void encode_state_options(Expr *sp)
 		for (pc = ep->value; *pc != '\0'; pc++)
 		{
 			/* Option not to reset timers on state entry from self */
-			if ( *pc == 't' ) 
+			if ( *pc == 't' )
 			{
 				if ( optionSpec & OPT_NORESETTIMERS )
 					duplicate = TRUE;

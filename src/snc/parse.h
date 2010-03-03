@@ -152,10 +152,10 @@ typedef struct parse Parse;
 #define	E_BREAK		23		/* break stmt */
 #define	E_COMMA		24		/* expr , expr */
 #define E_DECL		25		/* local declaration statement */
-#define E_ENTRY         26              /* entry statement */
-#define E_EXIT          27              /* exit statement */
-#define E_OPTION        28              /* state option statement */
-#define E_NUM_TYPES     29              /* number of expression types */
+#define E_ENTRY		26		/* entry statement */
+#define E_EXIT		27		/* exit statement */
+#define E_OPTION	28		/* state option statement */
+#define E_NUM_TYPES	29		/* number of expression types */
 
 extern char *expr_type_names[E_NUM_TYPES];
 

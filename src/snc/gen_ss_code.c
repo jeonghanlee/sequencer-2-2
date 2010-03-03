@@ -303,30 +303,30 @@ static void gen_action_func(Expr *sp, Expr *ssp)
 
 		else if (tp->type == E_WHEN) 
 		{
-			 /* "case" for each transition */ 
-		         printf("\tcase %d:\n", trans_num); 
+			/* "case" for each transition */ 
+			printf("\tcase %d:\n", trans_num); 
 
-			 /* block within case permits local variables */
-		         printf("\t\t{\n"); 
+			/* block within case permits local variables */
+			printf("\t\t{\n"); 
 
-		         /* For each action statement insert action code */
-		         for (ap = tp->right; ap != NULL; ap = ap->next) 
-                         { 
-		                 if (globals->line_num != ap->line_num) 
-                                 { 
-                                         print_line_num(ap->line_num, ap->src_file); 
-                                         globals->line_num = ap->line_num; 
-                                 } 
-                                 /* Evaluate statements */ 
-                                 eval_expr(ACTION_STMT, ap, sp, 3); 
-			 } 
+			/* For each action statement insert action code */
+			for (ap = tp->right; ap != NULL; ap = ap->next) 
+			{ 
+				if (globals->line_num != ap->line_num) 
+				{ 
+					print_line_num(ap->line_num, ap->src_file); 
+					globals->line_num = ap->line_num; 
+				} 
+				/* Evaluate statements */ 
+				eval_expr(ACTION_STMT, ap, sp, 3); 
+			} 
 
-			 /* end of block */
-		         printf("\t\t}\n"); 
+			/* end of block */
+			printf("\t\t}\n"); 
 
-                         /* end of case */ 
-                         printf("\t\treturn;\n"); 
-                         trans_num++;
+			/* end of case */ 
+			printf("\t\treturn;\n"); 
+			trans_num++;
 		}
 	}
 	/* end of switch stmt */
