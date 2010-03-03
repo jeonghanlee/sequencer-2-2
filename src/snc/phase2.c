@@ -227,7 +227,7 @@ static void connect_variable(Expr *ep, void *dummy)
 #ifdef	DEBUG
 	fprintf(stderr, "connect_variable: \"%s\", line %d\n", ep->value, ep->line_num);
 #endif	/*DEBUG*/
-	vp = (Var *)find_var(ep->value);
+	vp = find_var(ep->value);
 #ifdef	DEBUG
 	fprintf(stderr, "\t \"%s\" was %s\n", ep->value, vp ? "found" : "not found" );
 #endif	/*DEBUG*/

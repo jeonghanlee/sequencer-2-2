@@ -112,7 +112,7 @@ void decl_stmt(
 	fprintf(stderr, "length1=%d, length2=%d\n", length1, length2);
 #endif	/*DEBUG*/
 	/* See if variable already declared */
-	vp = (Var *)find_var(name);
+	vp = find_var(name);
 	if (vp != 0)
 	{
 		fprintf(stderr, "variable %s already declared, line %d\n",
@@ -188,7 +188,7 @@ void assign_single(
 	fprintf(stderr, "assign %s to \"%s\";\n", name, db_name);
 #endif	/*DEBUG*/
 	/* Find the variable */
-	vp = (Var *)find_var(name);
+	vp = find_var(name);
 	if (vp == 0)
 	{
 		fprintf(stderr, "assign: variable %s not declared, line %d\n",
@@ -231,7 +231,7 @@ void assign_subscr(
 	fprintf(stderr, "assign %s[%s] to \"%s\";\n", name, subscript, db_name);
 #endif	/*DEBUG*/
 	/* Find the variable */
-	vp = (Var *)find_var(name);
+	vp = find_var(name);
 	if (vp == 0)
 	{
 		fprintf(stderr, "assign: variable %s not declared, line %d\n",
@@ -304,7 +304,7 @@ void assign_list(
 	fprintf(stderr, "assign %s to {", name);
 #endif	/*DEBUG*/
 	/* Find the variable */
-	vp = (Var *)find_var(name);
+	vp = find_var(name);
 	if (vp == 0)
 	{
 		fprintf(stderr, "assign: variable %s not declared, line %d\n",
@@ -419,7 +419,7 @@ void monitor_stmt(
 #endif	/*DEBUG*/
 
 	/* Find the variable */
-	vp = (Var *)find_var(name);
+	vp = find_var(name);
 	if (vp == 0)
 	{
 		fprintf(stderr, "assign: variable %s not declared, line %d\n",
@@ -484,7 +484,7 @@ void sync_stmt(char *name, char *subscript, char *ef_name)
 	 name, subscript?subscript:"(no subscript)", ef_name);
 #endif	/*DEBUG*/
 
-	vp = (Var *)find_var(name);
+	vp = find_var(name);
 	if (vp == 0)
 	{
 		fprintf(stderr, "sync: variable %s not declared, line %d\n",
@@ -501,7 +501,7 @@ void sync_stmt(char *name, char *subscript, char *ef_name)
 	}
 
 	/* Find the event flag varible */
-	vp = (Var *)find_var(ef_name);
+	vp = find_var(ef_name);
 	if (vp == 0 || vp->type != V_EVFLAG)
 	{
 		fprintf(stderr, "sync: e-f variable %s not declared, line %d\n",
@@ -553,7 +553,7 @@ void syncq_stmt(char *name, char *subscript, char *ef_name, char *maxQueueSize)
 #endif	/*DEBUG*/
 
 	/* Find the variable and check it's assigned */
-	vp = (Var *)find_var(name);
+	vp = find_var(name);
 	if (vp == 0)
 	{
 		fprintf(stderr, "syncQ: variable %s not declared, line %d\n",
@@ -578,7 +578,7 @@ void syncq_stmt(char *name, char *subscript, char *ef_name, char *maxQueueSize)
 	}
 
 	/* Find the event flag variable */
-	efp = (Var *)find_var(ef_name);
+	efp = find_var(ef_name);
 	if (efp == 0 || efp->type != V_EVFLAG)
 	{
 		fprintf(stderr, "syncQ: e-f variable %s not declared, "
@@ -705,7 +705,7 @@ Expr *expression(
 		ep, expr_type_names[type], value, left, right);
 #endif	/*DEBUG*/
 	/* Fill in the structure */
-	ep->next = (Expr *)0;
+	ep->next = 0;
 	ep->last = ep;
 	ep->type = type;
 	ep->value = value;
