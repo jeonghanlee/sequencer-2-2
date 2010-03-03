@@ -32,6 +32,7 @@
 #include	<stdio.h>
 #include	<stdlib.h>
 #include	<string.h>
+#include	<assert.h>
 
 #include	"seqCom.h"
 #include	"parse.h"
@@ -346,38 +347,30 @@ static void encode_state_options(Expr *sp)
 	   check the option character is recognized and if so code it's bit mask */
 	for (ep = sp->right; ep != NULL; ep = ep->next )
 	{
-		for (pc = (char*)ep->left; *pc != '\0'; pc++)
+		char *plusminus = ep->left->value;
+		int opt_minus = plusminus[0] == '-';
+
+		assert(ep->left->type == E_X);
+		for (pc = ep->value; *pc != '\0'; pc++)
 		{
-			char *right = (char *)ep->right;
 			/* Option not to reset timers on state entry from self */
 			if ( *pc == 't' ) 
 			{
 				if ( optionSpec & OPT_NORESETTIMERS )
 					duplicate = TRUE;
-				if ( strchr(right,'+') )
+				if (opt_minus)
 				{
-					/* No contradictions */
-					/* Default, no bit to code */ 
-				}
-				else if ( strchr(right,'-') ) 
-				{
-					/* No contradictions */ 
 					printf(" | OPT_NORESETTIMERS" );
 					options |= OPT_NORESETTIMERS;
 				}
 				optionSpec |=  OPT_NORESETTIMERS;
-		        }
+			}
 			else if ( *pc == 'e' )
-		        {
+			{
 				if ( optionSpec & OPT_DOENTRYFROMSELF )
 					duplicate = TRUE;
-				if ( strchr(right,'+') )
-					/* No contradictions */
-					/* Default, no opt bit to code */
-					;
-				else if ( strchr(right,'-') )
+				if (opt_minus)
 				{
-					/* No contradictions */
 					printf(" | OPT_DOENTRYFROMSELF" );
 					options |= OPT_DOENTRYFROMSELF;
 				}
@@ -387,13 +380,8 @@ static void encode_state_options(Expr *sp)
 			{
 				if ( optionSpec & OPT_DOEXITTOSELF )
 					duplicate = TRUE;
-				if ( strchr(right,'+') )
-					/* No contradictions */ 
-					/* Default, no opt bit to code */
-					;
-				else if ( strchr(right,'-') )
+				if (opt_minus)
 				{
-					/* No contradictions */
 					printf(" | OPT_DOEXITTOSELF" );
 					options |= OPT_DOEXITTOSELF;
 				}
@@ -402,7 +390,7 @@ static void encode_state_options(Expr *sp)
 			else
 			{
 				sprintf(errMsg,"Unrecognized option in state %s: %s%c",
-					sp->value, right, *pc);
+					sp->value, plusminus, *pc);
 				snc_err(errMsg);
 			}
 
@@ -417,7 +405,7 @@ static void encode_state_options(Expr *sp)
 			{
 				sprintf(errMsg,
 					"Contradictory option or option out of order %s%c in state %s:\n\t\t %s",
-					right,*pc,sp->value,suppl);
+					plusminus,*pc,sp->value,suppl);
 				snc_err(errMsg);
 			}
 

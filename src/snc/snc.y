@@ -94,7 +94,7 @@ static void pp_code(char *line, char *fname);
 %type	<pexpr> global_entry_code global_exit_code
 %type	<pexpr> optional_global_c global_c
 %type	<pexpr> state_set_list state_set state_list state
-%type	<pexpr> transition_list transition
+%type	<pexpr> transition_list transition state_option_value
 %type	<pexpr> expr compound_expr assign_list bracked_expr
 %type	<pexpr> statement stmt_list compound_stmt if_stmt else_stmt while_stmt
 %type	<pexpr> for_stmt escaped_c_list local_decl_stmt
@@ -209,9 +209,9 @@ local_decl_stmt	/* local variable declarations (not yet arrays... but easy
 		   in escaped C code */
 		/* ### this is not working yet; don't use it */
 :	type NAME SEMI_COLON
-			{ $$ = expression(E_TEXT, "", (Expr *)"int i;", 0); }
+		{ $$ = expression(E_TEXT, $2, 0, 0); }
 |	type NAME EQUAL NUMBER SEMI_COLON
-			{ $$ = expression(E_TEXT, "", (Expr *)"int i=0;", 0); }
+		{ $$ = expression(E_TEXT, $2, expression(E_CONST, $4, 0, 0), 0); }
 ;
 
 type		/* types for variables defined in SNL */
@@ -297,12 +297,16 @@ state_option_list /* A list of options for a single state */
 ;
 
 state_option /* An option for a state */
-:	OPTION PLUS NAME SEMI_COLON	
-                { $$ = expression(E_OPTION,"stateoption",(Expr *)$3,(Expr *)"+"); }
-|	OPTION MINUS NAME SEMI_COLON	
-		{ $$ = expression(E_OPTION,"stateoption",(Expr *)$3,(Expr *)"-"); }
-|       error	{ snc_err("state option specifier"); }
+:	OPTION state_option_value NAME SEMI_COLON
+		{ $$ = expression(E_OPTION,$3,$2,0); }
+		/* $$ = expression(E_OPTION,"stateoption",$3,"+"); */
+		/* $$ = expression(E_OPTION,"stateoption",$3,"-"); */
+|	error	{ snc_err("state option specifier"); }
 ;
+
+state_option_value
+:	PLUS	{ $$ = expression(E_X, "+", 0, 0); }
+|	MINUS	{ $$ = expression(E_X, "-", 0, 0); }
 
 condition_list /* Conditions and resulting actions */
 :	entry_list transition_list exit_list
@@ -445,7 +449,7 @@ statement
 |	else_stmt			{ $$ = $1; }
 |	while_stmt			{ $$ = $1; }
 |	for_stmt			{ $$ = $1; }
-|	C_STMT				{ $$ = expression(E_TEXT, "", (Expr *)$1, 0); }
+|	C_STMT				{ $$ = expression(E_TEXT, $1, 0, 0); }
 |	pp_code				{ $$ = 0; }
 /* |	error 				{ snc_err("action statement"); } */
 ;
@@ -492,8 +496,8 @@ global_c
 ;
 
 escaped_c_list
-:	C_STMT			{ $$ = expression(E_TEXT, "", (Expr *)$1, 0); }
-|	escaped_c_list C_STMT	{ $$ = link_expr($1, expression(E_TEXT, "", (Expr *)$2, 0)); }
+:	C_STMT			{ $$ = expression(E_TEXT, $1, 0, 0); }
+|	escaped_c_list C_STMT	{ $$ = link_expr($1, expression(E_TEXT, $2, 0, 0)); }
 ;
 %%
 #include	"snc_lex.c"

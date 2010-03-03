@@ -298,7 +298,7 @@ static void gen_action_func(Expr *sp, Expr *ssp)
 		/* local declarations are handled as text */
 		if (tp->type == E_TEXT)
 		{
-			printf("\t\t%s\n", (char *)tp->left);
+			printf("\t\t%s\n", tp->value);
 		}
 
 		else if (tp->type == E_WHEN) 
@@ -563,7 +563,7 @@ static void eval_expr(
 		printf("]");
 		break;
 	case E_TEXT:
-		printf("%s\n", (char *)ep->left);
+		printf("%s\n", ep->value);
 		globals->line_num += 1;
 		break;
 	default:

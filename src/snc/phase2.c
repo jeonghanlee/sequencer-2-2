@@ -36,6 +36,7 @@
 #include	<stdio.h>
 #include	<stdlib.h>
 #include	<string.h>
+#include	<assert.h>
 
 #include	"parse.h"
 #include	"phase2.h"
@@ -384,8 +385,9 @@ static void gen_defn_c_code(Expr *defn_c_list)
 		printf("\n/* C code definitions */\n");
 		for (; ep != NULL; ep = ep->next)
 		{
+			assert(ep->type == E_TEXT);
 			print_line_num(ep->line_num, ep->src_file);
-			printf("%s\n", (char *)ep->left);
+			printf("%s\n", ep->value);
 		}
 	}
 	return;
@@ -402,7 +404,8 @@ static void gen_global_c_code(Expr *global_c_list)
 		print_line_num(ep->line_num, ep->src_file);
 		for (; ep != NULL; ep = ep->next)
 		{
-			printf("%s\n", (char *)ep->left);
+			assert(ep->type == E_TEXT);
+			printf("%s\n", ep->value);
 		}
 	}
 	return;
