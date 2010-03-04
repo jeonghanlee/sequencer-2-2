@@ -27,6 +27,13 @@
 ** the run-time code implementation.
 */
 
+struct	scope
+{
+	struct	var_list *var_list;
+	struct	scope *next;
+};
+typedef struct	scope Scope;
+
 struct	expression			/* Expression block */
 {
 	struct	expression *next;	/* link to next expression */
@@ -54,7 +61,7 @@ struct	var				/* Variable or function definition */
 	int	queued;			/* whether queued via syncQ */
 	int	maxQueueSize;		/* max syncQ queue size */
 	int	queueIndex;		/* index in syncQ queue array */
-
+	int	line_num;		/* line number */
 };
 typedef	struct	var Var;
 
@@ -77,18 +84,28 @@ struct	db_chan				/* DB channel assignment info */
 typedef	struct	db_chan Chan;
 /* Note: Only one of db_name or db_name_list can have a non-zero value */
 
+struct chan_list
+{
+	Chan	*first, *last;
+};
+typedef struct	chan_list ChanList;
+
+struct var_list
+{
+	Var	*first, *last;
+};
+typedef struct	var_list VarList;
+
 struct parse				/* result of parsing */
 {
 	char	*prog_name;		/* ptr to program name (string) */
 	char	*prog_param;		/* parameter string for program stmt */
-	Expr	*defn_c_list;		/* definition C code list */
-	Expr	*ss_list;		/* Start of state set list */
-	Expr	*entry_code_list;	/* Start of entry code list */
-	Expr	*exit_code_list;	/* Start of exit code list */
-	Var	*global_var_list;	/* start of global variable list */
-	Var	*global_var_tail;	/* tail of global variable list */
-	Chan	*chan_list;		/* start of DB channel list */
-	Chan	*chan_tail;		/* tail of DB channel list */
+	Expr	*global_defn_list;	/* global definition list */
+	Expr	*ss_list;		/* state set list */
+	Expr	*entry_code_list;	/* entry code list */
+	Expr	*exit_code_list;	/* exit code list */
+	Scope	*global_scope;		/* global scope */
+	ChanList *chan_list;		/* channel list */
 	Expr	*global_c_list;		/* global C code following state program */
 	int	num_channels;		/* number of db channels */
 	int	num_events;		/* number of event flags */
@@ -101,6 +118,10 @@ typedef struct parse Parse;
 #define	allocExpr()		(Expr *)calloc(1, sizeof(Expr));
 #define	allocVar()		(Var *)calloc(1, sizeof(Var));
 #define	allocChan()		(Chan *)calloc(1, sizeof(Chan));
+#define	allocVarList()		(VarList *)calloc(1, sizeof(VarList));
+#define	allocChanList()		(ChanList *)calloc(1, sizeof(ChanList));
+#define	allocScope()		(Scope *)calloc(1, sizeof(Scope));
+#define	allocParse()		(Parse *)calloc(1, sizeof(Parse));
 
 /* Variable types */
 #define	V_NONE		0		/* not defined */
@@ -155,43 +176,30 @@ typedef struct parse Parse;
 #define E_ENTRY		26		/* entry statement */
 #define E_EXIT		27		/* exit statement */
 #define E_OPTION	28		/* state option statement */
-#define E_NUM_TYPES	29		/* number of expression types */
+#define E_ASSIGN	29		/* assign statement */
+#define E_MONITOR	30		/* monitor statement */
+#define E_SYNC		31		/* sync statement */
+#define E_SYNCQ		32		/* syncq statement */
+#define E_NUM_TYPES	33		/* number of expression types */
 
 extern char *expr_type_names[E_NUM_TYPES];
 
 void program(
 	char *pname,
 	char *pparam,
+	Expr *defn_list,
 	Expr *entry_list,
 	Expr *prog_list,
 	Expr *exit_list,
 	Expr *c_list
 );
-void assign_single(
-	char	*name,		/* ptr to variable name */
-	char	*db_name	/* ptr to db name */
-);
-void assign_subscr(
-	char	*name,		/* ptr to variable name */
-	char	*subscript,	/* subscript value or NULL */
-	char	*db_name	/* ptr to db name */
-);
-void assign_list(
-	char	*name,		/* ptr to variable name */
-	Expr	*db_name_list	/* ptr to db name list */
-);
 Expr *expression(
 	int	type,		/* E_BINOP, E_ASGNOP, etc */
-	char	*value,		/* "==", "+=", var name, constant, etc. */	
+	char	*value,		/* "==", "+=", var name, constant, etc. */
 	Expr	*left,		/* LH side */
 	Expr	*right		/* RH side */
 );
-void monitor_stmt(
-	char	*name,		/* variable name (should be assigned) */
-	char	*subscript	/* element number or NULL */
-);
-void set_debug_print(char *opt);
-void decl_stmt(
+Expr *declaration(
 	int	type,		/* variable type (e.g. V_FLOAT) */
 	int	class,		/* variable class (e.g. VC_ARRAY) */
 	char	*name,		/* ptr to variable name */
@@ -199,20 +207,16 @@ void decl_stmt(
 	char	*s_length2,	/* array lth (2nd dim, [n]x[m] arrays only) */
 	char	*value		/* initial value or NULL */
 );
-void sync_stmt(char *name, char *subscript, char *ef_name);
-void syncq_stmt(char *name, char *subscript, char *ef_name, char *maxQueueSize);
-void defn_c_stmt(
-	Expr *c_list	/* ptr to C code */
-);
 void option_stmt(
 	char	*option,	/* "a", "r", ... */
 	int	value		/* TRUE means +, FALSE means - */
 );
-void add_var(Var *vp);
-Var *find_var(char *name);
+void add_var(VarList *var_list, Var *vp);
+Var *find_var(VarList *var_list, char *name);
+Var *global_find_var(char *name);
 Expr *link_expr(
-	Expr	*ep1,	/* beginning of 1-st structure or list */
-	Expr	*ep2	/* beginning 2-nd (append it to 1-st) */
+	Expr	*ep1,		/* beginning of 1-st structure or list */
+	Expr	*ep2		/* beginning 2-nd (append it to 1-st) */
 );
 
 #endif	/*INCLparseh*/

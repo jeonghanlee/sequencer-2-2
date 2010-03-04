@@ -33,6 +33,7 @@
 #include	<stdio.h>
 #include	<stdlib.h>
 #include	<string.h>
+#include	<assert.h>
 
 #include	"parse.h"
 #include	"phase2.h"
@@ -43,26 +44,68 @@
 #define	FALSE	0
 #endif	/*TRUE*/
 
-static Chan *build_db_struct(Var *vp);
+static Chan *build_db_struct(ChanList *chan_list, Var *vp);
 static void alloc_db_lists(Chan *cp, int length);
-static void add_chan(Chan *cp);
+static void add_chan(ChanList *chan_list, Chan *cp);
+VarList *analyze_declarations(Expr *defn_list);
+ChanList *analyze_assignments(VarList *var_list, Expr *defn_list);
+void analyze_definitions(Parse *parse, Expr *defn_list);
 
-static Parse global_parse = {0,0,0,0,0,0,0,0,0,0,0};
+static void assign_subscr(
+	VarList		*var_list,
+	ChanList	*chan_list,
+	char		*name,		/* ptr to variable name */
+	char		*subscript,	/* subscript value or NULL */
+	char		*db_name	/* ptr to db name */
+);
+static void assign_single(
+	VarList		*var_list,
+	ChanList	*chan_list,
+	char		*name,		/* ptr to variable name */
+	char		*db_name	/* ptr to db name */
+);
+void assign_list(
+	VarList		*var_list,
+	ChanList	*chan_list,
+	char		*name,		/* ptr to variable name */
+	Expr		*db_name_list	/* ptr to db name list */
+);
+void monitor_stmt(
+	VarList		*var_list,
+	char		*name,		/* variable name (should be assigned) */
+	char		*subscript	/* element number or NULL */
+);
+void sync_stmt(
+	VarList		*var_list,
+	char		*name,
+	char		*subscript,
+	char		*ef_name
+);
+void syncq_stmt(
+	VarList		*var_list,
+	char		*name,
+	char		*subscript,
+	char		*ef_name,
+	char		*maxQueueSize
+);
 
-static Parse *parse = &global_parse;
+static Parse *parse;
 
 /* Parsing "program" statement */
 void program(
 	char *pname,
 	char *pparam,
+	Expr *defn_list,
 	Expr *entry_list,
 	Expr *prog_list,
 	Expr *exit_list,
 	Expr *c_list
 )
 {
+	parse = allocParse();
 	parse->prog_name = pname;
 	parse->prog_param = pparam;
+	parse->global_defn_list = defn_list;
 	parse->entry_code_list = entry_list;
 	parse->ss_list = prog_list;
 	parse->exit_code_list = exit_list;
@@ -70,13 +113,93 @@ void program(
 #ifdef	DEBUG
 	fprintf(stderr, "----Phase2---\n");
 #endif	/*DEBUG*/
+	parse->global_scope = allocScope();
+	parse->global_scope->var_list = analyze_declarations(defn_list);
+	parse->chan_list = analyze_assignments(parse->global_scope->var_list, defn_list);
+	analyze_definitions(parse, defn_list);
+
 	phase2(parse);
 
 	exit(0);
 }
 
+VarList *analyze_declarations(Expr *defn_list)
+{
+	Expr *dp;
+	Var *vp, *vp2;
+	VarList *var_list;
+
+	var_list = allocVarList();
+	for (dp = defn_list; dp != NULL; dp = dp->next)
+	{
+        	if (dp->type != E_DECL)
+			continue;
+		vp = dp->value;
+		assert(vp != NULL);
+		vp->line_num = dp->line_num;
+		vp2 = find_var(var_list, vp->name);
+		if (vp2 != NULL)
+		{
+			fprintf(stderr, "line %d: variable %s already declared in line %d\n",
+			 vp->line_num, vp->name, vp2->line_num);
+			continue;
+		}
+		add_var(var_list, vp);
+	}
+	return var_list;
+}
+
+ChanList *analyze_assignments(VarList *var_list, Expr *defn_list)
+{
+	Expr		*dp;
+	ChanList	*chan_list;
+
+	chan_list = allocChanList();
+	for (dp = defn_list; dp != NULL; dp = dp->next)
+	{
+		char *name;
+		Expr *pv_names;
+
+        	if (dp->type != E_ASSIGN)
+			continue;
+		name = dp->value;
+		pv_names = dp->right;
+		if (dp->left != NULL)
+		{
+			assign_subscr(var_list, chan_list, name, dp->left->value,
+				pv_names->value);
+		}
+		else if (dp->right->next == NULL) {
+			assign_single(var_list, chan_list, name, pv_names->value);
+		}
+		else
+		{
+			assign_list(var_list, chan_list, name, pv_names);
+		}
+	}
+	return chan_list;
+}
+
+void analyze_definitions(Parse *parse, Expr *defn_list)
+{
+	Expr *dp = defn_list;
+
+	for (dp = defn_list; dp; dp = dp->next)
+	{
+		switch (dp->type)
+		{
+		case E_MONITOR:
+			break;
+		case E_SYNC:
+			break;
+		case E_SYNCQ:
+			break;
+		}
+	}
+}
+
 /* Parsing a declaration statement */
-void decl_stmt(
+Expr *declaration(
 	int	type,		/* variable type (e.g. V_FLOAT) */
 	int	class,		/* variable class (e.g. VC_ARRAY) */
 	char	*name,		/* ptr to variable name */
@@ -85,51 +208,31 @@ void decl_stmt(
 	char	*value		/* initial value or NULL */
 )
 {
-	Var		*vp;
+	Var *vp;
 	int		length1, length2;
 
-#ifdef	DEBUG
-	fprintf(stderr, 
-	 "variable decl: type=%d, class=%d, name=%s, ", type, class, name);
-#endif	/*DEBUG*/
 	length1 = length2 = 1;
-
 	if (s_length1 != NULL)
 	{
 		length1 = atoi(s_length1);
 		if (length1 <= 0)
 			length1 = 1;
 	}
-
 	if (s_length2 != NULL)
 	{
 		length2 = atoi(s_length2);
 		if (length2 <= 0)
 			length2 = 1;
 	}
-
-#ifdef	DEBUG
-	fprintf(stderr, "length1=%d, length2=%d\n", length1, length2);
-#endif	/*DEBUG*/
-	/* See if variable already declared */
-	vp = find_var(name);
-	if (vp != 0)
-	{
-		fprintf(stderr, "variable %s already declared, line %d\n",
-		 name, globals->line_num);
-		return;
-	}
-	/* Build a struct for this variable */
 	vp = allocVar();
-	add_var(vp); /* add to var list */
 	vp->name = name;
 	vp->class = class;
 	vp->type = type;
 	vp->length1 = length1;
 	vp->length2 = length2;
-	vp->value = value; /* initial value or NULL */
+	vp->value = value;
 	vp->chan = NULL;
-	return;
+	return expression(E_DECL, vp, 0, 0);
 }
 
 /* Option statement */
@@ -176,9 +279,11 @@ void option_stmt(
  * Format: assign <variable> to <string;
  * Note: Variable may be subscripted.
  */
-void assign_single(
-	char	*name,		/* ptr to variable name */
-	char	*db_name	/* ptr to db name */
+static void assign_single(
+	VarList		*var_list,
+	ChanList	*chan_list,
+	char		*name,		/* ptr to variable name */
+	char		*db_name	/* ptr to db name */
 )
 {
 	Chan		*cp;
@@ -188,7 +293,7 @@ void assign_single(
 	fprintf(stderr, "assign %s to \"%s\";\n", name, db_name);
 #endif	/*DEBUG*/
 	/* Find the variable */
-	vp = find_var(name);
+	vp = find_var(var_list, name);
 	if (vp == 0)
 	{
 		fprintf(stderr, "assign: variable %s not declared, line %d\n",
@@ -205,7 +310,7 @@ void assign_single(
 	}
 
 	/* Build structure for this channel */
-	cp = build_db_struct(vp);
+	cp = build_db_struct(chan_list, vp);
 
 	cp->db_name = db_name;	/* DB name */
 
@@ -217,10 +322,12 @@ void assign_single(
 
 /* "Assign" statement: assign an array element to a DB channel.
  * Format: assign <variable>[<subscr>] to <string>; */
-void assign_subscr(
-	char	*name,		/* ptr to variable name */
-	char	*subscript,	/* subscript value or NULL */
-	char	*db_name	/* ptr to db name */
+static void assign_subscr(
+	VarList		*var_list,
+	ChanList	*chan_list,
+	char		*name,		/* ptr to variable name */
+	char		*subscript,	/* subscript value or NULL */
+	char		*db_name	/* ptr to db name */
 )
 {
 	Chan		*cp;
@@ -231,7 +338,7 @@ void assign_subscr(
 	fprintf(stderr, "assign %s[%s] to \"%s\";\n", name, subscript, db_name);
 #endif	/*DEBUG*/
 	/* Find the variable */
-	vp = find_var(name);
+	vp = find_var(var_list, name);
 	if (vp == 0)
 	{
 		fprintf(stderr, "assign: variable %s not declared, line %d\n",
@@ -250,7 +357,7 @@ void assign_subscr(
 	if (cp == NULL)
 	{
 		/* Build structure for this channel */
-		cp = build_db_struct(vp);
+		cp = build_db_struct(chan_list, vp);
 	}
 	else if (cp->db_name != NULL)
 	{
@@ -292,8 +399,10 @@ void assign_subscr(
  * the remaining elements receive NULL assignments.
  */
 void assign_list(
-	char	*name,		/* ptr to variable name */
-	Expr	*db_name_list	/* ptr to db name list */
+	VarList		*var_list,
+	ChanList	*chan_list,
+	char		*name,		/* ptr to variable name */
+	Expr		*db_name_list	/* ptr to db name list */
 )
 {
 	Chan		*cp;
@@ -304,7 +413,7 @@ void assign_list(
 	fprintf(stderr, "assign %s to {", name);
 #endif	/*DEBUG*/
 	/* Find the variable */
-	vp = find_var(name);
+	vp = find_var(var_list, name);
 	if (vp == 0)
 	{
 		fprintf(stderr, "assign: variable %s not declared, line %d\n",
@@ -328,7 +437,7 @@ void assign_list(
 	}
 
 	/* Build a db structure for this variable */
-	cp = build_db_struct(vp);
+	cp = build_db_struct(chan_list, vp);
 
 	/* Allocate lists */
 	alloc_db_lists(cp, vp->length1); /* allocate lists */
@@ -355,12 +464,12 @@ void assign_list(
 }
 
 /* Build a db structure for this variable */
-static Chan *build_db_struct(Var *vp)
+static Chan *build_db_struct(ChanList *chan_list, Var *vp)
 {
 	Chan		*cp;
 
 	cp = allocChan();
-	add_chan(cp);		/* add to Chan list */
+	add_chan(chan_list, cp);		/* add to Chan list */
 
 	/* make connections between Var & Chan structures */
 	cp->var = vp;
@@ -395,7 +504,6 @@ static void alloc_db_lists(Chan *cp, int length)
 	cp->ef_num_list = (int *)calloc(sizeof(int **), length);
 
 	cp->num_elem = length;
-
 }
 
 /* Parsing a "monitor" statement.
@@ -404,8 +512,9 @@ static void alloc_db_lists(Chan *cp, int length)
  * 	monitor <var>[<m>]; - monitor m-th element of an array.
  */
 void monitor_stmt(
-	char	*name,		/* variable name (should be assigned) */
-	char	*subscript	/* element number or NULL */
+	VarList		*var_list,
+	char		*name,		/* variable name (should be assigned) */
+	char		*subscript	/* element number or NULL */
 )
 {
 	Var		*vp;
@@ -419,7 +528,7 @@ void monitor_stmt(
 #endif	/*DEBUG*/
 
 	/* Find the variable */
-	vp = find_var(name);
+	vp = find_var(var_list, name);
 	if (vp == 0)
 	{
 		fprintf(stderr, "assign: variable %s not declared, line %d\n",
@@ -471,9 +580,14 @@ void monitor_stmt(
 	cp->mon_flag_list[subNum] = TRUE;
 	return;
 }
-	
+
 /* Parsing "sync" statement */
-void sync_stmt(char *name, char *subscript, char *ef_name)
+void sync_stmt(
+	VarList		*var_list,
+	char		*name,
+	char		*subscript,
+	char		*ef_name
+)
 {
 	Chan		*cp;
 	Var		*vp;
@@ -484,7 +598,7 @@ void sync_stmt(char *name, char *subscript, char *ef_name)
 	 name, subscript?subscript:"(no subscript)", ef_name);
 #endif	/*DEBUG*/
 
-	vp = find_var(name);
+	vp = find_var(var_list, name);
 	if (vp == 0)
 	{
 		fprintf(stderr, "sync: variable %s not declared, line %d\n",
@@ -501,7 +615,7 @@ void sync_stmt(char *name, char *subscript, char *ef_name)
 	}
 
 	/* Find the event flag varible */
-	vp = find_var(ef_name);
+	vp = find_var(var_list, ef_name);
 	if (vp == 0 || vp->type != V_EVFLAG)
 	{
 		fprintf(stderr, "sync: e-f variable %s not declared, line %d\n",
@@ -540,7 +654,13 @@ void sync_stmt(char *name, char *subscript, char *ef_name)
 }
 
 /* Parsing "syncq" statement */
-void syncq_stmt(char *name, char *subscript, char *ef_name, char *maxQueueSize)
+void syncq_stmt(
+	VarList		*var_list,
+	char		*name,
+	char		*subscript,
+	char		*ef_name,
+	char		*maxQueueSize
+)
 {
 	Chan		*cp;
 	Var		*vp;
@@ -553,7 +673,7 @@ void syncq_stmt(char *name, char *subscript, char *ef_name, char *maxQueueSize)
 #endif	/*DEBUG*/
 
 	/* Find the variable and check it's assigned */
-	vp = find_var(name);
+	vp = find_var(var_list, name);
 	if (vp == 0)
 	{
 		fprintf(stderr, "syncQ: variable %s not declared, line %d\n",
@@ -578,7 +698,7 @@ void syncq_stmt(char *name, char *subscript, char *ef_name, char *maxQueueSize)
 	}
 
 	/* Find the event flag variable */
-	efp = find_var(ef_name);
+	efp = find_var(var_list, ef_name);
 	if (efp == 0 || efp->type != V_EVFLAG)
 	{
 		fprintf(stderr, "syncQ: e-f variable %s not declared, "
@@ -628,65 +748,50 @@ void syncq_stmt(char *name, char *subscript, char *ef_name, char *maxQueueSize)
 
 	return;
 }
-	
 
-/* Definition C code */
-void defn_c_stmt(
-	Expr *c_list	/* ptr to C code */
-)
+/* Add a variable to the end of a linked list */
+void add_var(VarList *var_list, Var *vp)
 {
-#ifdef	DEBUG
-	fprintf(stderr, "defn_c_stmt\n");
-#endif	/*DEBUG*/
-	if (parse->defn_c_list == 0)
-		parse->defn_c_list = c_list;
+	if (var_list->first == NULL)
+		var_list->first = vp;
 	else
-		link_expr(parse->defn_c_list, c_list);	
-	
-	return;
-}
-
-/* Add a variable to the variable linked list */
-void add_var(Var *vp)
-{
-	if (parse->global_var_list == NULL)
-		parse->global_var_list = vp;
-	else
-		parse->global_var_tail->next = vp;
-	parse->global_var_tail = vp;
+		var_list->last->next = vp;
+	var_list->last = vp;
 	vp->next = NULL;
 }
 
-/* Find a variable by name;  returns a pointer to the Var struct;
-	returns 0 if the variable is not found. */
-Var *find_var(char *name)
+/* Find a variable by name;  returns a pointer to the Var struct or
+   NULL if the variable is not found. */
+Var *find_var(VarList *var_list, char *name)
 {
 	Var		*vp;
 
-	for (vp = parse->global_var_list; vp != NULL; vp = vp->next)
+	for (vp = var_list->first; vp != NULL; vp = vp->next)
 	{
 		if (strcmp(vp->name, name) == 0)
-		{
 			return vp;
-		}
 	}
-	return 0;
+	return NULL;
+}
+
+Var *global_find_var(char *name)
+{
+	return find_var(parse->global_scope->var_list, name);
 }
 
 /* Add a channel to the channel linked list */
-static void add_chan(Chan *cp)
+static void add_chan(ChanList *chan_list, Chan *cp)
 {
-	if (parse->chan_list == NULL)
-		parse->chan_list = cp;
+	if (chan_list->first == NULL)
+		chan_list->first = cp;
 	else
-		parse->chan_tail->next = cp;
-	parse->chan_tail = cp;
+		chan_list->last->next = cp;
+	chan_list->last = cp;
 	cp->next = NULL;
 }
 
 /* Build an expression list (hierarchical):
-	Builds a node on a binary tree for each expression primitive.
- */
+   Builds a node on a binary tree for each expression primitive. */
 Expr *expression(
 	int	type,		/* E_BINOP, E_ASGNOP, etc */
 	char	*value,		/* "==", "+=", var name, constant, etc. */	
@@ -700,9 +805,22 @@ Expr *expression(
 	/* Allocate a structure for this item or expression */
 	ep = allocExpr();
 #ifdef	DEBUG
-	fprintf(stderr,
-		"expression: ep=%p, type=%s, value=\"%s\", left=%p, right=%p\n",
-		ep, expr_type_names[type], value, left, right);
+	if (type == E_DECL)
+	{
+		Var	*vp = (Var*)value;
+
+		fprintf(stderr,
+		 "expression: ep=%p, type=%s, value="
+		 "(var: name=%s, type=%d, class=%d, length1=%d, length2=%d, value=%s), "
+		 "left=%p, right=%p\n",
+		 ep, expr_type_names[type],
+		 vp->name, vp->type, vp->class, vp->length1, vp->length2, vp->value,
+		 left, right);
+	}
+        else
+		fprintf(stderr,
+		 "expression: ep=%p, type=%s, value=\"%s\", left=%p, right=%p\n",
+		 ep, expr_type_names[type], value, left, right);
 #endif	/*DEBUG*/
 	/* Fill in the structure */
 	ep->next = 0;
@@ -734,11 +852,11 @@ Expr *link_expr(
 	if (ep1 == 0 && ep2 == 0)
 		return NULL;
 	else if (ep1 == 0)
-		return ep2; 
+		return ep2;
 	else if (ep2 == 0)
 		return ep1;
 
-	(ep1->last)->next = ep2;
+	ep1->last->next = ep2;
 	ep1->last = ep2->last;
 #ifdef	DEBUG
 	fprintf(stderr, "link_expr(");
@@ -761,3 +879,4 @@ char *expr_type_names[E_NUM_TYPES] = {
 	"E_FOR", "E_X", "E_PRE", "E_POST", "E_BREAK", "E_COMMA", "E_DECL",
 	"E_ENTRY", "E_EXIT", "E_OPTION"
 };
+

@@ -718,7 +718,7 @@ static void gen_ef_func(
 	if (ep1 != 0 && ep1->type == E_COMMA)
 		ep1 = ep1->left;
 	if ( (ep1 != 0) && (ep1->type == E_VAR) )
-		vp = find_var(ep1->value);
+		vp = global_find_var(ep1->value);
 	else
 		vp = 0;
 		if (vp == 0 || vp->type != V_EVFLAG)
@@ -780,7 +780,7 @@ static void gen_pv_func(
 	id = -1;
 	if (ep1->type == E_VAR)
 	{
-		vp = find_var(ep1->value);
+		vp = global_find_var(ep1->value);
 	}
 	else if (ep1->type == E_SUBSCR)
 	{	/* Form should be: <db variable>[<expression>] */
@@ -788,7 +788,7 @@ static void gen_pv_func(
 		ep3 = ep1->right;	/* subscript */
 		if ( ep2->type == E_VAR )
 		{
-			vp = find_var(ep2->value);
+			vp = global_find_var(ep2->value);
 		}
 	}
 

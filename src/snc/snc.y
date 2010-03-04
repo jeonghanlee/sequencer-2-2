@@ -90,9 +90,12 @@ static void pp_code(char *line, char *fname);
 %token	PP_SYMBOL CR
 %type	<ival>	type
 %type	<pchar>	program_name program_param
-%type	<pchar>	subscript binop asgnop unop
+%type	<pchar>	subscript
+%type	<pchar>	binop asgnop unop
 %type	<pexpr> global_entry_code global_exit_code
-%type	<pexpr> optional_global_c global_c
+%type	<pexpr> optional_global_c global_c definitions defn_stmt defn_c_stmt
+%type	<pexpr> assign_stmt monitor_stmt decl_stmt sync_stmt syncq_stmt
+%type	<pexpr> optional_subscript optional_number
 %type	<pexpr> state_set_list state_set state_list state
 %type	<pexpr> transition_list transition state_option_value
 %type	<pexpr> expr compound_expr assign_list bracked_expr
@@ -125,7 +128,7 @@ state_program 	/* define a state program */
 	optional_pp_codes	/* $8 */
 	optional_global_c	/* $9 */
 {
-	program($2,$3,$5,$6,$7,$9);
+	program($2,$3,$4,$5,$6,$7,$9);
 }
 ;
 
@@ -138,29 +141,41 @@ program_param
 |	L_PAREN STRING R_PAREN		{ $$ = $2; }
 
 definitions 	/* definitions block */
-:	defn_stmt
-|	definitions defn_stmt
+:	defn_stmt			{ $$ = $1; }
+|	definitions defn_stmt		{ $$ = link_expr($1, $2); }
 ;
 
 defn_stmt	/* individual definitions for SNL (preceeds state sets) */
-:	assign_stmt
-|	monitor_stmt
-|	decl_stmt
-|	sync_stmt
-|	syncq_stmt
-|	option_stmt
-|	defn_c_stmt
-|	pp_code
+:	assign_stmt			{ $$ = $1; }
+|	monitor_stmt			{ $$ = $1; }
+|	decl_stmt			{ $$ = $1; }
+|	sync_stmt			{ $$ = $1; }
+|	syncq_stmt			{ $$ = $1; }
+|	option_stmt			{ $$ = 0; }
+|	defn_c_stmt			{ $$ = $1; }
+|	pp_code				{ $$ = 0; }
 |	error { snc_err("definitions/declarations"); }
 ;
 
 assign_stmt	/* assign <var name> to <db name>; */
-:	ASSIGN NAME to STRING SEMI_COLON { assign_single($2, $4); }
-		/* assign <var name>[<n>] [to] <db name>; */
-|	ASSIGN NAME subscript to STRING SEMI_COLON { assign_subscr($2, $3, $5); }
+:	ASSIGN NAME to STRING SEMI_COLON
+{
+	$$ = expression(E_ASSIGN, $2, 0, expression(E_STRING, $4, 0, 0));
+	/* assign_single($2, $4); */
+}
+|	ASSIGN NAME to subscript STRING SEMI_COLON
+{		/* assign <var name>[<n>] [to] <db name>; */
+	$$ = expression(E_ASSIGN, $2,
+			expression(E_CONST, $4, 0, 0),
+			expression(E_STRING, $5, 0, 0));
+	/* assign_single($2, $4); */
+}
 		/* assign <var name> [to] {<db name>, ... }; */
 |	ASSIGN NAME to L_BRACKET assign_list R_BRACKET SEMI_COLON
-			{ assign_list($2, $5); }
+{
+	$$ = expression(E_ASSIGN, $2, 0, $5);
+	/* assign_list($2, $5); */
+}
 ;
 
 assign_list	/* {"<db name>", .... } */ 
@@ -175,8 +190,16 @@ to		/* "to" */
 ;
 
 monitor_stmt	/* variable to be monitored; delta is optional */
-:	MONITOR NAME SEMI_COLON			{ monitor_stmt($2, NULL); }
-|	MONITOR NAME subscript SEMI_COLON	{ monitor_stmt($2, $3); }
+:	MONITOR NAME optional_subscript SEMI_COLON
+{
+	$$ = expression(E_MONITOR, $2, 0, $3);
+	/* monitor_stmt($2, $3); */
+}
+;
+
+optional_subscript
+:					{ $$ = 0; }
+|	subscript			{ $$ = expression(E_CONST, $1, 0, 0); }
 ;
 
 subscript	/* e.g. [10] */
@@ -184,24 +207,24 @@ subscript	/* e.g. [10] */
 ;
 
 decl_stmt	/* variable declarations (e.g. float x[20];)
-		 * decl_stmt(type, class, name, <1-st dim>, <2-nd dim>, value) */
+		 * declaration(type, class, name, <1-st dim>, <2-nd dim>, value) */
 :	type NAME SEMI_COLON
-			{ decl_stmt($1, VC_SIMPLE,  $2,  NULL, NULL, NULL); }
+		{ $$ = declaration($1, VC_SIMPLE,  $2,  NULL, NULL, NULL); }
 
 |	type NAME EQUAL NUMBER SEMI_COLON
-			{ decl_stmt($1, VC_SIMPLE,  $2,  NULL, NULL, $4  ); }
- 
+		{ $$ = declaration($1, VC_SIMPLE,  $2,  NULL, NULL, $4  ); }
+
 |	type NAME subscript SEMI_COLON
-			{ decl_stmt($1, VC_ARRAY1,  $2,  $3,   NULL, NULL); }
+		{ $$ = declaration($1, VC_ARRAY1,  $2,  $3,   NULL, NULL); }
 
 |	type NAME subscript subscript SEMI_COLON
-			{ decl_stmt($1, VC_ARRAY2,  $2,  $3,   $4,   NULL); }
+		{ $$ = declaration($1, VC_ARRAY2,  $2,  $3,   $4,   NULL); }
 
 |	type ASTERISK NAME SEMI_COLON
-			{ decl_stmt($1, VC_POINTER, $3,  NULL, NULL, NULL); }
+		{ $$ = declaration($1, VC_POINTER, $3,  NULL, NULL, NULL); }
 
 |	type ASTERISK NAME subscript SEMI_COLON
-			{ decl_stmt($1, VC_ARRAYP,  $3,  $4,   NULL, NULL); }
+		{ $$ = declaration($1, VC_ARRAYP,  $3,  $4,   NULL, NULL); }
 ;
 
 local_decl_stmt	/* local variable declarations (not yet arrays... but easy
@@ -231,22 +254,33 @@ type		/* types for variables defined in SNL */
 ;
 
 sync_stmt	/* sync <variable> <event flag> */
-:	SYNC NAME to NAME SEMI_COLON		{ sync_stmt($2, NULL, $4); }
-|	SYNC NAME subscript to NAME SEMI_COLON	{ sync_stmt($2, $3,   $5); }
+:	SYNC NAME optional_subscript to NAME SEMI_COLON
+{
+	$$ = expression(E_SYNC, $2, $3, expression(E_X, $5, 0, 0));
+	/* sync_stmt($2, $3, $5); */
+}
 ;
 
-syncq_stmt	/* syncQ <variable> <event flag> [<max queue size>] */
-:	SYNCQ NAME to NAME SEMI_COLON	{ syncq_stmt($2, NULL, $4, NULL); }
-|	SYNCQ NAME subscript to NAME SEMI_COLON
-					{ syncq_stmt($2, $3,   $5, NULL); }
-|	SYNCQ NAME to NAME NUMBER SEMI_COLON
-					{ syncq_stmt($2, NULL, $4, $5);   }
-|	SYNCQ NAME subscript to NAME NUMBER SEMI_COLON
-					{ syncq_stmt($2, $3,   $5, $6);   }
+syncq_stmt	/* syncQ <variable> [[subscript]] to <event flag> [<max queue size>] */
+:	SYNCQ NAME optional_subscript to NAME SEMI_COLON
+{
+	$$ = expression(E_SYNCQ, $2, $3, expression(E_X, $5, 0, 0));
+	/* syncq_stmt($2, $3, $5, NULL); */
+}
+|	SYNCQ NAME optional_subscript to NAME optional_number SEMI_COLON
+{
+	$$ = expression(E_SYNCQ, $2, $3, expression(E_X, $5, $6, 0));
+	/* syncq_stmt($2, $3, $5, $6); */
+}
+;
+
+optional_number
+:				{ $$ = 0; }
+|	NUMBER			{ $$ = expression(E_CONST, $1, 0, 0); }
 ;
 
 defn_c_stmt	/* escaped C in definitions */
-:	escaped_c_list		{ defn_c_stmt($1); }
+:	escaped_c_list		{ $$ = $1; }
 ;
 
 option_stmt	/* option +/-<option>;  e.g. option +a; */

@@ -45,7 +45,7 @@ typedef struct eval_event_mask_args {
 } eval_event_mask_args;
 
 static void encode_state_options(Expr *sp);
-static void gen_db_blocks(Chan *chan_list, int num_events);
+static void gen_db_blocks(ChanList *chan_list, int num_events);
 static void fill_db_block(Chan *cp, int elem_num, int num_events);
 static void gen_state_blocks(Expr *ss_list, int num_events, int num_channels);
 static void fill_state_block(Expr *sp, char *ss_name);
@@ -94,18 +94,18 @@ void gen_tables(Parse *parse)
 	return;
 }
 /* Generate database blocks with structure and data for each defined channel */
-static void gen_db_blocks(Chan *chan_list, int num_events)
+static void gen_db_blocks(ChanList *chan_list, int num_events)
 {
 	Chan		*cp;
 	int		nchan, elem_num;
 
 	nchan = 0;
 
-	if ( chan_list ) 
+	if (chan_list->first)
 	{
 		printf("\n/* Database Blocks */\n");
 		printf("static struct seqChan seqChan[NUM_CHANNELS] = {\n");
-		for (cp = chan_list; cp != NULL; cp = cp->next)
+		for (cp = chan_list->first; cp != NULL; cp = cp->next)
 		{
 #ifdef	DEBUG
 			fprintf(stderr, "gen_db_blocks: index=%d, num_elem=%d\n",

@@ -52,18 +52,18 @@
 static void gen_preamble(char *prog_name,
 	int num_ss, int num_channels, int num_events, int num_queues);
 static void gen_opt_defn(int opt, char *defn_name);
-static void reconcile_variables(Expr *expr_list);
-static void connect_variable(Expr *ep, void *dummy);
+static void reconcile_variables(Scope *scope, Expr *expr_list);
+static void connect_variable(Expr *ep, Scope *scope);
 static void reconcile_states(Expr *ss_list);
-static void gen_var_decl(Var *var_list);
+static void gen_var_decl(Scope *scope);
 static void gen_defn_c_code(Expr *defn_c_list);
 static void gen_global_c_code(Expr *global_c_list);
 static void gen_init_reg(char *prog_name);
-static int assign_ef_bits(Var *var_list, Chan *chan_list);
+static int assign_ef_bits(Scope *scope, ChanList *chan_list);
 static void assign_delay_ids(Expr *ss_list);
 static void assign_next_delay_id(Expr *ep, int *delay_id);
-static int db_queue_count(Var *var_list);
-static int db_chan_count(Chan *chan_list);
+static int db_queue_count(Scope *scope);
+static int db_chan_count(ChanList *chan_list);
 
 /*+************************************************************************
 *  NAME: phase2
@@ -79,20 +79,20 @@ static int db_chan_count(Chan *chan_list);
 void phase2(Parse *parse)
 {
 	/* Count number of db channels and state sets defined */
-	parse->num_queues = db_queue_count(parse->global_var_list);
+	parse->num_queues = db_queue_count(parse->global_scope);
 	parse->num_channels = db_chan_count(parse->chan_list);
 	parse->num_ss = expr_count(parse->ss_list);
 
 	/* Reconcile all variable and tie each to the appropriate VAR struct */
-	reconcile_variables(parse->ss_list);
-	reconcile_variables(parse->entry_code_list);
-	reconcile_variables(parse->exit_code_list);
+	reconcile_variables(parse->global_scope, parse->ss_list);
+	reconcile_variables(parse->global_scope, parse->entry_code_list);
+	reconcile_variables(parse->global_scope, parse->exit_code_list);
 
 	/* reconcile all state names, including next state in transitions */
 	reconcile_states(parse->ss_list);
 
 	/* Assign bits for event flags */
-	parse->num_events = assign_ef_bits(parse->global_var_list, parse->chan_list);
+	parse->num_events = assign_ef_bits(parse->global_scope, parse->chan_list);
 
 #ifdef	DEBUG
 	fprintf(stderr, "gen_tables:\n");
@@ -110,10 +110,10 @@ void phase2(Parse *parse)
 		parse->num_channels, parse->num_events, parse->num_queues);
 
 	/* Generate variable declarations */
-	gen_var_decl(parse->global_var_list);
+	gen_var_decl(parse->global_scope);
 
 	/* Generate definition C code */
-	gen_defn_c_code(parse->defn_c_list);
+	gen_defn_c_code(parse->global_defn_list);
 
 	/* Generate code for each state set */
 	gen_ss_code(parse);
@@ -207,18 +207,18 @@ static void gen_opt_defn(int opt, char *defn_name)
  */
 int	printTree = FALSE; /* For debugging only */
 
-static void reconcile_variables(Expr *expr_list)
+static void reconcile_variables(Scope *scope, Expr *expr_list)
 {
 	Expr			*ep;
 
 	for (ep = expr_list; ep != 0; ep = ep->next)
 	{
-		traverse_expr_tree(ep, E_VAR, 0, connect_variable, 0);
+		traverse_expr_tree(ep, E_VAR, 0, connect_variable, scope);
 	}
 }
 
 /* Connect a variable in an expression to the the Var structure */
-static void connect_variable(Expr *ep, void *dummy)
+static void connect_variable(Expr *ep, Scope *scope)
 {
 	Var		*vp;
 
@@ -227,7 +227,7 @@ static void connect_variable(Expr *ep, void *dummy)
 #ifdef	DEBUG
 	fprintf(stderr, "connect_variable: \"%s\", line %d\n", ep->value, ep->line_num);
 #endif	/*DEBUG*/
-	vp = find_var(ep->value);
+	vp = find_var(scope->var_list, ep->value);
 #ifdef	DEBUG
 	fprintf(stderr, "\t \"%s\" was %s\n", ep->value, vp ? "found" : "not found" );
 #endif	/*DEBUG*/
@@ -238,7 +238,7 @@ static void connect_variable(Expr *ep, void *dummy)
 			 "Warning:  variable \"%s\" is used but not declared.\n",
 			 ep->value);
 		vp = allocVar();
-		add_var(vp);
+		add_var(scope->var_list, vp);
 		vp->name = ep->value;
 		vp->type = V_NONE; /* undeclared type */
 		vp->length1 = 1;
@@ -274,7 +274,7 @@ static void reconcile_states(Expr *ss_list)
 }
 
 /* Generate a C variable declaration for each variable declared in SNL */
-static void gen_var_decl(Var *var_list)
+static void gen_var_decl(Scope *scope)
 {
 	Var		*vp;
 	char		*vstr;
@@ -285,7 +285,7 @@ static void gen_var_decl(Var *var_list)
 	/* Convert internal type to `C' type */
 	if (globals->options->reent)
 		printf("struct UserVar {\n");
-	for (nv=0, vp = var_list; vp != NULL; nv++, vp = vp->next)
+	for (nv=0, vp = scope->var_list->first; vp != NULL; nv++, vp = vp->next)
 	{
 		switch (vp->type)
 		{
@@ -375,17 +375,20 @@ static void gen_var_decl(Var *var_list)
 }		
 
 /* Generate definition C code (C code in definition section) */
-static void gen_defn_c_code(Expr *defn_c_list)
+static void gen_defn_c_code(Expr *defn_list)
 {
 	Expr		*ep;
+	int		first = TRUE;
 
-	ep = defn_c_list;
-	if (ep != NULL)
+	for (ep = defn_list; ep != NULL; ep = ep->next)
 	{
-		printf("\n/* C code definitions */\n");
-		for (; ep != NULL; ep = ep->next)
+		if (ep->type == E_TEXT)
 		{
-			assert(ep->type == E_TEXT);
+			if (first)
+			{
+				first = FALSE;
+				printf("\n/* C code definitions */\n");
+			}
 			print_line_num(ep->line_num, ep->src_file);
 			printf("%s\n", ep->value);
 		}
@@ -413,13 +416,13 @@ static void gen_global_c_code(Expr *global_c_list)
 
 /* Sets cp->index for each variable, & returns number of db channels defined. 
  */
-static int db_chan_count(Chan *chan_list)
+static int db_chan_count(ChanList *chan_list)
 {
 	int	nchan;
 	Chan	*cp;
 
 	nchan = 0;
-	for (cp = chan_list; cp != NULL; cp = cp->next)
+	for (cp = chan_list->first; cp != NULL; cp = cp->next)
 	{
 		cp->index = nchan;
 		if (cp->num_elem == 0)
@@ -434,13 +437,13 @@ static int db_chan_count(Chan *chan_list)
 /* Sets vp->queueIndex for each syncQ'd variable, & returns number of
  * syncQ queues defined. 
  */
-static int db_queue_count(Var *var_list)
+static int db_queue_count(Scope *scope)
 {
 	int		nqueue;
 	Var		*vp;
 
 	nqueue = 0;
-	for (vp = var_list; vp != NULL; vp = vp->next)
+	for (vp = scope->var_list->first; vp != NULL; vp = vp->next)
 	{
 		if (vp->type != V_EVFLAG && vp->queued)
 		{
@@ -455,7 +458,7 @@ static int db_queue_count(Var *var_list)
 /* Assign event bits to event flags and associate db channels with
  * event flags.
  */
-static int assign_ef_bits(Var *var_list, Chan *chan_list)
+static int assign_ef_bits(Scope *scope, ChanList *chan_list)
 {
 	Var		*vp;
 	Chan		*cp;
@@ -465,7 +468,7 @@ static int assign_ef_bits(Var *var_list, Chan *chan_list)
 	/* Assign event flag numbers (starting at 1) */
 	printf("\n/* Event flags */\n");
 	num_events = 0;
-	for (vp = var_list; vp != NULL; vp = vp->next)
+	for (vp = scope->var_list->first; vp != NULL; vp = vp->next)
 	{
 		if (vp->type == V_EVFLAG)
 		{
@@ -476,7 +479,7 @@ static int assign_ef_bits(Var *var_list, Chan *chan_list)
 	}
 			
 	/* Associate event flags with DB channels */
-	for (cp = chan_list; cp != NULL; cp = cp->next)
+	for (cp = chan_list->first; cp != NULL; cp = cp->next)
 	{
 		if (cp->num_elem == 0)
 		{
