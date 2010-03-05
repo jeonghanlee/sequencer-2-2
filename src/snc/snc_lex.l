@@ -82,7 +82,6 @@ CCONST	\'.\'
 <C_CODE>\n {
 		*pStr++ = 0;
 		globals->line_num++;
-		globals->c_line_num = globals->line_num;
 		yylval.pchar = strdup(strBfr);
 		pStr = strBfr;
 		if (one_line_c_code)
@@ -139,13 +138,11 @@ CCONST	\'.\'
 <SNL>"%{" {
 		pStr = strBfr;
 		one_line_c_code = FALSE;
-		globals->c_line_num = globals->line_num;
 		BEGIN C_CODE;
 }
 <SNL>"%%" {
 		pStr = strBfr;
 		one_line_c_code = TRUE;
-		globals->c_line_num = globals->line_num;
 		BEGIN C_CODE;
 }
 <SNL>^# {

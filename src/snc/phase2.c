@@ -227,7 +227,7 @@ static void connect_variable(Expr *ep, Scope *scope)
 #ifdef	DEBUG
 	fprintf(stderr, "connect_variable: \"%s\", line %d\n", ep->value, ep->line_num);
 #endif	/*DEBUG*/
-	vp = find_var(scope->var_list, ep->value);
+	vp = find_var(scope, ep->value);
 #ifdef	DEBUG
 	fprintf(stderr, "\t \"%s\" was %s\n", ep->value, vp ? "found" : "not found" );
 #endif	/*DEBUG*/
@@ -238,7 +238,7 @@ static void connect_variable(Expr *ep, Scope *scope)
 			 "Warning:  variable \"%s\" is used but not declared.\n",
 			 ep->value);
 		vp = allocVar();
-		add_var(scope->var_list, vp);
+		add_var(scope, vp);
 		vp->name = ep->value;
 		vp->type = V_NONE; /* undeclared type */
 		vp->length1 = 1;
@@ -372,7 +372,7 @@ static void gen_var_decl(Scope *scope)
 		printf("};\n");
 	}
 	return;
-}		
+}
 
 /* Generate definition C code (C code in definition section) */
 static void gen_defn_c_code(Expr *defn_list)

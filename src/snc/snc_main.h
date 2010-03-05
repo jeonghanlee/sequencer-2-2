@@ -19,7 +19,6 @@ struct globals
 {
 	char	*src_file;	/* ptr to (effective) source file name */
 	int	line_num;	/* current src file line number */
-	int	c_line_num;	/* line number for beginning of C code */
 	Options *options;	/* compile & run-time options */
 };
 typedef struct globals Globals;

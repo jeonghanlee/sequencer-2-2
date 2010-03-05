@@ -55,7 +55,7 @@ static Options	default_options =
 
 static Globals	default_globals =
 {
-	0,0,0,&default_options
+	0,0,&default_options
 };
 
 Globals *globals = &default_globals;
@@ -216,7 +216,7 @@ static void get_options(char *s)
 		opt->warn = opt_val;
 		break;
 	default:
-		fprintf(stderr, "Unknown option ignored: \"%s\"\n", s);
+		fprintf(stderr, "unknown option ignored: \"%s\"\n", s);
 		break;
 	}
 }
@@ -255,7 +255,6 @@ static void get_in_file(char *s)
 		out_file[ls+1] = 'c';
 		out_file[ls+2] = 0;
 	}
-	return;
 }
 
 static void get_out_file(char *s)
@@ -267,7 +266,6 @@ static void get_out_file(char *s)
 	}
 	
 	strcpy(out_file,s);
-	return;
 }
 
 static void print_usage(void)
@@ -326,9 +324,8 @@ void snc_err(char *err_txt)
 *-*************************************************************************/
 void yyerror(char *err)
 {
-	fprintf(stderr, "%s: line no. %d (%s)\n", err,
-		globals->line_num, globals->src_file);
-	return;
+	fprintf(stderr, "%s:%d: error: %s\n",
+		globals->src_file, globals->line_num, err);
 }
 
 /*+************************************************************************
@@ -351,5 +348,4 @@ void print_line_num(int line_num, char *src_file)
 {
 	if (globals->options->line)
 		printf("# line %d \"%s\"\n", line_num, src_file);
-	return;
 }

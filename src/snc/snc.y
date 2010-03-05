@@ -66,7 +66,7 @@ static void pp_code(char *line, char *fname);
 	void	*pval;
 	Expr	*pexpr;
 }
-%token	<pchar>	STATE ENTRY STATE_SET
+%token	<pchar>	STATE STATE_SET
 %token	<pchar>	NUMBER NAME
 %token	<pchar>	CHAR_CONST
 %token	<pchar>	DEBUG_PRINT
@@ -192,9 +192,30 @@ to		/* "to" */
 monitor_stmt	/* variable to be monitored; delta is optional */
 :	MONITOR NAME optional_subscript SEMI_COLON
 {
-	$$ = expression(E_MONITOR, $2, 0, $3);
+	$$ = expression(E_MONITOR, $2, $3, 0);
 	/* monitor_stmt($2, $3); */
 }
+;
+
+sync_stmt	/* sync <variable> <event flag> */
+:	SYNC NAME optional_subscript to NAME SEMI_COLON
+{
+	$$ = expression(E_SYNC, $2, $3, expression(E_X, $5, 0, 0));
+	/* sync_stmt($2, $3, $5); */
+}
+;
+
+syncq_stmt	/* syncQ <variable> [[subscript]] to <event flag> [<max queue size>] */
+:	SYNCQ NAME optional_subscript to NAME optional_number SEMI_COLON
+{
+	$$ = expression(E_SYNCQ, $2, $3, expression(E_X, $5, $6, 0));
+	/* syncq_stmt($2, $3, $5, $6); */
+}
+;
+
+optional_number
+:				{ $$ = 0; }
+|	NUMBER			{ $$ = expression(E_CONST, $1, 0, 0); }
 ;
 
 optional_subscript
@@ -251,32 +272,6 @@ type		/* types for variables defined in SNL */
 |	STRING_DECL	{ $$ = V_STRING; }
 |	EVFLAG		{ $$ = V_EVFLAG; }
 |	error { snc_err("type specifier"); }
-;
-
-sync_stmt	/* sync <variable> <event flag> */
-:	SYNC NAME optional_subscript to NAME SEMI_COLON
-{
-	$$ = expression(E_SYNC, $2, $3, expression(E_X, $5, 0, 0));
-	/* sync_stmt($2, $3, $5); */
-}
-;
-
-syncq_stmt	/* syncQ <variable> [[subscript]] to <event flag> [<max queue size>] */
-:	SYNCQ NAME optional_subscript to NAME SEMI_COLON
-{
-	$$ = expression(E_SYNCQ, $2, $3, expression(E_X, $5, 0, 0));
-	/* syncq_stmt($2, $3, $5, NULL); */
-}
-|	SYNCQ NAME optional_subscript to NAME optional_number SEMI_COLON
-{
-	$$ = expression(E_SYNCQ, $2, $3, expression(E_X, $5, $6, 0));
-	/* syncq_stmt($2, $3, $5, $6); */
-}
-;
-
-optional_number
-:				{ $$ = 0; }
-|	NUMBER			{ $$ = expression(E_CONST, $1, 0, 0); }
 ;
 
 defn_c_stmt	/* escaped C in definitions */

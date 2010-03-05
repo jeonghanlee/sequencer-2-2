@@ -114,14 +114,14 @@ struct parse				/* result of parsing */
 };
 typedef struct parse Parse;
 
-/* Linked list allocation definitions */
-#define	allocExpr()		(Expr *)calloc(1, sizeof(Expr));
-#define	allocVar()		(Var *)calloc(1, sizeof(Var));
-#define	allocChan()		(Chan *)calloc(1, sizeof(Chan));
-#define	allocVarList()		(VarList *)calloc(1, sizeof(VarList));
-#define	allocChanList()		(ChanList *)calloc(1, sizeof(ChanList));
-#define	allocScope()		(Scope *)calloc(1, sizeof(Scope));
-#define	allocParse()		(Parse *)calloc(1, sizeof(Parse));
+/* Allocation 'functions' */
+#define	allocExpr()		(Expr *)calloc(1, sizeof(Expr))
+#define	allocVar()		(Var *)calloc(1, sizeof(Var))
+#define	allocChan()		(Chan *)calloc(1, sizeof(Chan))
+#define	allocVarList()		(VarList *)calloc(1, sizeof(VarList))
+#define	allocChanList()		(ChanList *)calloc(1, sizeof(ChanList))
+#define	allocScope()		(Scope *)calloc(1, sizeof(Scope))
+#define	allocParse()		(Parse *)calloc(1, sizeof(Parse))
 
 /* Variable types */
 #define	V_NONE		0		/* not defined */
@@ -180,9 +180,47 @@ typedef struct parse Parse;
 #define E_MONITOR	30		/* monitor statement */
 #define E_SYNC		31		/* sync statement */
 #define E_SYNCQ		32		/* syncq statement */
-#define E_NUM_TYPES	33		/* number of expression types */
 
-extern char *expr_type_names[E_NUM_TYPES];
+#ifdef expr_type_GLOBAL
+const char *expr_type_names[] =
+{
+	"E_EMPTY",
+	"E_CONST",
+	"E_VAR",
+	"E_FUNC",
+	"E_STRING",
+	"E_UNOP",
+	"E_BINOP",
+	"E_ASGNOP",
+	"E_PAREN",
+	"E_SUBSCR",
+	"E_TEXT",
+	"E_STMT",
+	"E_CMPND",
+	"E_IF",
+	"E_ELSE",
+	"E_WHILE",
+	"E_SS",
+	"E_STATE",
+	"E_WHEN",
+	"E_FOR",
+	"E_X",
+	"E_PRE",
+	"E_POST",
+	"E_BREAK",
+	"E_COMMA",
+	"E_DECL",
+	"E_ENTRY",
+	"E_EXIT",
+	"E_OPTION",
+	"E_ASSIGN",
+	"E_MONITOR",
+	"E_SYNC",
+	"E_SYNCQ"
+};
+#else
+extern const char *expr_type_names[];
+#endif
 
 void program(
 	char *pname,
@@ -211,9 +249,14 @@ void option_stmt(
 	char	*option,	/* "a", "r", ... */
 	int	value		/* TRUE means +, FALSE means - */
 );
-void add_var(VarList *var_list, Var *vp);
-Var *find_var(VarList *var_list, char *name);
-Var *global_find_var(char *name);
+void add_var(
+	Scope *scope,		/* scope to add variable to */
+	Var *vp			/* variable to add */
+);
+Var *find_var(
+	Scope *scope,		/* scope where to first search for the variable */
+	char *name		/* variable name to find */
+);
 Expr *link_expr(
 	Expr	*ep1,		/* beginning of 1-st structure or list */
 	Expr	*ep2		/* beginning 2-nd (append it to 1-st) */

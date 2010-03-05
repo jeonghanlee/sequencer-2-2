@@ -29,13 +29,14 @@
 31mar00,wfl     Supported entry handler.
 ***************************************************************************/
 
-/*====================== Includes, globals, & defines ====================*/
 #include	<stdio.h>
 #include	<stdlib.h>
 #include	<string.h>
 #include	<assert.h>
 
+#define expr_type_GLOBAL
 #include	"parse.h"
+#undef expr_type_GLOBAL
 #include	"phase2.h"
 #include	"snc_main.h"
 
@@ -44,54 +45,53 @@
 #define	FALSE	0
 #endif	/*TRUE*/
 
-static Chan *build_db_struct(ChanList *chan_list, Var *vp);
-static void alloc_db_lists(Chan *cp, int length);
+static Chan *build_channel(ChanList *chan_list, Var *vp);
+static void alloc_channel_lists(Chan *cp, int length);
 static void add_chan(ChanList *chan_list, Chan *cp);
-VarList *analyze_declarations(Expr *defn_list);
-ChanList *analyze_assignments(VarList *var_list, Expr *defn_list);
-void analyze_definitions(Parse *parse, Expr *defn_list);
+Scope *analyze_declarations(Expr *defn_list);
+ChanList *analyze_assignments(Scope *scope, Expr *defn_list);
+void analyze_monitors(Scope *scope, Expr *defn_list);
+void analyze_syncs_and_syncqs(Scope *scope, Expr *defn_list);
 
 static void assign_subscr(
-	VarList		*var_list,
 	ChanList	*chan_list,
-	char		*name,		/* ptr to variable name */
+	Expr		*dp,
+	Var		*vp,
 	char		*subscript,	/* subscript value or NULL */
-	char		*db_name	/* ptr to db name */
+	char		*db_name
 );
 static void assign_single(
-	VarList		*var_list,
 	ChanList	*chan_list,
-	char		*name,		/* ptr to variable name */
-	char		*db_name	/* ptr to db name */
+	Expr		*dp,
+	Var		*vp,
+	char		*db_name
 );
 void assign_list(
-	VarList		*var_list,
 	ChanList	*chan_list,
-	char		*name,		/* ptr to variable name */
-	Expr		*db_name_list	/* ptr to db name list */
+	Expr		*dp,
+	Var		*vp,
+	Expr		*db_name_list
 );
 void monitor_stmt(
-	VarList		*var_list,
-	char		*name,		/* variable name (should be assigned) */
+	Var		*vp,
+	Expr		*dp,
 	char		*subscript	/* element number or NULL */
 );
 void sync_stmt(
-	VarList		*var_list,
-	char		*name,
+	Scope		*scope,
+	Expr		*dp,
 	char		*subscript,
 	char		*ef_name
 );
 void syncq_stmt(
-	VarList		*var_list,
-	char		*name,
+	Scope		*scope,
+	Expr		*dp,
 	char		*subscript,
 	char		*ef_name,
 	char		*maxQueueSize
 );
 
-static Parse *parse;
-
-/* Parsing "program" statement */
+/* Parsing whole program */
 void program(
 	char *pname,
 	char *pparam,
@@ -102,7 +102,8 @@ void program(
 	Expr *c_list
 )
 {
-	parse = allocParse();
+	Parse *parse = allocParse();
+
 	parse->prog_name = pname;
 	parse->prog_param = pparam;
 	parse->global_defn_list = defn_list;
@@ -110,95 +111,156 @@ void program(
 	parse->ss_list = prog_list;
 	parse->exit_code_list = exit_list;
 	parse->global_c_list = c_list;
-#ifdef	DEBUG
-	fprintf(stderr, "----Phase2---\n");
-#endif	/*DEBUG*/
-	parse->global_scope = allocScope();
-	parse->global_scope->var_list = analyze_declarations(defn_list);
-	parse->chan_list = analyze_assignments(parse->global_scope->var_list, defn_list);
-	analyze_definitions(parse, defn_list);
 
+#ifdef	DEBUG
+	fprintf(stderr, "---- Analysis ----\n");
+#endif	/*DEBUG*/
+	parse->global_scope = analyze_declarations(defn_list);
+	parse->chan_list = analyze_assignments(parse->global_scope, defn_list);
+	analyze_monitors(parse->global_scope, defn_list);
+	analyze_syncs_and_syncqs(parse->global_scope, defn_list);
+
+#ifdef	DEBUG
+	fprintf(stderr, "---- Phase2 ----\n");
+#endif	/*DEBUG*/
 	phase2(parse);
 
 	exit(0);
 }
 
-VarList *analyze_declarations(Expr *defn_list)
+Scope *analyze_declarations(Expr *defn_list)
 {
 	Expr *dp;
 	Var *vp, *vp2;
-	VarList *var_list;
+	Scope *scope;
 
-	var_list = allocVarList();
+#ifdef	DEBUG
+	fprintf(stderr, "-- Declarations --\n");
+#endif	/*DEBUG*/
+	scope = allocScope();
+	scope->var_list = allocVarList();
 	for (dp = defn_list; dp != NULL; dp = dp->next)
 	{
-        	if (dp->type != E_DECL)
+		if (dp->type != E_DECL)
 			continue;
-		vp = dp->value;
+		vp = (Var *)dp->value;
 		assert(vp != NULL);
 		vp->line_num = dp->line_num;
-		vp2 = find_var(var_list, vp->name);
+		vp2 = find_var(scope, vp->name);
 		if (vp2 != NULL)
 		{
-			fprintf(stderr, "line %d: variable %s already declared in line %d\n",
-			 vp->line_num, vp->name, vp2->line_num);
+			fprintf(stderr, "%s:%d: ", dp->src_file, dp->line_num);
+			fprintf(stderr, "assign: variable %s already declared in line %d\n",
+			 vp->name, vp2->line_num);
 			continue;
 		}
-		add_var(var_list, vp);
+		add_var(scope, vp);
 	}
-	return var_list;
+	return scope;
 }
 
-ChanList *analyze_assignments(VarList *var_list, Expr *defn_list)
+ChanList *analyze_assignments(Scope *scope, Expr *defn_list)
 {
 	Expr		*dp;
 	ChanList	*chan_list;
 
+#ifdef	DEBUG
+	fprintf(stderr, "-- Assignments --\n");
+#endif	/*DEBUG*/
 	chan_list = allocChanList();
 	for (dp = defn_list; dp != NULL; dp = dp->next)
 	{
 		char *name;
 		Expr *pv_names;
+		Var *vp;
 
-        	if (dp->type != E_ASSIGN)
+		if (dp->type != E_ASSIGN)
 			continue;
 		name = dp->value;
 		pv_names = dp->right;
+
+		vp = find_var(scope, name);
+		if (vp == NULL)
+		{
+			fprintf(stderr, "%s:%d: ", dp->src_file, dp->line_num);
+			fprintf(stderr, "assign: variable %s not declared\n", name);
+			continue;
+		}
 		if (dp->left != NULL)
 		{
-			assign_subscr(var_list, chan_list, name, dp->left->value,
+			assign_subscr(chan_list, dp, vp, dp->left->value,
 				pv_names->value);
 		}
 		else if (dp->right->next == NULL) {
-			assign_single(var_list, chan_list, name, pv_names->value);
+			assign_single(chan_list, dp, vp, pv_names->value);
 		}
 		else
 		{
-			assign_list(var_list, chan_list, name, pv_names);
+			assign_list(chan_list, dp, vp, pv_names);
 		}
 	}
 	return chan_list;
 }
 
-void analyze_definitions(Parse *parse, Expr *defn_list)
+void analyze_monitors(Scope *scope, Expr *defn_list)
 {
 	Expr *dp = defn_list;
 
+#ifdef	DEBUG
+	fprintf(stderr, "-- Monitors --\n");
+#endif	/*DEBUG*/
 	for (dp = defn_list; dp; dp = dp->next)
 	{
-		switch (dp->type)
+		if (dp->type == E_MONITOR)
 		{
-		case E_MONITOR:
-			break;
-		case E_SYNC:
-			break;
-		case E_SYNCQ:
-			break;
+			char *name = dp->value;
+			char *subscript = dp->left ? dp->left->value : 0;
+			Var *vp = find_var(scope, name);
+
+			if (vp == NULL)
+			{
+				fprintf(stderr, "%s:%d: ", dp->src_file, dp->line_num);
+				fprintf(stderr, "assign: variable %s not declared\n", name);
+				continue;
+			}
+			monitor_stmt(vp, dp, subscript);
 		}
 	}
 }
 
-/* Parsing a declaration statement */
+void analyze_syncs_and_syncqs(Scope *scope, Expr *defn_list)
+{
+	Expr *dp = defn_list;
+
+#ifdef	DEBUG
+	fprintf(stderr, "-- Sync and SyncQ --\n");
+#endif	/*DEBUG*/
+	for (dp = defn_list; dp; dp = dp->next)
+	{
+		char *subscript = dp->left ? dp->left->value : 0;
+		char *ef_name;
+
+		if (dp->type == E_SYNC)
+		{
+			assert(dp->right);
+			assert(dp->right->type == E_X);
+			ef_name = dp->right->value;
+			sync_stmt(scope, dp, subscript, ef_name);
+		}
+		if (dp->type == E_SYNCQ)
+		{
+			char *maxQueueSize;
+			assert(dp->right);
+			assert(dp->right->type == E_X);
+			ef_name = dp->right->value;
+			maxQueueSize = dp->right->left ? dp->right->left->value : 0;
+			assert(maxQueueSize==NULL || dp->right->left->type==E_CONST);
+			syncq_stmt(scope, dp, subscript, ef_name, maxQueueSize);
+		}
+	}
+}
+
+/* Parsing a declaration */
 Expr *declaration(
 	int	type,		/* variable type (e.g. V_FLOAT) */
 	int	class,		/* variable class (e.g. VC_ARRAY) */
@@ -208,8 +270,8 @@ Expr *declaration(
 	char	*value		/* initial value or NULL */
 )
 {
-	Var *vp;
-	int		length1, length2;
+	Var	*vp;
+	int	length1, length2;
 
 	length1 = length2 = 1;
 	if (s_length1 != NULL)
@@ -232,7 +294,7 @@ Expr *declaration(
 	vp->length2 = length2;
 	vp->value = value;
 	vp->chan = NULL;
-	return expression(E_DECL, vp, 0, 0);
+	return expression(E_DECL, (char *)vp, 0, 0);
 }
 
 /* Option statement */
@@ -280,37 +342,29 @@ void option_stmt(
  * Note: Variable may be subscripted.
  */
 static void assign_single(
-	VarList		*var_list,
 	ChanList	*chan_list,
-	char		*name,		/* ptr to variable name */
-	char		*db_name	/* ptr to db name */
+	Expr		*dp,
+	Var		*vp,
+	char		*db_name
 )
 {
 	Chan		*cp;
-	Var		*vp;
+	char		*name = vp->name;
 
 #ifdef	DEBUG
 	fprintf(stderr, "assign %s to \"%s\";\n", name, db_name);
 #endif	/*DEBUG*/
-	/* Find the variable */
-	vp = find_var(var_list, name);
-	if (vp == 0)
-	{
-		fprintf(stderr, "assign: variable %s not declared, line %d\n",
-		 name, globals->line_num);
-		return;
-	}
 
 	cp = vp->chan;
 	if (cp != NULL)
 	{
-		fprintf(stderr, "assign: %s already assigned, line %d\n",
-		 name, globals->line_num);
+		fprintf(stderr, "%s:%d: ", dp->src_file, dp->line_num);
+		fprintf(stderr, "assign: %s already assigned\n", name);
 		return;
 	}
 
 	/* Build structure for this channel */
-	cp = build_db_struct(chan_list, vp);
+	cp = build_channel(chan_list, vp);
 
 	cp->db_name = db_name;	/* DB name */
 
@@ -323,33 +377,25 @@ static void assign_single(
 /* "Assign" statement: assign an array element to a DB channel.
  * Format: assign <variable>[<subscr>] to <string>; */
 static void assign_subscr(
-	VarList		*var_list,
 	ChanList	*chan_list,
-	char		*name,		/* ptr to variable name */
+	Expr		*dp,
+	Var		*vp,
 	char		*subscript,	/* subscript value or NULL */
-	char		*db_name	/* ptr to db name */
+	char		*db_name
 )
 {
 	Chan		*cp;
-	Var		*vp;
+	char		*name = vp->name;
 	int		subNum;
 
 #ifdef	DEBUG
 	fprintf(stderr, "assign %s[%s] to \"%s\";\n", name, subscript, db_name);
 #endif	/*DEBUG*/
-	/* Find the variable */
-	vp = find_var(var_list, name);
-	if (vp == 0)
-	{
-		fprintf(stderr, "assign: variable %s not declared, line %d\n",
-		 name, globals->line_num);
-		return;
-	}
 
 	if (vp->class != VC_ARRAY1 && vp->class != VC_ARRAY2)
 	{
-		fprintf(stderr, "assign: variable %s not an array, line %d\n",
-		 name, globals->line_num);
+		fprintf(stderr, "%s:%d: ", dp->src_file, dp->line_num);
+		fprintf(stderr, "assign: variable %s not an array\n", name);
 		return;
 	}
 
@@ -357,33 +403,34 @@ static void assign_subscr(
 	if (cp == NULL)
 	{
 		/* Build structure for this channel */
-		cp = build_db_struct(chan_list, vp);
+		cp = build_channel(chan_list, vp);
 	}
 	else if (cp->db_name != NULL)
 	{
-		fprintf(stderr, "assign: array %s already assigned, line %d\n",
-		 name, globals->line_num);
+		fprintf(stderr, "%s:%d: ", dp->src_file, dp->line_num);
+		fprintf(stderr, "assign: array %s already assigned\n", name);
 		return;
 	}
 
 	subNum = atoi(subscript);
 	if (subNum < 0 || subNum >= vp->length1)
 	{
-		fprintf(stderr, 
-		 "assign: subscript %s[%d] is out of range, line %d\n",
-		 name, subNum, globals->line_num);
+		fprintf(stderr, "%s:%d: ", dp->src_file, dp->line_num);
+		fprintf(stderr, "assign: subscript %s[%d] is out of range\n",
+		 name, subNum);
 		return;
 	}
 
 	if (cp->db_name_list == NULL)
-		alloc_db_lists(cp, vp->length1); /* allocate lists */
+		alloc_channel_lists(cp, vp->length1); /* allocate lists */
 	else if (cp->db_name_list[subNum] != NULL)
 	{
-		fprintf(stderr, "assign: %s[%d] already assigned, line %d\n",
-		 name, subNum, globals->line_num);
+		fprintf(stderr, "%s:%d: ", dp->src_file, dp->line_num);
+		fprintf(stderr, "assign: %s[%d] already assigned\n",
+		 name, subNum);
 		return;
 	}
-	
+
 	cp->db_name_list[subNum] = db_name;
 	cp->count = vp->length2; /* could be a 2-dimensioned array */
 
@@ -399,48 +446,40 @@ static void assign_subscr(
  * the remaining elements receive NULL assignments.
  */
 void assign_list(
-	VarList		*var_list,
 	ChanList	*chan_list,
-	char		*name,		/* ptr to variable name */
-	Expr		*db_name_list	/* ptr to db name list */
+	Expr		*dp,
+	Var		*vp,
+	Expr		*db_name_list
 )
 {
 	Chan		*cp;
-	Var		*vp;
 	int		elem_num;
+	char		*name = vp->name;
 
 #ifdef	DEBUG
 	fprintf(stderr, "assign %s to {", name);
 #endif	/*DEBUG*/
-	/* Find the variable */
-	vp = find_var(var_list, name);
-	if (vp == 0)
-	{
-		fprintf(stderr, "assign: variable %s not declared, line %d\n",
-		 name, globals->line_num);
-		return;
-	}
 
 	if (vp->class != VC_ARRAY1 && vp->class != VC_ARRAY2)
 	{
-		fprintf(stderr, "assign: variable %s is not an array, line %d\n",
-		 name, globals->line_num);
+		fprintf(stderr, "%s:%d: ", dp->src_file, dp->line_num);
+		fprintf(stderr, "assign: variable %s is not an array\n", name);
 		return;
 	}
 
 	cp = vp->chan;
 	if (cp != NULL)
 	{
-		fprintf(stderr, "assign: variable %s already assigned, line %d\n",
-		 name, globals->line_num);
+		fprintf(stderr, "%s:%d: ", dp->src_file, dp->line_num);
+		fprintf(stderr, "assign: variable %s already assigned\n", name);
 		return;
 	}
 
 	/* Build a db structure for this variable */
-	cp = build_db_struct(chan_list, vp);
+	cp = build_channel(chan_list, vp);
 
 	/* Allocate lists */
-	alloc_db_lists(cp, vp->length1); /* allocate lists */
+	alloc_channel_lists(cp, vp->length1); /* allocate lists */
 
 	/* fill in the array of pv names */
 	for (elem_num = 0; elem_num < vp->length1; elem_num++)
@@ -463,8 +502,8 @@ void assign_list(
 	return;
 }
 
-/* Build a db structure for this variable */
-static Chan *build_db_struct(ChanList *chan_list, Var *vp)
+/* Build a channel structure for this variable */
+static Chan *build_channel(ChanList *chan_list, Var *vp)
 {
 	Chan		*cp;
 
@@ -489,7 +528,7 @@ static Chan *build_db_struct(ChanList *chan_list, Var *vp)
 }
 
 /* Allocate lists for assigning multiple pv's to a variable */
-static void alloc_db_lists(Chan *cp, int length)
+static void alloc_channel_lists(Chan *cp, int length)
 {
 	/* allocate an array of pv names */
 	cp->db_name_list = (char **)calloc(sizeof(char **), length);
@@ -506,42 +545,28 @@ static void alloc_db_lists(Chan *cp, int length)
 	cp->num_elem = length;
 }
 
-/* Parsing a "monitor" statement.
- * Format:
- * 	monitor <var>; - monitor a single variable or all elements in an array.
- * 	monitor <var>[<m>]; - monitor m-th element of an array.
- */
 void monitor_stmt(
-	VarList		*var_list,
-	char		*name,		/* variable name (should be assigned) */
+	Var		*vp,
+	Expr		*dp,
 	char		*subscript	/* element number or NULL */
 )
 {
-	Var		*vp;
 	Chan		*cp;
 	int		subNum;
+	char		*name = vp->name;
 
 #ifdef	DEBUG
-	fprintf(stderr, "monitor_stmt: name=%s", name);
+	fprintf(stderr, "monitor %s", name);
 	if (subscript != NULL) fprintf(stderr, "[%s]", subscript);
 	fprintf(stderr, "\n");
 #endif	/*DEBUG*/
-
-	/* Find the variable */
-	vp = find_var(var_list, name);
-	if (vp == 0)
-	{
-		fprintf(stderr, "assign: variable %s not declared, line %d\n",
-		 name, globals->line_num);
-		return;
-	}
 
 	/* Find a channel assigned to this variable */
 	cp = vp->chan;
 	if (cp == 0)
 	{
-		fprintf(stderr, "monitor: variable %s not assigned, line %d\n",
-		 name, globals->line_num);
+		fprintf(stderr, "%s:%d: ", dp->src_file, dp->line_num);
+		fprintf(stderr, "monitor: variable %s not assigned\n", name);
 		return;
 	}
 
@@ -565,15 +590,16 @@ void monitor_stmt(
 	subNum = atoi(subscript);
 	if (subNum < 0 || subNum >= cp->num_elem)
 	{
-		fprintf(stderr, "monitor: subscript of %s out of range, line %d\n",
-		 name, globals->line_num);
+		fprintf(stderr, "%s:%d: ", dp->src_file, dp->line_num);
+		fprintf(stderr, "monitor: subscript of %s out of range\n", name);
 		return;
 	}
 
 	if (cp->num_elem == 0 || cp->db_name_list[subNum] == NULL)
 	{
-		fprintf(stderr, "monitor: %s[%d] not assigned, line %d\n",
-		 name, subNum, globals->line_num);
+		fprintf(stderr, "%s:%d: ", dp->src_file, dp->line_num);
+		fprintf(stderr, "monitor: %s[%d] not assigned\n",
+		 name, subNum);
 		return;
 	}
 
@@ -581,10 +607,9 @@ void monitor_stmt(
 	return;
 }
 
-/* Parsing "sync" statement */
 void sync_stmt(
-	VarList		*var_list,
-	char		*name,
+	Scope		*scope,
+	Expr		*dp,
 	char		*subscript,
 	char		*ef_name
 )
@@ -592,34 +617,36 @@ void sync_stmt(
 	Chan		*cp;
 	Var		*vp;
 	int		subNum;
+	char		*name = dp->value;
 
 #ifdef	DEBUG
-	fprintf(stderr, "sync_stmt: name=%s, subNum=%s, ef_name=%s\n",
-	 name, subscript?subscript:"(no subscript)", ef_name);
+	fprintf(stderr, "sync %s%s%s%s to %s\n", name,
+	 subscript?"[":"", subscript?subscript:"", subscript?"]":"", ef_name);
 #endif	/*DEBUG*/
 
-	vp = find_var(var_list, name);
+	vp = find_var(scope, name);
 	if (vp == 0)
 	{
-		fprintf(stderr, "sync: variable %s not declared, line %d\n",
-		 name, globals->line_num);
+		fprintf(stderr, "%s:%d: ", dp->src_file, dp->line_num);
+		fprintf(stderr, "sync: variable %s not declared\n", name);
 		return;
 	}
 
 	cp = vp->chan;
 	if (cp == 0)
 	{
-		fprintf(stderr, "sync: variable %s not assigned, line %d\n",
-		 name, globals->line_num);
+		fprintf(stderr, "%s:%d: ", dp->src_file, dp->line_num);
+		fprintf(stderr, "sync: variable %s not assigned\n", name);
 		return;
 	}
 
 	/* Find the event flag varible */
-	vp = find_var(var_list, ef_name);
+	vp = find_var(scope, ef_name);
 	if (vp == 0 || vp->type != V_EVFLAG)
 	{
-		fprintf(stderr, "sync: e-f variable %s not declared, line %d\n",
-		 ef_name, globals->line_num);
+		fprintf(stderr, "%s:%d: ", dp->src_file, dp->line_num);
+		fprintf(stderr, "sync: e-f variable %s not declared\n",
+		 ef_name);
 		return;
 	}
 
@@ -643,9 +670,9 @@ void sync_stmt(
 	subNum = atoi(subscript);
 	if (subNum < 0 || subNum >= cp->num_elem)
 	{
-		fprintf(stderr,
-		 "sync: subscript %s[%d] out of range, line %d\n",
-		 name, subNum, globals->line_num);
+		fprintf(stderr, "%s:%d: ", dp->src_file, dp->line_num);
+		fprintf(stderr, "sync: subscript %s[%d] out of range\n",
+		 name, subNum);
 		return;
 	}
 	cp->ef_var_list[subNum] = vp; /* sync to a specific element of the array */
@@ -653,10 +680,9 @@ void sync_stmt(
 	return;
 }
 
-/* Parsing "syncq" statement */
 void syncq_stmt(
-	VarList		*var_list,
-	char		*name,
+	Scope		*scope,
+	Expr		*dp,
 	char		*subscript,
 	char		*ef_name,
 	char		*maxQueueSize
@@ -666,6 +692,7 @@ void syncq_stmt(
 	Var		*vp;
 	Var		*efp;
 	int		subNum;
+	char		*name = dp->value;
 
 #ifdef	DEBUG
 	fprintf(stderr, "syncq_stmt: name=%s, subNum=%s, ef_name=%s, "
@@ -673,44 +700,44 @@ void syncq_stmt(
 #endif	/*DEBUG*/
 
 	/* Find the variable and check it's assigned */
-	vp = find_var(var_list, name);
+	vp = find_var(scope, name);
 	if (vp == 0)
 	{
-		fprintf(stderr, "syncQ: variable %s not declared, line %d\n",
-		 name, globals->line_num);
+		fprintf(stderr, "%s:%d: ", dp->src_file, dp->line_num);
+		fprintf(stderr, "syncQ: variable %s not declared\n", name);
 		return;
 	}
 
 	cp = vp->chan;
 	if (cp == 0)
 	{
-		fprintf(stderr, "syncQ: variable %s not assigned, line %d\n",
-		 name, globals->line_num);
+		fprintf(stderr, "%s:%d: ", dp->src_file, dp->line_num);
+		fprintf(stderr, "syncQ: variable %s not assigned\n", name);
 		return;
 	}
 
 	/* Check that the variable has not already been syncQ'd */
 	if (vp->queued)
 	{
-		fprintf(stderr, "syncQ: variable %s already syncQ'd, "
-		 "line %d\n", name, globals->line_num);
+		fprintf(stderr, "%s:%d: ", dp->src_file, dp->line_num);
+		fprintf(stderr, "syncQ: variable %s already syncQ'd\n", name);
 		return;
 	}
 
 	/* Find the event flag variable */
-	efp = find_var(var_list, ef_name);
+	efp = find_var(scope, ef_name);
 	if (efp == 0 || efp->type != V_EVFLAG)
 	{
-		fprintf(stderr, "syncQ: e-f variable %s not declared, "
-		 "line %d\n", ef_name, globals->line_num);
+		fprintf(stderr, "%s:%d: ", dp->src_file, dp->line_num);
+		fprintf(stderr, "syncQ: e-f variable %s not declared\n", ef_name);
 		return;
 	}
 
 	/* Check that the event flag has not already been syncQ'd */
 	if (efp->queued)
 	{
-		fprintf(stderr, "syncQ: e-f variable %s already syncQ'd, "
-		 "line %d\n", ef_name, globals->line_num);
+		fprintf(stderr, "%s:%d: ", dp->src_file, dp->line_num);
+		fprintf(stderr, "syncQ: e-f variable %s already syncQ'd\n", ef_name);
 		return;
 	}
 
@@ -739,19 +766,19 @@ void syncq_stmt(
 	subNum = atoi(subscript);
 	if (subNum < 0 || subNum >= cp->num_elem)
 	{
-		fprintf(stderr,
-		 "syncQ: subscript %s[%d] out of range, line %d\n",
-		 name, subNum, globals->line_num);
+		fprintf(stderr, "%s:%d: ", dp->src_file, dp->line_num);
+		fprintf(stderr, "syncQ: subscript %s[%d] out of range\n",
+		 name, subNum);
 		return;
 	}
 	cp->ef_var_list[subNum] = efp; /* sync to a specific element of the array */
-
-	return;
 }
 
-/* Add a variable to the end of a linked list */
-void add_var(VarList *var_list, Var *vp)
+/* Add a variable to a scope; (append to the end of the list */
+void add_var(Scope *scope, Var *vp)
 {
+	VarList	*var_list = scope->var_list;
+
 	if (var_list->first == NULL)
 		var_list->first = vp;
 	else
@@ -760,23 +787,22 @@ void add_var(VarList *var_list, Var *vp)
 	vp->next = NULL;
 }
 
-/* Find a variable by name;  returns a pointer to the Var struct or
-   NULL if the variable is not found. */
-Var *find_var(VarList *var_list, char *name)
+/* Find a variable by name, given a scope; first searches the given
+   scope, then the parent scope, and so on. Returns a pointer to the
+   var struct or NULL if the variable is not found. */
+Var *find_var(Scope *scope, char *name)
 {
-	Var		*vp;
+	Var	*vp;
 
-	for (vp = var_list->first; vp != NULL; vp = vp->next)
+	for ( ; scope != NULL; scope = scope->next)
 	{
-		if (strcmp(vp->name, name) == 0)
-			return vp;
+		for (vp = scope->var_list->first; vp != NULL; vp = vp->next)
+		{
+			if (strcmp(vp->name, name) == 0)
+				return vp;
+		}
 	}
 	return NULL;
-}
-
-Var *global_find_var(char *name)
-{
-	return find_var(parse->global_scope->var_list, name);
 }
 
 /* Add a channel to the channel linked list */
@@ -800,8 +826,7 @@ Expr *expression(
 )
 {
 	Expr		*ep;
-#ifdef	DEBUG
-#endif	/*DEBUG*/
+
 	/* Allocate a structure for this item or expression */
 	ep = allocExpr();
 #ifdef	DEBUG
@@ -830,7 +855,7 @@ Expr *expression(
 	ep->left = left;
 	ep->right = right;
 	if (type == E_TEXT)
-		ep->line_num = globals->c_line_num;
+		ep->line_num = globals->line_num-1;
 	else
 		ep->line_num = globals->line_num;
 	ep->src_file = globals->src_file;
@@ -870,13 +895,3 @@ Expr *link_expr(
 #endif	/*DEBUG*/
 	return ep1;
 }
-
-/* The ordering of this list must correspond with the ordering in parse.h */
-char *expr_type_names[E_NUM_TYPES] = {
-	"E_EMPTY", "E_CONST", "E_VAR", "E_FUNC", "E_STRING", "E_UNOP", "E_BINOP",
-	"E_ASGNOP", "E_PAREN", "E_SUBSCR", "E_TEXT", "E_STMT", "E_CMPND",
-	"E_IF", "E_ELSE", "E_WHILE", "E_SS", "E_STATE", "E_WHEN",
-	"E_FOR", "E_X", "E_PRE", "E_POST", "E_BREAK", "E_COMMA", "E_DECL",
-	"E_ENTRY", "E_EXIT", "E_OPTION"
-};
-

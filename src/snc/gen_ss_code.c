@@ -28,6 +28,7 @@
 ***************************************************************************/
 #include	<stdio.h>
 #include	<string.h>
+#include	<assert.h>
 
 #include	"parse.h"
 #include	"phase2.h"
@@ -67,7 +68,7 @@ static void gen_action_func(Expr *sp, Expr *ssp);
 static void gen_event_func(Expr *sp, Expr *ssp);
 static void eval_expr(int stmt_type, Expr *ep, Expr *sp, int level);
 static void indent(int level);
-static void gen_ef_func(int stmt_type, Expr *ep, Expr *sp, char *fname,
+static void gen_ef_func(int stmt_type, Expr *ep, char *fname,
 	enum fcode func_code);
 static void gen_pv_func(int stmt_type, Expr *ep, Expr *sp,
 	char *fname, enum fcode func_code, int add_length, int num_params);
@@ -78,6 +79,7 @@ static void gen_entry_func(Expr *sp, Expr *ssp);
 static void gen_exit_func(Expr *sp, Expr *ssp);
 static int state_block_index_from_name(Expr *ssp, char *state_name);
 static int special_func(int stmt_type, Expr *ep, Expr *sp);
+void print_loc(Expr *ep);
 
 /*+************************************************************************
 *  NAME: gen_ss_code
@@ -158,7 +160,7 @@ static void gen_entry_func(Expr *sp, Expr *ssp)
 {	
 	Expr	*ep,			/* Entry expression */
 		*xp;			/* statement expression walker */
-	int	entryI =  0, line_num = -1;
+	int	entryI = 0;
 
 	/* Entry function declaration */
 	printf("\n/* Entry function for state \"%s\" in state set \"%s\" */\n",
@@ -173,11 +175,6 @@ static void gen_entry_func(Expr *sp, Expr *ssp)
 			printf("/* Entry %d: */\n", ++entryI);
 			for (xp = ep->right; xp != NULL; xp = xp->next)
 			{
-				if (line_num != xp->line_num) 
-				{ 
-					print_line_num(xp->line_num, xp->src_file); 
-					line_num = xp->line_num; 
-				} 
 				eval_expr(ACTION_STMT, xp, sp, 1);
 			}
 		}
@@ -192,7 +189,7 @@ static void gen_exit_func(Expr *sp, Expr *ssp)
 {	
 	Expr	*ep,			/* Entry expression */
 		*xp;			/* statement expression walker */
-	int	exitI =  0, line_num = -1;
+	int	exitI = 0;
 
 	/* Exit function declaration */
 	printf("\n/* Exit function for state \"%s\" in state set \"%s\" */\n",
@@ -207,11 +204,6 @@ static void gen_exit_func(Expr *sp, Expr *ssp)
  			 printf("/* Exit %d: */\n", ++exitI);
 			 for (xp = ep->right; xp != NULL; xp = xp->next)
 			 {
-				if (line_num != xp->line_num) 
-				{ 
-					print_line_num(xp->line_num, xp->src_file); 
-					line_num = xp->line_num; 
-				}
 				eval_expr(ACTION_STMT, xp, sp, 1);
 			 }
 		}
@@ -241,7 +233,6 @@ static void gen_delay_func(Expr *sp, Expr *ssp)
 	{
 		if ( tp->type == E_WHEN )
 		{
-			print_line_num(tp->line_num, tp->src_file);
 			traverse_expr_tree(tp, E_FUNC, "delay", eval_delay, sp);
 		}
 	}
@@ -260,6 +251,8 @@ static void eval_delay(Expr *ep, Expr *sp)
 #ifdef	DEBUG
 	fprintf(stderr, "eval_delay: type=%s\n", expr_type_names[ep->type]);
 #endif	/*DEBUG*/
+
+	print_loc(ep);
 
 	/* Generate 1-st part of function w/ 1-st 2 parameters */
 	delay_id = (int)ep->right; /* delay id was previously assigned */
@@ -291,7 +284,7 @@ static void gen_action_func(Expr *sp, Expr *ssp)
 	/* "switch" statment based on the transition number */
 	printf("\tswitch(transNum)\n\t{\n");
 	trans_num = 0;
-	globals->line_num = 0;
+
 	/* For each transition ("when" statement) ... */
 	for (tp = sp->left; tp != NULL; tp = tp->next)
 	{
@@ -312,14 +305,9 @@ static void gen_action_func(Expr *sp, Expr *ssp)
 			/* For each action statement insert action code */
 			for (ap = tp->right; ap != NULL; ap = ap->next) 
 			{ 
-				if (globals->line_num != ap->line_num) 
-				{ 
-					print_line_num(ap->line_num, ap->src_file); 
-					globals->line_num = ap->line_num; 
-				} 
 				/* Evaluate statements */ 
 				eval_expr(ACTION_STMT, ap, sp, 3); 
-			} 
+			}
 
 			/* end of block */
 			printf("\t\t}\n"); 
@@ -352,19 +340,22 @@ static void gen_event_func(Expr *sp, Expr *ssp)
 	{
 	        if (tp->type == E_WHEN) 
 		{
-		        print_line_num(tp->line_num, tp->src_file);
+			if (tp->left != 0)
+				print_loc(tp->left);
 			printf("\tif (");
 			if (tp->left == 0)
 			      printf("TRUE");
 			else
+			{
 			      eval_expr(EVENT_STMT, tp->left, sp, 0);
+			}
 			printf(")\n\t{\n");
 			/* index is the transition number (0, 1, ...) */
 			index = state_block_index_from_name(ssp, tp->value);
 			if (index < 0)
 			{
-			       fprintf(stderr, "Line %d: ", tp->line_num);
-			       fprintf(stderr, "No state %s in state set %s\n",
+			       fprintf(stderr, "line %d: ", tp->line_num);
+			       fprintf(stderr, "no state %s in state set %s\n",
 				       tp->value, ssp->value);
 			       index = 0; /* default to 1-st state */
 			       printf("\t\t/* state %s does not exist */\n",
@@ -415,6 +406,7 @@ static void eval_expr(
 	switch(ep->type)
 	{
 	case E_DECL:
+		if (stmt_type == ACTION_STMT) print_loc(ep->left);
 		indent(level);
 		printf("%s ",ep->value);
 		eval_expr(stmt_type, ep->left, sp, 0);
@@ -424,28 +416,26 @@ static void eval_expr(
 			eval_expr(stmt_type, ep->right, sp, 0);
 		}
 		printf(";\n");
-		globals->line_num += 1;
 		break;
 	case E_CMPND:
 		indent(level);
 		printf("{\n");
-		globals->line_num += 1;
 		for (epf = ep->left; epf != 0;	epf = epf->next)
 		{
 			eval_expr(stmt_type, epf, sp, level+1);
 		}
 		indent(level);
 		printf("}\n");
-		globals->line_num += 1;
 		break;
 	case E_STMT:
+		if (stmt_type == ACTION_STMT) print_loc(ep->left);
 		indent(level);
 		eval_expr(stmt_type, ep->left, sp, 0);
 		printf(";\n");
-		globals->line_num += 1;
 		break;
 	case E_IF:
 	case E_WHILE:
+		if (stmt_type == ACTION_STMT) print_loc(ep->left);
 		indent(level);
 		if (ep->type == E_IF)
 			printf("if (");
@@ -453,7 +443,6 @@ static void eval_expr(
 			printf("while (");
 		eval_expr(stmt_type, ep->left, sp, 0);
 		printf(")\n");
-		globals->line_num += 1;
 		epf = ep->right;
 		if (epf->type == E_CMPND)
 			eval_expr(stmt_type, ep->right, sp, level);
@@ -461,6 +450,7 @@ static void eval_expr(
 			eval_expr(stmt_type, ep->right, sp, level+1);
 		break;
 	case E_FOR:
+		if (stmt_type == ACTION_STMT) print_loc(ep->left->left);
 		indent(level);
 		printf("for (");
 		eval_expr(stmt_type, ep->left->left, sp, 0);
@@ -469,7 +459,6 @@ static void eval_expr(
 		printf("; ");
 		eval_expr(stmt_type, ep->right->left, sp, 0);
 		printf(")\n");
-		globals->line_num += 1;
 		epf = ep->right->right;
 		if (epf->type == E_CMPND)
 			eval_expr(stmt_type, epf, sp, level);
@@ -477,9 +466,9 @@ static void eval_expr(
 			eval_expr(stmt_type, epf, sp, level+1);
 		break;
 	case E_ELSE:
+		if (stmt_type == ACTION_STMT) print_loc(ep->left);
 		indent(level);
 		printf("else\n");
-		globals->line_num += 1;
 		epf = ep->left;
 		/* Is it "else if" ? */
 		if (epf->type == E_IF || epf->type == E_CMPND)
@@ -493,7 +482,8 @@ static void eval_expr(
 		fprintf(stderr, "ep->left is %s\n",ep->left ? "non-null" : "null");
 #endif	/*DEBUG*/
 		if(globals->options->reent)
-		{	/* Make variables point to allocated structure */
+		{
+			/* Make variables point to allocated structure */
 			Var		*vp;
 			vp = (Var *)ep->left;
 			if (vp->type != V_NONE && vp->type != V_EVFLAG)
@@ -513,7 +503,6 @@ static void eval_expr(
 	case E_BREAK:
 		indent(level);
 		printf("break;\n");
-		globals->line_num += 1;
 		break;
 	case E_FUNC:
 #ifdef	DEBUG
@@ -564,7 +553,6 @@ static void eval_expr(
 		break;
 	case E_TEXT:
 		printf("%s\n", ep->value);
-		globals->line_num += 1;
 		break;
 	default:
 		if (stmt_type == EVENT_STMT)
@@ -590,7 +578,7 @@ static enum fcode func_name_to_code(char *fname)
 		if (strcmp(fname, fcode_str[i]) == 0)
 			return (enum fcode)i;
 	}
-			
+
 	return F_NONE;
 }
 
@@ -633,7 +621,7 @@ static int special_func(
 	    case F_EFCLEAR:
 	    case F_EFTESTANDCLEAR:
 		/* Event flag funtions */
-		gen_ef_func(stmt_type, ep, sp, fname, func_code);
+		gen_ef_func(stmt_type, ep, fname, func_code);
 		return TRUE;
 
 	    case F_PVGETQ:
@@ -706,39 +694,39 @@ static int special_func(
 static void gen_ef_func(
 	int stmt_type,		/* ACTION_STMT or EVENT_STMT */
 	Expr *ep,		/* ptr to function in the expression */
-	Expr *sp,		/* current State struct */
 	char *fname,		/* function name */
 	enum fcode func_code	/* function code */
 )
 {
 	Expr		*ep1;
-	Var		*vp;
+	Var		*vp = 0;
 
 	ep1 = ep->left; /* ptr to 1-st parameters */
 	if (ep1 != 0 && ep1->type == E_COMMA)
-		ep1 = ep1->left;
-	if ( (ep1 != 0) && (ep1->type == E_VAR) )
-		vp = global_find_var(ep1->value);
-	else
-		vp = 0;
-		if (vp == 0 || vp->type != V_EVFLAG)
 	{
-		fprintf(stderr, "Line %d: ", ep->line_num);
+		ep1 = ep1->left;
+	}
+	if (ep1 != 0 && ep1->type == E_VAR)
+	{
+		vp = (Var *)ep1->left;
+	}
+
+	if (vp == 0 || vp->type != V_EVFLAG)
+	{
+		fprintf(stderr, "line %d: ", ep->line_num);
 		fprintf(stderr,
-		 "Parameter to \"%s\" must be an event flag\n", fname);
+		 "parameter to \"%s\" must be an event flag\n", fname);
 	}
 	else if (func_code == F_EFSET && stmt_type == EVENT_STMT)
 	{
-		fprintf(stderr, "Line %d: ", ep->line_num);
+		fprintf(stderr, "line %d: ", ep->line_num);
 		fprintf(stderr,
-		 "efSet() cannot be used as an event.\n");
+		 "efSet() cannot be used as an event\n");
 	}
 	else
 	{
 		printf("seq_%s(ssId, %s)", fname, vp->name);
 	}
-
-	return;
 }
 
 /* Generate code for pv functions requiring a database variable.
@@ -769,9 +757,9 @@ static void gen_pv_func(
 		ep1 = ep1->left;
 	if (ep1 == 0)
 	{
-		fprintf(stderr, "Line %d: ", ep->line_num);
+		fprintf(stderr, "line %d: ", ep->line_num);
 		fprintf(stderr,
-		 "Function \"%s\" requires a parameter.\n", fname);
+		 "function \"%s\" requires a parameter\n", fname);
 		return;
 	}
 
@@ -780,7 +768,7 @@ static void gen_pv_func(
 	id = -1;
 	if (ep1->type == E_VAR)
 	{
-		vp = global_find_var(ep1->value);
+		vp = (Var *)ep1->left;
 	}
 	else if (ep1->type == E_SUBSCR)
 	{	/* Form should be: <db variable>[<expression>] */
@@ -788,18 +776,17 @@ static void gen_pv_func(
 		ep3 = ep1->right;	/* subscript */
 		if ( ep2->type == E_VAR )
 		{
-			vp = global_find_var(ep2->value);
+			vp = (Var *)ep2->left;
 		}
 	}
 
 	if (vp == 0)
 	{
-		fprintf(stderr, "Line %d: ", ep->line_num);
+		fprintf(stderr, "line %d: ", ep->line_num);
 		fprintf(stderr,
-		 "Parameter to \"%s\" is not a defined variable.\n", fname);
-		cp=0;
+		 "parameter to \"%s\" is not a defined variable\n", fname);
+		cp = 0;
 	}
-		
 	else
 	{
 #ifdef	DEBUG
@@ -809,9 +796,9 @@ static void gen_pv_func(
 		cp = vp->chan;
 		if (cp == 0)
 		{
-			fprintf(stderr, "Line %d: ", ep->line_num);
+			fprintf(stderr, "line %d: ", ep->line_num);
 			fprintf(stderr,
-			 "Parameter to \"%s\" must be DB variable.\n", fname);
+			 "parameter to \"%s\" must be DB variable\n", fname);
 		}
 		else
 		{
@@ -908,4 +895,9 @@ static void gen_exit_handler(Expr *expr_list)
 		eval_expr(EXIT_STMT, ep, NULL, 1);
 	}
 	printf("}\n\n");
+}
+
+void print_loc(Expr *ep)
+{
+	print_line_num(ep->line_num, ep->src_file);
 }
