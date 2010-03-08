@@ -28,6 +28,7 @@
 #include	<stdio.h>
 #include	<stdlib.h>
 #include	<string.h>
+#include	<stdarg.h>
 
 #include	"snc_main.h"
 
@@ -55,7 +56,7 @@ static Options	default_options =
 
 static Globals	default_globals =
 {
-	0,0,&default_options
+	0,0,0,&default_options
 };
 
 Globals *globals = &default_globals;
@@ -117,14 +118,43 @@ int main(int argc, char *argv[])
 	/* Use line buffered output */
 	setvbuf(stdout, NULL, _IOLBF, BUFSIZ);
 	setvbuf(stderr, NULL, _IOLBF, BUFSIZ);
-	
+
 	printf("/* %s: %s */\n", sncVersion, in_file);
 
-	/* Call the SNC parser */
 	compile();
 
         return 0; /* never reached */
 }
+
+#ifdef USE_LEMON
+#include "token.h"
+
+extern void parser(
+	void *yyp,	/* The parser */
+	int yymajor,	/* The major token code number */
+	Token yyminor,	/* The value for the token */
+        int line_num
+);
+extern void *parserAlloc(void *(*mallocProc)(size_t));
+void parserFree(
+	void *p,		/* The parser to be deleted */
+	void (*freeProc)(void*)	/* Function used to reclaim memory */
+);
+
+void compile(void)
+{
+	int tok;
+	void *pParser = parserAlloc(malloc);
+	do
+	{
+		tok = yylex();
+		parser(pParser, tok, yylval, globals->c_line_num);
+	}
+	while (tok);
+	parserFree(pParser, free);
+}
+#endif
+
 /*+************************************************************************
 *  NAME: get_args
 *
@@ -216,7 +246,7 @@ static void get_options(char *s)
 		opt->warn = opt_val;
 		break;
 	default:
-		fprintf(stderr, "unknown option ignored: \"%s\"\n", s);
+		report("unknown option ignored: \"%s\"", s);
 		break;
 	}
 }
@@ -270,82 +300,65 @@ static void get_out_file(char *s)
 
 static void print_usage(void)
 {
-	fprintf(stderr, "%s\n", sncVersion);
-	fprintf(stderr, "usage: snc <options> <infile>\n");
-	fprintf(stderr, "options:\n");
-	fprintf(stderr, "  -o <outfile> - override name of output file\n");
-	fprintf(stderr, "  +a           - do asynchronous pvGet\n");
-	fprintf(stderr, "  -c           - don't wait for all connects\n");
-	fprintf(stderr, "  +d           - turn on debug run-time option\n");
-	fprintf(stderr, "  -e           - don't use new event flag mode\n");
-	fprintf(stderr, "  -l           - suppress line numbering\n");
-	fprintf(stderr, "  +m           - generate main program\n");
-	fprintf(stderr, "  -i           - don't register commands/programs\n");
-	fprintf(stderr, "  +r           - make reentrant at run-time\n");
-	fprintf(stderr, "  -w           - suppress compiler warnings\n");
-	fprintf(stderr, "example:\n snc +a -c vacuum.st\n");
+	report("%s", sncVersion);
+	report("usage: snc <options> <infile>");
+	report("options:");
+	report("  -o <outfile> - override name of output file");
+	report("  +a           - do asynchronous pvGet");
+	report("  -c           - don't wait for all connects");
+	report("  +d           - turn on debug run-time option");
+	report("  -e           - don't use new event flag mode");
+	report("  -l           - suppress line numbering");
+	report("  +m           - generate main program");
+	report("  -i           - don't register commands/programs");
+	report("  +r           - make reentrant at run-time");
+	report("  -w           - suppress compiler warnings");
+	report("example:\n snc +a -c vacuum.st");
 }
 
-/*+************************************************************************
-*  NAME: snc_err
-*
-*  CALLING SEQUENCE
-*	type		argument	I/O	description
-*	-------------------------------------------------------------------
-*	char		*err_txt	I	Text of error msg.
-*	int		line		I	Line no. where error ocurred
-*	int		code		I	Error code (see snc.y)
-*
-*  RETURNS: no return
-*
-*  FUNCTION: Print the SNC error message and then exit.
-*
-*  NOTES:
-*-*************************************************************************/
-void snc_err(char *err_txt)
-{
-	fprintf(stderr, "     %s\n", err_txt);
-	exit(1);
-}
-
-/*+************************************************************************
-*  NAME: yyerror
-*
-*  CALLING SEQUENCE
-*	type		argument	I/O	description
-*	---------------------------------------------------
-*	char		*err		I	yacc error
-*
-*  RETURNS: n/a
-*
-*  FUNCTION: Print yacc error msg
-*
-*  NOTES:
-*-*************************************************************************/
-void yyerror(char *err)
-{
-	fprintf(stderr, "%s:%d: error: %s\n",
-		globals->src_file, globals->line_num, err);
-}
-
-/*+************************************************************************
-*  NAME: print_line_num
-*
-*  CALLING SEQUENCE
-*	type		argument	I/O	description
-*	---------------------------------------------------
-*	int		line_num	I	current line number
-*	char		src_file	I	effective source file
-*
-*  RETURNS: n/a
-*
-*  FUNCTION: Prints the line number and input file name for use by the
-*	C preprocessor.  e.g.: # line 24 "something.st"
-*
-*  NOTES:
-*-*************************************************************************/
 void print_line_num(int line_num, char *src_file)
 {
 	if (globals->options->line)
 		printf("# line %d \"%s\"\n", line_num, src_file);
+}
+
+/* Errors and warnings */
+
+void parse_error(const char *format, ...)
+{
+	va_list args;
+
+	report_location(globals->src_file, globals->line_num);
+
+	va_start(args, format);
+	report(format, args);
+	va_end(args);
+}
+
+void report_location(const char *src_file, int line_num)
+{
+	fprintf(stderr, "%s:%d: ", src_file, line_num);
+}
+
+void report_with_location(
+	const char *src_file, int line_num, const char *format, ...)
+{
+	va_list args;
+
+	report_location(src_file, line_num);
+
+	va_start(args, format);
+	report(format, args);
+	va_end(args);
+}
+
+void report(const char *format, ...)
+{
+	va_list args;
+
+	va_start(args, format);
+	vfprintf(stderr, format, args);
+	va_end(args);
+
+	fprintf(stderr, "\n");
 }

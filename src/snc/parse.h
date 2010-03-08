@@ -147,71 +147,68 @@ typedef struct parse Parse;
 #define	VC_ARRAYP	4		/* array of pointers */
 
 /* Expression types */
-#define	E_EMPTY		0		/* empty expression */
-#define	E_CONST		1		/* numeric constant */
-#define	E_VAR		2		/* variable */
-#define	E_FUNC		3		/* function */
-#define	E_STRING	4		/* ptr to string constant */
-#define	E_UNOP		5		/* unary operator: OP expr (-, +, or !) */
-#define	E_BINOP		6		/* binary operator: expr OP expr */
-#define	E_ASGNOP	7		/* assign operator:  (=, +=, *=, etc.) */
-#define	E_PAREN		8		/* parenthesis around an expression */
-#define	E_SUBSCR	9		/* subscript */
-#define	E_TEXT		10		/* C code or other text to be inserted */
-#define	E_STMT		11		/* simple statement */
-#define	E_CMPND		12		/* begin compound statement: {...} */
-#define	E_IF		13		/* if statement */
-#define	E_ELSE		14		/* else statement */
-#define	E_WHILE		15		/* while statement */
-#define	E_SS		16		/* state set statement */
-#define	E_STATE		17		/* state statement */
-#define	E_WHEN		18		/* when statement */
-#define	E_FOR		19		/* for statement */
-#define	E_X		20		/* eXpansion (e.g. for(;;) */
-#define	E_PRE		21		/* ++expr or --expr */
-#define	E_POST		22		/* expr++ or expr-- */
-#define	E_BREAK		23		/* break stmt */
-#define	E_COMMA		24		/* expr , expr */
-#define E_DECL		25		/* local declaration statement */
-#define E_ENTRY		26		/* entry statement */
-#define E_EXIT		27		/* exit statement */
-#define E_OPTION	28		/* state option statement */
-#define E_ASSIGN	29		/* assign statement */
-#define E_MONITOR	30		/* monitor statement */
-#define E_SYNC		31		/* sync statement */
-#define E_SYNCQ		32		/* syncq statement */
+enum expr_type {
+	E_CONST,		/* numeric constant */
+	E_STRING,		/* ptr to string constant */
+	E_VAR,			/* variable */
+	E_PAREN,		/* parenthesis around an expression */
+	E_FUNC,			/* function */
+	E_SUBSCR,		/* subscript: expr[expr] */
+	E_POST,			/* unary postfix operator: expr OP */
+	E_PRE,			/* unary prefix operator: OP expr */
+	E_BINOP,		/* binary operator: expr OP expr */
+	E_TERNOP,		/* ternary operator: expr OP expr OP expr */
+	E_TEXT,			/* C code or other text to be inserted */
+	E_STMT,			/* simple statement */
+	E_CMPND,		/* begin compound statement: {...} */
+	E_IF,			/* if statement */
+	E_ELSE,			/* else statement */
+	E_WHILE,		/* while statement */
+	E_SS,			/* state set statement */
+	E_STATE,		/* state statement */
+	E_WHEN,			/* when statement */
+	E_FOR,			/* for statement */
+	E_X,			/* eXpansion (e.g. for(;;) */
+	E_BREAK,		/* break stmt */
+	E_DECL,			/* declaration statement */
+	E_ENTRY,		/* entry statement */
+	E_EXIT,			/* exit statement */
+	E_OPTION,		/* state option statement */
+	E_ASSIGN,		/* assign statement */
+	E_MONITOR,		/* monitor statement */
+	E_SYNC,			/* sync statement */
+	E_SYNCQ			/* syncq statement */
+};
+typedef enum expr_type ExprType;
 
 #ifdef expr_type_GLOBAL
 const char *expr_type_names[] =
 {
-	"E_EMPTY",
 	"E_CONST",
-	"E_VAR",
-	"E_FUNC",
 	"E_STRING",
-	"E_UNOP",
-	"E_BINOP",
-	"E_ASGNOP",
+	"E_VAR",	
 	"E_PAREN",
+	"E_FUNC",	
 	"E_SUBSCR",
-	"E_TEXT",
-	"E_STMT",
+	"E_POST",	
+	"E_PRE",	
+	"E_BINOP",
+	"E_TERNOP",
+	"E_TEXT",	
+	"E_STMT",	
 	"E_CMPND",
-	"E_IF",
-	"E_ELSE",
+	"E_IF",	
+	"E_ELSE",	
 	"E_WHILE",
-	"E_SS",
+	"E_SS",	
 	"E_STATE",
-	"E_WHEN",
-	"E_FOR",
-	"E_X",
-	"E_PRE",
-	"E_POST",
+	"E_WHEN",	
+	"E_FOR",	
+	"E_X",	
 	"E_BREAK",
-	"E_COMMA",
-	"E_DECL",
+	"E_DECL",	
 	"E_ENTRY",
-	"E_EXIT",
+	"E_EXIT",	
 	"E_OPTION",
 	"E_ASSIGN",
 	"E_MONITOR",
@@ -260,6 +257,10 @@ Var *find_var(
 Expr *link_expr(
 	Expr	*ep1,		/* beginning of 1-st structure or list */
 	Expr	*ep2		/* beginning 2-nd (append it to 1-st) */
+);
+Expr *c_code(
+	char	*value;
+	int	line_num;
 );
 
 #endif	/*INCLparseh*/

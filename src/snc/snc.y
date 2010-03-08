@@ -62,14 +62,12 @@ static void pp_code(char *line, char *fname);
 %union
 {
 	int	ival;
-	char	*pchar;
-	void	*pval;
+	char	*str;
 	Expr	*pexpr;
 }
-%token	<pchar>	STATE STATE_SET
-%token	<pchar>	NUMBER NAME
-%token	<pchar>	CHAR_CONST
-%token	<pchar>	DEBUG_PRINT
+%token	<str>	STATE STATE_SET
+%token	<str>	INTNUM FPNUM NAME
+%token	<str>	DEBUG_PRINT
 %token	PROGRAM ENTRY EXIT L_OPTION
 %token	R_SQ_BRACKET L_SQ_BRACKET
 %token	BAD_CHAR L_BRACKET R_BRACKET
@@ -80,27 +78,27 @@ static void pp_code(char *line, char *fname);
 %token	EVFLAG SYNC SYNCQ
 %token	ASTERISK AMPERSAND
 %token	AUTO_INCR AUTO_DECR
-%token	PLUS MINUS SLASH GT GE EQ LE LT NE NOT BIT_OR BIT_XOR BIT_AND
+%token	PLUS MINUS SLASH GT GE EQ LE LT NE NOT BIT_OR BIT_XOR
 %token	L_SHIFT R_SHIFT COMPLEMENT MODULO OPTION
 %token	PLUS_EQUAL MINUS_EQUAL MULT_EQUAL DIV_EQUAL AND_EQUAL OR_EQUAL
-%token	MODULO_EQUAL LEFT_EQUAL RIGHT_EQUAL CMPL_EQUAL
-%token	<pchar>	STRING
-%token	<pchar>	C_STMT
+%token	MODULO_EQUAL LEFT_EQUAL RIGHT_EQUAL XOR_EQUAL
+%token	<str>	STRING
+%token	<str>	C_STMT
 %token	IF ELSE WHILE FOR BREAK
 %token	PP_SYMBOL CR
 %type	<ival>	type
-%type	<pchar>	program_name program_param
-%type	<pchar>	subscript
-%type	<pchar>	binop asgnop unop
+%type	<str>	program_name program_param
+%type	<str>	subscript number
+%type	<str>	binop asgnop unop
 %type	<pexpr> global_entry_code global_exit_code
-%type	<pexpr> optional_global_c global_c definitions defn_stmt defn_c_stmt
+%type	<pexpr> global_c definitions defn_stmt
 %type	<pexpr> assign_stmt monitor_stmt decl_stmt sync_stmt syncq_stmt
-%type	<pexpr> optional_subscript optional_number
+%type	<pexpr> optional_subscript syncq_size
 %type	<pexpr> state_set_list state_set state_list state
 %type	<pexpr> transition_list transition state_option_value
 %type	<pexpr> expr compound_expr assign_list bracked_expr
 %type	<pexpr> statement stmt_list compound_stmt if_stmt else_stmt while_stmt
-%type	<pexpr> for_stmt escaped_c_list local_decl_stmt
+%type	<pexpr> for_stmt escaped_c_list
 %type	<pexpr> state_option_list state_option
 %type	<pexpr> condition_list
 %type	<pexpr> entry_list exit_list entry exit
@@ -118,15 +116,15 @@ static void pp_code(char *line, char *fname);
 %%	/* Begin rules */
 
 state_program 	/* define a state program */
-:	optional_pp_codes	/* $1 */
+:	pp_codes	/* $1 */
 	program_name		/* $2 */
 	program_param		/* $3 */
 	definitions		/* $4 */
 	global_entry_code	/* $5 */
 	state_set_list		/* $6 */
 	global_exit_code	/* $7 */
-	optional_pp_codes	/* $8 */
-	optional_global_c	/* $9 */
+	pp_codes	/* $8 */
+	global_c		/* $9 */
 {
 	program($2,$3,$4,$5,$6,$7,$9);
 }
@@ -152,7 +150,7 @@ defn_stmt	/* individual definitions for SNL (preceeds state sets) */
 |	sync_stmt			{ $$ = $1; }
 |	syncq_stmt			{ $$ = $1; }
 |	option_stmt			{ $$ = 0; }
-|	defn_c_stmt			{ $$ = $1; }
+|	escaped_c_list			{ $$ = $1; }
 |	pp_code				{ $$ = 0; }
 |	error { snc_err("definitions/declarations"); }
 ;
@@ -206,16 +204,16 @@ sync_stmt	/* sync <variable> <event flag> */
 ;
 
 syncq_stmt	/* syncQ <variable> [[subscript]] to <event flag> [<max queue size>] */
-:	SYNCQ NAME optional_subscript to NAME optional_number SEMI_COLON
+:	SYNCQ NAME optional_subscript to NAME syncq_size SEMI_COLON
 {
 	$$ = expression(E_SYNCQ, $2, $3, expression(E_X, $5, $6, 0));
 	/* syncq_stmt($2, $3, $5, $6); */
 }
 ;
 
-optional_number
+syncq_size
 :				{ $$ = 0; }
-|	NUMBER			{ $$ = expression(E_CONST, $1, 0, 0); }
+|	INTNUM			{ $$ = expression(E_CONST, $1, 0, 0); }
 ;
 
 optional_subscript
@@ -224,7 +222,7 @@ optional_subscript
 ;
 
 subscript	/* e.g. [10] */
-:	L_SQ_BRACKET NUMBER R_SQ_BRACKET	{ $$ = $2; }
+:	L_SQ_BRACKET INTNUM R_SQ_BRACKET	{ $$ = $2; }
 ;
 
 decl_stmt	/* variable declarations (e.g. float x[20];)
@@ -232,7 +230,7 @@ decl_stmt	/* variable declarations (e.g. float x[20];)
 :	type NAME SEMI_COLON
 		{ $$ = declaration($1, VC_SIMPLE,  $2,  NULL, NULL, NULL); }
 
-|	type NAME EQUAL NUMBER SEMI_COLON
+|	type NAME EQUAL number SEMI_COLON
 		{ $$ = declaration($1, VC_SIMPLE,  $2,  NULL, NULL, $4  ); }
 
 |	type NAME subscript SEMI_COLON
@@ -248,14 +246,19 @@ decl_stmt	/* variable declarations (e.g. float x[20];)
 		{ $$ = declaration($1, VC_ARRAYP,  $3,  $4,   NULL, NULL); }
 ;
 
-local_decl_stmt	/* local variable declarations (not yet arrays... but easy
+/* local_decl_stmt */	/* local variable declarations (not yet arrays... but easy
 		   to add); not added to SNC's tables; treated as though
 		   in escaped C code */
 		/* ### this is not working yet; don't use it */
-:	type NAME SEMI_COLON
+/* :	type NAME SEMI_COLON
 		{ $$ = expression(E_TEXT, $2, 0, 0); }
-|	type NAME EQUAL NUMBER SEMI_COLON
+|	type NAME EQUAL number SEMI_COLON
 		{ $$ = expression(E_TEXT, $2, expression(E_CONST, $4, 0, 0), 0); }
+; */
+
+number
+:	INTNUM		{ $$ = $1; }
+|	FPNUM		{ $$ = $1; }
 ;
 
 type		/* types for variables defined in SNL */
@@ -272,10 +275,6 @@ type		/* types for variables defined in SNL */
 |	STRING_DECL	{ $$ = V_STRING; }
 |	EVFLAG		{ $$ = V_EVFLAG; }
 |	error { snc_err("type specifier"); }
-;
-
-defn_c_stmt	/* escaped C in definitions */
-:	escaped_c_list		{ $$ = $1; }
 ;
 
 option_stmt	/* option +/-<option>;  e.g. option +a; */
@@ -376,7 +375,7 @@ transition_list	/* all transitions for one state */
 transition /* define a transition condition and action */
 :	WHEN L_PAREN expr R_PAREN L_BRACKET stmt_list R_BRACKET STATE NAME
 					{ $$ = expression(E_WHEN, $9, $3, $6); }
-|	local_decl_stmt			{ $$ = $1; }
+/* |	local_decl_stmt			{ $$ = $1; } */
 |	pp_code				{ $$ = 0; }
 |	error				{ snc_err("when transition block"); }
 ;
@@ -391,9 +390,8 @@ expr	/* general expr: e.g. (-b+2*a/(c+d)) != 0 || (func1(x,y) < 5.0) */
 |	AUTO_DECR expr  %prec UOP	{ $$ = expression(E_PRE, "--", $2, 0); }
 |	expr AUTO_INCR  %prec UOP	{ $$ = expression(E_POST, "++", $1, 0); }
 |	expr AUTO_DECR  %prec UOP	{ $$ = expression(E_POST, "--", $1, 0); }
-|	NUMBER				{ $$ = expression(E_CONST, $1, 0, 0); }
-|	CHAR_CONST			{ $$ = expression(E_CONST, $1, 0, 0); }
 |	STRING				{ $$ = expression(E_STRING, $1, 0, 0); }
+|	number				{ $$ = expression(E_CONST, $1, 0, 0); }
 |	NAME				{ $$ = expression(E_VAR, $1, 0, 0); }
 |	NAME L_PAREN expr R_PAREN	{ $$ = expression(E_FUNC, $1, $3, 0); }
 |	EXIT L_PAREN expr R_PAREN	{ $$ = expression(E_FUNC, "exit", $3, 0); }
@@ -437,7 +435,7 @@ binop	/* Binary operators */
 |	R_SHIFT		{ $$ = ">>"; }
 |	BIT_OR		{ $$ = "|"; }
 |	BIT_XOR		{ $$ = "^"; }
-|	BIT_AND		{ $$ = "&"; }
+|	AMPERSAND	{ $$ = "&"; }
 |	MODULO		{ $$ = "%"; }
 |	QUESTION	{ $$ = "?"; }	/* fudges ternary operator */
 |	COLON		{ $$ = ":"; }	/* fudges ternary operator */
@@ -456,7 +454,7 @@ asgnop	/* Assignment operators */
 |	MODULO_EQUAL	{ $$ = "%="; }
 |	LEFT_EQUAL	{ $$ = "<<="; }
 |	RIGHT_EQUAL	{ $$ = ">>="; }
-|	CMPL_EQUAL	{ $$ = "^="; }
+|	XOR_EQUAL	{ $$ = "^="; }
 ;
 
 compound_stmt		/* compound statement e.g. { ...; ...; ...; } */
@@ -501,28 +499,20 @@ for_stmt
 				expression(E_X, "", $7, $9) ); }
 ;
 
+pp_codes	/* zero or more pp_code */
+:	pp_codes pp_code
+|	/* optional */
+;
+
 pp_code		/* pre-processor code (e.g. # 1 "test.st") */
-:	PP_SYMBOL NUMBER STRING CR	{ pp_code($2, $3); }
-|	PP_SYMBOL NUMBER CR		{ pp_code($2, 0); }
+:	PP_SYMBOL INTNUM STRING CR	{ pp_code($2, $3); }
+|	PP_SYMBOL INTNUM CR		{ pp_code($2, 0); }
 |	PP_SYMBOL STRING CR		{ /* Silently consume #pragma lines */ }
 ;
 
-optional_pp_codes
-:	/* optional */
-|	pp_codes
-
-pp_codes	/* one or more pp_code */
-:	pp_code
-|	pp_codes pp_code
-;
-
-optional_global_c
-:	/* optional */		{ $$ = 0; }
-|	global_c		{ $$ = $1; }
-
 global_c
-:	escaped_c_list		{ $$ = $1; }
-;
+:	/* optional */		{ $$ = 0; }
+|	escaped_c_list		{ $$ = $1; }
 
 escaped_c_list
 :	C_STMT			{ $$ = expression(E_TEXT, $1, 0, 0); }
@@ -544,5 +534,5 @@ static void pp_code(char *line, char *fname)
 {
 	globals->line_num = atoi(line);
 	if (fname != 0)
-	globals->src_file = fname;
+		globals->src_file = fname;
 }

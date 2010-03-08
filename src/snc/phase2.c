@@ -578,11 +578,9 @@ void traverse_expr_tree(
 		break;
 
 	case E_PAREN:
-	case E_UNOP:
 	case E_SS:
 	case E_STATE:
 	case E_FUNC:
-	case E_COMMA:
 	case E_CMPND:
 	case E_STMT:
 	case E_ELSE:
@@ -598,7 +596,6 @@ void traverse_expr_tree(
 	case E_WHEN:
         case E_ENTRY:  /* E_ENTRY and E_EXIT only have expressions on RHS (->right) */
         case E_EXIT:   /* but add them here incase ->left is used in future. */
-	case E_ASGNOP:
 	case E_BINOP:
 	case E_SUBSCR:
 	case E_IF:

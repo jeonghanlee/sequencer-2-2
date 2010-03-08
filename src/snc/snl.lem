@@ -1,0 +1,397 @@
+%include {
+#include <stdlib.h>
+#include <string.h>
+#include "token.h"
+#include "snc_main.h"
+#include "assert.h"
+}
+
+%name parser
+
+%extra_argument { int line_num }
+
+%parse_failure {
+	parse_error("giving up");
+	exit(1);
+}
+
+%syntax_error {
+	parse_error("syntax error");
+	exit(1);
+}
+
+%token_type { Token }
+
+/*
+  Primary Expression Operators  () [] . -> expr++ expr--  left-to-right
+  Unary Operators  * & + - ! ~ ++expr --expr (typecast) sizeof()  right-to-left
+  Binary Operators  * / %  left-to-right
+  + -
+  >> <<
+  < > <= >=
+  == !=
+  &
+  ^
+  |
+  &&
+  ||
+  Ternary Operator  ?:  right-to-left
+  Assignment Operators  = += -= *= /= %= >>= <<= &= ^= |=  right-to-left
+  Comma  ,  left-to-right
+*/
+
+/* PRE_OP and POST_OP are pseudo tokens, only for precedence */
+
+// We do not support the comma operator, except
+// in for(;;), where it is built-in.
+// %left	COMMA.
+
+%right	EQUAL PLUS_EQUAL MINUS_EQUAL AND_EQUAL OR_EQUAL
+	DIV_EQUAL MULT_EQUAL MODULO_EQUAL LEFT_EQUAL RIGHT_EQUAL XOR_EQUAL.
+%right	QUESTION COLON.
+%left	OR.
+%left	AND.
+%left	BIT_OR.
+%left	BIT_XOR.
+%left	AMPERSAND.
+%left	EQ NE.
+%left	GT GE LE LT.
+%left	L_SHIFT R_SHIFT.
+%left	PLUS MINUS.
+%left	ASTERISK SLASH MODULO.
+%right	NOT AUTO_INCR AUTO_DECR PRE_OP.
+%left	L_SQ_BRACKET R_SQ_BRACKET POINTER PERIOD POST_OP.
+// As we do not support indirect calls, L_PAREN R_PAREN are not listed here */
+
+%nonassoc BAD_CHAR DEBUG_PRINT.
+
+program ::=
+//	pp_codes
+	program_name(pn)
+	program_param(pp)
+	definitions(ds)
+	global_entry_code(en)
+	state_sets(ss)
+	global_exit_code(ex)
+//	pp_codes
+	c_codes(cc).
+{
+	program(pn,pp,ds,en,ss,ex,cc);
+}
+
+%type program_name {char*}
+program_name(p) ::= PROGRAM NAME(n).	{ p = n.str; }
+
+%type program_param {char*}
+program_param(p) ::=
+	L_PAREN STRING(s) R_PAREN.	{ p = s.str; }
+program_param(p) ::= .			{ p = ""; }
+
+%type definitions {Expr*}
+definitions(p) ::= definitions(xs) definition(x). {
+	p = link_expr(xs, x);
+}
+definitions(p) ::= definition(x).	{ p = x; }
+
+%type definition {Expr*}
+definition(p) ::= assign(x).		{ p = x; }
+definition(p) ::= monitor(x).		{ p = x; }
+definition(p) ::= sync(x).		{ p = x; }
+definition(p) ::= syncq(x).		{ p = x; }
+definition(p) ::= decl(x).		{ p = x; }
+definition(p) ::= option.		{ p = 0; }
+definition(p) ::= c_code(x).		{ p = x; }
+// definition(p) ::= pp_code.		{ p = 0; }
+
+// definition(p) ::= error SEMI_COLON.	{ p = 0; snc_err("expected definition"); }
+
+%type assign {Expr*}
+assign(p) ::= ASSIGN NAME(v) to STRING(t) SEMI_COLON. {
+	p = expression(E_ASSIGN, v.str, 0, expression(E_STRING, t.str, 0, 0));
+}
+assign(p) ::= ASSIGN NAME(v) subscript(s) to STRING(t) SEMI_COLON. {
+	p = expression(E_ASSIGN, v.str, expression(E_CONST, s, 0, 0),
+		expression(E_STRING, t.str, 0, 0));
+}
+assign(p) ::= ASSIGN NAME(v) to L_BRACKET strings(ss) R_BRACKET SEMI_COLON. {
+	p = expression(E_ASSIGN, v.str, 0, ss);
+}
+
+%type strings {Expr*}
+strings(p) ::= strings(xs) COMMA STRING(x). {
+	p = link_expr(xs, expression(E_STRING, x.str, 0, 0));
+}
+strings(p) ::= STRING(x). {
+	p = expression(E_STRING, x.str, 0, 0);
+}
+
+%type monitor {Expr*}
+monitor(p) ::= MONITOR NAME(v) opt_subscript(s) SEMI_COLON. {
+	p = expression(E_MONITOR, v.str, s, 0);
+}
+
+%type sync {Expr*}
+sync(p) ::= SYNC NAME(v) opt_subscript(s) to NAME(ev) SEMI_COLON. {
+	p = expression(E_SYNC, v.str, s, expression(E_X, ev.str, 0, 0));
+}
+
+%type syncq {Expr*}
+syncq(p) ::= SYNCQ NAME(v) opt_subscript(s) to NAME(ev) syncq_size(n) SEMI_COLON. {
+	p = expression(E_SYNCQ, v.str, s, expression(E_X, ev.str, n, 0));
+}
+
+%type syncq_size {Expr*}
+syncq_size(p) ::= INTNUM(n).		{ p = expression(E_CONST, n.str, 0, 0); }
+syncq_size(p) ::= .			{ p = 0; }
+
+to ::= TO.
+to ::= .
+
+%type opt_subscript {Expr*}
+opt_subscript(p) ::= subscript(s).	{ p = expression(E_CONST, s, 0, 0); }
+opt_subscript(p) ::= .			{ p = 0; }
+
+%type subscript {char*}
+subscript(p) ::= L_SQ_BRACKET INTNUM(n) R_SQ_BRACKET. { p = n.str; }
+
+%type decl {Expr*}
+decl(p) ::= type(t) NAME(v) SEMI_COLON.
+		{ p = declaration(t, VC_SIMPLE,  v.str, NULL, NULL, NULL); }
+decl(p) ::= type(t) NAME(v) EQUAL number(n) SEMI_COLON.
+		{ p = declaration(t, VC_SIMPLE,  v.str, NULL, NULL, n); }
+decl(p) ::= type(t) NAME(v) subscript(s) SEMI_COLON.
+		{ p = declaration(t, VC_ARRAY1,  v.str, s,    NULL, NULL); }
+decl(p) ::= type(t) NAME(v) subscript(s1) subscript(s2) SEMI_COLON.
+		{ p = declaration(t, VC_ARRAY2,  v.str, s1,   s2,   NULL); }
+decl(p) ::= type(t) ASTERISK NAME(v) SEMI_COLON.
+		{ p = declaration(t, VC_POINTER, v.str, NULL, NULL, NULL); }
+decl(p) ::= type(t) ASTERISK NAME(v) subscript(s) SEMI_COLON.
+		{ p = declaration(t, VC_ARRAYP,  v.str, s,    NULL, NULL); }
+
+%type number {char*}
+number(p) ::= INTNUM(x).			{ p = x.str; }
+number(p) ::= FPNUM(x).				{ p = x.str; }
+
+%type type {int}
+type(p) ::= CHAR.				{ p = V_CHAR;	}
+type(p) ::= SHORT.				{ p = V_SHORT;	}
+type(p) ::= INT.				{ p = V_INT;	}
+type(p) ::= LONG.				{ p = V_LONG;	}
+type(p) ::= UNSIGNED CHAR.			{ p = V_UCHAR;	}
+type(p) ::= UNSIGNED SHORT.			{ p = V_USHORT;	}
+type(p) ::= UNSIGNED INT.			{ p = V_UINT;	}
+type(p) ::= UNSIGNED LONG.			{ p = V_ULONG;	}
+type(p) ::= FLOAT.				{ p = V_FLOAT;	}
+type(p) ::= DOUBLE.				{ p = V_DOUBLE;	}
+type(p) ::= STRING_DECL.			{ p = V_STRING;	}
+type(p) ::= EVFLAG.				{ p = V_EVFLAG;	}
+
+/* option +/-<option>;  e.g. option +a; */
+option ::= OPTION PLUS NAME(n) SEMI_COLON.	{ option_stmt(n.str, 1); }
+option ::= OPTION MINUS NAME(n) SEMI_COLON.	{ option_stmt(n.str, 0); }
+
+// State sets and states
+
+%type global_entry_code {Expr*}
+global_entry_code(p) ::= ENTRY block(xs).	{ p = xs; }
+global_entry_code(p) ::= .			{ p = 0; }
+
+%type global_exit_code {Expr*}
+global_exit_code(p) ::= EXIT block(xs).		{ p = xs; }
+global_exit_code(p) ::= .			{ p = 0; }
+
+%type state_sets {Expr*}
+state_sets(p) ::= state_sets(xs) state_set(x).	{ p = link_expr(xs, x); }
+state_sets(p) ::= state_set(x).			{ p = x; }
+
+%type state_set {Expr*}
+state_set(p) ::= STATE_SET NAME(n) L_BRACKET states(xs) R_BRACKET. {
+	p = expression(E_SS, n.str, xs, 0);
+}
+// state_set(p) ::= pp_code.			{ p = 0; }
+
+%type states {Expr*}
+states(p) ::= states(xs) state(x).		{ p = link_expr(xs, x); }
+states(p) ::= state(x).				{ p = x; }
+
+%type state {Expr*}
+state(p) ::= STATE NAME(n) L_BRACKET state_options(os) state_blocks(xs) R_BRACKET.
+						{ p = expression(E_STATE, n.str, xs, os); }
+
+%type state_options {Expr*}
+state_options(p) ::= state_options(xs) state_option(x).
+						{ p = link_expr(xs, x); }
+state_options(p) ::= .				{ p = 0; }
+
+%type state_option {Expr*}
+state_option(p) ::= OPTION state_option_value(v) NAME(n) SEMI_COLON.
+						{ p = expression(E_OPTION, n.str, v, 0); }
+
+%type state_option_value {Expr*}
+state_option_value(p) ::= PLUS.			{ p = expression(E_X, "+", 0, 0); }
+state_option_value(p) ::= MINUS.		{ p = expression(E_X, "-", 0, 0); }
+
+%type state_blocks {Expr*}
+state_blocks(p) ::= entries(xs) transitions(ts) exits(ys).
+						{ p = link_expr(link_expr(xs, ts), ys); }
+
+%type entries {Expr*}
+entries(p) ::= entries(xs) entry(x).		{ p = link_expr(xs, x); }
+entries(p) ::= .				{ p = 0; }
+
+%type entry {Expr*}
+entry(p) ::= ENTRY block(xs).			{  p = expression(E_ENTRY, "", 0, xs); }
+
+%type exits {Expr*}
+exits(p) ::= exits(xs) exit(x).			{ p = link_expr(xs, x); }
+exits(p) ::= .					{ p = 0; }
+
+%type exit {Expr*}
+exit(p) ::= EXIT block(xs).			{  p = expression(E_EXIT, "", 0, xs); }
+
+%type transitions {Expr*}
+transitions(p) ::= transitions(xs) transition(x). { p = link_expr(xs, x); }
+transitions(p) ::= transition(x).		{ p = x; }
+
+%type transition {Expr*}
+transition(p) ::= WHEN L_PAREN opt_expr(c) R_PAREN block(xs) STATE NAME(n).
+						{ p = expression(E_WHEN, n.str, c, xs); }
+
+%type block {Expr*}
+block(p) ::= L_BRACKET statements(xs) R_BRACKET.{ p = xs; }
+
+// Statements
+
+%type statements {Expr*}
+statements(p) ::= statements(xs) statement(x).	{ p = link_expr(xs, x); }
+statements(p) ::= .				{ p = 0; }
+
+%type statement {Expr*}
+// statement(p) ::= pp_code.			{ p = 0; }
+statement(p) ::= BREAK SEMI_COLON.		{ p = expression(E_BREAK, "", 0, 0); }
+statement(p) ::= c_code(x).			{ p = x; }
+statement(p) ::= block(xs).			{ p = expression(E_CMPND, "",xs, 0); }
+statement(p) ::= IF L_PAREN expr(c) R_PAREN statement(x).
+						{ p = expression(E_IF, "", c, x); }
+statement(p) ::= ELSE statement(x).		{ p = expression(E_ELSE, "", x, 0); }
+statement(p) ::= WHILE L_PAREN expr(c) R_PAREN statement(x).
+						{ p = expression(E_WHILE, "", c, x); }
+statement(p) ::= for_statement(x).		{ p = x; }
+statement(p) ::= opt_expr(x) SEMI_COLON.	{ p = expression(E_STMT, "", x, 0); }
+
+%type for_statement {Expr*}
+for_statement(p) ::=
+	FOR L_PAREN
+		exprs(init) SEMI_COLON opt_expr(cond) SEMI_COLON exprs(iter)
+	R_PAREN statement(x).			{ p = expression(E_FOR, "",
+							expression(E_X, "", init, cond),
+							expression(E_X, "", iter, x));
+						}
+
+// Expressions
+
+%type expr {Expr*}
+
+// Atomic
+expr(p) ::= number(x).				{ p = expression(E_CONST, x, 0, 0); }
+expr(p) ::= STRING(x).				{ p = expression(E_STRING, x.str, 0, 0); }
+expr(p) ::= NAME(v).				{ p = expression(E_VAR, v.str, 0, 0); }
+
+// Parenthesized
+expr(p) ::= L_PAREN expr(x) R_PAREN.		{ p = expression(E_PAREN, "", x, 0); }
+
+// Primary Expression and Unary Postfix Operators
+expr(p) ::= NAME(f) L_PAREN exprs(xs) R_PAREN. [POST_OP]
+						{ p = expression(E_FUNC,  f.str, xs, 0); }
+expr(p) ::= EXIT L_PAREN exprs(xs) R_PAREN. [POST_OP]
+						{ p = expression(E_FUNC, "exit", xs, 0); }
+expr(p) ::= expr(x) L_SQ_BRACKET expr(y) R_SQ_BRACKET. [POST_OP]
+						{ p = expression(E_SUBSCR, "",   x, y); }
+expr(p) ::= expr(x) PERIOD  expr(y). [POST_OP]	{ p = expression(E_BINOP,  "." , x, y); }
+expr(p) ::= expr(x) POINTER expr(y). [POST_OP]	{ p = expression(E_BINOP,  "->", x, y); }
+expr(p) ::= expr(x) AUTO_INCR.       [POST_OP]	{ p = expression(E_POST,   "++", x, 0); }
+expr(p) ::= expr(x) AUTO_DECR.	     [POST_OP]	{ p = expression(E_POST,   "--", x, 0); }
+
+// Unary Prefix Operators
+expr(p) ::= PLUS	expr(x). [PRE_OP]	{ p = expression(E_PRE, "+",  x, 0); }
+expr(p) ::= MINUS	expr(x). [PRE_OP]	{ p = expression(E_PRE, "-",  x, 0); }
+expr(p) ::= ASTERISK	expr(x). [PRE_OP]	{ p = expression(E_PRE, "*",  x, 0); }
+expr(p) ::= AMPERSAND	expr(x). [PRE_OP]	{ p = expression(E_PRE, "&",  x, 0); }
+expr(p) ::= NOT		expr(x). [PRE_OP]	{ p = expression(E_PRE, "!",  x, 0); }
+expr(p) ::= COMPLEMENT	expr(x). [PRE_OP]	{ p = expression(E_PRE, "~",  x, 0); }
+expr(p) ::= AUTO_INCR	expr(x). [PRE_OP]	{ p = expression(E_PRE, "++", x, 0); }
+expr(p) ::= AUTO_DECR	expr(x). [PRE_OP]	{ p = expression(E_PRE, "--", x, 0); }
+
+// Binary Operators, left-to-right
+expr(p) ::= expr(x) MINUS	expr(y).	{ p = expression(E_BINOP, "-",  x, y); }
+expr(p) ::= expr(x) PLUS	expr(y).	{ p = expression(E_BINOP, "+",  x, y); }
+expr(p) ::= expr(x) ASTERISK	expr(y).	{ p = expression(E_BINOP, "*",  x, y); }
+expr(p) ::= expr(x) SLASH	expr(y).	{ p = expression(E_BINOP, "/",  x, y); }
+expr(p) ::= expr(x) GT		expr(y).	{ p = expression(E_BINOP, ">",  x, y); }
+expr(p) ::= expr(x) GE		expr(y).	{ p = expression(E_BINOP, ">=", x, y); }
+expr(p) ::= expr(x) EQ		expr(y).	{ p = expression(E_BINOP, "==", x, y); }
+expr(p) ::= expr(x) NE		expr(y).	{ p = expression(E_BINOP, "!=", x, y); }
+expr(p) ::= expr(x) LE		expr(y).	{ p = expression(E_BINOP, "<=", x, y); }
+expr(p) ::= expr(x) LT		expr(y).	{ p = expression(E_BINOP, "<" , x, y); }
+expr(p) ::= expr(x) OR		expr(y).	{ p = expression(E_BINOP, "||", x, y); }
+expr(p) ::= expr(x) AND		expr(y).	{ p = expression(E_BINOP, "&&", x, y); }
+expr(p) ::= expr(x) L_SHIFT	expr(y).	{ p = expression(E_BINOP, "<<", x, y); }
+expr(p) ::= expr(x) R_SHIFT	expr(y).	{ p = expression(E_BINOP, ">>", x, y); }
+expr(p) ::= expr(x) BIT_OR	expr(y).	{ p = expression(E_BINOP, "|",  x, y); }
+expr(p) ::= expr(x) BIT_XOR	expr(y).	{ p = expression(E_BINOP, "^",  x, y); }
+expr(p) ::= expr(x) AMPERSAND	expr(y).	{ p = expression(E_BINOP, "&",  x, y); }
+expr(p) ::= expr(x) MODULO	expr(y).	{ p = expression(E_BINOP, "%",  x, y); }
+
+// Ternary Operator, right-to-left
+expr(p) ::= expr(x) QUESTION expr(y) COLON expr(z). {
+	p = expression(E_TERNOP, "?", x, expression(E_X, ":", y, z));
+}
+
+// Assignment Operators, right-to-left
+expr(p) ::= expr(x) EQUAL	expr(y).	{ p = expression(E_BINOP, "="  , x, y); }
+expr(p) ::= expr(x) PLUS_EQUAL	expr(y).	{ p = expression(E_BINOP, "+=" , x, y); }
+expr(p) ::= expr(x) MINUS_EQUAL	expr(y).	{ p = expression(E_BINOP, "-=" , x, y); }
+expr(p) ::= expr(x) AND_EQUAL	expr(y).	{ p = expression(E_BINOP, "&=" , x, y); }
+expr(p) ::= expr(x) OR_EQUAL	expr(y).	{ p = expression(E_BINOP, "|=" , x, y); }
+expr(p) ::= expr(x) DIV_EQUAL	expr(y).	{ p = expression(E_BINOP, "/=" , x, y); }
+expr(p) ::= expr(x) MULT_EQUAL	expr(y).	{ p = expression(E_BINOP, "*=" , x, y); }
+expr(p) ::= expr(x) MODULO_EQUAL expr(y).	{ p = expression(E_BINOP, "%=" , x, y); }
+expr(p) ::= expr(x) LEFT_EQUAL	expr(y).	{ p = expression(E_BINOP, "<<=", x, y); }
+expr(p) ::= expr(x) RIGHT_EQUAL	expr(y).	{ p = expression(E_BINOP, ">>=", x, y); }
+expr(p) ::= expr(x) XOR_EQUAL	expr(y).	{ p = expression(E_BINOP, "^=" , x, y); }
+
+// Comma, left-to-right, not supported
+// expr(p) ::= expr(x) COMMA	expr(y).	{ p = expression(E_BINOP, "," ,  x, y); }
+
+%type opt_expr {Expr*}
+opt_expr(p) ::= expr(x).			{ p = x; }
+opt_expr(p) ::= .				{ p = 0; }
+
+%type exprs {Expr*}
+exprs(p) ::= exprs(xs) COMMA expr(x).		{ p = link_expr(xs, x); }
+exprs(p) ::= expr(x).				{ p = x; }
+exprs(p) ::= .					{ p = 0; }
+
+// Literal (C) code
+
+%type c_codes {Expr*}
+c_codes(p) ::= c_codes(xs) c_code(x).		{ p = link_expr(xs, x); }
+c_codes(p) ::= .				{ p = 0; }
+
+%type c_code {Expr*}
+c_code(p) ::= C_STMT(x). 			{ p = c_code(x.str, line_num); }
+
+// Preprocessor code
+
+// pp_codes ::= pp_codes pp_code.
+// pp_codes ::= .
+
+// /* pre-processor code (e.g. # 1 "test.st") */
+// pp_code	::= PP_SYMBOL INTNUM(line) STRING(fname) CR. {
+ 	// globals->line_num = atoi(line.str);
+	// globals->src_file = fname.str;
+// }
+// pp_code	::= PP_SYMBOL INTNUM(line) CR. {
+ 	// globals->line_num = atoi(line.str);
+// }
+// pp_code	::= PP_SYMBOL STRING CR. /* Silently consume #pragma lines */

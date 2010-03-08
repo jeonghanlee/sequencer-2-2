@@ -42,6 +42,10 @@
 #include	<unistd.h>
 #include	<stdlib.h>
 #include	"snc_main.h"
+#ifdef USE_LEMON
+#include	"token.h"
+#include	"snl.h"
+#endif
 
 #ifndef	TRUE
 #define	TRUE	1
@@ -58,45 +62,51 @@
 
 static char		strBfr[STR_BFR_SIZE];	/* holding place for strings */
 static char		*pStr;			/* current ptr to strBfr */
-static int		one_line_c_code;	/* TRUE for %%; FALSE for %{...}% */
 
 %}
 
 /* Start conditions (SNL, C code, comment, string, pre-processor, pre-proc. string) */
-%Start	SNL C_CODE COMMENT STR PP PP_STR
+%Start	SNL C_CODE COMMENT STR PP PP_SP PP_STR PP_END
 
-/* FPNUM was:
-FPNUM   (([0-9]+)(\.[0-9]*)?)|(\.[0-9]+)
-   replaced 01-Oct-98 */
+OCT	[0-7]
+DEC	[0-9]
+LET	[a-zA-Z_]
+HEX	[a-fA-F0-9]
+EXP	[DEde][+-]?{DEC}+
+FS	[fFlL]
+IS	[uUlL]*
+ESC	\\([abfnrtv?'"\\]|"x"{HEX}+|{OCT}+)
 
-NAME	[a-zA-Z][a-zA-Z0-9_]*
-DIG     [0-9]
-EXP     [DEde][-+]?{DIG}+
-FPNUM   {DIG}+({EXP})?|{DIG}+\.{DIG}*({EXP})?|{DIG}*\.{DIG}+({EXP})?
-OCTAL	0[0-7]+
-HEX	0x([0-9a-fA-F])+
-CCONST	\'.\'
+NAME	{LET}({LET}|{DEC})*
+HEXNUM	0[xX]{HEX}+{IS}?
+OCTNUM	0{OCT}+{IS}?
+DECNUM	{DEC}+{IS}?
+CHRCON	'({ESC}|[^\n\\'])*'
+
+INTNUM	{HEXNUM}|{OCTNUM}|{DECNUM}|{CHRCON}
+FPNUM	{DEC}+{EXP}{FS}?|{DEC}*\.{DEC}+{EXP}?{FS}?|{DEC}+\.{DEC}*{EXP}?{FS}?
+/*
+FPNUM	{DEC}+({EXP})?|{DEC}+\.{DEC}*({EXP})?|{DEC}*\.{DEC}+({EXP})?
+*/
 
 %% /* Begin rules */
-<C_CODE>.	*pStr++ = yytext[0];
+
 <C_CODE>\n {
-		*pStr++ = 0;
 		globals->line_num++;
-		yylval.pchar = strdup(strBfr);
-		pStr = strBfr;
-		if (one_line_c_code)
-			BEGIN SNL;
-		RETURN(C_STMT);
 }
 <C_CODE>"}%" {
-		*pStr++ = 0;
-		yylval.pchar = strdup(strBfr);
 		BEGIN SNL;
+}
+<C_CODE>([^}\n]|[}][^%])* {
+		globals->c_line_num = globals->line_num;
+		yylval.str = strdup((char*)yytext);
 		RETURN(C_STMT);
 }
+
 <COMMENT>\n	globals->line_num++;
 <COMMENT>"*/"	BEGIN SNL;
 <COMMENT>.	;
+
 <STR>"\\\"" {
 		*pStr++ = yytext[0];
 		*pStr++ = yytext[1];
@@ -104,50 +114,53 @@ CCONST	\'.\'
 <STR>\"[\n\t\ ]*\" /* ignored */ ;
 <STR>\"	 {
 		*pStr++ = 0;
-		yylval.pchar = strdup(strBfr);
+		yylval.str = strdup(strBfr);
 		BEGIN SNL;
 		RETURN(STRING);
 }
 <STR>.		{ *pStr++ = yytext[0]; }
-<STR>\n	{	*pStr++ = '?';
-		if (globals->options->warn)
-			fprintf(stderr, "Warning:  newline in string, line %d\n",
-			 globals->line_num);
+<STR>\n	{
+		*pStr++ = '?';
+		if (globals->options->warn) {
+			parse_error("warning: newline in string");
+		}
 		globals->line_num++;
 }
-<PP>{FPNUM} {	yylval.pchar = strdup((char *)yytext);
-		RETURN(NUMBER);
+
+<PP>[\t\ ]+	;
+<PP>{DEC}+ {
+		globals->line_num = atoi((char*)yytext) - 1;
+		pStr = strBfr;
+		BEGIN PP_SP;
 }
-<PP>\"		{ pStr = strBfr; BEGIN PP_STR; }
-<PP>\n {
-		BEGIN SNL;
-		RETURN(CR);
+<PP>.		BEGIN PP_END;
+<PP_SP>[\t\ ]+	;
+<PP_SP>\" {
+		pStr = strBfr;
+		BEGIN PP_STR;
 }
-<PP>[\t\ ]*	/* no action */ ;
-<PP>. {
-}
-<PP_STR>\" {
+<PP_SP>.	BEGIN PP_END;
+<PP_STR>\" {	/* done scanning the string */
 		*pStr++ = 0;
-		yylval.pchar = strdup(strBfr);
-		BEGIN PP;
-		RETURN(STRING);
+		if (strcmp(strBfr,globals->src_file) != 0) {
+			globals->src_file = strdup(strBfr);
+		}
+		BEGIN PP_END;
 }
 <PP_STR>.	{ *pStr++ = yytext[0]; }
 <PP_STR>\n	{ *pStr++ = '?'; globals->line_num++; }
+<PP_END>.*	;
+<PP_END>\n	{ globals->line_num++; BEGIN SNL; }
+
 <SNL>\n		{ globals->line_num++; }
-<SNL>"%{" {
-		pStr = strBfr;
-		one_line_c_code = FALSE;
-		BEGIN C_CODE;
-}
-<SNL>"%%" {
-		pStr = strBfr;
-		one_line_c_code = TRUE;
-		BEGIN C_CODE;
+<SNL>"%{"	BEGIN C_CODE;
+<SNL>"%%".* {
+		globals->c_line_num = globals->line_num;
+		yylval.str = strdup((char*)yytext+2);
+		RETURN(C_STMT);
 }
 <SNL>^# {
 		BEGIN PP;
-		RETURN(PP_SYMBOL);
 }
 <SNL>"/*"	BEGIN COMMENT;
 <SNL>\"		{ pStr = strBfr; BEGIN STR; }
@@ -177,25 +190,25 @@ CCONST	\'.\'
 <SNL>"for"	RETURN(FOR);
 <SNL>"break"	RETURN(BREAK);
 <SNL>"exit"	RETURN(EXIT);
-<SNL>"entry"    RETURN(ENTRY);
+<SNL>"entry"	RETURN(ENTRY);
 <SNL>"TRUE" {
-		yylval.pchar = "1";
-		RETURN(NUMBER);
+		yylval.str = "1";
+		RETURN(INTNUM);
 }
 <SNL>"FALSE" {
-		yylval.pchar = "0";
-		RETURN(NUMBER);
+		yylval.str = "0";
+		RETURN(INTNUM);
 }
 <SNL>"ASYNC" {
-		yylval.pchar = "1";
-		RETURN(NUMBER);
+		yylval.str = "1";
+		RETURN(INTNUM);
 }
 <SNL>"SYNC" {
-		yylval.pchar = "2";
-		RETURN(NUMBER);
+		yylval.str = "2";
+		RETURN(INTNUM);
 }
 <SNL>{NAME} {
-		yylval.pchar = strdup((char *)yytext);
+		yylval.str = strdup((char *)yytext);
 		RETURN(NAME);
 }
 <SNL>"++"	RETURN(AUTO_INCR);
@@ -217,7 +230,7 @@ CCONST	\'.\'
 <SNL>"<<"	RETURN(L_SHIFT);
 <SNL>"<="	RETURN(LE);
 <SNL>"%="	RETURN(MODULO_EQUAL);
-<SNL>"^="	RETURN(CMPL_EQUAL);
+<SNL>"^="	RETURN(XOR_EQUAL);
 <SNL>"->"	RETURN(POINTER);
 <SNL>"+"	RETURN(PLUS);
 <SNL>"-"	RETURN(MINUS);
@@ -227,7 +240,6 @@ CCONST	\'.\'
 <SNL>">"	RETURN(GT);
 <SNL>"|"	RETURN(BIT_OR);
 <SNL>"^"	RETURN(BIT_XOR);
-<SNL>"&"	RETURN(BIT_AND);
 <SNL>"~"	RETURN(COMPLEMENT);
 <SNL>"%"	RETURN(MODULO);
 <SNL>"="	RETURN(EQUAL);
@@ -244,27 +256,14 @@ CCONST	\'.\'
 <SNL>"("	RETURN(L_PAREN);
 <SNL>")"	RETURN(R_PAREN);
 <SNL>","	RETURN(COMMA);
-<SNL>{HEX} {
-		yylval.pchar = strdup((char *)yytext);
-		RETURN(NUMBER);
-}
-<SNL>{OCTAL} {
-		yylval.pchar = strdup((char *)yytext);
-		RETURN(NUMBER);
+<SNL>{INTNUM} {
+		yylval.str = strdup((char *)yytext);
+		RETURN(INTNUM);
 }
 <SNL>{FPNUM} {
-		yylval.pchar = strdup((char *)yytext);
-		RETURN(NUMBER);
-}
-<SNL>{CCONST} {
-		yylval.pchar = strdup((char *)yytext);
-		RETURN(CHAR_CONST);
+		yylval.str = strdup((char *)yytext);
+		RETURN(FPNUM);
 }
 <SNL>[\f\t\ ]*	/* no action */ ;
 <SNL>.		RETURN(BAD_CHAR);
-# {		/* somehow "^#" doesn't work if it's first char */
-		BEGIN PP;
-		RETURN(PP_SYMBOL);
-}
 .|\n		{ globals->line_num = 1; BEGIN SNL; yyless(0); }
-

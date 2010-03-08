@@ -855,11 +855,21 @@ Expr *expression(
 	ep->left = left;
 	ep->right = right;
 	if (type == E_TEXT)
-		ep->line_num = globals->line_num-1;
+		ep->line_num = globals->c_line_num;
 	else
 		ep->line_num = globals->line_num;
 	ep->src_file = globals->src_file;
 
+	return ep;
+}
+
+Expr *c_code(
+	char	*value,
+	int	line_num
+)
+{
+	Expr *ep = expression(E_TEXT, value, 0, 0);
+	ep->line_num = line_num;
 	return ep;
 }
 

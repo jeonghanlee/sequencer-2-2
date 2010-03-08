@@ -288,13 +288,16 @@ static void gen_action_func(Expr *sp, Expr *ssp)
 	/* For each transition ("when" statement) ... */
 	for (tp = sp->left; tp != NULL; tp = tp->next)
 	{
+#if 0
 		/* local declarations are handled as text */
 		if (tp->type == E_TEXT)
 		{
 			printf("\t\t%s\n", tp->value);
 		}
 
-		else if (tp->type == E_WHEN) 
+		else 
+#endif
+		if (tp->type == E_WHEN) 
 		{
 			/* "case" for each transition */ 
 			printf("\tcase %d:\n", trans_num); 
@@ -511,9 +514,15 @@ static void eval_expr(
 		if (special_func(stmt_type, ep, sp))
 			break;
 		printf("%s(", ep->value);
-		eval_expr(stmt_type, ep->left, sp, 0);
+		for (epf = ep->left, nexprs = 0; epf != 0; epf = epf->next, nexprs++)
+		{
+			if (nexprs > 0)
+				printf(", ");
+			eval_expr(stmt_type, epf, sp, 0);
+		}
 		printf(")");
 		break;
+#if 0
 	case E_COMMA:
 		for (epf = ep->left, nexprs = 0; epf != 0; epf = epf->next, nexprs++)
 		{
@@ -522,7 +531,7 @@ static void eval_expr(
 			eval_expr(stmt_type, epf, sp, 0);
 		}
 		break;
-	case E_ASGNOP:
+#endif
 	case E_BINOP:
 		eval_expr(stmt_type, ep->left, sp, 0);
 		printf(" %s ", ep->value);
@@ -532,10 +541,6 @@ static void eval_expr(
 		printf("(");
 		eval_expr(stmt_type, ep->left, sp, 0);
 		printf(")");
-		break;
-	case E_UNOP:
-		printf("%s", ep->value);
-		eval_expr(stmt_type, ep->left, sp, 0);
 		break;
 	case E_PRE:
 		printf("%s", ep->value);
@@ -672,11 +677,13 @@ static int special_func(
 		/* Any funtion that requires adding ssID as 1st parameter.
 		 * Note:  name is changed by prepending "seq_". */
 		printf("seq_%s(ssId", fname);
-		/* now fill in user-supplied paramters */
+		/* now fill in user-supplied parameters */
+#if 0
 		ep1 = ep->left;
 		if (ep1 != 0 && ep1->type == E_COMMA)
 			ep1 = ep1->left;
-		for (; ep1 != 0; ep1 = ep1->next)
+#endif
+		for (ep1 = ep->left; ep1 != 0; ep1 = ep1->next)
 		{
 			printf(", ");
 			eval_expr(stmt_type, ep1, sp, 0);
@@ -702,10 +709,12 @@ static void gen_ef_func(
 	Var		*vp = 0;
 
 	ep1 = ep->left; /* ptr to 1-st parameters */
+#if 0
 	if (ep1 != 0 && ep1->type == E_COMMA)
 	{
 		ep1 = ep1->left;
 	}
+#endif
 	if (ep1 != 0 && ep1->type == E_VAR)
 	{
 		vp = (Var *)ep1->left;
@@ -753,8 +762,10 @@ static void gen_pv_func(
 	int		num;
 
 	ep1 = ep->left; /* ptr to 1-st parameter in the function */
+#if 0
 	if (ep1 != 0 && ep1->type == E_COMMA)
 		ep1 = ep1->left;
+#endif
 	if (ep1 == 0)
 	{
 		fprintf(stderr, "line %d: ", ep->line_num);
@@ -835,11 +846,14 @@ static void gen_pv_func(
 	ep1 = ep1->next;
 	while (ep1 != 0)
 	{
+#if 0
 		Expr *ep;
+#endif
 
 		printf(", ");
 		eval_expr(stmt_type, ep1, sp, 0);
 
+#if 0
 		/* Count parameters (makes use of knowledge that parameter
 		   list will be tree with nodes of type E_COMMA, arguments
 		   in "left" and next E_COMMA in "left->next") */
@@ -849,10 +863,13 @@ static void gen_pv_func(
 			num++;
 			ep = ep->left->next;
 		}
+#endif
 		num++;
 
+#if 0
 		/* Advance to next parameter (always zero? multiple parameters
 		   are always handled as compound expressions?) */
+#endif
 		ep1 = ep1->next;
 	}
 

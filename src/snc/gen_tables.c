@@ -336,7 +336,7 @@ no possible state option conflicts.  */
 static void encode_state_options(Expr *sp)
 {
 	Expr	*ep;
-	char	errMsg[BUFSIZ], *pc = NULL, *suppl = NULL;
+	char	*pc;
 	bitMask	options = 0,
 		optionSpec = 0;
 	int	duplicate = FALSE,
@@ -389,24 +389,23 @@ static void encode_state_options(Expr *sp)
 			}
 			else
 			{
-				sprintf(errMsg,"Unrecognized option in state %s: %s%c",
+				report_location(ep->src_file, ep->line_num);
+				report("unrecognized option in state %s: %s%c",
 					sp->value, plusminus, *pc);
-				snc_err(errMsg);
 			}
 
 			if ( duplicate )
 			{
-				sprintf(errMsg,
-					"Option already specified in state %s: %c",
+				report_location(ep->src_file, ep->line_num);
+				report("option already specified in state %s: %c",
 					sp->value, *pc);
-				snc_err(errMsg);
 			}
 			if ( contradictory )
 			{
-				sprintf(errMsg,
-					"Contradictory option or option out of order %s%c in state %s:\n\t\t %s",
-					plusminus,*pc,sp->value,suppl);
-				snc_err(errMsg);
+				report_location(ep->src_file, ep->line_num);
+				report("contradictory option or option out of "
+					"order %s%c in state %s",
+					plusminus, *pc, sp->value);
 			}
 
 		}

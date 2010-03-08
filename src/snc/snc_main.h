@@ -18,15 +18,30 @@ typedef struct options Options;
 struct globals
 {
 	char	*src_file;	/* ptr to (effective) source file name */
-	int	line_num;	/* current src file line number */
+	int	line_num;	/* current src file and line number */
+	int	c_line_num;	/* current src file and line number for c code */
 	Options *options;	/* compile & run-time options */
 };
 typedef struct globals Globals;
 
 extern Globals *globals;
 
-void yyerror(char *err);
-void snc_err(char *err_txt);
+/* append '# <line_num> "<src_file>"\n' to output */
+
 void print_line_num(int line_num, char *src_file);
+
+/* Error and warning message support */
+
+/* this uses the global location information which is valid only during the
+   parsing stage */
+void parse_error(const char *format, ...);
+
+/* just the location info, no newline */
+void report_location(const char *src_file, int line_num);
+
+/* these both add a trailing newline */
+void report_with_location(
+	const char *src_file, int line_num, const char *format, ...);
+void report(const char *format, ...);
 
 #endif	/*INCLsncmainh*/
