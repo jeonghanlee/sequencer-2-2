@@ -100,16 +100,16 @@ void print_loc(Expr *ep);
 #define	ENTRY_STMT	4
 #define	EXIT_STMT	5
 
-void gen_ss_code(Parse *parse)
+void gen_ss_code(Program *program)
 {
 	Expr			*ssp;
 	Expr			*sp;
 
 	/* Generate entry handler code */
-	gen_entry_handler(parse->entry_code_list);
+	gen_entry_handler(program->entry_code_list);
 
 	/* For each state set ... */
-	for (ssp = parse->ss_list; ssp != NULL; ssp = ssp->next)
+	for (ssp = program->ss_list; ssp != NULL; ssp = ssp->next)
 	{
 		/* For each state ... */
 		for (sp = ssp->left; sp != NULL; sp = sp->next)
@@ -132,7 +132,7 @@ void gen_ss_code(Parse *parse)
 	}
 
 	/* Generate exit handler code */
-	gen_exit_handler(parse->exit_code_list);
+	gen_exit_handler(program->exit_code_list);
 }
 /* Generate functions for each state which perform the state entry and 
   * exit actions. 

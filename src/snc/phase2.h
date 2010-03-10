@@ -1,7 +1,7 @@
 #ifndef INCLphase2h
 #define INCLphase2h
 
-void phase2(Parse *parse);
+void phase2(Program *program);
 
 int expr_count(Expr*);
 

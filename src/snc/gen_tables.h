@@ -1,6 +1,8 @@
 #ifndef INCLgentablesh
 #define INCLgentablesh
 
-void gen_tables(Parse *parse);
+struct program;
+
+void gen_tables(struct program *program);
 
 #endif	/*INCLgentablesh*/

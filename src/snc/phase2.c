@@ -76,56 +76,56 @@ static int db_chan_count(ChanList *chan_list);
 *
 *  FUNCTION: Generate C code from parsing lists.
 *-*************************************************************************/
-void phase2(Parse *parse)
+void phase2(Program *program)
 {
 	/* Count number of db channels and state sets defined */
-	parse->num_queues = db_queue_count(parse->global_scope);
-	parse->num_channels = db_chan_count(parse->chan_list);
-	parse->num_ss = expr_count(parse->ss_list);
+	program->num_queues = db_queue_count(program->global_scope);
+	program->num_channels = db_chan_count(program->chan_list);
+	program->num_ss = expr_count(program->ss_list);
 
 	/* Reconcile all variable and tie each to the appropriate VAR struct */
-	reconcile_variables(parse->global_scope, parse->ss_list);
-	reconcile_variables(parse->global_scope, parse->entry_code_list);
-	reconcile_variables(parse->global_scope, parse->exit_code_list);
+	reconcile_variables(program->global_scope, program->ss_list);
+	reconcile_variables(program->global_scope, program->entry_code_list);
+	reconcile_variables(program->global_scope, program->exit_code_list);
 
 	/* reconcile all state names, including next state in transitions */
-	reconcile_states(parse->ss_list);
+	reconcile_states(program->ss_list);
 
 	/* Assign bits for event flags */
-	parse->num_events = assign_ef_bits(parse->global_scope, parse->chan_list);
+	program->num_events = assign_ef_bits(program->global_scope, program->chan_list);
 
 #ifdef	DEBUG
 	fprintf(stderr, "gen_tables:\n");
-	fprintf(stderr, " num_channels = %d\n", parse->num_channels);
-	fprintf(stderr, " num_events = %d\n", parse->num_events);
-	fprintf(stderr, " num_queues = %d\n", parse->num_queues);
-	fprintf(stderr, " num_ss = %d\n", parse->num_ss);
+	fprintf(stderr, " num_channels = %d\n", program->num_channels);
+	fprintf(stderr, " num_events = %d\n", program->num_events);
+	fprintf(stderr, " num_queues = %d\n", program->num_queues);
+	fprintf(stderr, " num_ss = %d\n", program->num_ss);
 #endif	/*DEBUG*/
 
 	/* Assign delay id's */
-	assign_delay_ids(parse->ss_list);
+	assign_delay_ids(program->ss_list);
 
 	/* Generate preamble code */
-	gen_preamble(parse->prog_name, parse->num_ss,
-		parse->num_channels, parse->num_events, parse->num_queues);
+	gen_preamble(program->prog_name, program->num_ss,
+		program->num_channels, program->num_events, program->num_queues);
 
 	/* Generate variable declarations */
-	gen_var_decl(parse->global_scope);
+	gen_var_decl(program->global_scope);
 
 	/* Generate definition C code */
-	gen_defn_c_code(parse->global_defn_list);
+	gen_defn_c_code(program->global_defn_list);
 
 	/* Generate code for each state set */
-	gen_ss_code(parse);
+	gen_ss_code(program);
 
 	/* Generate tables */
-	gen_tables(parse);
+	gen_tables(program);
 
 	/* Output global C code */
-	gen_global_c_code(parse->global_c_list);
+	gen_global_c_code(program->global_c_list);
 
 	/* Sequencer registration (if "init_register" option set) */
-	gen_init_reg(parse->prog_name);
+	gen_init_reg(program->prog_name);
 
 	exit(0);
 }

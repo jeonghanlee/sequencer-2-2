@@ -72,24 +72,24 @@ static char *db_type_str(int type);
 *  FUNCTION: Generate C code from tables.
 *-*************************************************************************/
 
-void gen_tables(Parse *parse)
+void gen_tables(Program *program)
 {
 	printf("\f/************************ Tables ***********************/\n");
 
 	/* Generate DB blocks */
-	gen_db_blocks(parse->chan_list, parse->num_events);
+	gen_db_blocks(program->chan_list, program->num_events);
 
 	/* Generate State Blocks */
-	gen_state_blocks(parse->ss_list, parse->num_events, parse->num_channels);
+	gen_state_blocks(program->ss_list, program->num_events, program->num_channels);
 
 	/* Generate State Set Blocks */
-	gen_ss_array(parse->ss_list);
+	gen_ss_array(program->ss_list);
 
 	/* generate program parameter string */
-	gen_prog_params(parse->prog_param);
+	gen_prog_params(program->prog_param);
 
 	/* Generate state program table */
-	gen_prog_table(parse->prog_name);
+	gen_prog_table(program->prog_name);
 
 	return;
 }

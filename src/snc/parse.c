@@ -92,7 +92,7 @@ void syncq_stmt(
 );
 
 /* Parsing whole program */
-void program(
+Program *program(
 	char *pname,
 	char *pparam,
 	Expr *defn_list,
@@ -102,28 +102,28 @@ void program(
 	Expr *c_list
 )
 {
-	Parse *parse = allocParse();
+	Program *program = allocProgram();
 
-	parse->prog_name = pname;
-	parse->prog_param = pparam;
-	parse->global_defn_list = defn_list;
-	parse->entry_code_list = entry_list;
-	parse->ss_list = prog_list;
-	parse->exit_code_list = exit_list;
-	parse->global_c_list = c_list;
+	program->prog_name = pname;
+	program->prog_param = pparam;
+	program->global_defn_list = defn_list;
+	program->entry_code_list = entry_list;
+	program->ss_list = prog_list;
+	program->exit_code_list = exit_list;
+	program->global_c_list = c_list;
 
 #ifdef	DEBUG
 	fprintf(stderr, "---- Analysis ----\n");
 #endif	/*DEBUG*/
-	parse->global_scope = analyze_declarations(defn_list);
-	parse->chan_list = analyze_assignments(parse->global_scope, defn_list);
-	analyze_monitors(parse->global_scope, defn_list);
-	analyze_syncs_and_syncqs(parse->global_scope, defn_list);
+	program->global_scope = analyze_declarations(defn_list);
+	program->chan_list = analyze_assignments(program->global_scope, defn_list);
+	analyze_monitors(program->global_scope, defn_list);
+	analyze_syncs_and_syncqs(program->global_scope, defn_list);
 
 #ifdef	DEBUG
 	fprintf(stderr, "---- Phase2 ----\n");
 #endif	/*DEBUG*/
-	phase2(parse);
+	phase2(program);
 
 	exit(0);
 }
@@ -261,7 +261,7 @@ void analyze_syncs_and_syncqs(Scope *scope, Expr *defn_list)
 }
 
 /* Parsing a declaration */
-Expr *declaration(
+Expr *decl(
 	int	type,		/* variable type (e.g. V_FLOAT) */
 	int	class,		/* variable class (e.g. VC_ARRAY) */
 	char	*name,		/* ptr to variable name */
@@ -294,7 +294,7 @@ Expr *declaration(
 	vp->length2 = length2;
 	vp->value = value;
 	vp->chan = NULL;
-	return expression(E_DECL, (char *)vp, 0, 0);
+	return expr(E_DECL, (char *)vp, 0, 0);
 }
 
 /* Option statement */
@@ -816,9 +816,8 @@ static void add_chan(ChanList *chan_list, Chan *cp)
 	cp->next = NULL;
 }
 
-/* Build an expression list (hierarchical):
-   Builds a node on a binary tree for each expression primitive. */
-Expr *expression(
+/* Expr is the generic syntax tree node. It is formed by a type  */
+Expr *expr(
 	int	type,		/* E_BINOP, E_ASGNOP, etc */
 	char	*value,		/* "==", "+=", var name, constant, etc. */	
 	Expr	*left,		/* LH side */
@@ -835,7 +834,7 @@ Expr *expression(
 		Var	*vp = (Var*)value;
 
 		fprintf(stderr,
-		 "expression: ep=%p, type=%s, value="
+		 "expr: ep=%p, type=%s, value="
 		 "(var: name=%s, type=%d, class=%d, length1=%d, length2=%d, value=%s), "
 		 "left=%p, right=%p\n",
 		 ep, expr_type_names[type],
@@ -844,7 +843,7 @@ Expr *expression(
 	}
         else
 		fprintf(stderr,
-		 "expression: ep=%p, type=%s, value=\"%s\", left=%p, right=%p\n",
+		 "expr: ep=%p, type=%s, value=\"%s\", left=%p, right=%p\n",
 		 ep, expr_type_names[type], value, left, right);
 #endif	/*DEBUG*/
 	/* Fill in the structure */
@@ -857,16 +856,6 @@ Expr *expression(
 	ep->line_num = globals->prev_line_num;
 	ep->src_file = globals->src_file;
 
-	return ep;
-}
-
-Expr *c_code(
-	char	*value,
-	int	line_num
-)
-{
-	Expr *ep = expression(E_TEXT, value, 0, 0);
-	ep->line_num = line_num;
 	return ep;
 }
 

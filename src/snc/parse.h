@@ -47,9 +47,9 @@ struct	expression			/* Expression block */
 };
 typedef	struct	expression Expr;
 
-struct	var				/* Variable or function definition */
+struct	variable			/* Variable or function definition */
 {
-	struct	var *next;		/* link to next item in list */
+	struct	variable *next;		/* link to next item in list */
 	char	*name;			/* variable name */
 	char	*value;			/* initial value or NULL */
 	int	type;			/* var type */
@@ -63,7 +63,7 @@ struct	var				/* Variable or function definition */
 	int	queueIndex;		/* index in syncQ queue array */
 	int	line_num;		/* line number */
 };
-typedef	struct	var Var;
+typedef	struct	variable Var;
 
 struct	db_chan				/* DB channel assignment info */
 {
@@ -96,7 +96,7 @@ struct var_list
 };
 typedef struct	var_list VarList;
 
-struct parse				/* result of parsing */
+struct program				/* result of parsing */
 {
 	char	*prog_name;		/* ptr to program name (string) */
 	char	*prog_param;		/* parameter string for program stmt */
@@ -112,7 +112,7 @@ struct parse				/* result of parsing */
 	int	num_queues;		/* number of syncQ queues */
 	int	num_ss;			/* number of state sets */
 };
-typedef struct parse Parse;
+typedef struct program Program;
 
 /* Allocation 'functions' */
 #define	allocExpr()		(Expr *)calloc(1, sizeof(Expr))
@@ -121,7 +121,7 @@ typedef struct parse Parse;
 #define	allocVarList()		(VarList *)calloc(1, sizeof(VarList))
 #define	allocChanList()		(ChanList *)calloc(1, sizeof(ChanList))
 #define	allocScope()		(Scope *)calloc(1, sizeof(Scope))
-#define	allocParse()		(Parse *)calloc(1, sizeof(Parse))
+#define	allocProgram()		(Program *)calloc(1, sizeof(Program))
 
 /* Variable types */
 #define	V_NONE		0		/* not defined */
@@ -219,7 +219,7 @@ const char *expr_type_names[] =
 extern const char *expr_type_names[];
 #endif
 
-void program(
+Program *program(
 	char *pname,
 	char *pparam,
 	Expr *defn_list,
@@ -228,13 +228,13 @@ void program(
 	Expr *exit_list,
 	Expr *c_list
 );
-Expr *expression(
+Expr *expr(
 	int	type,		/* E_BINOP, E_ASGNOP, etc */
 	char	*value,		/* "==", "+=", var name, constant, etc. */
 	Expr	*left,		/* LH side */
 	Expr	*right		/* RH side */
 );
-Expr *declaration(
+Expr *decl(
 	int	type,		/* variable type (e.g. V_FLOAT) */
 	int	class,		/* variable class (e.g. VC_ARRAY) */
 	char	*name,		/* ptr to variable name */
@@ -257,10 +257,6 @@ Var *find_var(
 Expr *link_expr(
 	Expr	*ep1,		/* beginning of 1-st structure or list */
 	Expr	*ep2		/* beginning 2-nd (append it to 1-st) */
-);
-Expr *c_code(
-	char	*value;
-	int	line_num;
 );
 
 #endif	/*INCLparseh*/
