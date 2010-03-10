@@ -17,9 +17,9 @@ typedef struct options Options;
 
 struct globals
 {
-	char	*src_file;	/* ptr to (effective) source file name */
-	int	line_num;	/* current src file and line number */
-	int	c_line_num;	/* current src file and line number for c code */
+	char	*src_file;	/* current source file name */
+	int	line_num;	/* current line number */
+	int	prev_line_num;	/* line number for previous token */
 	Options *options;	/* compile & run-time options */
 };
 typedef struct globals Globals;

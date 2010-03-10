@@ -854,10 +854,7 @@ Expr *expression(
 	ep->value = value;
 	ep->left = left;
 	ep->right = right;
-	if (type == E_TEXT)
-		ep->line_num = globals->c_line_num;
-	else
-		ep->line_num = globals->line_num;
+	ep->line_num = globals->prev_line_num;
 	ep->src_file = globals->src_file;
 
 	return ep;

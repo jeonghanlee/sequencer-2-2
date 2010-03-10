@@ -4,13 +4,14 @@ include $(TOP)/configure/CONFIG
 #----------------------------------------
 #  ADD MACRO DEFINITIONS AFTER THIS LINE
 
-#USE_LEMON = 1
+USE_LEMON = 1
 
 #  Internal debug control
 #USR_CPPFLAGS = -DDEBUG
 
 #  YACC options (generate y.tab.h; generate y.output)
 YACCOPT	= -d -v
+LEXOPT += -s -d
 
 #  snc product
 PROD_HOST = snc
@@ -21,7 +22,8 @@ endif
 snc_LIBS += $(EPICS_BASE_IOC_LIBS)
 ifdef USE_LEMON
 USR_CFLAGS += -DUSE_LEMON
-snc_SRCS += snc_lex.l snl.c
+snc_SRCS += snl.c
+snc_SRCS += snl_lex.re
 else
 snc_SRCS += snc.c
 endif
@@ -66,7 +68,11 @@ snl.c snl.h: snl.lem snl.lt $(LEMON)
 %.lt: ../%.lt
 	$(CP) $< .
 
-snc_lex$(OBJ) snc_lex.c: snl.h
+vpath %.re . ..
+
+snl_lex.c: snl.re snl.h
+	re2c -d -o $@ $<
+
 else
 snc.c: snc_lex.c
 endif

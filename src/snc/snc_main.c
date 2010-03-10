@@ -39,7 +39,7 @@
 
 extern char	*sncVersion;	/* snc version and date created */
 
-extern void compile(void);	/* defined in snc.y */
+extern void compile(void);	/* defined in snl.re */
 
 static Options	default_options =
 {
@@ -70,25 +70,10 @@ static void get_in_file(char *s);
 static void get_out_file(char *s);
 static void print_usage(void);
 
-/*+************************************************************************
-*  NAME: main
-*
-*  CALLING SEQUENCE
-*	type		argument	I/O	description
-*	-------------------------------------------------------------
-*	int		argc		I	arg count
-*	char		*argv[]		I	array of ptrs to args
-*
-*  RETURNS: n/a
-*
-*  FUNCTION: Program entry.
-*
-*  NOTES: The streams stdin and stdout are redirected to files named in the
-* command parameters.  This accomodates the use by lex of stdin for input
-* and permits printf() to be used for output.  Stderr is not redirected.
-*
-* This routine calls yyparse(), which never returns.
-*-*************************************************************************/
+/* The streams stdin and stdout are redirected to files named in the
+   command parameters.  This accomodates the use by lex of stdin for input
+   and permits printf() to be used for output.
+*/
 int main(int argc, char *argv[])
 {
 	FILE	*infp, *outfp;
@@ -126,51 +111,9 @@ int main(int argc, char *argv[])
         return 0; /* never reached */
 }
 
-#ifdef USE_LEMON
-#include "token.h"
-
-extern void parser(
-	void *yyp,	/* The parser */
-	int yymajor,	/* The major token code number */
-	Token yyminor,	/* The value for the token */
-        int line_num
-);
-extern void *parserAlloc(void *(*mallocProc)(size_t));
-void parserFree(
-	void *p,		/* The parser to be deleted */
-	void (*freeProc)(void*)	/* Function used to reclaim memory */
-);
-
-void compile(void)
-{
-	int tok;
-	void *pParser = parserAlloc(malloc);
-	do
-	{
-		tok = yylex();
-		parser(pParser, tok, yylval, globals->c_line_num);
-	}
-	while (tok);
-	parserFree(pParser, free);
-}
-#endif
-
-/*+************************************************************************
-*  NAME: get_args
-*
-*  CALLING SEQUENCE
-*	type		argument	I/O	description
-*	-----------------------------------------------------------
-*	int		argc		I	number of arguments
-*	char		*argv[]		I	shell command arguments
-*  RETURNS: n/a
-*
-*  FUNCTION: Get the shell command arguments.
-*
-*  NOTES: If "*.s" is input file then "*.c" is the output file.  Otherwise,
-*  ".c" is appended to the input file to form the output file name.
-*  Sets the globals in_file[] and out_file[].
-*-*************************************************************************/
+/* If "*.s" is input file then "*.c" is the output file.  Otherwise,
+   ".c" is appended to the input file to form the output file name.
+   Sets the globals in_file[] and out_file[]. */
 static void get_args(int argc, char *argv[])
 {
 	char	*s;
@@ -331,8 +274,10 @@ void parse_error(const char *format, ...)
 	report_location(globals->src_file, globals->line_num);
 
 	va_start(args, format);
-	report(format, args);
+	vfprintf(stderr, format, args);
 	va_end(args);
+
+	fprintf(stderr, "\n");
 }
 
 void report_location(const char *src_file, int line_num)
@@ -348,8 +293,10 @@ void report_with_location(
 	report_location(src_file, line_num);
 
 	va_start(args, format);
-	report(format, args);
+	vfprintf(stderr, format, args);
 	va_end(args);
+
+	fprintf(stderr, "\n");
 }
 
 void report(const char *format, ...)

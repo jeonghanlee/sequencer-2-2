@@ -51,13 +51,22 @@
 #define	TRUE	1
 #define	FALSE	0
 #endif
-/*#define	DEBUG 1*/
+
 #ifdef	DEBUG
-#define	RETURN(param)	{ fprintf(stderr, "return(" #param ")\n"); \
-			  return(param); }
+#define	RETURN(param) {\
+	fprintf(stderr, "return(" #param ")\n");\
+	globals->prev_line_num = tok_line_num;\
+	tok_line_num = globals->line_num;\
+	return(param);\
+	}
 #else
-#define	RETURN(param)	return(param)
+#define	RETURN(param) {\
+	globals->prev_line_num = tok_line_num;\
+	tok_line_num = globals->line_num;\
+	return(param);\
+	}
 #endif
+
 #define	STR_BFR_SIZE	1000
 
 static char		strBfr[STR_BFR_SIZE];	/* holding place for strings */
