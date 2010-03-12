@@ -41,11 +41,6 @@
 #include	"snc_main.h"
 #include	"gen_code.h"
 
-#ifndef TRUE
-#define TRUE    1
-#define FALSE   0
-#endif  /*TRUE*/
-
 static void gen_preamble(char *prog_name, Options *options,
 	int num_ss, int num_channels, int num_events, int num_queues);
 static void gen_opt_defn(int opt, char *defn_name);
@@ -296,7 +291,7 @@ static void gen_defn_c_code(Expr *defn_list)
 				first = FALSE;
 				printf("\n/* C code definitions */\n");
 			}
-			print_line_num(ep->line_num, ep->src_file);
+			gen_line_marker(ep);
 			printf("%s\n", ep->value);
 		}
 	}
@@ -314,7 +309,7 @@ static void gen_global_c_code(Expr *global_c_list)
 		for (; ep != NULL; ep = ep->next)
 		{
 			assert(ep->type == E_TEXT);
-			print_line_num(ep->line_num, ep->src_file);
+			gen_line_marker(ep);
 			printf("%s\n", ep->value);
 		}
 	}

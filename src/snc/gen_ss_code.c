@@ -34,11 +34,6 @@
 #include	"analysis.h"
 #include	"snc_main.h"
 
-#ifndef TRUE
-#define TRUE	1
-#define FALSE   0
-#endif  /*TRUE*/
-
 /* func_name_to_code - convert function name to a code */
 enum fcode {
 	F_DELAY, F_EFSET, F_EFTEST, F_EFCLEAR, F_EFTESTANDCLEAR,
@@ -79,7 +74,6 @@ static void gen_entry_func(Expr *sp, Expr *ssp);
 static void gen_exit_func(Expr *sp, Expr *ssp);
 static int state_block_index_from_name(Expr *ssp, char *state_name);
 static int special_func(int stmt_type, Expr *ep, Expr *sp);
-void print_loc(Expr *ep);
 
 /*+************************************************************************
 *  NAME: gen_ss_code
@@ -256,7 +250,7 @@ static void eval_delay(Expr *ep, Expr *sp)
 	fprintf(stderr, "eval_delay: type=%s\n", expr_type_names[ep->type]);
 #endif	/*DEBUG*/
 
-	print_loc(ep);
+	gen_line_marker(ep);
 
 	/* Generate 1-st part of function w/ 1-st 2 parameters */
 	delay_id = (int)ep->right; /* delay id was previously assigned */
@@ -348,7 +342,7 @@ static void gen_event_func(Expr *sp, Expr *ssp)
 	        if (tp->type == E_WHEN) 
 		{
 			if (tp->left != 0)
-				print_loc(tp->left);
+				gen_line_marker(tp->left);
 			printf("\tif (");
 			if (tp->left == 0)
 			      printf("TRUE");
@@ -412,7 +406,7 @@ static void gen_expr(
 	switch(ep->type)
 	{
 	case E_DECL:
-		if (stmt_type == ACTION_STMT) print_loc(ep->left);
+		if (stmt_type == ACTION_STMT) gen_line_marker(ep->left);
 		indent(level);
 		printf("%s ",ep->value);
 		gen_expr(stmt_type, ep->left, sp, 0);
@@ -434,14 +428,14 @@ static void gen_expr(
 		printf("}\n");
 		break;
 	case E_STMT:
-		if (stmt_type == ACTION_STMT) print_loc(ep->left);
+		if (stmt_type == ACTION_STMT) gen_line_marker(ep->left);
 		indent(level);
 		gen_expr(stmt_type, ep->left, sp, 0);
 		printf(";\n");
 		break;
 	case E_IF:
 	case E_WHILE:
-		if (stmt_type == ACTION_STMT) print_loc(ep->left);
+		if (stmt_type == ACTION_STMT) gen_line_marker(ep->left);
 		indent(level);
 		if (ep->type == E_IF)
 			printf("if (");
@@ -456,7 +450,7 @@ static void gen_expr(
 			gen_expr(stmt_type, ep->right, sp, level+1);
 		break;
 	case E_FOR:
-		if (stmt_type == ACTION_STMT) print_loc(ep->left->left);
+		if (stmt_type == ACTION_STMT) gen_line_marker(ep->left->left);
 		indent(level);
 		printf("for (");
 		gen_expr(stmt_type, ep->left->left, sp, 0);
@@ -472,7 +466,7 @@ static void gen_expr(
 			gen_expr(stmt_type, epf, sp, level+1);
 		break;
 	case E_ELSE:
-		if (stmt_type == ACTION_STMT) print_loc(ep->left);
+		if (stmt_type == ACTION_STMT) gen_line_marker(ep->left);
 		indent(level);
 		printf("else\n");
 		epf = ep->left;
@@ -922,9 +916,4 @@ static void gen_exit_handler(Expr *expr_list)
 		gen_expr(EXIT_STMT, ep, NULL, 1);
 	}
 	printf("}\n\n");
-}
-
-void print_loc(Expr *ep)
-{
-	print_line_num(ep->line_num, ep->src_file);
 }
