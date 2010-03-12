@@ -86,7 +86,7 @@ static void gen_db_blocks(ChanList *chan_list, int num_events, int opt_reent)
 		{
 			int n;
 #ifdef	DEBUG
-			fprintf(stderr, "gen_db_blocks: index=%d, num_elem=%d\n",
+			report("gen_db_blocks: index=%d, num_elem=%d\n",
 				cp->index, cp->num_elem);
 #endif	/*DEBUG*/
 			int num_elem = cp->num_elem ? cp->num_elem : 1;
@@ -525,10 +525,10 @@ static void eval_state_event_mask(Expr *sp, int num_events,
 		traverse_expr_tree(tp->left, E_SUBSCR, 0, (expr_fun*)eval_event_mask_subscr, &args);
 	}
 #ifdef	DEBUG
-	fprintf(stderr, "Event mask for state %s is", sp->value);
+	report("Event mask for state %s is", sp->value);
 	for (n = 0; n < num_event_words; n++)
-		fprintf(stderr, " 0x%lx", event_words[n]);
-	fprintf(stderr, "\n");
+		report(" 0x%lx", event_words[n]);
+	report("\n");
 #endif	/*DEBUG*/
 }
 
@@ -552,7 +552,7 @@ static void eval_event_mask(Expr *ep, eval_event_mask_args *args)
 	if (vp->type == V_EVFLAG)
 	{
 #ifdef	DEBUG
-		fprintf(stderr, " eval_event_mask: %s, ef_num=%d\n",
+		report(" eval_event_mask: %s, ef_num=%d\n",
 		 vp->name, vp->ef_num);
 #endif	/*DEBUG*/
 		bitSet(event_words, vp->ef_num);
@@ -570,7 +570,7 @@ static void eval_event_mask(Expr *ep, eval_event_mask_args *args)
 		int ef_num = cp->num_elem == 0 ?
 					cp->ef_num : cp->ef_num_list[0];
 #ifdef	DEBUG
-		fprintf(stderr, " eval_event_mask: %s, ef_num=%d\n",
+		report(" eval_event_mask: %s, ef_num=%d\n",
 		 vp->name, ef_num);
 #endif	/*DEBUG*/
 		bitSet(event_words, ef_num);
@@ -580,7 +580,7 @@ static void eval_event_mask(Expr *ep, eval_event_mask_args *args)
 	else if (cp->num_elem == 0)
 	{
 #ifdef	DEBUG
-		fprintf(stderr, " eval_event_mask: %s, db event bit=%d\n",
+		report(" eval_event_mask: %s, db event bit=%d\n",
 		 vp->name, cp->index + 1);
 #endif	/*DEBUG*/
 		bitSet(event_words, cp->index + num_events + 1);
@@ -590,7 +590,7 @@ static void eval_event_mask(Expr *ep, eval_event_mask_args *args)
 	else
 	{
 #ifdef	DEBUG
-		fprintf(stderr, "  eval_event_mask: %s, db event bits=%d..%d\n",
+		report("  eval_event_mask: %s, db event bits=%d..%d\n",
 			vp->name, cp->index + 1, cp->index + vp->length1);
 #endif	/*DEBUG*/
 		for (n = 0; n < vp->length1; n++)
@@ -629,7 +629,7 @@ static void eval_event_mask_subscr(Expr *ep, eval_event_mask_args *args)
 	if (cp->num_elem == 0)
 	{
 #ifdef	DEBUG
-		fprintf(stderr, "  eval_event_mask_subscr: %s, db event bit=%d\n",
+		report("  eval_event_mask_subscr: %s, db event bit=%d\n",
 		 vp->name, cp->index);
 #endif	/*DEBUG*/
 		bitSet(event_words, cp->index + num_events + 1);
@@ -646,7 +646,7 @@ static void eval_event_mask_subscr(Expr *ep, eval_event_mask_args *args)
 		if (subscr < 0 || subscr >= cp->num_elem)
 			return;
 #ifdef	DEBUG
-		fprintf(stderr, "  eval_event_mask_subscr: %s, db event bit=%d\n",
+		report("  eval_event_mask_subscr: %s, db event bit=%d\n",
 		 vp->name, cp->index + subscr + 1);
 #endif	/*DEBUG*/
 		bitSet(event_words, cp->index + subscr + num_events + 1);
@@ -655,7 +655,7 @@ static void eval_event_mask_subscr(Expr *ep, eval_event_mask_args *args)
 
 	/* subscript is an expression -- set all event bits for this variable */
 #ifdef	DEBUG
-	fprintf(stderr, "  eval_event_mask_subscr: %s, db event bits=%d..%d\n",
+	report("  eval_event_mask_subscr: %s, db event bits=%d..%d\n",
 	 vp->name, cp->index + 1, cp->index + vp->length1);
 #endif	/*DEBUG*/
 	for (n = 0; n < vp->length1; n++)

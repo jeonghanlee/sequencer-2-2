@@ -59,11 +59,11 @@ void generate_code(Program *p)
 	p->num_events = assign_ef_bits(p->global_scope, p->chan_list);
 
 #ifdef	DEBUG
-	fprintf(stderr, "gen_tables:\n");
-	fprintf(stderr, " num_channels = %d\n", p->num_channels);
-	fprintf(stderr, " num_events = %d\n", p->num_events);
-	fprintf(stderr, " num_queues = %d\n", p->num_queues);
-	fprintf(stderr, " num_ss = %d\n", p->num_ss);
+	report("gen_tables:\n");
+	report(" num_channels = %d\n", p->num_channels);
+	report(" num_events = %d\n", p->num_events);
+	report(" num_queues = %d\n", p->num_queues);
+	report(" num_ss = %d\n", p->num_ss);
 #endif	/*DEBUG*/
 
 	/* Assign delay id's */
@@ -374,7 +374,7 @@ static void assign_delay_ids(Expr *ss_list)
 	int			delay_id;
 
 #ifdef	DEBUG
-	fprintf(stderr, "assign_delay_ids:\n");
+	report("assign_delay_ids:\n");
 #endif	/*DEBUG*/
 	for (ssp = ss_list; ssp != 0; ssp = ssp->next)
 	{

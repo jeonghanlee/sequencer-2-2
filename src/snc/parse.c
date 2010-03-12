@@ -119,7 +119,7 @@ Expr *expr(
 	{
 		Var	*vp = (Var*)value.str;
 
-		fprintf(stderr,
+		report(
 		 "expr: ep=%p, type=%s, value="
 		 "(var: name=%s, type=%d, class=%d, length1=%d, length2=%d, value=%s), "
 		 "left=%p, right=%p\n",
@@ -128,7 +128,7 @@ Expr *expr(
 		 left, right);
 	}
         else
-		fprintf(stderr,
+		report(
 		 "expr: ep=%p, type=%s, value=\"%s\", left=%p, right=%p\n",
 		 ep, expr_type_names[type], value.str, left, right);
 #endif	/*DEBUG*/
@@ -166,14 +166,14 @@ Expr *link_expr(
 	ep1->last->next = ep2;
 	ep1->last = ep2->last;
 #ifdef	DEBUG
-	fprintf(stderr, "link_expr(");
+	report("link_expr(");
 	for (ep = ep1; ; ep = ep->next)
 	{
-		fprintf(stderr, "%p, ", ep);
+		report("%p, ", ep);
 		if (ep == ep1->last)
 			break;
 	}
-	fprintf(stderr, ")\n");	
+	report(")\n");
 #endif	/*DEBUG*/
 	return ep1;
 }

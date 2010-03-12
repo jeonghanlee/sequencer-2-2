@@ -20,7 +20,7 @@ typedef unsigned char uchar;
 #define	YYLIMIT			s->lim
 #define	YYMARKER		s->ptr
 #define	YYFILL			cursor = fill(s, cursor);
-#define	YYDEBUG(state, current) fprintf(stderr, "state = %d, current = %c\n", state, current);
+#define	YYDEBUG(state, current) report("state = %d, current = %c\n", state, current);
 
 #define	RET(i,r) {\
 	s->cur = cursor;\

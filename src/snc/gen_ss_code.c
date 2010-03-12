@@ -247,7 +247,7 @@ static void eval_delay(Expr *ep, Expr *sp)
 	int		delay_id;
 
 #ifdef	DEBUG
-	fprintf(stderr, "eval_delay: type=%s\n", expr_type_names[ep->type]);
+	report("eval_delay: type=%s\n", expr_type_names[ep->type]);
 #endif	/*DEBUG*/
 
 	gen_line_marker(ep);
@@ -355,12 +355,11 @@ static void gen_event_func(Expr *sp, Expr *ssp)
 			index = state_block_index_from_name(ssp, tp->value);
 			if (index < 0)
 			{
-			       fprintf(stderr, "line %d: ", tp->line_num);
-			       fprintf(stderr, "no state %s in state set %s\n",
-				       tp->value, ssp->value);
-			       index = 0; /* default to 1-st state */
-			       printf("\t\t/* state %s does not exist */\n",
-				      tp->value);
+				report_at_expr(tp, "no state %s in state set %s\n",
+					tp->value, ssp->value);
+				index = 0; /* default to 1-st state */
+				printf("\t\t/* state %s does not exist */\n",
+					tp->value);
 			}
 			printf("\t\t*pNextState = %d;\n", index);
 			printf("\t\t*pTransNum = %d;\n", trans_num);
@@ -478,8 +477,8 @@ static void gen_expr(
 		break;
 	case E_VAR:
 #ifdef	DEBUG
-		fprintf(stderr, "E_VAR: %s\n", ep->value);
-		fprintf(stderr, "ep->left is %s\n",ep->left ? "non-null" : "null");
+		report("E_VAR: %s\n", ep->value);
+		report("ep->left is %s\n",ep->left ? "non-null" : "null");
 #endif	/*DEBUG*/
 		if(opt_reent)
 		{
@@ -506,7 +505,7 @@ static void gen_expr(
 		break;
 	case E_FUNC:
 #ifdef	DEBUG
-		fprintf(stderr, "E_FUNC: %s\n", ep->value);
+		report("E_FUNC: %s\n", ep->value);
 #endif	/*DEBUG*/
 		if (special_func(stmt_type, ep, sp))
 			break;
@@ -616,7 +615,7 @@ static int special_func(
 		return FALSE; /* not a special function */
 
 #ifdef	DEBUG
-	fprintf(stderr, "special_func: func_code=%d\n", func_code);
+	report("special_func: func_code=%d\n", func_code);
 #endif	/*DEBUG*/
 	switch (func_code)
 	{
@@ -726,14 +725,12 @@ static void gen_ef_func(
 
 	if (vp == 0 || vp->type != V_EVFLAG)
 	{
-		fprintf(stderr, "line %d: ", ep->line_num);
-		fprintf(stderr,
+		report_at_expr(ep,
 		 "parameter to \"%s\" must be an event flag\n", fname);
 	}
 	else if (func_code == F_EFSET && stmt_type == EVENT_STMT)
 	{
-		fprintf(stderr, "line %d: ", ep->line_num);
-		fprintf(stderr,
+		report_at_expr(ep,
 		 "efSet() cannot be used as an event\n");
 	}
 	else
@@ -772,8 +769,7 @@ static void gen_pv_func(
 #endif
 	if (ep1 == 0)
 	{
-		fprintf(stderr, "line %d: ", ep->line_num);
-		fprintf(stderr,
+		report_at_expr(ep,
 		 "function \"%s\" requires a parameter\n", fname);
 		return;
 	}
@@ -797,22 +793,20 @@ static void gen_pv_func(
 
 	if (vp == 0)
 	{
-		fprintf(stderr, "line %d: ", ep->line_num);
-		fprintf(stderr,
+		report_at_expr(ep,
 		 "parameter to \"%s\" is not a defined variable\n", fname);
 		cp = 0;
 	}
 	else
 	{
 #ifdef	DEBUG
-		fprintf(stderr, "gen_pv_func: var=%s\n", ep1->value);
+		report("gen_pv_func: var=%s\n", ep1->value);
 #endif	/*DEBUG*/
 		vn = vp->name;
 		cp = vp->chan;
 		if (cp == 0)
 		{
-			fprintf(stderr, "line %d: ", ep->line_num);
-			fprintf(stderr,
+			report_at_expr(ep,
 			 "parameter to \"%s\" must be DB variable\n", fname);
 		}
 		else

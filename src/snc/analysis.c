@@ -138,9 +138,9 @@ static Scope *analyse_declarations(Expr *defn_list)
 		vp2 = find_var(scope, vp->name);
 		if (vp2 != 0)
 		{
-			report("%s:%d: ", dp->src_file, dp->line_num);
-			report("assign: variable %s already declared in line %d\n",
-			 vp->name, vp2->line_num);
+			report_at_expr(dp,
+				"assign: variable %s already declared in line %d\n",
+				vp->name, vp2->line_num);
 			continue;
 		}
 		add_var(scope, vp);
@@ -171,8 +171,7 @@ static ChanList *analyse_assignments(Scope *scope, Expr *defn_list)
 		vp = find_var(scope, name);
 		if (vp == 0)
 		{
-			report("%s:%d: ", dp->src_file, dp->line_num);
-			report("assign: variable %s not declared\n", name);
+			report_at_expr(dp, "assign: variable %s not declared\n", name);
 			continue;
 		}
 		if (dp->left != 0)
@@ -208,8 +207,8 @@ static void analyse_monitors(Scope *scope, Expr *defn_list)
 
 			if (vp == 0)
 			{
-				report("%s:%d: ", dp->src_file, dp->line_num);
-				report("assign: variable %s not declared\n", name);
+				report_at_expr(dp,
+					"assign: variable %s not declared\n", name);
 				continue;
 			}
 			monitor_stmt(vp, dp, subscript);
@@ -315,8 +314,7 @@ static void assign_single(
 	cp = vp->chan;
 	if (cp != 0)
 	{
-		report("%s:%d: ", dp->src_file, dp->line_num);
-		report("assign: %s already assigned\n", name);
+		report_at_expr(dp, "assign: %s already assigned\n", name);
 		return;
 	}
 
@@ -351,8 +349,7 @@ static void assign_subscr(
 
 	if (vp->class != VC_ARRAY1 && vp->class != VC_ARRAY2)
 	{
-		report("%s:%d: ", dp->src_file, dp->line_num);
-		report("assign: variable %s not an array\n", name);
+		report_at_expr(dp, "assign: variable %s not an array\n", name);
 		return;
 	}
 
@@ -364,17 +361,15 @@ static void assign_subscr(
 	}
 	else if (cp->db_name != 0)
 	{
-		report("%s:%d: ", dp->src_file, dp->line_num);
-		report("assign: array %s already assigned\n", name);
+		report_at_expr(dp, "assign: array %s already assigned\n", name);
 		return;
 	}
 
 	subNum = atoi(subscript);
 	if (subNum < 0 || subNum >= vp->length1)
 	{
-		report("%s:%d: ", dp->src_file, dp->line_num);
-		report("assign: subscript %s[%d] is out of range\n",
-		 name, subNum);
+		report_at_expr(dp, "assign: subscript %s[%d] is out of range\n",
+			name, subNum);
 		return;
 	}
 
@@ -382,9 +377,8 @@ static void assign_subscr(
 		alloc_channel_lists(cp, vp->length1); /* allocate lists */
 	else if (cp->db_name_list[subNum] != 0)
 	{
-		report("%s:%d: ", dp->src_file, dp->line_num);
-		report("assign: %s[%d] already assigned\n",
-		 name, subNum);
+		report_at_expr(dp, "assign: %s[%d] already assigned\n",
+			name, subNum);
 		return;
 	}
 
@@ -419,16 +413,14 @@ static void assign_list(
 
 	if (vp->class != VC_ARRAY1 && vp->class != VC_ARRAY2)
 	{
-		report("%s:%d: ", dp->src_file, dp->line_num);
-		report("assign: variable %s is not an array\n", name);
+		report_at_expr(dp, "assign: variable %s is not an array\n", name);
 		return;
 	}
 
 	cp = vp->chan;
 	if (cp != 0)
 	{
-		report("%s:%d: ", dp->src_file, dp->line_num);
-		report("assign: variable %s already assigned\n", name);
+		report_at_expr(dp, "assign: variable %s already assigned\n", name);
 		return;
 	}
 
@@ -522,8 +514,7 @@ static void monitor_stmt(
 	cp = vp->chan;
 	if (cp == 0)
 	{
-		report("%s:%d: ", dp->src_file, dp->line_num);
-		report("monitor: variable %s not assigned\n", name);
+		report_at_expr(dp, "monitor: variable %s not assigned\n", name);
 		return;
 	}
 
@@ -547,15 +538,13 @@ static void monitor_stmt(
 	subNum = atoi(subscript);
 	if (subNum < 0 || subNum >= cp->num_elem)
 	{
-		report("%s:%d: ", dp->src_file, dp->line_num);
-		report("monitor: subscript of %s out of range\n", name);
+		report_at_expr(dp, "monitor: subscript of %s out of range\n", name);
 		return;
 	}
 
 	if (cp->num_elem == 0 || cp->db_name_list[subNum] == 0)
 	{
-		report("%s:%d: ", dp->src_file, dp->line_num);
-		report("monitor: %s[%d] not assigned\n",
+		report_at_expr(dp, "monitor: %s[%d] not assigned\n",
 		 name, subNum);
 		return;
 	}
@@ -584,16 +573,14 @@ static void sync_stmt(
 	vp = find_var(scope, name);
 	if (vp == 0)
 	{
-		report("%s:%d: ", dp->src_file, dp->line_num);
-		report("sync: variable %s not declared\n", name);
+		report_at_expr(dp, "sync: variable %s not declared\n", name);
 		return;
 	}
 
 	cp = vp->chan;
 	if (cp == 0)
 	{
-		report("%s:%d: ", dp->src_file, dp->line_num);
-		report("sync: variable %s not assigned\n", name);
+		report_at_expr(dp, "sync: variable %s not assigned\n", name);
 		return;
 	}
 
@@ -601,9 +588,8 @@ static void sync_stmt(
 	vp = find_var(scope, ef_name);
 	if (vp == 0 || vp->type != V_EVFLAG)
 	{
-		report("%s:%d: ", dp->src_file, dp->line_num);
-		report("sync: e-f variable %s not declared\n",
-		 ef_name);
+		report_at_expr(dp, "sync: e-f variable %s not declared\n",
+			ef_name);
 		return;
 	}
 
@@ -627,9 +613,8 @@ static void sync_stmt(
 	subNum = atoi(subscript);
 	if (subNum < 0 || subNum >= cp->num_elem)
 	{
-		report("%s:%d: ", dp->src_file, dp->line_num);
-		report("sync: subscript %s[%d] out of range\n",
-		 name, subNum);
+		report_at_expr(dp, "sync: subscript %s[%d] out of range\n",
+			name, subNum);
 		return;
 	}
 	cp->ef_var_list[subNum] = vp; /* sync to a specific element of the array */
@@ -660,24 +645,21 @@ static void syncq_stmt(
 	vp = find_var(scope, name);
 	if (vp == 0)
 	{
-		report("%s:%d: ", dp->src_file, dp->line_num);
-		report("syncQ: variable %s not declared\n", name);
+		report_at_expr(dp, "syncQ: variable %s not declared\n", name);
 		return;
 	}
 
 	cp = vp->chan;
 	if (cp == 0)
 	{
-		report("%s:%d: ", dp->src_file, dp->line_num);
-		report("syncQ: variable %s not assigned\n", name);
+		report_at_expr(dp, "syncQ: variable %s not assigned\n", name);
 		return;
 	}
 
 	/* Check that the variable has not already been syncQ'd */
 	if (vp->queued)
 	{
-		report("%s:%d: ", dp->src_file, dp->line_num);
-		report("syncQ: variable %s already syncQ'd\n", name);
+		report_at_expr(dp, "syncQ: variable %s already syncQ'd\n", name);
 		return;
 	}
 
@@ -685,16 +667,14 @@ static void syncq_stmt(
 	efp = find_var(scope, ef_name);
 	if (efp == 0 || efp->type != V_EVFLAG)
 	{
-		report("%s:%d: ", dp->src_file, dp->line_num);
-		report("syncQ: e-f variable %s not declared\n", ef_name);
+		report_at_expr(dp, "syncQ: e-f variable %s not declared\n", ef_name);
 		return;
 	}
 
 	/* Check that the event flag has not already been syncQ'd */
 	if (efp->queued)
 	{
-		report("%s:%d: ", dp->src_file, dp->line_num);
-		report("syncQ: e-f variable %s already syncQ'd\n", ef_name);
+		report_at_expr(dp, "syncQ: e-f variable %s already syncQ'd\n", ef_name);
 		return;
 	}
 
@@ -723,9 +703,8 @@ static void syncq_stmt(
 	subNum = atoi(subscript);
 	if (subNum < 0 || subNum >= cp->num_elem)
 	{
-		report("%s:%d: ", dp->src_file, dp->line_num);
-		report("syncQ: subscript %s[%d] out of range\n",
-		 name, subNum);
+		report_at_expr(dp,
+			"syncQ: subscript %s[%d] out of range\n", name, subNum);
 		return;
 	}
 	cp->ef_var_list[subNum] = efp; /* sync to a specific element of the array */
