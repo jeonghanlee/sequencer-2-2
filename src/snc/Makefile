@@ -44,8 +44,8 @@ include $(TOP)/configure/RULES
 #  ADD RULES AFTER THIS LINE
 
 #  How to generate the version file
-sncVersion.c: $(TOP)/configure/CONFIG
-	$(PERL) ../sncVersion.pl $(SEQ_VERSION) > $@.tmp
+sncVersion.c: ../sncVersion.pl $(TOP)/configure/CONFIG
+	$(PERL) $< $(SEQ_VERSION) > $@.tmp
 	$(MV) $@.tmp $@
 
 snl.c snl.h: snl.lem snl.lt $(LEMON)
