@@ -6,6 +6,7 @@
 
 #include "snl.h"
 #include "snc_main.h"
+#include "lexer.h"
 
 #define	EOI		0
 
@@ -21,13 +22,16 @@ typedef unsigned char uchar;
 #define	YYFILL			cursor = fill(s, cursor);
 #define	YYDEBUG(state, current) fprintf(stderr, "state = %d, current = %c\n", state, current);
 
-#define	RET(i)			{s->cur = cursor; return i;}
+#define	RET(i,r) {\
+	s->cur = cursor;\
+	t->str = r;\
+	return i;\
+}
 
 typedef struct Scanner {
 	int	fd;	/* file descriptor */
 	uchar	*bot;	/* pointer to bottom (start) of buffer */
 	uchar	*tok;	/* pointer to start of current token */
-	uchar	*end;	/* pointer to end of token (or 0, then use cur) */
 	uchar	*ptr;	/* marker for backtracking (always > tok) */
 	uchar	*cur;	/* saved scan position between calls to scan() */
 	uchar	*lim;	/* pointer to one position after last read char */
@@ -41,7 +45,7 @@ static void scan_report(Scanner *s, const char *format, ...)
 {
 	va_list args;
 
-	report_location(s->file, s->line);
+	report_loc(s->file, s->line);
 	va_start(args, format);
 	vfprintf(stderr, format, args);
 	va_end(args);
@@ -106,6 +110,22 @@ static uchar *fill(Scanner *s, uchar *cursor) {
 	return cursor;
 }
 
+/* alias strdup_from_to: duplicate string from start to (exclusive) stop */
+char *strdupft(uchar *start, uchar *stop) {
+	char *result;
+	char c = *stop;
+	*stop = 0;
+	result = strdup((char*)start);
+	*stop = c;
+#if 0
+	int len = stop - start;
+	result = malloc(len + 1);
+	memcpy(result, start, len);
+	result[len] = 0;
+#endif
+	return result;
+}
+
 /*!re2c
 	re2c:yyfill:parameter	= 0;
 
@@ -121,17 +141,18 @@ static uchar *fill(Scanner *s, uchar *cursor) {
 	ESC	= [\\] ([abfnrtv?'"\\] | "x" HEX+ | OCT+);
 */
 
-static int scan(Scanner *s) {
+static int scan(Scanner *s, Token *t) {
 	uchar *cursor = s->cur;
 	uchar *str_end = 0;
 
-        s->end = 0;
 snl:
+	t->line = s->line;
+	t->file = s->file;
 	s->tok = cursor;
 
 /*!re2c
 	"\n"		{
-				if(cursor == s->eof) RET(EOI);
+				if(cursor == s->eof) RET(EOI,0);
 				s->line++;
 				goto snl;
 			}
@@ -150,92 +171,92 @@ snl:
 			}
 	("%%" .*)	{
 				s->tok += 2;
-				RET(CCODE);
+				RET(CCODE, strdupft(s->tok, cursor));
 			}
-	"assign"	{ RET(ASSIGN); }
-	"break"		{ RET(BREAK); }
-	"char"		{ RET(CHAR); }
-	"double"	{ RET(DOUBLE); }
-	"else"		{ RET(ELSE); }
-	"entry"		{ RET(ENTRY); }
-	"evflag"	{ RET(EVFLAG); }
-	"exit"		{ RET(EXIT); }
-	"float"		{ RET(FLOAT); }
-	"for"		{ RET(FOR); }
-	"if"		{ RET(IF); }
-	"int"		{ RET(INT); }
-	"long"		{ RET(LONG); }
-	"monitor"	{ RET(MONITOR); }
-	"option"	{ RET(OPTION); }
-	"program"	{ RET(PROGRAM); }
-	"short"		{ RET(SHORT); }
-	"ss"		{ RET(SS); }
-	"state"		{ RET(STATE); }
-	"string"	{ RET(STRING); }
-	"syncQ"		{ RET(SYNCQ); }
-	"sync"		{ RET(SYNC); }
-	"to"		{ RET(TO); }
-	"unsigned"	{ RET(UNSIGNED); }
-	"when"		{ RET(WHEN); }
-	"while"		{ RET(WHILE); }
-	"TRUE"		{ RET(INTCON); }
-	"FALSE"		{ RET(INTCON); }
-	"ASYNC"		{ RET(INTCON); }
-	"SYNC"		{ RET(INTCON); }
-	LET (LET|DEC)*	{ RET(NAME); }
+	"assign"	{ RET(ASSIGN,	"assign"); }
+	"break"		{ RET(BREAK,	"break"); }
+	"char"		{ RET(CHAR,	"char"); }
+	"double"	{ RET(DOUBLE,	"double"); }
+	"else"		{ RET(ELSE,	"else"); }
+	"entry"		{ RET(ENTRY,	"entry"); }
+	"evflag"	{ RET(EVFLAG,	"evflag"); }
+	"exit"		{ RET(EXIT,	"exit"); }
+	"float"		{ RET(FLOAT,	"float"); }
+	"for"		{ RET(FOR,	"for"); }
+	"if"		{ RET(IF,	"if"); }
+	"int"		{ RET(INT,	"int"); }
+	"long"		{ RET(LONG,	"long"); }
+	"monitor"	{ RET(MONITOR,	"monitor"); }
+	"option"	{ RET(OPTION,	"option"); }
+	"program"	{ RET(PROGRAM,	"program"); }
+	"short"		{ RET(SHORT,	"short"); }
+	"ss"		{ RET(SS,	"ss"); }
+	"state"		{ RET(STATE,	"state"); }
+	"string"	{ RET(STRING,	"string"); }
+	"syncQ"		{ RET(SYNCQ,	"syncQ"); }
+	"sync"		{ RET(SYNC,	"sync"); }
+	"to"		{ RET(TO,	"to"); }
+	"unsigned"	{ RET(UNSIGNED,	"unsigned"); }
+	"when"		{ RET(WHEN,	"when"); }
+	"while"		{ RET(WHILE,	"while"); }
+	"TRUE"		{ RET(INTCON,	"TRUE"); }
+	"FALSE"		{ RET(INTCON,	"FALSE"); }
+	"ASYNC"		{ RET(INTCON,	"ASYNC"); }
+	"SYNC"		{ RET(INTCON,	"SYNC"); }
+	LET (LET|DEC)*	{ RET(NAME, strdupft(s->tok, cursor)); }
 	("0" [xX] HEX+ IS?) | ("0" DEC+ IS?) | (DEC+ IS?) | (['] (ESC|ANY\[\n\\'])* ['])
-			{ RET(INTCON); }
+			{ RET(INTCON, strdupft(s->tok, cursor)); }
 
 	(DEC+ EXP FS?) | (DEC* "." DEC+ EXP? FS?) | (DEC+ "." DEC* EXP? FS?)
-			{ RET(FPCON); }
+			{ RET(FPCON, strdupft(s->tok, cursor)); }
 
-	">>="		{ RET(RSHEQ); }
-	"<<="		{ RET(LSHEQ); }
-	"+="		{ RET(ADDEQ); }
-	"-="		{ RET(SUBEQ); }
-	"*="		{ RET(MULEQ); }
-	"/="		{ RET(DIVEQ); }
-	"%="		{ RET(MODEQ); }
-	"&="		{ RET(ANDEQ); }
-	"^="		{ RET(XOREQ); }
-	"|="		{ RET(OREQ); }
-	">>"		{ RET(RSHIFT); }
-	"<<"		{ RET(LSHIFT); }
-	"++"		{ RET(INCR); }
-	"--"		{ RET(DECR); }
-	"->"		{ RET(POINTER); }
-	"&&"		{ RET(ANDAND); }
-	"||"		{ RET(OROR); }
-	"<="		{ RET(LE); }
-	">="		{ RET(GE); }
-	"=="		{ RET(EQ); }
-	"!="		{ RET(NE); }
-	";"		{ RET(SEMICOLON); }
-	"{"		{ RET(LBRACE); }
-	"}"		{ RET(RBRACE); }
-	","		{ RET(COMMA); }
-	":"		{ RET(COLON); }
-	"="		{ RET(EQUAL); }
-	"("		{ RET(LPAREN); }
-	")"		{ RET(RPAREN); }
-	"["		{ RET(LBRACKET); }
-	"]"		{ RET(RBRACKET); }
-	"."		{ RET(PERIOD); }
-	"&"		{ RET(AMPERSAND); }
-	"!"		{ RET(NOT); }
-	"~"		{ RET(TILDE); }
-	"-"		{ RET(SUB); }
-	"+"		{ RET(ADD); }
-	"*"		{ RET(ASTERISK); }
-	"/"		{ RET(SLASH); }
-	"%"		{ RET(MOD); }
-	"<"		{ RET(LT); }
-	">"		{ RET(GT); }
-	"^"		{ RET(CARET); }
-	"|"		{ RET(VBAR); }
-	"?"		{ RET(QUESTION); }
+	">>="		{ RET(RSHEQ,	">>="); }
+	"<<="		{ RET(LSHEQ,	"<<="); }
+	"+="		{ RET(ADDEQ,	"+="); }
+	"-="		{ RET(SUBEQ,	"-="); }
+	"*="		{ RET(MULEQ,	"*="); }
+	"/="		{ RET(DIVEQ,	"/="); }
+	"%="		{ RET(MODEQ,	"%="); }
+	"&="		{ RET(ANDEQ,	"&="); }
+	"^="		{ RET(XOREQ,	"^="); }
+	"|="		{ RET(OREQ,	"|="); }
+	">>"		{ RET(RSHIFT,	">>"); }
+	"<<"		{ RET(LSHIFT,	"<<"); }
+	"++"		{ RET(INCR,	"++"); }
+	"--"		{ RET(DECR,	"--"); }
+	"->"		{ RET(POINTER,	"->"); }
+	"&&"		{ RET(ANDAND,	"&&"); }
+	"||"		{ RET(OROR,	"||"); }
+	"<="		{ RET(LE,	"<="); }
+	">="		{ RET(GE,	">="); }
+	"=="		{ RET(EQ,	"=="); }
+	"!="		{ RET(NE,	"!="); }
+	";"		{ RET(SEMICOLON,";"); }
+	"{"		{ RET(LBRACE,	"{"); }
+	"}"		{ RET(RBRACE,	"}"); }
+	","		{ RET(COMMA,	","); }
+	":"		{ RET(COLON,	":"); }
+	"="		{ RET(EQUAL,	"="); }
+	"("		{ RET(LPAREN,	"("); }
+	")"		{ RET(RPAREN,	")"); }
+	"["		{ RET(LBRACKET,	"["); }
+	"]"		{ RET(RBRACKET,	"]"); }
+	"."		{ RET(PERIOD,	"."); }
+	"&"		{ RET(AMPERSAND,"&"); }
+	"!"		{ RET(NOT,	"!"); }
+	"~"		{ RET(TILDE,	"~"); }
+	"-"		{ RET(SUB,	"-"); }
+	"+"		{ RET(ADD,	"+"); }
+	"*"		{ RET(ASTERISK,	"*"); }
+	"/"		{ RET(SLASH,	"/"); }
+	"%"		{ RET(MOD,	"%"); }
+	"<"		{ RET(LT,	"<"); }
+	">"		{ RET(GT,	">"); }
+	"^"		{ RET(CARET,	"^"); }
+	"|"		{ RET(VBAR,	"|"); }
+	"?"		{ RET(QUESTION,	"?"); }
 	[ \t\v\f]+	{ goto snl; }
-	ANY		{ scan_report(s, "invalid character\n"); RET(EOI); }
+	ANY		{ scan_report(s, "invalid character\n"); RET(EOI,0); }
 */
 
 string_const:
@@ -246,7 +267,7 @@ string_const:
 				str_end = cursor - 1;
 				goto string_cat;
 			}
-	ANY		{ scan_report(s, "invalid character in string constant\n"); RET(EOI); }
+	ANY		{ scan_report(s, "invalid character in string constant\n"); RET(EOI,0); }
 */
 
 string_cat:
@@ -254,9 +275,8 @@ string_cat:
 	SPC+		{ goto string_cat; }
 	"\n"		{
 				if (cursor == s->eof) {
-					s->end = str_end;
 					cursor -= 1;
-					RET(STRCON);
+					RET(STRCON, strdupft(s->tok, str_end));
 				}
 				s->line++;
 				goto string_cat;
@@ -268,9 +288,8 @@ string_cat:
 				goto string_const;
 			}
 	ANY		{
-				s->end = str_end;
 				cursor -= 1;
-				RET(STRCON);
+				RET(STRCON, strdupft(s->tok, str_end));
 			}
 */
 
@@ -299,9 +318,8 @@ line_marker_str:
 			}
 	"\n"		{
 				if (cursor == s->eof) {
-					s->end = str_end;
 					cursor -= 1;
-					RET(STRCON);
+					goto snl;
 				}
 				s->line++;
 				goto string_cat;
@@ -322,7 +340,7 @@ comment:
 	"\n"		{
 				if (cursor == s->eof) {
 					scan_report(s, "at eof: unterminated comment\n");
-					RET(EOI);
+					RET(EOI,0);
 				}
 				s->tok = cursor;
 				s->line++;
@@ -333,14 +351,13 @@ comment:
 c_code:
 /*!re2c
 	"}%"		{
-				s->end = cursor - 2;
-				RET(CCODE);
+				RET(CCODE, strdupft(s->tok, cursor - 2));
 			}
 	.		{ goto c_code; }
 	"\n"		{
 				if (cursor == s->eof) {
 					scan_report(s, "at eof: unterminated literal c-code section\n");
-					RET(EOI);
+					RET(EOI,0);
 				}
 				s->line++;
 				goto c_code;
@@ -349,59 +366,50 @@ c_code:
 }
 
 #ifdef TEST_LEXER
+void report_loc(const char *f, int l) {
+	fprintf(stderr, "%s:%d: ", f, l);
+}
+
 int main() {
 	Scanner s;
-	int t;
-	memset((char*) &s, 0, sizeof(s));
-	s.fd = 0;
+	int		tt;	/* token type */
+	Token		tv;	/* token value */
+
+	bzero(&s, sizeof(s));
+
 	s.cur = fill(&s, s.cur);
 	s.line = 1;
-	while( (t = scan(&s)) != EOI) {
-		if (!s.end) s.end = s.cur;
-		printf("%s:%d: %2d\t£%.*s£\n", s.file, s.line, t, s.end - s.tok, s.tok);
+
+	while( (tt = scan(&s, &tv)) != EOI) {
+		printf("%s:%d: %2d\t$%s$\n", tv.file, tv.line, tt, tv.str);
 	}
-	close(s.fd);
+	return 0;
 }
 #else
 
-extern void parser(
-	void *yyp,		/* the parser */
-	int yymajor,		/* the major token code number */
-	char *yyminor		/* the value for the token */
-);
-extern void *parserAlloc(void *(*mallocProc)(size_t));
-void parserFree(
-	void *p,		/* the parser to be deleted */
-	void (*freeProc)(void*)	/* function used to reclaim memory */
-);
-
-void compile(void)
+Program *parse_program(const char *src_file)
 {
-	Scanner s;
-	int t;
-	char *x;
+	Scanner		s;
+	int		tt;	/* token type */
+	Token		tv;	/* token value */
+        Program		*result; /* result of parsing */
 
 	bzero(&s, sizeof(s));
-	s.cur = fill(&s, s.cur); /* otherwise scanner crashes in debug mode */
+	s.file = strdup(src_file);
 	s.line = 1;
 
 	void *pParser = parserAlloc(malloc);
 	do
 	{
-		globals->prev_line_num = s.line;
-		t = scan(&s);
-		globals->src_file = s.file;
-		globals->line_num = s.line;
-
-		if (!s.end) s.end = s.cur;
-		scan_report(&s,"%2d\t£%.*s£\n", t, s.end - s.tok, s.tok);
-		x = malloc(s.end - s.tok + 1);
-		memcpy(x,s.tok,s.end - s.tok);
-		x[s.end - s.tok] = 0;
-		parser(pParser, t, x);
+		tt = scan(&s, &tv);
+#ifdef	DEBUG
+		report_at(tv.file, tv.line, &s,"%2d\t$%s$\n", tt, tv.str);
+#endif
+		parser(pParser, tt, tv, &result);
 	}
-	while (t);
+	while (tt);
 	parserFree(pParser, free);
+	return result;
 }
 
-#endif
+#endif /* TEST_LEXER */

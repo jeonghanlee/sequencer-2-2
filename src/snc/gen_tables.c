@@ -3,10 +3,7 @@
 	Copyright, 1990, The Regents of the University of California.
 		 Los Alamos National Laboratory
 
-	gen_tables.c,v 1.2 1995/06/27 15:25:45 wright Exp
-
 	DESCRIPTION: Generate tables for run-time sequencer.
-	See also:  phase2.c & gen_ss_code.c
 	ENVIRONMENT: UNIX
 	HISTORY:
 28apr92,ajk	Implemented new event flag mode.
@@ -35,8 +32,8 @@
 #include	<assert.h>
 
 #include	"seqCom.h"
-#include	"parse.h"
-#include	"phase2.h"
+#include	"analysis.h"
+#include	"gen_code.h"
 #include	"snc_main.h"
 
 typedef struct eval_event_mask_args {
@@ -45,13 +42,13 @@ typedef struct eval_event_mask_args {
 } eval_event_mask_args;
 
 static void encode_state_options(Expr *sp);
-static void gen_db_blocks(ChanList *chan_list, int num_events);
-static void fill_db_block(Chan *cp, int elem_num, int num_events);
+static void gen_db_blocks(ChanList *chan_list, int num_events, int opt_reent);
+static void fill_db_block(Chan *cp, int elem_num, int num_events, int opt_reent);
 static void gen_state_blocks(Expr *ss_list, int num_events, int num_channels);
 static void fill_state_block(Expr *sp, char *ss_name);
 static void gen_prog_params(char *prog_param);
-static void gen_prog_table(char *prog_name);
-static void encode_options(void);
+static void gen_prog_table(char *prog_name, Options *options);
+static void encode_options(Options *options);
 static void gen_ss_array(Expr *ss_list);
 static void eval_state_event_mask(Expr *sp, int num_events,
 	bitMask *event_words, int num_event_words);
@@ -60,46 +57,26 @@ static void eval_event_mask_subscr(Expr *ep, eval_event_mask_args *args);
 static int find_error_state(Expr *ssp);
 static char *db_type_str(int type);
 
-/*+************************************************************************
-*  NAME: gen_tables
-*
-*  CALLING SEQUENCE
-*	type		argument	I/O	description
-*	---------------------------------------------------
-*
-*  RETURNS: n/a
-*
-*  FUNCTION: Generate C code from tables.
-*-*************************************************************************/
-
-void gen_tables(Program *program)
+/* Generate all kinds of tables for a SNL program. */
+void gen_tables(Program *p)
 {
 	printf("\f/************************ Tables ***********************/\n");
 
-	/* Generate DB blocks */
-	gen_db_blocks(program->chan_list, program->num_events);
+	gen_db_blocks(p->chan_list, p->num_events, p->options->reent);
 
-	/* Generate State Blocks */
-	gen_state_blocks(program->ss_list, program->num_events, program->num_channels);
+	gen_state_blocks(p->ss_list, p->num_events, p->num_channels);
 
-	/* Generate State Set Blocks */
-	gen_ss_array(program->ss_list);
+	gen_ss_array(p->ss_list);
 
-	/* generate program parameter string */
-	gen_prog_params(program->prog_param);
+	gen_prog_params(p->param);
 
-	/* Generate state program table */
-	gen_prog_table(program->prog_name);
-
-	return;
+	gen_prog_table(p->name, p->options);
 }
-/* Generate database blocks with structure and data for each defined channel */
-static void gen_db_blocks(ChanList *chan_list, int num_events)
-{
-	Chan		*cp;
-	int		nchan, elem_num;
 
-	nchan = 0;
+/* Generate database blocks with structure and data for each defined channel */
+static void gen_db_blocks(ChanList *chan_list, int num_events, int opt_reent)
+{
+	Chan *cp;
 
 	if (chan_list->first)
 	{
@@ -107,23 +84,16 @@ static void gen_db_blocks(ChanList *chan_list, int num_events)
 		printf("static struct seqChan seqChan[NUM_CHANNELS] = {\n");
 		for (cp = chan_list->first; cp != NULL; cp = cp->next)
 		{
+			int n;
 #ifdef	DEBUG
 			fprintf(stderr, "gen_db_blocks: index=%d, num_elem=%d\n",
 				cp->index, cp->num_elem);
 #endif	/*DEBUG*/
+			int num_elem = cp->num_elem ? cp->num_elem : 1;
 
-			if (cp->num_elem == 0)
-			{	/* Variable assigned to single pv */
-				fill_db_block(cp, 0, num_events);
-				nchan++;
-			}
-			else
-			{	/* Variable assigned to multiple pv's */
-				for (elem_num = 0; elem_num<cp->num_elem; elem_num++)
-				{
-					fill_db_block(cp, elem_num, num_events);
-					nchan++;
-				}
+			for (n = 0; n < num_elem; n++)
+			{
+				fill_db_block(cp, n, num_events, opt_reent);
 			}
 		}
 		printf("};\n");
@@ -133,11 +103,10 @@ static void gen_db_blocks(ChanList *chan_list, int num_events)
 		printf("\n/* No Database Blocks, create 1 for ptr init. */\n");
 		printf("static struct seqChan seqChan[1];\n");
 	}
-	return;
 }
 
 /* Fill in a db block with data (all elements for "seqChan" struct) */
-static void fill_db_block(Chan *cp, int elem_num, int num_events)
+static void fill_db_block(Chan *cp, int elem_num, int num_events, int opt_reent)
 {
 	Var		*vp;
 	char		*suffix, elem_str[20], *db_name;
@@ -182,7 +151,7 @@ static void fill_db_block(Chan *cp, int elem_num, int num_events)
 
 	/* Ptr or offset to user variable */
 	printf("(void *)");
-	if (globals->options->reent)
+	if (opt_reent)
 		printf("OFFSET(struct UserVar, %s%s%s), ", vp->name, elem_str, suffix);
 	else
 		printf("&%s%s%s, ", vp->name, elem_str, suffix); /* variable ptr */
@@ -191,7 +160,7 @@ static void fill_db_block(Chan *cp, int elem_num, int num_events)
 	printf("\"%s%s\", ", vp->name, elem_str);
 
  	/* variable type */
-	printf("\n    \"%s\", ", db_type_str(vp->type) );
+	printf("\n    \"%s\", ", db_type_str(vp->type));
 
 	/* count for db requests */
 	printf("%d, ", cp->count);
@@ -212,8 +181,6 @@ static void fill_db_block(Chan *cp, int elem_num, int num_events)
 		printf("%d, %d, %d", vp->queued, vp->maxQueueSize, vp->queueIndex);
 
 	printf("},\n\n");
-
-	return;
 }
 
 /* Convert variable type to db type as a string */
@@ -276,7 +243,6 @@ static void gen_state_blocks(Expr *ss_list, int num_events, int num_channels)
 	}
 
 	free(event_mask);
-	return;
 }
 
 /* Fill in data for a state block (see seqState in seqCom.h) */
@@ -327,7 +293,6 @@ static void fill_state_block(Expr *sp, char *ss_name)
 	printf("\t/* state options */   ");
 	encode_state_options(sp);
 	printf("},\n\n");
-	return;
 }
 
 /* Writes the state option bitmask into a state block. At present this f is
@@ -347,8 +312,15 @@ static void encode_state_options(Expr *sp)
 	   check the option character is recognized and if so code it's bit mask */
 	for (ep = sp->right; ep != NULL; ep = ep->next )
 	{
-		char *plusminus = ep->left->value;
-		int opt_minus = plusminus[0] == '-';
+		char *plusminus;
+		int opt_minus;
+
+		if (ep->type != E_OPTION) {
+			continue;
+		}
+
+		plusminus = ep->left->value;
+		opt_minus = plusminus[0] == '-';
 
 		assert(ep->left->type == E_X);
 		for (pc = ep->value; *pc != '\0'; pc++)
@@ -389,29 +361,28 @@ static void encode_state_options(Expr *sp)
 			}
 			else
 			{
-				report_location(ep->src_file, ep->line_num);
-				report("unrecognized option in state %s: %s%c",
+				report_loc(ep->src_file, ep->line_num);
+				report("unrecognized option in state %s: %s%c\n",
 					sp->value, plusminus, *pc);
 			}
 
 			if ( duplicate )
 			{
-				report_location(ep->src_file, ep->line_num);
-				report("option already specified in state %s: %c",
+				report_loc(ep->src_file, ep->line_num);
+				report("option already specified in state %s: %c\n",
 					sp->value, *pc);
 			}
 			if ( contradictory )
 			{
-				report_location(ep->src_file, ep->line_num);
+				report_loc(ep->src_file, ep->line_num);
 				report("contradictory option or option out of "
-					"order %s%c in state %s",
+					"order %s%c in state %s\n",
 					plusminus, *pc, sp->value);
 			}
 
 		}
 	}
 	printf(")");
-	return;
 } 
 
 
@@ -424,7 +395,7 @@ static void gen_prog_params(char *prog_param)
 }
 
 /* Generate the structure with data for a state program table (SPROG) */
-static void gen_prog_table(char *prog_name)
+static void gen_prog_table(char *prog_name, Options *options)
 {
 	printf("\n/* State Program table (global) */\n");
 
@@ -442,7 +413,7 @@ static void gen_prog_table(char *prog_name)
 
 	printf("\t/* numSS */              NUM_SS,\n");	/* number of state sets */
 
-	if (globals->options->reent)
+	if (options->reent)
 		printf("\t/* user variable size */ sizeof(struct UserVar),\n");
 	else
 		printf("\t/* user variable size */ 0,\n");
@@ -452,35 +423,31 @@ static void gen_prog_table(char *prog_name)
 	printf("\t/* numEvents */          NUM_EVENTS,\n");	/* number event flags */
 
 	printf("\t/* encoded options */    ");
-	encode_options();
+	encode_options(options);
 
 	printf("\t/* entry handler */      (ENTRY_FUNC) entry_handler,\n");
 	printf("\t/* exit handler */       (EXIT_FUNC) exit_handler,\n");
 	printf("\t/* numQueues */          NUM_QUEUES,\n");	/* number of syncQ queues */
 
 	printf("};\n");
-
-	return;
 }
 
-static void encode_options(void)
+static void encode_options(Options *options)
 {
 	printf("(0");
-	if (globals->options->async)
+	if (options->async)
 		printf(" | OPT_ASYNC");
-	if (globals->options->conn)
+	if (options->conn)
 		printf(" | OPT_CONN");
-	if (globals->options->debug)
+	if (options->debug)
 		printf(" | OPT_DEBUG");
-	if (globals->options->newef)
+	if (options->newef)
 		printf(" | OPT_NEWEF");
-	if (globals->options->reent)
+	if (options->reent)
 		printf(" | OPT_REENT");
-	if (globals->options->main)
+	if (options->main)
 		printf(" | OPT_MAIN");
 	printf("),\n");
-
-	return;
 }
 
 /* Generate an array of state set blocks, one entry for each state set */
@@ -511,7 +478,6 @@ static void gen_ss_array(Expr *ss_list)
 
 	}
 	printf("};\n");
-	return;
 }
 
 /* Find the state named "error" in a state set */
@@ -553,10 +519,10 @@ static void eval_state_event_mask(Expr *sp, int num_events,
 			continue;
 
 		/* look for simple variables, e.g. "when(x > 0)" */
-		traverse_expr_tree(tp->left, E_VAR, 0, eval_event_mask, &args);
+		traverse_expr_tree(tp->left, E_VAR, 0, (expr_fun*)eval_event_mask, &args);
 
 		/* look for subscripted variables, e.g. "when(x[i] > 0)" */
-		traverse_expr_tree(tp->left, E_SUBSCR, 0, eval_event_mask_subscr, &args);
+		traverse_expr_tree(tp->left, E_SUBSCR, 0, (expr_fun*)eval_event_mask_subscr, &args);
 	}
 #ifdef	DEBUG
 	fprintf(stderr, "Event mask for state %s is", sp->value);
@@ -632,8 +598,6 @@ static void eval_event_mask(Expr *ep, eval_event_mask_args *args)
 			bitSet(event_words, cp->index + n + num_events + 1);
 		}
 	}
-
-	return;
 }
 
 /* Evaluate the event mask for a given transition (when() statement)
@@ -698,6 +662,4 @@ static void eval_event_mask_subscr(Expr *ep, eval_event_mask_args *args)
 	{
 		bitSet(event_words, cp->index + n + num_events + 1);
 	}
-
-	return;
 }

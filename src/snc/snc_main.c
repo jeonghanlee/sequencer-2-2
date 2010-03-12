@@ -30,6 +30,10 @@
 #include	<string.h>
 #include	<stdarg.h>
 
+#include	"types.h"
+#include	"lexer.h"
+#include	"analysis.h"
+#include	"gen_code.h"
 #include	"snc_main.h"
 
 #ifndef	TRUE
@@ -37,49 +41,38 @@
 #define	FALSE 0
 #endif
 
-extern char	*sncVersion;	/* snc version and date created */
+extern char *sncVersion;	/* snc version and date created */
 
-extern void compile(void);	/* defined in snl.re */
-
-static Options	default_options =
+static Options options =
 {
-	FALSE,	/* async */
-	TRUE,	/* conn */
-	FALSE,	/* debug */
-	TRUE,	/* newef */
-	TRUE,	/* init_reg */
-	TRUE,	/* line */
-	FALSE,	/* main */
-	FALSE,	/* reent */
-	TRUE	/* warn */
+	FALSE,		/* async */
+	TRUE,		/* conn */
+	FALSE,		/* debug */
+	TRUE,		/* newef */
+	TRUE,		/* init_reg */
+	TRUE,		/* line */
+	FALSE,		/* main */
+	FALSE,		/* reent */
+	TRUE		/* warn */
 };
 
-static Globals	default_globals =
-{
-	0,0,0,&default_options
-};
+static char *in_file;	/* input file name */
+static char *out_file;	/* output file name */
 
-Globals *globals = &default_globals;
-
-static char	in_file[200];	/* input file name */
-static char	out_file[200];	/* output file name */
-
-static void get_args(int argc, char *argv[]);
-static void get_options(char *s);
-static void get_in_file(char *s);
-static void get_out_file(char *s);
+static void parse_args(int argc, char *argv[]);
+static void parse_option(char *s);
 static void print_usage(void);
 
 /* The streams stdin and stdout are redirected to files named in the
    command parameters.  This accomodates the use by lex of stdin for input
-   and permits printf() to be used for output.
-*/
+   and permits printf() to be used for output. */
 int main(int argc, char *argv[])
 {
 	FILE	*infp, *outfp;
+	Program	*prg;
 
 	/* Get command arguments */
-	get_args(argc, argv);
+	parse_args(argc, argv);
 
 	/* Redirect input stream from specified file */
 	infp = freopen(in_file, "r", stdin);
@@ -97,26 +90,23 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
-	/* src_file is used to mark the output file for snc & cc errors */
-	globals->src_file = in_file;
-
 	/* Use line buffered output */
 	setvbuf(stdout, NULL, _IOLBF, BUFSIZ);
 	setvbuf(stderr, NULL, _IOLBF, BUFSIZ);
 
 	printf("/* %s: %s */\n", sncVersion, in_file);
 
-	compile();
+	prg = parse_program(in_file);
+	analyse_program(prg, &options);
+	generate_code(prg);
 
-        return 0; /* never reached */
+	exit(0);
 }
 
-/* If "*.s" is input file then "*.c" is the output file.  Otherwise,
-   ".c" is appended to the input file to form the output file name.
-   Sets the globals in_file[] and out_file[]. */
-static void get_args(int argc, char *argv[])
+/* Initialize options, in_file, and out_file from arguments. */
+static void parse_args(int argc, char *argv[])
 {
-	char	*s;
+	int i;
 
 	if (argc < 2)
 	{
@@ -124,179 +114,154 @@ static void get_args(int argc, char *argv[])
 		exit(1);
 	}
 
-	strcpy(in_file,"");
-	strcpy(out_file,"");
-
-	for (argc--, argv++; argc > 0; argc--, argv++)
+	for (i=1; i<argc; i++)
 	{
-		s = *argv;
-		if (*s != '+' && *s != '-')
+		char *s = argv[i];
+
+		if (strcmp(s,"-o") == 0)
 		{
-			get_in_file(s);
+			if (i+1 == argc)
+			{
+				report("missing filename after option -o\n");
+				print_usage();
+				exit(1);
+			}
+			else
+			{
+				i++;
+				out_file = argv[i];
+				continue;
+			}
 		}
-		else if (*s == '-' && *(s+1) == 'o')
+		else if (s[0] != '+' && s[0] != '-')
 		{
-			argc--; argv++; s = *argv;
-			get_out_file(s);
+			in_file = s;
+			continue;
 		}
 		else
 		{
-			get_options(s);
+			parse_option(s);
 		}
 	}
 
-	if (strcmp(in_file,"") == 0)
+	if (!in_file)
 	{
+		report("no input file argument given\n");
 		print_usage();
 		exit(1);
 	}
+
+	if (!out_file)	/* no -o option given */
+	{
+		int l = strlen(in_file);
+		char *ext = strrchr(in_file, '.');
+
+		if (ext && strcmp(ext,".st") == 0)
+		{
+			out_file = (char*)malloc(l);
+			strcpy(out_file, in_file);
+			strcpy(out_file+(ext-in_file), ".c\n");
+		}
+		else
+		{
+			out_file = (char*)malloc(l+3);
+			sprintf(out_file, "%s.c", in_file);
+		}
+	}
 }
 
-static void get_options(char *s)
+static void parse_option(char *s)
 {
 	int		opt_val;
-	Options		*opt = globals->options;
 
 	opt_val = (*s == '+');
 
 	switch (s[1])
 	{
 	case 'a':
-		opt->async = opt_val;
+		options.async = opt_val;
 		break;
 	case 'c':
-		opt->conn = opt_val;
+		options.conn = opt_val;
 		break;
 	case 'd':
-		opt->debug = opt_val;
+		options.debug = opt_val;
 		break;
 	case 'e':
-		opt->newef = opt_val;
+		options.newef = opt_val;
 		break;
 	case 'i':
-		opt->init_reg = opt_val;
+		options.init_reg = opt_val;
 		break;
 	case 'l':
-		opt->line = opt_val;
+		options.line = opt_val;
 		break;
 	case 'm':
-		opt->main = opt_val;
+		options.main = opt_val;
 		break;
 	case 'r':
-		opt->reent = opt_val;
+		options.reent = opt_val;
 		break;
 	case 'w':
-		opt->warn = opt_val;
+		options.warn = opt_val;
 		break;
 	default:
-		report("unknown option ignored: \"%s\"", s);
+		report("unknown option ignored: '%s'\n", s);
 		break;
 	}
-}
-
-static void get_in_file(char *s)
-{				
-	int		ls;
-
-	if (strcmp(in_file,"") != 0)
-	{
-		print_usage();
-		exit(1);
-	}
-
-	ls = strlen (s);
-	strcpy (in_file, s);
-
-	if (strcmp(out_file,"") != 0)
-	{
-		return;
-	}
-
-	strcpy (out_file, s);
-	if ( strcmp (&in_file[ls-3], ".st") == 0 )
-	{
-		out_file[ls-2] = 'c';
-		out_file[ls-1] = 0;
-	}
-	else if (in_file[ls-2] == '.')
-	{	/* change suffix to 'c' */
-		out_file[ls -1] = 'c';
-	}
-	else
-	{	/* append ".c" */
-		out_file[ls] = '.';
-		out_file[ls+1] = 'c';
-		out_file[ls+2] = 0;
-	}
-}
-
-static void get_out_file(char *s)
-{
-	if (s == NULL)
-	{
-		print_usage();
-		exit(1);
-	}
-	
-	strcpy(out_file,s);
 }
 
 static void print_usage(void)
 {
-	report("%s", sncVersion);
-	report("usage: snc <options> <infile>");
-	report("options:");
-	report("  -o <outfile> - override name of output file");
-	report("  +a           - do asynchronous pvGet");
-	report("  -c           - don't wait for all connects");
-	report("  +d           - turn on debug run-time option");
-	report("  -e           - don't use new event flag mode");
-	report("  -l           - suppress line numbering");
-	report("  +m           - generate main program");
-	report("  -i           - don't register commands/programs");
-	report("  +r           - make reentrant at run-time");
-	report("  -w           - suppress compiler warnings");
-	report("example:\n snc +a -c vacuum.st");
+	report("%s\n", sncVersion);
+	report("usage: snc <options> <infile>\n");
+	report("options:\n");
+	report("  -o <outfile> - override name of output file\n");
+	report("  +a           - do asynchronous pvGet\n");
+	report("  -c           - don't wait for all connects\n");
+	report("  +d           - turn on debug run-time option\n");
+	report("  -e           - don't use new event flag mode\n");
+	report("  -l           - suppress line numbering\n");
+	report("  +m           - generate main program\n");
+	report("  -i           - don't register commands/programs\n");
+	report("  +r           - make reentrant at run-time\n");
+	report("  -w           - suppress compiler warnings\n");
+	report("example:\n snc +a -c vacuum.st\n");
 }
 
 void print_line_num(int line_num, char *src_file)
 {
-	if (globals->options->line)
+	if (options.line)
 		printf("# line %d \"%s\"\n", line_num, src_file);
 }
 
 /* Errors and warnings */
 
-void parse_error(const char *format, ...)
-{
-	va_list args;
-
-	report_location(globals->src_file, globals->line_num);
-
-	va_start(args, format);
-	vfprintf(stderr, format, args);
-	va_end(args);
-
-	fprintf(stderr, "\n");
-}
-
-void report_location(const char *src_file, int line_num)
+void report_loc(const char *src_file, int line_num)
 {
 	fprintf(stderr, "%s:%d: ", src_file, line_num);
 }
 
-void report_with_location(
-	const char *src_file, int line_num, const char *format, ...)
+void report_at(const char *src_file, int line_num, const char *format, ...)
 {
 	va_list args;
 
-	report_location(src_file, line_num);
+	report_loc(src_file, line_num);
 
 	va_start(args, format);
 	vfprintf(stderr, format, args);
 	va_end(args);
+}
 
-	fprintf(stderr, "\n");
+void report_at_expr(Expr *ep, const char *format, ...)
+{
+	va_list args;
+
+	report_loc(ep->src_file, ep->line_num);
+
+	va_start(args, format);
+	vfprintf(stderr, format, args);
+	va_end(args);
 }
 
 void report(const char *format, ...)
@@ -306,6 +271,4 @@ void report(const char *format, ...)
 	va_start(args, format);
 	vfprintf(stderr, format, args);
 	va_end(args);
-
-	fprintf(stderr, "\n");
 }

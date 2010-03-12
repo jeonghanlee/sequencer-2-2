@@ -3,8 +3,6 @@
 	Copyright, 1990, The Regents of the University of California.
 		 Los Alamos National Laboratory
 
- 	phase2.c,v 1.2 1995/06/27 15:25:52 wright Exp
-
 	DESCRIPTION: Phase 2 code generation routines for SNC.
 	Produces code and tables in C output file.
 	See also:  gen_ss_code.c and gen_tables.c
@@ -31,110 +29,80 @@
 17mar00,wfl	Added necessary includes for C main program.
 31mar00,wfl	Supported entry handler.
 ***************************************************************************/
-/*#define DEBUG 1*/
 
 #include	<stdio.h>
 #include	<stdlib.h>
 #include	<string.h>
 #include	<assert.h>
 
-#include	"parse.h"
-#include	"phase2.h"
+#include	"analysis.h"
 #include	"gen_ss_code.h"
 #include	"gen_tables.h"
 #include	"snc_main.h"
+#include	"gen_code.h"
 
 #ifndef TRUE
 #define TRUE    1
 #define FALSE   0
 #endif  /*TRUE*/
 
-static void gen_preamble(char *prog_name,
+static void gen_preamble(char *prog_name, Options *options,
 	int num_ss, int num_channels, int num_events, int num_queues);
 static void gen_opt_defn(int opt, char *defn_name);
-static void reconcile_variables(Scope *scope, Expr *expr_list);
-static void connect_variable(Expr *ep, Scope *scope);
-static void reconcile_states(Expr *ss_list);
-static void gen_var_decl(Scope *scope);
+static void gen_var_decl(Scope *scope, int opt_reent);
 static void gen_defn_c_code(Expr *defn_c_list);
 static void gen_global_c_code(Expr *global_c_list);
 static void gen_init_reg(char *prog_name);
 static int assign_ef_bits(Scope *scope, ChanList *chan_list);
 static void assign_delay_ids(Expr *ss_list);
 static void assign_next_delay_id(Expr *ep, int *delay_id);
-static int db_queue_count(Scope *scope);
-static int db_chan_count(ChanList *chan_list);
 
-/*+************************************************************************
-*  NAME: phase2
-*
-*  CALLING SEQUENCE
-*	type		argument	I/O	description
-*	---------------------------------------------------
-*
-*  RETURNS: n/a
-*
-*  FUNCTION: Generate C code from parsing lists.
-*-*************************************************************************/
-void phase2(Program *program)
+/* Generate C code from parse tree. */
+void generate_code(Program *p)
 {
-	/* Count number of db channels and state sets defined */
-	program->num_queues = db_queue_count(program->global_scope);
-	program->num_channels = db_chan_count(program->chan_list);
-	program->num_ss = expr_count(program->ss_list);
-
-	/* Reconcile all variable and tie each to the appropriate VAR struct */
-	reconcile_variables(program->global_scope, program->ss_list);
-	reconcile_variables(program->global_scope, program->entry_code_list);
-	reconcile_variables(program->global_scope, program->exit_code_list);
-
-	/* reconcile all state names, including next state in transitions */
-	reconcile_states(program->ss_list);
-
 	/* Assign bits for event flags */
-	program->num_events = assign_ef_bits(program->global_scope, program->chan_list);
+	p->num_events = assign_ef_bits(p->global_scope, p->chan_list);
 
 #ifdef	DEBUG
 	fprintf(stderr, "gen_tables:\n");
-	fprintf(stderr, " num_channels = %d\n", program->num_channels);
-	fprintf(stderr, " num_events = %d\n", program->num_events);
-	fprintf(stderr, " num_queues = %d\n", program->num_queues);
-	fprintf(stderr, " num_ss = %d\n", program->num_ss);
+	fprintf(stderr, " num_channels = %d\n", p->num_channels);
+	fprintf(stderr, " num_events = %d\n", p->num_events);
+	fprintf(stderr, " num_queues = %d\n", p->num_queues);
+	fprintf(stderr, " num_ss = %d\n", p->num_ss);
 #endif	/*DEBUG*/
 
 	/* Assign delay id's */
-	assign_delay_ids(program->ss_list);
+	assign_delay_ids(p->ss_list);
 
 	/* Generate preamble code */
-	gen_preamble(program->prog_name, program->num_ss,
-		program->num_channels, program->num_events, program->num_queues);
+	gen_preamble(p->name, p->options, p->num_ss,
+		p->num_channels, p->num_events, p->num_queues);
 
 	/* Generate variable declarations */
-	gen_var_decl(program->global_scope);
+	gen_var_decl(p->global_scope, p->options->reent);
 
 	/* Generate definition C code */
-	gen_defn_c_code(program->global_defn_list);
+	gen_defn_c_code(p->global_defn_list);
 
 	/* Generate code for each state set */
-	gen_ss_code(program);
+	gen_ss_code(p);
 
 	/* Generate tables */
-	gen_tables(program);
+	gen_tables(p);
 
 	/* Output global C code */
-	gen_global_c_code(program->global_c_list);
+	gen_global_c_code(p->global_c_list);
 
 	/* Sequencer registration (if "init_register" option set) */
-	gen_init_reg(program->prog_name);
-
-	exit(0);
+	if (p->options->init_reg) {
+		gen_init_reg(p->name);
+	}
 }
+
 /* Generate preamble (includes, defines, etc.) */
-static void gen_preamble(char *prog_name,
+static void gen_preamble(char *prog_name, Options *options,
 	int num_ss, int num_channels, int num_events, int num_queues)
 {
-	Options *options = globals->options;
-
 	/* Program name (comment) */
 	printf("\n/* Program \"%s\" */\n", prog_name);
 
@@ -147,9 +115,14 @@ static void gen_preamble(char *prog_name,
 	printf("#define NUM_EVENTS %d\n", num_events);
 	printf("#define NUM_QUEUES %d\n", num_queues);
 
-	/* The following definition should be consistant with db_access.h */
+	/* The following definition should be consistent with db_access.h */
 	printf("\n");
 	printf("#define MAX_STRING_SIZE 40\n");
+
+	/* The following definition should be consistent with seq_if.c */
+	printf("\n");
+	printf("#define ASYNC %d\n", 1);
+	printf("#define SYNC %d\n", 2);
 
 	/* #define's for compiler options */
 	printf("\n");
@@ -207,74 +180,8 @@ static void gen_opt_defn(int opt, char *defn_name)
  */
 int	printTree = FALSE; /* For debugging only */
 
-static void reconcile_variables(Scope *scope, Expr *expr_list)
-{
-	Expr			*ep;
-
-	for (ep = expr_list; ep != 0; ep = ep->next)
-	{
-		traverse_expr_tree(ep, E_VAR, 0, connect_variable, scope);
-	}
-}
-
-/* Connect a variable in an expression to the the Var structure */
-static void connect_variable(Expr *ep, Scope *scope)
-{
-	Var		*vp;
-
-	if (ep->type != E_VAR)
-		return;
-#ifdef	DEBUG
-	fprintf(stderr, "connect_variable: \"%s\", line %d\n", ep->value, ep->line_num);
-#endif	/*DEBUG*/
-	vp = find_var(scope, ep->value);
-#ifdef	DEBUG
-	fprintf(stderr, "\t \"%s\" was %s\n", ep->value, vp ? "found" : "not found" );
-#endif	/*DEBUG*/
-	if (vp == 0)
-	{	/* variable not declared; add it to the variable list */
-		if (globals->options->warn)
-			fprintf(stderr,
-			 "Warning:  variable \"%s\" is used but not declared.\n",
-			 ep->value);
-		vp = allocVar();
-		add_var(scope, vp);
-		vp->name = ep->value;
-		vp->type = V_NONE; /* undeclared type */
-		vp->length1 = 1;
-		vp->length2 = 1;
-		vp->value = 0;
-	}
-	ep->left = (Expr *)vp; /* make connection */
-
-	return;
-} 
-
-/* Reconcile state names */
-static void reconcile_states(Expr *ss_list)
-{
-	Expr		*ssp, *sp, *sp1;
-
-	for (ssp = ss_list; ssp != 0; ssp = ssp->next)
-	{
-	    for (sp = ssp->left; sp != 0; sp = sp->next)
-	    {
-		/* Check for duplicate state names in this state set */
-		for (sp1 = sp->next; sp1 != 0; sp1 = sp1->next)
-		{
-			if (strcmp(sp->value, sp1->value) == 0)
-			{
-			    fprintf(stderr,
-			       "State \"%s\" is duplicated in state set \"%s\"\n",
-			       sp->value, ssp->value);
-			}
-		}		
-	    }
-	}
-}
-
 /* Generate a C variable declaration for each variable declared in SNL */
-static void gen_var_decl(Scope *scope)
+static void gen_var_decl(Scope *scope, int opt_reent)
 {
 	Var		*vp;
 	char		*vstr;
@@ -283,7 +190,7 @@ static void gen_var_decl(Scope *scope)
 	printf("\n/* Variable declarations */\n");
 
 	/* Convert internal type to `C' type */
-	if (globals->options->reent)
+	if (opt_reent)
 		printf("struct UserVar {\n");
 	for (nv=0, vp = scope->var_list->first; vp != NULL; nv++, vp = vp->next)
 	{
@@ -333,7 +240,7 @@ static void gen_var_decl(Scope *scope)
 		if (vstr == NULL)
 			continue;
 
-		if (globals->options->reent)
+		if (opt_reent)
 			printf("\t");
 		else
 			printf("static ");
@@ -359,11 +266,11 @@ static void gen_var_decl(Scope *scope)
 
 		printf(";\n");
 	}
-	if (globals->options->reent)
+	if (opt_reent)
 		printf("};\n");
 
 	/* Avoid compilation warnings if not re-entrant */
-	if (!globals->options->reent)
+	if (!opt_reent)
 	{
 		printf("\n");
 		printf("/* Not used (avoids compilation warnings) */\n");
@@ -404,59 +311,18 @@ static void gen_global_c_code(Expr *global_c_list)
 	if (ep != NULL)
 	{
 		printf("\f/* Global C code */\n");
-		print_line_num(ep->line_num, ep->src_file);
 		for (; ep != NULL; ep = ep->next)
 		{
 			assert(ep->type == E_TEXT);
+			print_line_num(ep->line_num, ep->src_file);
 			printf("%s\n", ep->value);
 		}
 	}
 	return;
 }
 
-/* Sets cp->index for each variable, & returns number of db channels defined. 
- */
-static int db_chan_count(ChanList *chan_list)
-{
-	int	nchan;
-	Chan	*cp;
-
-	nchan = 0;
-	for (cp = chan_list->first; cp != NULL; cp = cp->next)
-	{
-		cp->index = nchan;
-		if (cp->num_elem == 0)
-			nchan += 1;
-		else
-			nchan += cp->num_elem; /* array with multiple channels */
-	}
-
-	return nchan;
-}
-
-/* Sets vp->queueIndex for each syncQ'd variable, & returns number of
- * syncQ queues defined. 
- */
-static int db_queue_count(Scope *scope)
-{
-	int		nqueue;
-	Var		*vp;
-
-	nqueue = 0;
-	for (vp = scope->var_list->first; vp != NULL; vp = vp->next)
-	{
-		if (vp->type != V_EVFLAG && vp->queued)
-		{
-			vp->queueIndex = nqueue;
-			nqueue++;
-		}
-	}
-
-	return nqueue;
-}
-
 /* Assign event bits to event flags and associate db channels with
- * event flags.
+ * event flags. Return number of event flags found.
  */
 static int assign_ef_bits(Scope *scope, ChanList *chan_list)
 {
@@ -477,7 +343,7 @@ static int assign_ef_bits(Scope *scope, ChanList *chan_list)
 			printf("#define %s\t%d\n", vp->name, num_events);
 		}
 	}
-			
+
 	/* Associate event flags with DB channels */
 	for (cp = chan_list->first; cp != NULL; cp = cp->next)
 	{
@@ -528,7 +394,7 @@ static void assign_delay_ids(Expr *ss_list)
 
 				/* traverse event expression only */
 				traverse_expr_tree(tp->left, E_FUNC, "delay",
-					assign_next_delay_id, &delay_id);
+				  (expr_fun*)assign_next_delay_id, &delay_id);
 			}
 		}
 	}
@@ -540,101 +406,12 @@ static void assign_next_delay_id(Expr *ep, int *delay_id)
 	*delay_id += 1;
 }
 
-/* Traverse the expression tree, and call the supplied
- * function whenever type = ep->type AND value matches ep->value.
- * The condition value = 0 matches all.
- * The function is called with the current ep and a supplied argument (argp) */
-void traverse_expr_tree(
-	Expr	    *ep,	/* ptr to start of expression */
-	int	    type,	/* to search for */
-	char	    *value,	/* with optional matching value */
-	expr_fun    *funcp,	/* function to call */
-	void	    *argp	/* ptr to argument to pass on to function */
-)
-{
-	Expr		*ep1;
-
-	if (ep == 0)
-		return;
-
-	if (printTree)
-		fprintf(stderr, "traverse_expr_tree: type=%s, value=%s\n",
-		 expr_type_names[ep->type], ep->value);
-
-	/* Call the function? */
-	if ((ep->type == type) && (value == 0 || strcmp(ep->value, value) == 0) )
-	{
-		funcp(ep, argp);
-	}
-
-	/* Continue traversing the expression tree */
-	switch(ep->type)
-	{
-	case E_VAR:
-	case E_CONST:
-	case E_STRING:
-	case E_TEXT:
-	case E_BREAK:
-		break;
-
-	case E_PAREN:
-	case E_SS:
-	case E_STATE:
-	case E_FUNC:
-	case E_CMPND:
-	case E_STMT:
-	case E_ELSE:
-	case E_PRE:
-	case E_POST:
-		for (ep1 = ep->left; ep1 != 0;	ep1 = ep1->next)
-		{
-			traverse_expr_tree(ep1, type, value, funcp, argp);
-		}
-		break;
-
-	case E_DECL:
-	case E_WHEN:
-        case E_ENTRY:  /* E_ENTRY and E_EXIT only have expressions on RHS (->right) */
-        case E_EXIT:   /* but add them here incase ->left is used in future. */
-	case E_BINOP:
-	case E_SUBSCR:
-	case E_IF:
-	case E_WHILE:
-	case E_FOR:
-	case E_X:
-		for (ep1 = ep->left; ep1 != 0;	ep1 = ep1->next)
-		{
-			traverse_expr_tree(ep1, type, value, funcp, argp);
-		}
-		for (ep1 = ep->right; ep1 != 0;	ep1 = ep1->next)
-		{
-			traverse_expr_tree(ep1, type, value, funcp, argp);
-		}
-		break;
-
-	default:
-		fprintf(stderr, "traverse_expr_tree: type=%d???\n", ep->type);
-	}
-}
-
 static void gen_init_reg(char *prog_name)
 {
-	if (globals->options->init_reg) {
-		printf("\n\n/* Register sequencer commands and program */\n");
-		printf("\nvoid %sRegistrar (void) {\n", prog_name);
-		printf("    seqRegisterSequencerCommands();\n");
-		printf("    seqRegisterSequencerProgram (&%s);\n", prog_name);
-		printf("}\n");
-		printf("epicsExportRegistrar(%sRegistrar);\n\n", prog_name);
-	}
-}
-
-/* Count the number of linked expressions */
-int expr_count(Expr *ep)
-{
-	int		count;
-
-	for (count = 0; ep != 0; ep = ep->next)
-		count++;
-	return count;
+	printf("\n\n/* Register sequencer commands and program */\n");
+	printf("\nvoid %sRegistrar (void) {\n", prog_name);
+	printf("    seqRegisterSequencerCommands();\n");
+	printf("    seqRegisterSequencerProgram (&%s);\n", prog_name);
+	printf("}\n");
+	printf("epicsExportRegistrar(%sRegistrar);\n\n", prog_name);
 }

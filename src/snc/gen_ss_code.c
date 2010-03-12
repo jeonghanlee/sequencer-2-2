@@ -31,7 +31,7 @@
 #include	<assert.h>
 
 #include	"parse.h"
-#include	"phase2.h"
+#include	"analysis.h"
 #include	"snc_main.h"
 
 #ifndef TRUE
@@ -66,7 +66,7 @@ static void gen_delay_func(Expr *sp, Expr *ssp);
 static void eval_delay(Expr *ep, Expr *sp);
 static void gen_action_func(Expr *sp, Expr *ssp);
 static void gen_event_func(Expr *sp, Expr *ssp);
-static void eval_expr(int stmt_type, Expr *ep, Expr *sp, int level);
+static void gen_expr(int stmt_type, Expr *ep, Expr *sp, int level);
 static void indent(int level);
 static void gen_ef_func(int stmt_type, Expr *ep, char *fname,
 	enum fcode func_code);
@@ -100,10 +100,14 @@ void print_loc(Expr *ep);
 #define	ENTRY_STMT	4
 #define	EXIT_STMT	5
 
+static int opt_reent;
+
 void gen_ss_code(Program *program)
 {
 	Expr			*ssp;
 	Expr			*sp;
+
+	opt_reent = program->options->reent;
 
 	/* Generate entry handler code */
 	gen_entry_handler(program->entry_code_list);
@@ -175,7 +179,7 @@ static void gen_entry_func(Expr *sp, Expr *ssp)
 			printf("/* Entry %d: */\n", ++entryI);
 			for (xp = ep->right; xp != NULL; xp = xp->next)
 			{
-				eval_expr(ACTION_STMT, xp, sp, 1);
+				gen_expr(ACTION_STMT, xp, sp, 1);
 			}
 		}
 	}
@@ -204,7 +208,7 @@ static void gen_exit_func(Expr *sp, Expr *ssp)
  			 printf("/* Exit %d: */\n", ++exitI);
 			 for (xp = ep->right; xp != NULL; xp = xp->next)
 			 {
-				eval_expr(ACTION_STMT, xp, sp, 1);
+				gen_expr(ACTION_STMT, xp, sp, 1);
 			 }
 		}
 	}
@@ -233,7 +237,7 @@ static void gen_delay_func(Expr *sp, Expr *ssp)
 	{
 		if ( tp->type == E_WHEN )
 		{
-			traverse_expr_tree(tp, E_FUNC, "delay", eval_delay, sp);
+			traverse_expr_tree(tp, E_FUNC, "delay", (expr_fun*)eval_delay, sp);
 		}
 	}
 	printf("}\n");
@@ -259,7 +263,7 @@ static void eval_delay(Expr *ep, Expr *sp)
 	printf("\tseq_delayInit(ssId, %d, (", delay_id);
 
 	/* Evaluate & generate the 3-rd parameter (an expression) */
-	eval_expr(EVENT_STMT, ep->left, sp, 0);
+	gen_expr(EVENT_STMT, ep->left, sp, 0);
 
 	/* Complete the function call */
 	printf("));\n");
@@ -309,7 +313,7 @@ static void gen_action_func(Expr *sp, Expr *ssp)
 			for (ap = tp->right; ap != NULL; ap = ap->next) 
 			{ 
 				/* Evaluate statements */ 
-				eval_expr(ACTION_STMT, ap, sp, 3); 
+				gen_expr(ACTION_STMT, ap, sp, 3); 
 			}
 
 			/* end of block */
@@ -350,7 +354,7 @@ static void gen_event_func(Expr *sp, Expr *ssp)
 			      printf("TRUE");
 			else
 			{
-			      eval_expr(EVENT_STMT, tp->left, sp, 0);
+			      gen_expr(EVENT_STMT, tp->left, sp, 0);
 			}
 			printf(")\n\t{\n");
 			/* index is the transition number (0, 1, ...) */
@@ -391,9 +395,8 @@ static int state_block_index_from_name(Expr *ssp, char *state_name)
 	return -1; /* State name non-existant */
 }
 
-/* Evaluate an expression.
-*/
-static void eval_expr(
+/* Recursively generate code for an expression (tree) */
+static void gen_expr(
 	int stmt_type,		/* EVENT_STMT, ACTION_STMT, or DELAY_STMT */
 	Expr *ep,		/* ptr to expression */
 	Expr *sp,		/* ptr to current State struct */
@@ -412,11 +415,11 @@ static void eval_expr(
 		if (stmt_type == ACTION_STMT) print_loc(ep->left);
 		indent(level);
 		printf("%s ",ep->value);
-		eval_expr(stmt_type, ep->left, sp, 0);
+		gen_expr(stmt_type, ep->left, sp, 0);
 		if (ep->right != 0)
 		{
 			printf(" = ");
-			eval_expr(stmt_type, ep->right, sp, 0);
+			gen_expr(stmt_type, ep->right, sp, 0);
 		}
 		printf(";\n");
 		break;
@@ -425,7 +428,7 @@ static void eval_expr(
 		printf("{\n");
 		for (epf = ep->left; epf != 0;	epf = epf->next)
 		{
-			eval_expr(stmt_type, epf, sp, level+1);
+			gen_expr(stmt_type, epf, sp, level+1);
 		}
 		indent(level);
 		printf("}\n");
@@ -433,7 +436,7 @@ static void eval_expr(
 	case E_STMT:
 		if (stmt_type == ACTION_STMT) print_loc(ep->left);
 		indent(level);
-		eval_expr(stmt_type, ep->left, sp, 0);
+		gen_expr(stmt_type, ep->left, sp, 0);
 		printf(";\n");
 		break;
 	case E_IF:
@@ -444,29 +447,29 @@ static void eval_expr(
 			printf("if (");
 		else
 			printf("while (");
-		eval_expr(stmt_type, ep->left, sp, 0);
+		gen_expr(stmt_type, ep->left, sp, 0);
 		printf(")\n");
 		epf = ep->right;
 		if (epf->type == E_CMPND)
-			eval_expr(stmt_type, ep->right, sp, level);
+			gen_expr(stmt_type, ep->right, sp, level);
 		else
-			eval_expr(stmt_type, ep->right, sp, level+1);
+			gen_expr(stmt_type, ep->right, sp, level+1);
 		break;
 	case E_FOR:
 		if (stmt_type == ACTION_STMT) print_loc(ep->left->left);
 		indent(level);
 		printf("for (");
-		eval_expr(stmt_type, ep->left->left, sp, 0);
+		gen_expr(stmt_type, ep->left->left, sp, 0);
 		printf("; ");
-		eval_expr(stmt_type, ep->left->right, sp, 0);
+		gen_expr(stmt_type, ep->left->right, sp, 0);
 		printf("; ");
-		eval_expr(stmt_type, ep->right->left, sp, 0);
+		gen_expr(stmt_type, ep->right->left, sp, 0);
 		printf(")\n");
 		epf = ep->right->right;
 		if (epf->type == E_CMPND)
-			eval_expr(stmt_type, epf, sp, level);
+			gen_expr(stmt_type, epf, sp, level);
 		else
-			eval_expr(stmt_type, epf, sp, level+1);
+			gen_expr(stmt_type, epf, sp, level+1);
 		break;
 	case E_ELSE:
 		if (stmt_type == ACTION_STMT) print_loc(ep->left);
@@ -475,16 +478,16 @@ static void eval_expr(
 		epf = ep->left;
 		/* Is it "else if" ? */
 		if (epf->type == E_IF || epf->type == E_CMPND)
-			eval_expr(stmt_type, ep->left, sp, level);
+			gen_expr(stmt_type, ep->left, sp, level);
 		else
-			eval_expr(stmt_type, ep->left, sp, level+1);
+			gen_expr(stmt_type, ep->left, sp, level+1);
 		break;
 	case E_VAR:
 #ifdef	DEBUG
 		fprintf(stderr, "E_VAR: %s\n", ep->value);
 		fprintf(stderr, "ep->left is %s\n",ep->left ? "non-null" : "null");
 #endif	/*DEBUG*/
-		if(globals->options->reent)
+		if(opt_reent)
 		{
 			/* Make variables point to allocated structure */
 			Var		*vp;
@@ -518,7 +521,7 @@ static void eval_expr(
 		{
 			if (nexprs > 0)
 				printf(", ");
-			eval_expr(stmt_type, epf, sp, 0);
+			gen_expr(stmt_type, epf, sp, 0);
 		}
 		printf(")");
 		break;
@@ -528,32 +531,39 @@ static void eval_expr(
 		{
 			if (nexprs > 0)
 				printf(", ");
-			eval_expr(stmt_type, epf, sp, 0);
+			gen_expr(stmt_type, epf, sp, 0);
 		}
 		break;
 #endif
-	case E_BINOP:
-		eval_expr(stmt_type, ep->left, sp, 0);
+	case E_TERNOP:
+		gen_expr(stmt_type, ep->left, sp, 0);
 		printf(" %s ", ep->value);
-		eval_expr(stmt_type, ep->right, sp, 0);
+		gen_expr(stmt_type, ep->right->left, sp, 0);
+		printf(" %s ", ep->right->value);
+		gen_expr(stmt_type, ep->right->right, sp, 0);
+		break;
+	case E_BINOP:
+		gen_expr(stmt_type, ep->left, sp, 0);
+		printf(" %s ", ep->value);
+		gen_expr(stmt_type, ep->right, sp, 0);
 		break;
 	case E_PAREN:
 		printf("(");
-		eval_expr(stmt_type, ep->left, sp, 0);
+		gen_expr(stmt_type, ep->left, sp, 0);
 		printf(")");
 		break;
 	case E_PRE:
 		printf("%s", ep->value);
-		eval_expr(stmt_type, ep->left, sp, 0);
+		gen_expr(stmt_type, ep->left, sp, 0);
 		break;
 	case E_POST:
-		eval_expr(stmt_type, ep->left, sp, 0);
+		gen_expr(stmt_type, ep->left, sp, 0);
 		printf("%s", ep->value);
 		break;
 	case E_SUBSCR:
-		eval_expr(stmt_type, ep->left, sp, 0);
+		gen_expr(stmt_type, ep->left, sp, 0);
 		printf("[");
-		eval_expr(stmt_type, ep->right, sp, 0);
+		gen_expr(stmt_type, ep->right, sp, 0);
 		printf("]");
 		break;
 	case E_TEXT:
@@ -686,7 +696,7 @@ static int special_func(
 		for (ep1 = ep->left; ep1 != 0; ep1 = ep1->next)
 		{
 			printf(", ");
-			eval_expr(stmt_type, ep1, sp, 0);
+			gen_expr(stmt_type, ep1, sp, 0);
 		}
 		printf(")");
 		return TRUE;
@@ -823,7 +833,7 @@ static void gen_pv_func(
 	{	/* e.g. pvPut(xyz[i+2]); => seq_pvPut(ssId, 3 + (i+2)); */
 		printf(" + (");
 		/* evalute the subscript expression */
-		eval_expr(stmt_type, ep3, sp, 0);
+		gen_expr(stmt_type, ep3, sp, 0);
 		printf(")");
 	}
 
@@ -851,7 +861,7 @@ static void gen_pv_func(
 #endif
 
 		printf(", ");
-		eval_expr(stmt_type, ep1, sp, 0);
+		gen_expr(stmt_type, ep1, sp, 0);
 
 #if 0
 		/* Count parameters (makes use of knowledge that parameter
@@ -895,7 +905,7 @@ static void gen_entry_handler(Expr *expr_list)
 	printf("static void entry_handler(SS_ID ssId, struct UserVar *pVar)\n{\n");
 	for (ep = expr_list; ep != 0; ep = ep->next)
 	{
-		eval_expr(ENTRY_STMT, ep, NULL, 1);
+		gen_expr(ENTRY_STMT, ep, NULL, 1);
 	}
 	printf("}\n\n");
 }
@@ -909,7 +919,7 @@ static void gen_exit_handler(Expr *expr_list)
 	printf("static void exit_handler(SS_ID ssId, struct UserVar *pVar)\n{\n");
 	for (ep = expr_list; ep != 0; ep = ep->next)
 	{
-		eval_expr(EXIT_STMT, ep, NULL, 1);
+		gen_expr(EXIT_STMT, ep, NULL, 1);
 	}
 	printf("}\n\n");
 }

@@ -4,6 +4,8 @@ float v;
 assign v to "{user}:xxxExample";
 monitor v;
 
+evflag tick;
+
 ss ss1
 {
 	state low
@@ -25,5 +27,16 @@ ss ss1
 	    when(delay(.1))
 	    {
 	    } state high
+        when (efTestAndClear(tick)) {
+            printf("tick!");
+        } state high
 	}
+}
+
+ss ss2 {
+    state it {
+        when (delay(10)) {
+            efSet(tick);
+        } state it
+    }
 }

@@ -1,7 +1,7 @@
 #ifndef INCLgensscodeh
 #define INCLgensscodeh
 
-struct program;
+#include "types.h"
 
 void gen_ss_code(struct program *program);
 

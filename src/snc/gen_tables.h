@@ -1,8 +1,8 @@
 #ifndef INCLgentablesh
 #define INCLgentablesh
 
-struct program;
+#include "types.h"
 
-void gen_tables(struct program *program);
+void gen_tables(Program *program);
 
 #endif	/*INCLgentablesh*/
