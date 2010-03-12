@@ -6,6 +6,8 @@
 #define FALSE	0
 #endif
 
+typedef struct sym_table	SymTable;
+
 typedef struct options		Options;
 typedef struct token		Token;
 typedef struct scope		Scope;
@@ -19,6 +21,11 @@ typedef struct var_list		VarList;
 typedef enum var_type		VarType;
 typedef enum var_class		VarClass;
 typedef enum expr_type		ExprType;
+
+struct sym_table
+{
+	void *table;
+};
 
 struct options			/* compile & run-time options */
 {
@@ -63,7 +70,7 @@ struct	expression			/* Expression block */
 
 struct	variable			/* Variable or function definition */
 {
-	struct	variable *next;		/* link to next item in list */
+	Var	*next;			/* link to next item in list */
 	char	*name;			/* variable name */
 	char	*value;			/* initial value or NULL */
 	int	type;			/* var type */
@@ -71,7 +78,7 @@ struct	variable			/* Variable or function definition */
 	int	length1;		/* 1st dim. array lth (default=1) */
 	int	length2;		/* 2nd dim. array lth (default=1) */
 	int	ef_num;			/* bit number if this is an event flag */
-	struct	channel *chan;		/* ptr to channel struct if assigned */
+	Chan	*chan;			/* ptr to channel struct if assigned */
 	int	queued;			/* whether queued via syncQ */
 	int	maxQueueSize;		/* max syncQ queue size */
 	int	queueIndex;		/* index in syncQ queue array */
@@ -80,7 +87,7 @@ struct	variable			/* Variable or function definition */
 
 struct	channel				/* DB channel assignment info */
 {
-	struct	channel *next;		/* link to next item in list */
+	Chan	*next;			/* link to next item in list */
 	char	*db_name;		/* database name (assign all to 1 pv) */
 	char	**db_name_list;		/* list of db names (assign each to a pv) */
 	int	num_elem;		/* number of elements assigned in db_name_list */
@@ -119,6 +126,7 @@ struct program				/* result of parsing an SNL program */
 
 	/* these get added by later stages */
 	Options *options;		/* program options, from source or command line */
+	SymTable sym_table;		/* symbol table */
 	Scope	*global_scope;		/* global scope */
 	ChanList *chan_list;		/* channel list */
 	int	num_channels;		/* number of db channels */

@@ -28,6 +28,9 @@ snc_SRCS += gen_code.c		# code generation
 snc_SRCS += gen_ss_code.c	# code generation (state sets)
 snc_SRCS += gen_tables.c	# code generation (tables)
 snc_SRCS += sncVersion.c	# version info
+snc_SRCS += sym_table.c		# symbol table
+
+snc_LIBS += Com
 
 ifdef LEXER_TEST
 PROD_HOST =
