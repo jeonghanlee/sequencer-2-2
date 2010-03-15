@@ -11,10 +11,12 @@ ss ss1
 	    { 
 		printf("Will do this on entry");
 	    }
+#if 0
 	    entry 
 	    { 
 		printf("Another thing to do on entry");
 	    }
+#endif
 	    when(v>5.0)
 	    {
 		printf("now changing to high\n");

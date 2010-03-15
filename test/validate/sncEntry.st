@@ -12,10 +12,12 @@ ss ss1
 {
 	state low
 	{
+#if 0
 	    entry 
 	    { 
 		printf("Print something on entry to low\n");
 	    }
+#endif
 	    entry 
 	    { 
 		printf("Also pause on entry to low\n");
