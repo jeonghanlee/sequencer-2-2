@@ -56,12 +56,12 @@ endif
 
 %.c: %.i
 	@echo "converting $<"
-	$(SNC) $(TARGET_SNCFLAGS) $(SNCFLAGS) $< -o $(@F).tmp
+	$(SNC) $(TARGET_SNCFLAGS) $(SNCFLAGS) $(USR_SNCFLAGS) $< -o $(@F).tmp
 	$(MV) $(@F).tmp $@
 
 %.c: ../%.stt
 	@echo "converting $< "
-	$(SNC) $(TARGET_SNCFLAGS) $(SNCFLAGS) $< -o $(@F).tmp
+	$(SNC) $(TARGET_SNCFLAGS) $(SNCFLAGS) $(USR_SNCFLAGS) $< -o $(@F).tmp
 	$(MV) $(@F).tmp $@
 
 clean::
