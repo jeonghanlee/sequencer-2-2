@@ -205,6 +205,8 @@ struct program
 				| (1<<S_CHANGE) | (1<<S_CMPND) | (1<<S_FOR) | (1<<S_IF)\
 				| (1<<S_STMT) | (1<<S_WHILE) | (1<<T_TEXT) )
 
+#define expr_type_name(e)	expr_type_info[(e)->type].name
+
 /* Variable types */
 enum var_type
 {

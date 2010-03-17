@@ -71,7 +71,6 @@ Expr *decl(
 	vp->length1 = length1;
 	vp->length2 = length2;
 	vp->value = value;
-	vp->chan = NULL;
 
         ep = expr(D_DECL, var, 0, 0);
 	ep->extra.e_decl = vp;

@@ -41,6 +41,8 @@
 #include	"snc_main.h"
 #include	"gen_code.h"
 
+#define	DEBUG
+
 static const int impossible = 0;
 
 static void gen_preamble(char *prog_name, Options options,
@@ -54,7 +56,7 @@ static int assign_ef_bits(Expr *scope, ChanList *chan_list);
 void generate_code(Program *p)
 {
 #ifdef	DEBUG
-	report("---- Code Generation ----\n");
+	report("-------------------- Code Generation --------------------\n");
 #endif	/*DEBUG*/
 
 	/* Assign bits for event flags */
@@ -216,7 +218,7 @@ static void gen_global_var_decls(Program *p)
 			{
 				gen_var_decl(vp, opt_reent?"\t\t\t":"\t\t");
 			}
-			printf("%s} UserVar_ss_%s_state_%s;\n", opt_reent?"\t\t":"\t", ssp->value, sp->value);
+			printf("%s} UserVar_state_%s;\n", opt_reent?"\t\t":"\t", sp->value);
 		}
 		printf("%s} UserVar_ss_%s;\n", opt_reent?"\t":"", ssp->value);
 	}

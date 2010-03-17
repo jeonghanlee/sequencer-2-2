@@ -43,7 +43,7 @@ Program *analyse_program(Expr *prog, Options options)
 {
 	assert(prog != 0);
 #ifdef	DEBUG
-	report("---- Analysis ----\n");
+	report("-------------------- Analysis --------------------\n");
 #endif	/*DEBUG*/
 
 	Program *p = new(Program);
@@ -82,11 +82,6 @@ Program *analyse_program(Expr *prog, Options options)
 	connect_variables(p->sym_table, prog, options.warn, prog->prog_statesets);
 	connect_variables(p->sym_table, prog, options.warn, prog->prog_exit);
 #endif
-
-#ifdef	DEBUG
-	report("analysis done\n");
-#endif	/*DEBUG*/
-
 	return p;
 }
 
@@ -715,6 +710,8 @@ void add_var(SymTable st, Var *vp, Expr *scope)
 		var_list->last->next = vp;
 	var_list->last = vp;
 	vp->next = 0;
+
+	vp->scope = scope;
 }
 
 /* Find a variable by name, given a scope; first searches the given
@@ -730,11 +727,13 @@ Var *find_var(SymTable st, char *name, Expr *scope)
 		expr_type_info[scope->type].name);
 #endif
 	vp = sym_table_lookup(st, name, var_list);
-#ifdef DEBUG
-	if (vp) report("found\n");
-#endif
 	if (vp)
+	{
+#ifdef DEBUG
+		report("found\n");
+#endif
 		return vp;
+	}
 	else if (var_list->parent_scope == 0)
 	{
 #ifdef DEBUG
@@ -765,13 +764,18 @@ static int db_chan_count(ChanList *chan_list)
 	return nchan;
 }
 
-/* Connect a variable in an expression to the Var structure */
+/* Connect a variable in an expression (E_VAR) to the Var structure.
+   If there is no such structure, e.g. because the variable has not been
+   declared, then allocate one, assign type V_NONE, and assign the most
+   local scope for the variable. */
 static void connect_variable(Expr *ep, Expr *scope, void *parg)
 {
 	connect_var_arg	*cv_arg = (connect_var_arg *)parg;
 	Var		*vp;
 
+	assert(ep);
 	assert(ep->type == E_VAR);
+	assert(scope);
 
 #ifdef	DEBUG
 	report("connect_variable: '%s', line %d\n", ep->value, ep->line_num);
@@ -781,9 +785,11 @@ static void connect_variable(Expr *ep, Expr *scope, void *parg)
 
 #ifdef	DEBUG
 	if (vp)
+	{
 		report_at_expr(ep, "'%s' found in scope (%s:%s)\n", ep->value,
-			expr_type_info[vp->scope->type].name,
-			vp->scope->value);
+			expr_type_name(scope),
+			scope->value);
+	}
 	else
 		report_at_expr(ep, "'%s' not found\n", ep->value);
 #endif	/*DEBUG*/
@@ -806,7 +812,6 @@ static void connect_variable(Expr *ep, Expr *scope, void *parg)
 		add_var(cv_arg->st, vp, scope);
 	}
 	ep->extra.e_var = vp; /* make connection */
-	vp->scope = scope;
 }
 
 static void connect_variables(SymTable st, Expr *scope, int opt_warn)

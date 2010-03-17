@@ -37,6 +37,8 @@
 #include	"snc_main.h"
 #include	"sym_table.h"
 
+#define DEBUG
+
 static const int impossible = 0;
 
 enum fcode {
@@ -369,6 +371,11 @@ void gen_var_access(Expr *ep)
 	Var *vp = ep->extra.e_var;
 	char *prefix = global_opt_reent ? "pVar->" : "";
 
+#ifdef	DEBUG
+	report_at_expr(ep, "var_access: '%s', scope=%s,'%s')\n",
+		vp->name, expr_type_name(vp->scope), vp->scope->value);
+#endif
+
 	if (vp->type == V_NONE || vp->type == V_EVFLAG)
 	{
 		printf("%s", ep->value);
@@ -384,7 +391,7 @@ void gen_var_access(Expr *ep)
 	}
 	else if (vp->scope->type == D_STATE)
 	{
-		printf("%sUserVar_ss_%s_state_%s.%s",
+		printf("%sUserVar_ss_%s.UserVar_state_%s.%s",
 			prefix,
 			vp->scope->extra.e_state->var_list->parent_scope->value,
 			vp->scope->value, ep->value);
