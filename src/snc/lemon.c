@@ -1520,8 +1520,8 @@ char **argv;
   if( lem.nconflict ){
     fprintf(stderr,"%d parsing conflicts.\n",lem.nconflict);
   }
-  exit(lem.errorcnt + lem.nconflict);
-  return (lem.errorcnt + lem.nconflict);
+  exit(lem.errorcnt /* + lem.nconflict */);
+  return (lem.errorcnt /* + lem.nconflict */);
 }
 /******************** From the file "msort.c" *******************************/
 /*
