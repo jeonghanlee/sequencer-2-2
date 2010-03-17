@@ -10,9 +10,11 @@ ss ss1
 	    entry 
 	    { 
 		printf("Will do this on entry");
+#if 0
 	    }
 	    entry 
 	    { 
+#endif
 		printf("Another thing to do on entry");
 	    }
 	    when(v>5.0)

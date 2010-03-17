@@ -19,10 +19,12 @@ long    done[N];
 
 /* main state-set */
 ss main {
+    double z = 123.456;
     state inactive {
+        int y = 0;
 	when () {
 %%	    long i;
-	    for ( i = 0; i < N; i++ ) {
+	    for ( i = 0; i < N || i > y; i++ ) {
 		init[i] = 1;
 		pvPut( init[i], ASYNC );
 	    }

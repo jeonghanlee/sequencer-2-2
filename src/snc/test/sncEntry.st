@@ -15,9 +15,11 @@ ss ss1
 	    entry 
 	    { 
 		printf("Print something on entry to low\n");
+#if 0
 	    }
 	    entry 
 	    { 
+#endif
 		printf("Also pause on entry to low\n");
 		epicsThreadSleep(1.0);
 	    }
