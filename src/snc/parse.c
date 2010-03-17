@@ -29,41 +29,13 @@
 #include	<stdlib.h>
 #include	<string.h>
 #include	<assert.h>
+#include        <stdarg.h>
 
 #define expr_type_GLOBAL
 #include	"types.h"
 #undef expr_type_GLOBAL
 #include	"parse.h"
-#include	"gen_code.h"
 #include	"snc_main.h"
-
-#ifndef	TRUE
-#define	TRUE	1
-#define	FALSE	0
-#endif	/*TRUE*/
-
-/* Parsing a program */
-Program *program(
-	char	*name,		/* program name */
-	char	*param,		/* program parameters */
-	Expr	*defn_list,	/* list of top-level definitions */
-	Expr	*entry_code,	/* global entry actions */
-	Expr	*ss_list,	/* state sets */
-	Expr	*exit_code,	/* global exit actions */
-	Expr	*c_code		/* global c code */
-)
-{
-	Program *p = allocProgram();
-
-	p->name = name;
-	p->param = param;
-	p->global_defn_list = defn_list;
-	p->entry_code_list = entry_code;
-	p->ss_list = ss_list;
-	p->exit_code_list = exit_code;
-	p->global_c_list = c_code;
-	return p;
-}
 
 /* Parsing a variable declaration */
 Expr *decl(
@@ -75,6 +47,7 @@ Expr *decl(
 	char	*value		/* initial value or NULL */
 )
 {
+	Expr	*ep;
 	Var	*vp;
 	int	length1, length2;
 
@@ -91,7 +64,7 @@ Expr *decl(
 		if (length2 <= 0)
 			length2 = 1;
 	}
-	vp = allocVar();
+	vp = new(Var);
 	vp->name = var.str;
 	vp->class = class;
 	vp->type = type;
@@ -99,81 +72,88 @@ Expr *decl(
 	vp->length2 = length2;
 	vp->value = value;
 	vp->chan = NULL;
-	return expr(E_DECL, tok((char*)vp), 0, 0);
+
+        ep = expr(D_DECL, var, 0, 0);
+	ep->extra.e_decl = vp;
+#ifdef	DEBUG
+	report("decl: name=%s, type=%d, class=%d, "
+		"length1=%d, length2=%d, value=%s\n",
+		vp->name, vp->type, vp->class,
+		vp->length1, vp->length2, vp->value);
+#endif	/*DEBUG*/
+	vp->decl = ep;
+	return ep;
 }
 
-/* Expr is the generic syntax tree node. It is formed by a type  */
+/* Expr is the generic syntax tree node */
 Expr *expr(
-	int	type,		/* E_BINOP, E_ASGNOP, etc */
-	Token	value,		/* "==", "+=", var name, constant, etc. */	
-	Expr	*left,		/* LH side */
-	Expr	*right		/* RH side */
+	int	type,
+	Token	tok,
+	...			/* variable number of child arguments */
 )
 {
-	Expr		*ep;
+        va_list	argp;
+	int	i, num_children;
+	Expr	*ep;
 
-	/* Allocate a structure for this item or expression */
-	ep = allocExpr();
-#ifdef	DEBUG
-	if (type == E_DECL)
-	{
-		Var	*vp = (Var*)value.str;
+	num_children = expr_type_info[type].num_children;
 
-		report(
-		 "expr: ep=%p, type=%s, value="
-		 "(var: name=%s, type=%d, class=%d, length1=%d, length2=%d, value=%s), "
-		 "left=%p, right=%p\n",
-		 ep, expr_type_names[type],
-		 vp->name, vp->type, vp->class, vp->length1, vp->length2, vp->value,
-		 left, right);
-	}
-        else
-		report(
-		 "expr: ep=%p, type=%s, value=\"%s\", left=%p, right=%p\n",
-		 ep, expr_type_names[type], value.str, left, right);
-#endif	/*DEBUG*/
-	/* Fill in the structure */
+	ep = new(Expr);
 	ep->next = 0;
 	ep->last = ep;
 	ep->type = type;
-	ep->value = value.str;
-	ep->left = left;
-	ep->right = right;
-	ep->line_num = value.line;
-	ep->src_file = value.file;
+	ep->value = tok.str;
+	ep->line_num = tok.line;
+	ep->src_file = tok.file;
+	ep->children = calloc(num_children, sizeof(Expr*));
+	/* allocate extra data */
+	switch (type)
+	{
+	case D_SS:	ep->extra.e_ss = new(StateSet);	break;
+	case D_STATE:	ep->extra.e_state = new(State);	break;
+	case D_WHEN:	ep->extra.e_when = new(When);	break;
+	}
+
+#ifdef	DEBUG
+	report("expr: ep=%p, type=%s, value=\"%s\", file=%s, line=%d",
+		ep, expr_type_info[type].name, tok.str, tok.file, tok.line);
+#endif	/*DEBUG*/
+        va_start(argp, tok);
+	for (i = 0; i < num_children; i++)
+	{
+		ep->children[i] = va_arg(argp, Expr*);
+#ifdef	DEBUG
+		report(", child[%d]=%p", i, ep->children[i]);
+#endif	/*DEBUG*/
+	}
+        va_end(argp);
+#ifdef	DEBUG
+	report(")\n");
+#endif	/*DEBUG*/
 
 	return ep;
 }
 
+Expr *opt_defn(Token name, Token value)
+{
+	Expr *opt = expr(D_OPTION, name);
+	opt->extra.e_option = (value.str[0] == '+');
+	return opt;
+}
+
 /* Link two expression structures and/or lists.  Returns ptr to combined list.
-   Note:  ->last ptrs are correct only for 1-st and last structures in the list */
+   Note: last ptrs are correct only for 1-st element of the resulting list */
 Expr *link_expr(
-	Expr	*ep1,	/* beginning of 1-st structure or list */
-	Expr	*ep2	/* beginning 2-nd (append it to 1-st) */
+	Expr	*ep1,	/* 1-st structure or list */
+	Expr	*ep2	/* 2-nd (append it to 1-st) */
 )
 {
-#ifdef	DEBUG
-	Expr	*ep;
-#endif
-
-	if (ep1 == 0 && ep2 == 0)
-		return NULL;
-	else if (ep1 == 0)
+	if (ep1 == 0)
 		return ep2;
-	else if (ep2 == 0)
-		return ep1;
-
+	if (ep2 == 0)
+		return 0;
 	ep1->last->next = ep2;
 	ep1->last = ep2->last;
-#ifdef	DEBUG
-	report("link_expr(");
-	for (ep = ep1; ; ep = ep->next)
-	{
-		report("%p, ", ep);
-		if (ep == ep1->last)
-			break;
-	}
-	report(")\n");
-#endif	/*DEBUG*/
+	ep2->last = 0;
 	return ep1;
 }

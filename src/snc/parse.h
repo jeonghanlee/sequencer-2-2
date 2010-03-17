@@ -4,6 +4,7 @@
 		         Los Alamos National Laboratory
 
 	DESCRIPTION: Structures for parsing the state notation language.
+
 	ENVIRONMENT: UNIX
 	HISTORY:
 18nov91,ajk	Replaced lstLib stuff with in-line links.
@@ -22,21 +23,18 @@
 
 #include "types.h"
 
-Program *program(
-	char	*name,		/* program name */
-	char	*param,		/* program parameters */
-	Expr	*defn_list,	/* list of top-level definitions */
-	Expr	*entry_code,	/* global entry actions */
-	Expr	*ss_list,	/* state sets */
-	Expr	*exit_code,	/* global exit actions */
-	Expr	*c_code		/* global c code */
-);
+struct expr_pair
+{
+	Expr	*left, *right;
+};
+typedef struct expr_pair ExprPair;
+
 Expr *expr(
 	int	type,		/* E_BINOP, E_ASGNOP, etc */
 	Token	tok,		/* "==", "+=", var name, constant, etc. */
-	Expr	*left,		/* LH side */
-	Expr	*right		/* RH side */
+	...
 );
+
 Expr *decl(
 	int	type,		/* variable type (e.g. V_FLOAT) */
 	int	class,		/* variable class (e.g. VC_ARRAY) */
@@ -45,14 +43,12 @@ Expr *decl(
 	char	*s_length2,	/* array lth (2nd dim, [n]x[m] arrays only) */
 	char	*value		/* initial value or NULL */
 );
-void add_var(
-	Scope *scope,		/* scope to add variable to */
-	Var *vp			/* variable to add */
+
+Expr *opt_defn(
+	Token	name,
+	Token	value
 );
-Var *find_var(
-	Scope *scope,		/* scope where to first search for the variable */
-	char *name		/* variable name to find */
-);
+
 Expr *link_expr(
 	Expr	*ep1,		/* beginning of 1-st structure or list */
 	Expr	*ep2		/* beginning 2-nd (append it to 1-st) */

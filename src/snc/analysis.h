@@ -3,28 +3,31 @@
 
 #include "types.h"
 
-void analyse_program(Program *p, Options *options);
+/* Iteratee ("what gets iterated") for traverse_expr_tree */
+typedef void expr_iter(Expr *ep, Expr *scope, void *parg);
 
-void add_var(
-	Scope *scope,		/* scope to add variable to */
-	Var *vp			/* variable to add */
-);
-
-Var *find_var(
-	Scope *scope,		/* scope where to first search for the variable */
-	char *name		/* variable name to find */
-);
-
-int expr_count(Expr*);
-
-typedef void expr_fun(Expr *, void *);
+/* Pre-order traversal of the expression tree. Call the supplied iteratee whenever
+ * call_mask has the (ep->type)'th bit set. The function is called with the current
+ * ep, the current scope, and an additional user defined argument (argp). Afterwards
+ * recurse into all child nodes except those whose type'th bit is set in stop_mask.
+ * The traversal starts at the first argument. The 4th argument is the current
+ * scope; 0 may be supplied for it, in which case it will be set to a valid scope as
+ * the traversal encounters one.
+ * NOTE: next pointer of the prog expression is ignored,
+ * this functions does NOT descend into sibling list elements. */
 
 void traverse_expr_tree(
-	Expr	    *ep,	/* ptr to start of expression */
-	int	    type,	/* to search for */
-	char	    *value,	/* with optional matching value */
-	expr_fun    *funcp,	/* function to call */
-	void	    *argp	/* ptr to argument to pass on to function */
+	Expr		*ep,		/* start expression */
+	int		call_mask,	/* when to call iteratee */
+	int		stop_mask,	/* when to stop descending */
+	Expr		*scope,		/* current scope, 0 at top-level */
+	expr_iter	*iteratee,	/* function to call */
+	void		*parg		/* argument to pass to function */
 );
+
+VarList **pvar_list_from_scope(Expr *scope);
+Expr *defn_list_from_scope(Expr *scope);
+
+Program *analyse_program(Expr *ep, Options options);
 
 #endif	/*INCLanalysish*/

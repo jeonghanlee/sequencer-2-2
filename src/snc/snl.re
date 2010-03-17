@@ -176,6 +176,7 @@ snl:
 	"assign"	{ RET(ASSIGN,	"assign"); }
 	"break"		{ RET(BREAK,	"break"); }
 	"char"		{ RET(CHAR,	"char"); }
+	"delay"		{ RET(DELAY,	"delay"); }
 	"double"	{ RET(DOUBLE,	"double"); }
 	"else"		{ RET(ELSE,	"else"); }
 	"entry"		{ RET(ENTRY,	"entry"); }
@@ -387,28 +388,28 @@ int main() {
 }
 #else
 
-Program *parse_program(const char *src_file)
+Expr *parse_program(const char *src_file)
 {
-	Scanner		s;
-	int		tt;	/* token type */
-	Token		tv;	/* token value */
-        Program		*result; /* result of parsing */
+	Scanner	s;
+	int	tt;		/* token type */
+	Token	tv;		/* token value */
+        Expr	*result;	/* result of parsing */
 
 	bzero(&s, sizeof(s));
 	s.file = strdup(src_file);
 	s.line = 1;
 
-	void *pParser = parserAlloc(malloc);
+	void *parser = snlParserAlloc(malloc);
 	do
 	{
 		tt = scan(&s, &tv);
 #ifdef	DEBUG
-		report_at(tv.file, tv.line, &s,"%2d\t$%s$\n", tt, tv.str);
+		report_at(tv.file, tv.line, "%2d\t$%s$\n", tt, tv.str);
 #endif
-		parser(pParser, tt, tv, &result);
+		snlParser(parser, tt, tv, &result);
 	}
 	while (tt);
-	parserFree(pParser, free);
+	snlParserFree(parser, free);
 	return result;
 }
 

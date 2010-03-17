@@ -3,9 +3,6 @@
 	Copyright, 1990, The Regents of the University of California.
 		         Los Alamos National Laboratory
 
-	snc_main.c,v 1.2 1995/06/27 15:26:11 wright Exp
-		
-
 	DESCRIPTION: Main program and miscellaneous routines for
 	State Notation Compiler.
 
@@ -36,25 +33,9 @@
 #include	"gen_code.h"
 #include	"snc_main.h"
 
-#ifndef	TRUE
-#define	TRUE 1
-#define	FALSE 0
-#endif
+#include	"snc_version.h"
 
-extern char *sncVersion;	/* snc version and date created */
-
-static Options options =
-{
-	FALSE,		/* async */
-	TRUE,		/* conn */
-	FALSE,		/* debug */
-	TRUE,		/* newef */
-	TRUE,		/* init_reg */
-	TRUE,		/* line */
-	FALSE,		/* main */
-	FALSE,		/* reent */
-	TRUE		/* warn */
-};
+static Options options = DEFAULT_OPTIONS;
 
 static char *in_file;	/* input file name */
 static char *out_file;	/* output file name */
@@ -70,6 +51,7 @@ int main(int argc, char *argv[])
 {
 	FILE	*infp, *outfp;
 	Program	*prg;
+        Expr    *exp;
 
 	/* Get command arguments */
 	parse_args(argc, argv);
@@ -94,10 +76,16 @@ int main(int argc, char *argv[])
 	setvbuf(stdout, NULL, _IOLBF, BUFSIZ);
 	setvbuf(stderr, NULL, _IOLBF, BUFSIZ);
 
-	printf("/* %s: %s */\n", sncVersion, in_file);
+	printf("/* %s: %s */\n", snc_version, in_file);
 
-	prg = parse_program(in_file);
-	analyse_program(prg, &options);
+	exp = parse_program(in_file);
+
+#if 0
+	/* HACK *** TEMPORARY *** HACK */
+	options.line = FALSE;
+#endif
+
+        prg = analyse_program(exp, options);
 	generate_code(prg);
 
 	exit(0);
@@ -190,6 +178,9 @@ static void parse_option(char *s)
 	case 'e':
 		options.newef = opt_val;
 		break;
+	case 'r':
+		options.reent = opt_val;
+		break;
 	case 'i':
 		options.init_reg = opt_val;
 		break;
@@ -198,9 +189,6 @@ static void parse_option(char *s)
 		break;
 	case 'm':
 		options.main = opt_val;
-		break;
-	case 'r':
-		options.reent = opt_val;
 		break;
 	case 'w':
 		options.warn = opt_val;
@@ -213,7 +201,7 @@ static void parse_option(char *s)
 
 static void print_usage(void)
 {
-	report("%s\n", sncVersion);
+	report("%s\n", snc_version);
 	report("usage: snc <options> <infile>\n");
 	report("options:\n");
 	report("  -o <outfile> - override name of output file\n");

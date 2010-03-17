@@ -4,8 +4,8 @@
 		 Los Alamos National Laboratory
 
 	DESCRIPTION: Phase 2 code generation routines for SNC.
-	Produces code and tables in C output file.
-	See also:  gen_ss_code.c and gen_tables.c
+		Produces code and tables in C output file.
+		See also:  gen_ss_code.c and gen_tables.c
 	ENVIRONMENT: UNIX
 	HISTORY:
 19nov91,ajk	Replaced lstLib calls with built-in linked list.
@@ -41,22 +41,24 @@
 #include	"snc_main.h"
 #include	"gen_code.h"
 
-static void gen_preamble(char *prog_name, Options *options,
+static const int impossible = 0;
+
+static void gen_preamble(char *prog_name, Options options,
 	int num_ss, int num_channels, int num_events, int num_queues);
-static void gen_opt_defn(int opt, char *defn_name);
-static void gen_var_decl(Scope *scope, int opt_reent);
-static void gen_defn_c_code(Expr *defn_c_list);
+static void gen_global_var_decls(Program *p);
 static void gen_global_c_code(Expr *global_c_list);
 static void gen_init_reg(char *prog_name);
-static int assign_ef_bits(Scope *scope, ChanList *chan_list);
-static void assign_delay_ids(Expr *ss_list);
-static void assign_next_delay_id(Expr *ep, int *delay_id);
+static int assign_ef_bits(Expr *scope, ChanList *chan_list);
 
 /* Generate C code from parse tree. */
 void generate_code(Program *p)
 {
+#ifdef	DEBUG
+	report("---- Code Generation ----\n");
+#endif	/*DEBUG*/
+
 	/* Assign bits for event flags */
-	p->num_events = assign_ef_bits(p->global_scope, p->chan_list);
+	p->num_events = assign_ef_bits(p->prog, p->chan_list);
 
 #ifdef	DEBUG
 	report("gen_tables:\n");
@@ -66,18 +68,15 @@ void generate_code(Program *p)
 	report(" num_ss = %d\n", p->num_ss);
 #endif	/*DEBUG*/
 
-	/* Assign delay id's */
-	assign_delay_ids(p->ss_list);
-
 	/* Generate preamble code */
 	gen_preamble(p->name, p->options, p->num_ss,
 		p->num_channels, p->num_events, p->num_queues);
 
-	/* Generate variable declarations */
-	gen_var_decl(p->global_scope, p->options->reent);
+	/* Generate global variable declarations */
+	gen_global_var_decls(p);
 
 	/* Generate definition C code */
-	gen_defn_c_code(p->global_defn_list);
+	gen_defn_c_code(p->prog);
 
 	/* Generate code for each state set */
 	gen_ss_code(p);
@@ -86,16 +85,16 @@ void generate_code(Program *p)
 	gen_tables(p);
 
 	/* Output global C code */
-	gen_global_c_code(p->global_c_list);
+	gen_global_c_code(p->prog->prog_ccode);
 
 	/* Sequencer registration (if "init_register" option set) */
-	if (p->options->init_reg) {
+	if (p->options.init_reg) {
 		gen_init_reg(p->name);
 	}
 }
 
 /* Generate preamble (includes, defines, etc.) */
-static void gen_preamble(char *prog_name, Options *options,
+static void gen_preamble(char *prog_name, Options options,
 	int num_ss, int num_channels, int num_events, int num_queues)
 {
 	/* Program name (comment) */
@@ -119,20 +118,11 @@ static void gen_preamble(char *prog_name, Options *options,
 	printf("#define ASYNC %d\n", 1);
 	printf("#define SYNC %d\n", 2);
 
-	/* #define's for compiler options */
-	printf("\n");
-	gen_opt_defn(options->async, "ASYNC_OPT");
-	gen_opt_defn(options->conn,  "CONN_OPT" );
-	gen_opt_defn(options->debug, "DEBUG_OPT");
-	gen_opt_defn(options->main,  "MAIN_OPT" );
-	gen_opt_defn(options->newef, "NEWEF_OPT" );
-	gen_opt_defn(options->reent, "REENT_OPT");
-
 	/* Forward references of tables: */
 	printf("\nextern struct seqProgram %s;\n", prog_name);
 
         /* Main program (if "main" option set) */
-	if (options->main) {
+	if (options.main) {
 	    printf("\n/* Main program */\n");
 	    printf("#include <string.h>\n");
 	    printf("#include \"epicsThread.h\"\n");
@@ -157,112 +147,80 @@ static void gen_preamble(char *prog_name, Options *options,
             printf("    return(0);\n");
 	    printf("}\n");
 	}
-
-	return;
 }
 
-/* Generate defines for compiler options */
-static void gen_opt_defn(int opt, char *defn_name)
+void gen_var_decl(Var *vp, const char *prefix)
 {
-	if (opt)
-		printf("#define %s TRUE\n", defn_name);
-	else
-		printf("#define %s FALSE\n", defn_name);
-}
+	char	*vstr;
 
-/* Reconcile all variables in an expression,
- * and tie each to the appropriate VAR structure.
- */
-int	printTree = FALSE; /* For debugging only */
+	switch (vp->type)
+	{
+	case V_CHAR:	vstr = "char";		break;
+	case V_INT:	vstr = "int";		break;
+	case V_LONG:	vstr = "long";		break;
+	case V_SHORT:	vstr = "short";		break;
+	case V_UCHAR:	vstr = "unsigned char";	break;
+	case V_UINT:	vstr = "unsigned int";	break;
+	case V_ULONG:	vstr = "unsigned long";	break;
+	case V_USHORT:	vstr = "unsigned short";break;
+	case V_FLOAT:	vstr = "float";		break;
+	case V_DOUBLE:	vstr = "double";	break;
+	case V_STRING:	vstr = "char";		break;
+	case V_EVFLAG:
+	case V_NONE:
+		return;
+	default:
+		assert(impossible);
+	}
+	printf("%s%s\t", prefix, vstr);
+	if (vp->class == VC_POINTER || vp->class == VC_ARRAYP)
+		printf("*");
+	printf("%s", vp->name);
+	if (vp->class == VC_ARRAY1 || vp->class == VC_ARRAYP)
+		printf("[%d]", vp->length1);
+	else if (vp->class == VC_ARRAY2)
+		printf("[%d][%d]", vp->length1, vp->length2);
+	if (vp->type == V_STRING)
+		printf("[MAX_STRING_SIZE]");
+	printf(";\n");
+}
 
 /* Generate a C variable declaration for each variable declared in SNL */
-static void gen_var_decl(Scope *scope, int opt_reent)
+static void gen_global_var_decls(Program *p)
 {
-	Var		*vp;
-	char		*vstr;
-	int		nv;
+	int	opt_reent = p->options.reent;
+	Var	*vp;
+	Expr	*sp, *ssp;
 
 	printf("\n/* Variable declarations */\n");
 
+	if (opt_reent) printf("struct UserVar {\n");
 	/* Convert internal type to `C' type */
-	if (opt_reent)
-		printf("struct UserVar {\n");
-	for (nv=0, vp = scope->var_list->first; vp != NULL; nv++, vp = vp->next)
+	foreach (vp, p->prog->extra.e_prog->first)
 	{
-		switch (vp->type)
-		{
-		  case V_CHAR:
-			vstr = "char";
-			break;
-		  case V_INT:
-			vstr = "int";
-			break;
-		  case V_LONG:
-			vstr = "long";
-			break;
-		  case V_SHORT:
-			vstr = "short";
-			break;
-		  case V_UCHAR:
-			vstr = "unsigned char";
-			break;
-		  case V_UINT:
-			vstr = "unsigned int";
-			break;
-		  case V_ULONG:
-			vstr = "unsigned long";
-			break;
-		  case V_USHORT:
-			vstr = "unsigned short";
-			break;
-		  case V_FLOAT:
-			vstr = "float";
-			break;
- 		  case V_DOUBLE:
-			vstr = "double";
-			break;
-		  case V_STRING:
-			vstr = "char";
-			break;
-		  case V_EVFLAG:
-		  case V_NONE:
-			vstr = NULL;
-			break;
-		  default:
-			vstr = "int";
-			break;
-		}
-		if (vstr == NULL)
-			continue;
-
-		if (opt_reent)
-			printf("\t");
-		else
-			printf("static ");
-
-		printf("%s\t", vstr);
-
-		if (vp->class == VC_POINTER || vp->class == VC_ARRAYP)
-			printf("*");
-
-		printf("%s", vp->name);
-
-		if (vp->class == VC_ARRAY1 || vp->class == VC_ARRAYP)
-			printf("[%d]", vp->length1);
-
-		else if (vp->class == VC_ARRAY2)
-			printf("[%d][%d]", vp->length1, vp->length2);
-
-		if (vp->type == V_STRING)
-			printf("[MAX_STRING_SIZE]");
-
-		if (vp->value != NULL)
-			printf(" = %s", vp->value);
-
-		printf(";\n");
+		if (vp->decl)
+			gen_line_marker(vp->decl);
+		gen_var_decl(vp, opt_reent ? "\t" : "static ");
 	}
-	if (opt_reent)
-		printf("};\n");
+	foreach (ssp, p->prog->prog_statesets)
+	{
+		printf("%sstruct UserVar_ss_%s {\n", opt_reent?"\t":"", ssp->value);
+		foreach (vp, ssp->extra.e_ss->var_list->first)
+		{
+			gen_var_decl(vp, opt_reent?"\t\t":"\t");
+		}
+		foreach (sp, ssp->ss_states)
+		{
+			printf("%sstruct UserVar_ss_%s_state_%s {\n", opt_reent?"\t\t":"\t", ssp->value, sp->value);
+			foreach (vp, sp->extra.e_state->var_list->first)
+			{
+				gen_var_decl(vp, opt_reent?"\t\t\t":"\t\t");
+			}
+			printf("%s} UserVar_ss_%s_state_%s;\n", opt_reent?"\t\t":"\t", ssp->value, sp->value);
+		}
+		printf("%s} UserVar_ss_%s;\n", opt_reent?"\t":"", ssp->value);
+	}
+	if (opt_reent) printf("};\n");
 
 	/* Avoid compilation warnings if not re-entrant */
 	if (!opt_reent)
@@ -273,18 +231,18 @@ static void gen_var_decl(Scope *scope, int opt_reent)
 		printf("\tint\tdummy;\n");
 		printf("};\n");
 	}
-	return;
 }
 
 /* Generate definition C code (C code in definition section) */
-static void gen_defn_c_code(Expr *defn_list)
+void gen_defn_c_code(Expr *scope)
 {
-	Expr		*ep;
-	int		first = TRUE;
+	Expr	*ep;
+	int	first = TRUE;
+	Expr	*defn_list = defn_list_from_scope(scope);
 
-	for (ep = defn_list; ep != NULL; ep = ep->next)
+	foreach (ep, defn_list)
 	{
-		if (ep->type == E_TEXT)
+		if (ep->type == T_TEXT)
 		{
 			if (first)
 			{
@@ -295,8 +253,8 @@ static void gen_defn_c_code(Expr *defn_list)
 			printf("%s\n", ep->value);
 		}
 	}
-	return;
 }
+
 /* Generate global C code (C code following state program) */
 static void gen_global_c_code(Expr *global_c_list)
 {
@@ -308,28 +266,31 @@ static void gen_global_c_code(Expr *global_c_list)
 		printf("\f/* Global C code */\n");
 		for (; ep != NULL; ep = ep->next)
 		{
-			assert(ep->type == E_TEXT);
+			assert(ep->type == T_TEXT);
 			gen_line_marker(ep);
 			printf("%s\n", ep->value);
 		}
 	}
-	return;
 }
 
 /* Assign event bits to event flags and associate db channels with
  * event flags. Return number of event flags found.
  */
-static int assign_ef_bits(Scope *scope, ChanList *chan_list)
+static int assign_ef_bits(Expr *scope, ChanList *chan_list)
 {
-	Var		*vp;
-	Chan		*cp;
-	int		n;
-	int		num_events;
+	Var	*vp;
+	Chan	*cp;
+	int	n;
+	int	num_events;
+	VarList	*var_list;
 
 	/* Assign event flag numbers (starting at 1) */
 	printf("\n/* Event flags */\n");
+
+	var_list = *pvar_list_from_scope(scope);
+
 	num_events = 0;
-	for (vp = scope->var_list->first; vp != NULL; vp = vp->next)
+	for (vp = var_list->first; vp != NULL; vp = vp->next)
 	{
 		if (vp->type == V_EVFLAG)
 		{
@@ -350,8 +311,7 @@ static int assign_ef_bits(Scope *scope, ChanList *chan_list)
 				cp->ef_num = vp->ef_num;
 			}
 		}
-
-		else /* cp->num_elem != 0 */
+		else
 		{
 			for (n = 0; n < cp->num_elem; n++)
 			{
@@ -367,40 +327,6 @@ static int assign_ef_bits(Scope *scope, ChanList *chan_list)
 	return num_events;
 }
 
-/* Assign a delay id to each "delay()" in an event (when()) expression */
-static void assign_delay_ids(Expr *ss_list)
-{
-	Expr			*ssp, *sp, *tp;
-	int			delay_id;
-
-#ifdef	DEBUG
-	report("assign_delay_ids:\n");
-#endif	/*DEBUG*/
-	for (ssp = ss_list; ssp != 0; ssp = ssp->next)
-	{
-		for (sp = ssp->left; sp != 0; sp = sp->next)
-		{
-			/* Each state has it's own delay id's */
-			delay_id = 0;
-			for (tp = sp->left; tp != 0; tp = tp->next)
-			{	/* ignore local declarations */
-				if (tp->type == E_TEXT)
-					continue;
-
-				/* traverse event expression only */
-				traverse_expr_tree(tp->left, E_FUNC, "delay",
-				  (expr_fun*)assign_next_delay_id, &delay_id);
-			}
-		}
-	}
-}
-
-static void assign_next_delay_id(Expr *ep, int *delay_id)
-{
-	ep->right = (Expr *)*delay_id;
-	*delay_id += 1;
-}
-
 static void gen_init_reg(char *prog_name)
 {
 	printf("\n\n/* Register sequencer commands and program */\n");
@@ -408,5 +334,5 @@ static void gen_init_reg(char *prog_name)
 	printf("    seqRegisterSequencerCommands();\n");
 	printf("    seqRegisterSequencerProgram (&%s);\n", prog_name);
 	printf("}\n");
-	printf("epicsExportRegistrar(%sRegistrar);\n\n", prog_name);
+	printf("epicsExportRegistrar(%sRegistrar);\n", prog_name);
 }

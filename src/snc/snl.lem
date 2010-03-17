@@ -7,9 +7,9 @@
 #include "snc_main.h"
 }
 
-%extra_argument { Program **presult }
+%extra_argument { Expr **presult }
 
-%name parser
+%name snlParser
 
 %parse_failure {
 	report("parser giving up\n");
@@ -68,46 +68,44 @@
 // LPAREN RPAREN not listed as we do not support indirect calls. */
 
 program ::=
-	program_name(pn)
+	PROGRAM NAME(n)
 	program_param(pp)
-	definitions(ds)
+	global_defns(ds)
 	global_entry_code(en)
 	state_sets(ss)
 	global_exit_code(ex)
 	c_codes(cc).
 {
-	*presult = program(pn,pp,ds,en,ss,ex,cc);
+	*presult =  expr(D_PROG, n, pp, ds, en, ss, ex, cc);
 }
 
-%type program_name {char*}
-program_name(p) ::= PROGRAM NAME(t).	{ p = t.str; }
-
-%type program_param {char*}
 program_param(p) ::=
-	LPAREN STRCON(t) RPAREN.	{ p = t.str; }
-program_param(p) ::= .			{ p = ""; }
+	LPAREN string(x) RPAREN.	{ p = x; }
+program_param(p) ::= .			{ p = 0; }
 
-definitions(p) ::= definitions(xs) definition(x). {
+// Definitions
+
+global_defns(p) ::= global_defns(xs) global_defn(x). {
 	p = link_expr(xs, x);
 }
-definitions(p) ::= definition(x).	{ p = x; }
+global_defns(p) ::= global_defn(x).	{ p = x; }
 
-definition(p) ::= assign(x).		{ p = x; }
-definition(p) ::= monitor(x).		{ p = x; }
-definition(p) ::= sync(x).		{ p = x; }
-definition(p) ::= syncq(x).		{ p = x; }
-definition(p) ::= decl(x).		{ p = x; }
-definition(p) ::= option(x).		{ p = x; }
-definition(p) ::= c_code(x).		{ p = x; }
+global_defn(p) ::= assign(x).		{ p = x; }
+global_defn(p) ::= monitor(x).		{ p = x; }
+global_defn(p) ::= sync(x).		{ p = x; }
+global_defn(p) ::= syncq(x).		{ p = x; }
+global_defn(p) ::= decl(x).		{ p = x; }
+global_defn(p) ::= option(x).		{ p = x; }
+global_defn(p) ::= c_code(x).		{ p = x; }
 
 assign(p) ::= ASSIGN NAME(v) to string(t) SEMICOLON. {
-	p = expr(E_ASSIGN, v, 0, t);
+	p = expr(D_ASSIGN, v, 0, t);
 }
 assign(p) ::= ASSIGN NAME(v) subscript(s) to string(t) SEMICOLON. {
-	p = expr(E_ASSIGN, v, expr(E_CONST, s, 0, 0), t);
+	p = expr(D_ASSIGN, v, expr(E_CONST, s), t);
 }
 assign(p) ::= ASSIGN NAME(v) to LBRACE strings(ss) RBRACE SEMICOLON. {
-	p = expr(E_ASSIGN, v, 0, ss);
+	p = expr(D_ASSIGN, v, 0, ss);
 }
 
 strings(p) ::= strings(xs) COMMA string(x). {
@@ -118,41 +116,41 @@ strings(p) ::= string(x). {
 }
 
 monitor(p) ::= MONITOR NAME(v) opt_subscript(s) SEMICOLON. {
-	p = expr(E_MONITOR, v, s, 0);
+	p = expr(D_MONITOR, v, s);
 }
 
 sync(p) ::= SYNC NAME(v) opt_subscript(s) to NAME(ev) SEMICOLON. {
-	p = expr(E_SYNC, v, s, expr(E_X, ev, 0, 0));
+	p = expr(D_SYNC, v, s, expr(E_VAR, ev), 0);
 }
 
 syncq(p) ::= SYNCQ NAME(v) opt_subscript(s) to NAME(ev) syncq_size(n) SEMICOLON. {
-	p = expr(E_SYNCQ, v, s, expr(E_X, ev, n, 0));
+	p = expr(D_SYNCQ, v, s, expr(E_VAR, ev), n);
 }
 
-syncq_size(p) ::= INTCON(n).		{ p = expr(E_CONST, n, 0, 0); }
+syncq_size(p) ::= INTCON(n).		{ p = expr(E_CONST, n); }
 syncq_size(p) ::= .			{ p = 0; }
 
 to ::= TO.
 to ::= .
 
-opt_subscript(p) ::= subscript(s).	{ p = expr(E_CONST, s, 0, 0); }
+opt_subscript(p) ::= subscript(s).	{ p = expr(E_CONST, s); }
 opt_subscript(p) ::= .			{ p = 0; }
 
 %type subscript {Token}
 subscript(p) ::= LBRACKET INTCON(n) RBRACKET. { p = n; }
 
 decl(p) ::= type(t) NAME(v) SEMICOLON.
-		{ p = decl(t, VC_SIMPLE,  v, 0,  0,  0); }
+			{ p = decl(t, VC_SIMPLE,  v, 0,  0,  0); }
 decl(p) ::= type(t) NAME(v) EQUAL number(n) SEMICOLON.
-		{ p = decl(t, VC_SIMPLE,  v, 0,  0, n.str); }
+			{ p = decl(t, VC_SIMPLE,  v, 0,  0, n.str); }
 decl(p) ::= type(t) NAME(v) subscript(s) SEMICOLON.
-		{ p = decl(t, VC_ARRAY1,  v, s.str,  0,  0); }
+			{ p = decl(t, VC_ARRAY1,  v, s.str,  0,  0); }
 decl(p) ::= type(t) NAME(v) subscript(s1) subscript(s2) SEMICOLON.
-		{ p = decl(t, VC_ARRAY2,  v, s1.str, s2.str, 0); }
+			{ p = decl(t, VC_ARRAY2,  v, s1.str, s2.str, 0); }
 decl(p) ::= type(t) ASTERISK NAME(v) SEMICOLON.
-		{ p = decl(t, VC_POINTER, v, 0, 0, 0); }
+			{ p = decl(t, VC_POINTER, v, 0, 0, 0); }
 decl(p) ::= type(t) ASTERISK NAME(v) subscript(s) SEMICOLON.
-		{ p = decl(t, VC_ARRAYP,  v, s.str,  0,  0); }
+			{ p = decl(t, VC_ARRAYP,  v, s.str,  0,  0); }
 
 %type number {Token}
 number(p) ::= INTCON(x).			{ p = x; }
@@ -173,120 +171,139 @@ type(p) ::= STRING.				{ p = V_STRING;	}
 type(p) ::= EVFLAG.				{ p = V_EVFLAG;	}
 
 option(p) ::= OPTION option_value(v) NAME(n) SEMICOLON.
-						{ p = expr(E_OPTION, n, v, 0); }
+						{ p = opt_defn(n, v); }
 
-option_value(p) ::= ADD(t).			{ p = expr(E_X, t, 0, 0); }
-option_value(p) ::= SUB(t).			{ p = expr(E_X, t, 0, 0); }
+%type option_value {Token}
+option_value(p) ::= ADD(t).			{ p = t; }
+option_value(p) ::= SUB(t).			{ p = t; }
 
 // State sets and states
 
-global_entry_code(p) ::= ENTRY block(xs).	{ p = xs; }
+global_entry_code(p) ::= ENTRY block(xs).	{ p = xs.right; }
 global_entry_code(p) ::= .			{ p = 0; }
 
-global_exit_code(p) ::= EXIT block(xs).		{ p = xs; }
+global_exit_code(p) ::= EXIT block(xs).		{ p = xs.right; }
 global_exit_code(p) ::= .			{ p = 0; }
 
 state_sets(p) ::= state_sets(xs) state_set(x).	{ p = link_expr(xs, x); }
 state_sets(p) ::= state_set(x).			{ p = x; }
 
-state_set(p) ::= SS NAME(n) LBRACE states(xs) RBRACE. {
-	p = expr(E_SS, n, xs, 0);
+state_set(p) ::= SS NAME(n) LBRACE ss_defns(ds) states(xs) RBRACE.
+						{ p = expr(D_SS, n, ds, xs); }
+
+ss_defns(p) ::= ss_defns(xs) ss_defn(x). {
+	p = link_expr(xs, x);
 }
+ss_defns(p) ::= .				{ p = 0; }
+
+ss_defn(p) ::= assign(x).			{ p = x; }
+ss_defn(p) ::= monitor(x).			{ p = x; }
+ss_defn(p) ::= sync(x).				{ p = x; }
+ss_defn(p) ::= syncq(x).			{ p = x; }
+ss_defn(p) ::= decl(x).				{ p = x; }
 
 states(p) ::= states(xs) state(x).		{ p = link_expr(xs, x); }
 states(p) ::= state(x).				{ p = x; }
 
-state(p) ::= STATE NAME(n) LBRACE state_definitions(ds) state_blocks(xs) RBRACE.
-						{ p = expr(E_STATE, n, xs, ds); }
+state(p) ::=
+	STATE NAME(n) LBRACE state_defns(ds)
+	entry(en) whens(ws) exit(ex) RBRACE.
+{
+	p = expr(D_STATE, n, ds, en, ws, ex);
+}
 
-state_definitions(p) ::= state_definitions(xs) state_definition(x). {
+state_defns(p) ::= state_defns(xs) state_defn(x). {
 	p = link_expr(xs, x);
 }
-state_definitions(p) ::= .			{ p = 0; }
+state_defns(p) ::= .				{ p = 0; }
 
-// state_definition(p) ::= assign(x).		{ p = x; }
-// state_definition(p) ::= monitor(x).		{ p = x; }
-// state_definition(p) ::= sync(x).		{ p = x; }
-// state_definition(p) ::= syncq(x).		{ p = x; }
-// state_definition(p) ::= decl(x).		{ p = x; }
-state_definition(p) ::= option(x).		{ p = x; }
-state_definition(p) ::= c_code(x).		{ p = x; }
+// state_defn(p) ::= assign(x).			{ p = x; }
+// state_defn(p) ::= monitor(x).		{ p = x; }
+// state_defn(p) ::= sync(x).			{ p = x; }
+// state_defn(p) ::= syncq(x).			{ p = x; }
+state_defn(p) ::= decl(x).			{ p = x; }
+state_defn(p) ::= option(x).			{ p = x; }
+// state_defn(p) ::= c_code(x).			{ p = x; }
 
-state_blocks(p) ::= entries(xs) transitions(ts) exits(ys).
-						{ p = link_expr(link_expr(xs, ts), ys); }
+entry(p) ::= ENTRY(t) block(b).			{ p = expr(D_ENTRY, t, b.left, b.right); }
+entry(p) ::= .					{ p = 0; }
 
-entries(p) ::= entries(xs) entry(x).		{ p = link_expr(xs, x); }
-entries(p) ::= .				{ p = 0; }
+exit(p) ::= EXIT(t) block(b).			{ p = expr(D_EXIT, t, b.left, b.right); }
+exit(p) ::= .					{ p = 0; }
 
-entry(p) ::= ENTRY(t) block(xs).		{ p = expr(E_ENTRY, t, 0, xs); }
+whens(p) ::= whens(xs) when(x).			{ p = link_expr(xs, x); }
+whens(p) ::= when(x).				{ p = x; }
 
-exits(p) ::= exits(xs) exit(x).			{ p = link_expr(xs, x); }
-exits(p) ::= .					{ p = 0; }
+when(p) ::= WHEN(t) LPAREN opt_expr(c) RPAREN block(b) STATE NAME(n). {
+	t.str = n.str;
+	p = expr(D_WHEN, t, c, b.left, b.right);
+}
 
-exit(p) ::= EXIT(t) block(xs).			{ p = expr(E_EXIT, t, 0, xs); }
+%type block {ExprPair}
+block(p) ::= LBRACE block_defns(ds) statements(xs) RBRACE. {
+	p = (ExprPair){ds,xs};
+}
 
-transitions(p) ::= transitions(xs) transition(x). { p = link_expr(xs, x); }
-transitions(p) ::= transition(x).		{ p = x; }
+block_defns(p) ::= block_defns(ds) block_defn(d). {
+	p = link_expr(ds, d);
+}
+block_defns(p) ::= .				{ p = 0; }
 
-transition(p) ::= WHEN LPAREN opt_expr(c) RPAREN block(xs) STATE NAME(n).
-						{ p = expr(E_WHEN, n, c, xs); }
-
-block(p) ::= LBRACE statements(xs) RBRACE.	{ p = xs; }
+block_defn(p) ::= decl(x).			{ p = x; }
+block_defn(p) ::= c_code(x).			{ p = x; }
 
 // Statements
 
 statements(p) ::= statements(xs) statement(x).	{ p = link_expr(xs, x); }
 statements(p) ::= .				{ p = 0; }
 
-statement(p) ::= BREAK(t) SEMICOLON.		{ p = expr(E_BREAK, t, 0, 0); }
+statement(p) ::= BREAK(t) SEMICOLON.		{ p = expr(S_BREAK, t); }
 statement(p) ::= c_code(x).			{ p = x; }
-statement(p) ::= LBRACE(t) statements(xs) RBRACE. { p = expr(E_CMPND, t, xs, 0); }
-statement(p) ::= IF(t) LPAREN expr(c) RPAREN statement(x).
-						{ p = expr(E_IF, t, c, x); }
-statement(p) ::= ELSE(t) statement(x).		{ p = expr(E_ELSE, t, x, 0); }
+statement(p) ::= LBRACE(t) block_defns(ds) statements(xs) RBRACE.
+						{ p = expr(S_CMPND, t, ds, xs); }
+statement(p) ::= IF(t) LPAREN expr(c) RPAREN statement(th).
+						{ p = expr(S_IF, t, c, th, 0); }
+statement(p) ::= IF(t) LPAREN expr(c) RPAREN statement(th) ELSE statement(el).
+						{ p = expr(S_IF, t, c, th, el); }
 statement(p) ::= WHILE(t) LPAREN expr(c) RPAREN statement(x).
-						{ p = expr(E_WHILE, t, c, x); }
+						{ p = expr(S_WHILE, t, c, x); }
 statement(p) ::= for_statement(x).		{ p = x; }
-statement(p) ::= opt_expr(x) SEMICOLON(t).	{ p = expr(E_STMT, t, x, 0); }
+statement(p) ::= opt_expr(x) SEMICOLON(t).	{ p = expr(S_STMT, t, x); }
 
 for_statement(p) ::=
 	FOR(for) LPAREN
-		exprs(init) SEMICOLON(sem1) opt_expr(cond) SEMICOLON(sem2) exprs(iter)
-	RPAREN statement(x).			{ p = expr(E_FOR, for,
-							expr(E_X, sem1, init, cond),
-							expr(E_X, sem2, iter, x));
-						}
+	exprs(init) SEMICOLON opt_expr(cond) SEMICOLON exprs(iter)
+	RPAREN statement(st).		{ p = expr(S_FOR, for, init, cond, iter, st); }
 
 // Expressions
 
 // Atomic
-expr(p) ::= number(x).				{ p = expr(E_CONST, x, 0, 0); }
+expr(p) ::= number(x).				{ p = expr(E_CONST, x); }
 expr(p) ::= string(x).				{ p = x; }
-expr(p) ::= NAME(v).				{ p = expr(E_VAR, v, 0, 0); }
+expr(p) ::= NAME(v).				{ p = expr(E_VAR, v); }
 
 // Parenthesized
-expr(p) ::= LPAREN(t) expr(x) RPAREN.		{ p = expr(E_PAREN, t, x, 0); }
+expr(p) ::= LPAREN(t) expr(x) RPAREN.		{ p = expr(E_PAREN, t, x); }
 
 // Primary Expression and Unary Postfix Operators
-expr(p) ::= NAME(t) LPAREN exprs(xs) RPAREN. [POST]
-						{ p = expr(E_FUNC, t, xs, 0); }
-expr(p) ::= EXIT(t) LPAREN exprs(xs) RPAREN. [POST] { p = expr(E_FUNC, t, xs, 0); }
-expr(p) ::= expr(x) LBRACKET(t) expr(y) RBRACKET. [POST]
-						{ p = expr(E_SUBSCR, t, x, y); }
-expr(p) ::= expr(x) PERIOD(t)  expr(y).	[POST]	{ p = expr(E_BINOP,  t, x, y); }
-expr(p) ::= expr(x) POINTER(t) expr(y).	[POST]	{ p = expr(E_BINOP,  t, x, y); }
-expr(p) ::= expr(x) INCR(t).		[POST]	{ p = expr(E_POST,   t, x, 0); }
-expr(p) ::= expr(x) DECR(t).		[POST]	{ p = expr(E_POST,   t, x, 0); }
+expr(p) ::= NAME(t) LPAREN exprs(xs) RPAREN.	 [POST] { p = expr(E_FUNC,   t, xs); }
+expr(p) ::= EXIT(t) LPAREN exprs(xs) RPAREN.	 [POST] { p = expr(E_FUNC,   t, xs); }
+expr(p) ::= DELAY(t) LPAREN exprs(xs) RPAREN.	 [POST] { p = expr(E_DELAY,  t, xs); }
+expr(p) ::= expr(x) LBRACKET(t) expr(y) RBRACKET.[POST] { p = expr(E_SUBSCR, t, x, y); }
+expr(p) ::= expr(x) PERIOD(t)  expr(y).		 [POST] { p = expr(E_BINOP,  t, x, y); }
+expr(p) ::= expr(x) POINTER(t) expr(y).		 [POST] { p = expr(E_BINOP,  t, x, y); }
+expr(p) ::= expr(x) INCR(t).			 [POST] { p = expr(E_POST,   t, x); }
+expr(p) ::= expr(x) DECR(t).			 [POST] { p = expr(E_POST,   t, x); }
 
 // Unary Prefix Operators
-expr(p) ::= ADD(t)	expr(x). [PRE]		{ p = expr(E_PRE, t, x, 0); }
-expr(p) ::= SUB(t)	expr(x). [PRE]		{ p = expr(E_PRE, t, x, 0); }
-expr(p) ::= ASTERISK(t)	expr(x). [PRE]		{ p = expr(E_PRE, t, x, 0); }
-expr(p) ::= AMPERSAND(t)expr(x). [PRE]		{ p = expr(E_PRE, t, x, 0); }
-expr(p) ::= NOT(t)	expr(x). [PRE]		{ p = expr(E_PRE, t, x, 0); }
-expr(p) ::= TILDE(t)	expr(x). [PRE]		{ p = expr(E_PRE, t, x, 0); }
-expr(p) ::= INCR(t)	expr(x). [PRE]		{ p = expr(E_PRE, t, x, 0); }
-expr(p) ::= DECR(t)	expr(x). [PRE]		{ p = expr(E_PRE, t, x, 0); }
+expr(p) ::= ADD(t)	expr(x). [PRE]		{ p = expr(E_PRE, t, x); }
+expr(p) ::= SUB(t)	expr(x). [PRE]		{ p = expr(E_PRE, t, x); }
+expr(p) ::= ASTERISK(t)	expr(x). [PRE]		{ p = expr(E_PRE, t, x); }
+expr(p) ::= AMPERSAND(t)expr(x). [PRE]		{ p = expr(E_PRE, t, x); }
+expr(p) ::= NOT(t)	expr(x). [PRE]		{ p = expr(E_PRE, t, x); }
+expr(p) ::= TILDE(t)	expr(x). [PRE]		{ p = expr(E_PRE, t, x); }
+expr(p) ::= INCR(t)	expr(x). [PRE]		{ p = expr(E_PRE, t, x); }
+expr(p) ::= DECR(t)	expr(x). [PRE]		{ p = expr(E_PRE, t, x); }
 
 // Binary Operators, left-to-right
 expr(p) ::= expr(x) SUB(t)	expr(y).	{ p = expr(E_BINOP, t, x, y); }
@@ -309,9 +326,8 @@ expr(p) ::= expr(x) AMPERSAND(t) expr(y).	{ p = expr(E_BINOP, t, x, y); }
 expr(p) ::= expr(x) MOD(t)	expr(y).	{ p = expr(E_BINOP, t, x, y); }
 
 // Ternary Operator, right-to-left
-expr(p) ::= expr(x) QUESTION(t1) expr(y) COLON(t2) expr(z). {
-	p = expr(E_TERNOP, t1, x, expr(E_X, t2, y, z));
-}
+expr(p) ::= expr(c) QUESTION(t) expr(th) COLON expr(el).
+						{ p = expr(E_TERNOP, t, c, th, el); }
 
 // Assignment Operators, right-to-left
 expr(p) ::= expr(x) EQUAL(t)	expr(y).	{ p = expr(E_BINOP, t, x, y); }
@@ -336,11 +352,11 @@ exprs(p) ::= exprs(xs) COMMA expr(x).		{ p = link_expr(xs, x); }
 exprs(p) ::= expr(x).				{ p = x; }
 exprs(p) ::= .					{ p = 0; }
 
-string(p) ::= STRCON(t).			{ p = expr(E_STRING, t, 0, 0); }
+string(p) ::= STRCON(t).			{ p = expr(E_STRING, t); }
 
 // Literal (C) code
 
 c_codes(p) ::= c_codes(xs) c_code(x).		{ p = link_expr(xs, x); }
 c_codes(p) ::= .				{ p = 0; }
 
-c_code(p) ::= CCODE(t). 			{ p = expr(E_TEXT, t, 0, 0); }
+c_code(p) ::= CCODE(t). 			{ p = expr(T_TEXT, t); }

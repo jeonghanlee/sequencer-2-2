@@ -2,6 +2,7 @@
 #include <gpHash.h>
 #include <assert.h>
 
+#include "types.h"
 #include "sym_table.h"
 
 /* Invariant: all values stored in the table are non-zero. */
@@ -13,7 +14,7 @@ SymTable sym_table_create(void)
 	return st;
 }
 
-void *sym_table_lookup(const SymTable st, const char *name, const void *type)
+void *sym_table_lookup(const SymTable st, const char *name, void *type)
 {
 	GPHENTRY *pentry;
 
@@ -30,7 +31,7 @@ void *sym_table_lookup(const SymTable st, const char *name, const void *type)
 	}
 }
 
-void *sym_table_insert(SymTable st, const char *name, const void *type, void *value)
+void *sym_table_insert(SymTable st, const char *name, void *type, void *value)
 {
 	GPHENTRY *pentry;
 

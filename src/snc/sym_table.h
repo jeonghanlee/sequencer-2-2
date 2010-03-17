@@ -18,18 +18,15 @@ SymTable sym_table_create(void);
 
 /* Lookup a symbol: given a symbol table, a name and a type,
    return the value or 0 if not found. */
-void *sym_table_lookup(const SymTable st, const char *name, const void *type);
+void *sym_table_lookup(const SymTable st, const char *name, void *type);
 
 /* Insert a symbol.
 
    If the value is non-zero, try to insert it into the table under the
-   given (name,type) key. This may fail because there is already another
-   value associated with this key. If the value is zero, do nothing.
+   given (name,type) key, otherwise do nothing.
 
-   In any case, return the value associated with the given key after
-   this operation. To check for success, compare the value to be
-   inserted with the result. */
-void *sym_table_insert(SymTable st, const char *name, const void *type, void *value);
+   Return the value if successfully inserted, otherwise return zero. */
+void *sym_table_insert(SymTable st, const char *name, void *type, void *value);
 
 /* Free all memory associated with a table. */
 void sym_table_destroy(SymTable st);

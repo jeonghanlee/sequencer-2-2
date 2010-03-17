@@ -7,4 +7,4 @@ $version = $ARGV[0];
 $now = localtime;
 print "/* sncVersion.c - version & date */\n";
 print "/* Created by sncVersion.pl */\n";
-print "char *sncVersion = \"SNC Version ${version}: ${now}\";\n";
+print "static char *snc_version = \"SNC Version ${version}, compiled ${now}\";\n";
