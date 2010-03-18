@@ -11,13 +11,14 @@ option +r;
  *   iii. Re-entrant code, variable d is assigned properly in entry{}.
  */
 
-float d; /* Delay variable for managing low state*/
-float v; /* Iteration Counter for managing high state*/
-
 ss ss1
 {
+
 	state low
 	{
+
+		float d; /* Delay variable for managing low state*/
+
   	    option -t; /* -t Don't reset timers on re-entry to state */
 	    entry 
 	    { 
@@ -43,6 +44,9 @@ ss ss1
 
 	state high
 	{
+
+		float v; /* Iteration Counter for managing high state*/
+
 	    entry { 
                  printf("\nEntered high\n");
                  v = 3.0;

@@ -35,18 +35,6 @@ program demo( PVSYS ",debug=1" )
 /* options */
 option  +r;
 
-/* control variables and transition points for light control */
-long    light;
-assign  light    to LIGHT;
-
-double  lightOn;
-assign  lightOn  to LIGHTON;
-monitor lightOn;
-
-double  lightOff;
-assign  lightOff to LIGHTOFF;
-monitor lightOff;
-
 /* control variables and limits for voltage control */
 double	voltage;
 assign  voltage  to VOLTAGE;
@@ -90,7 +78,19 @@ entry {
 
 /* light control state-set */
 ss light {
+
+    /* control variables and transition points for light control */
+    long    light;
+    assign  light    to LIGHT;
+
+    string  sstate;
+    assign  sstate to "demo:STATE";
+
     state START {
+        entry {
+            sstate = "START";
+            pvPut(sstate);
+        }
 	when () {
 	    light = 0;
 	    pvPut( light );
@@ -98,6 +98,11 @@ ss light {
     }
 
     state LIGHT_OFF {
+
+        double  lightOn;
+        assign  lightOn  to LIGHTON;
+        monitor lightOn;
+
 	when ( voltage > lightOn ) {
 	    light = 1;
 	    pvPut( light );
@@ -106,6 +111,11 @@ ss light {
     }
 
     state LIGHT_ON {
+
+        double  lightOff;
+        assign  lightOff to LIGHTOFF;
+        monitor lightOff;
+
 	when ( voltage < lightOff ) {
 	    light = 0;
 	    pvPut( light );
