@@ -143,7 +143,7 @@ char *strdupft(uchar *start, uchar *stop) {
 
 static int scan(Scanner *s, Token *t) {
 	uchar *cursor = s->cur;
-	uchar *str_end = 0;
+	uchar *end;
 
 snl:
 	t->line = s->line;
@@ -157,7 +157,7 @@ snl:
 				goto snl;
 			}
 	["]		{
-				s->tok = cursor;
+				s->tok = end = cursor;
 				goto string_const;
 			}
 	"/*"		{ goto comment; }
@@ -169,9 +169,9 @@ snl:
 				s->tok = cursor;
 				goto c_code;
 			}
-	("%%" .*)	{
-				s->tok += 2;
-				RET(CCODE, strdupft(s->tok, cursor));
+	"%%" SPC*	{
+				s->tok = end = cursor;
+				goto c_code_line;
 			}
 	"assign"	{ RET(ASSIGN,	"assign"); }
 	"break"		{ RET(BREAK,	"break"); }
@@ -267,7 +267,7 @@ string_const:
 	(ESC | [^"\n\\])*
 			{ goto string_const; }
 	["]		{
-				str_end = cursor - 1;
+				end = cursor - 1;
 				goto string_cat;
 			}
 	ANY		{ scan_report(s, "invalid character in string constant\n"); RET(EOI,0); }
@@ -279,20 +279,20 @@ string_cat:
 	"\n"		{
 				if (cursor == s->eof) {
 					cursor -= 1;
-					RET(STRCON, strdupft(s->tok, str_end));
+					RET(STRCON, strdupft(s->tok, end));
 				}
 				s->line++;
 				goto string_cat;
 			}
 	["]		{
-				uint len = str_end - s->tok;
+				uint len = end - s->tok;
 				memmove(cursor - len, s->tok, len);
 				s->tok = cursor - len;
 				goto string_const;
 			}
 	ANY		{
 				cursor -= 1;
-				RET(STRCON, strdupft(s->tok, str_end));
+				RET(STRCON, strdupft(s->tok, end));
 			}
 */
 
@@ -364,6 +364,23 @@ c_code:
 				}
 				s->line++;
 				goto c_code;
+			}
+*/
+
+c_code_line:
+/*!re2c
+	.		{
+				end = cursor;
+				goto c_code_line;
+			}
+	SPC* "\n"	{
+				if (cursor == s->eof) {
+					cursor -= 1;
+				}
+				if (end > s->tok) {
+					RET(CCODE, strdupft(s->tok, end));
+				}
+				goto snl;
 			}
 */
 }
