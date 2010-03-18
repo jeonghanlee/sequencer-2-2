@@ -678,7 +678,7 @@ static void gen_ef_func(
 	}
 	if (vp == 0 || vp->type != V_EVFLAG)
 	{
-		error_at_expr(ep, "argument to »%s« must be an event flag\n", fname);
+		error_at_expr(ep, "argument to '%s' must be an event flag\n", fname);
 	}
 	if ((func_code == F_EFSET || func_code == F_EFCLEAR) && stmt_type == EVENT_STMT)
 	{
@@ -716,7 +716,7 @@ static void gen_pv_func(
 	if (ap == 0)
 	{
 		error_at_expr(ep,
-			"function »%s« requires a parameter\n", fname);
+			"function '%s' requires a parameter\n", fname);
 		return;
 	}
 
@@ -741,7 +741,7 @@ static void gen_pv_func(
 	if (vp == 0)
 	{
 		error_at_expr(ep,
-			"parameter to »%s« is not a declared variable\n", fname);
+			"parameter to '%s' is not a declared variable\n", fname);
 		cp = 0;
 	}
 	else
@@ -754,7 +754,7 @@ static void gen_pv_func(
 		if (cp == 0)
 		{
 			error_at_expr(ep,
-				"parameter to »%s« was not assigned to a pv\n", fname);
+				"parameter to '%s' was not assigned to a pv\n", fname);
 		}
 		else
 		{
