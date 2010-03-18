@@ -26,8 +26,6 @@
 31mar00,wfl	Supported entry handler.
 ***************************************************************************/
 
-#define	DEBUG	1
-
 #include	<stdio.h>
 #include	<stdlib.h>
 #include	<string.h>
@@ -37,6 +35,8 @@
 #include	"analysis.h"
 #include	"snc_main.h"
 #include	"sym_table.h"
+
+/* #define	DEBUG */
 
 typedef struct event_mask_args {
 	bitMask	*event_words;

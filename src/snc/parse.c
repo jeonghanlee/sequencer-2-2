@@ -37,6 +37,8 @@
 #include	"parse.h"
 #include	"snc_main.h"
 
+/* #define DEBUG */
+
 /* Parsing a variable declaration */
 Expr *decl(
 	int	type,		/* variable type (e.g. V_FLOAT) */

@@ -37,7 +37,7 @@
 #include	"snc_main.h"
 #include	"sym_table.h"
 
-#define DEBUG
+/* #define DEBUG */
 
 static const int impossible = 0;
 
@@ -357,7 +357,7 @@ static void gen_event_body(Expr *xp, int level)
 	indent(level); printf("return FALSE;\n");
 }
 
-void gen_var_access(Expr *ep)
+static void gen_var_access(Var *vp)
 {
 	Var *vp = ep->extra.e_var;
 	char *pVar_arr = global_opt_reent ? "pVar->" : "";
@@ -480,10 +480,6 @@ static void gen_expr(
 		indent(level);
 		printf("%s;\n", ep->value);
 		break;
-	case T_TEXT:
-		indent(level);
-		printf("%s\n", ep->value);
-		break;
 	/* Expressions */
 	case E_VAR:
 		gen_var_access(ep);
@@ -549,6 +545,11 @@ static void gen_expr(
 		printf("[");
 		gen_expr(stmt_type, ep->subscr_index, 0);
 		printf("]");
+		break;
+	/* C-code can be either definition, statement, or expression */
+	case T_TEXT:
+		indent(level);
+		printf("%s\n", ep->value);
 		break;
 #if 0
 	default:

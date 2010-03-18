@@ -301,7 +301,7 @@ static void analyse_assignment(SymTable st, ChanList *chan_list, Expr *scope, Ex
 }
 
 /* "Assign" statement: Assign a variable to a DB channel.
- * Format: assign <variable> to <string;
+ * Format: assign <variable> to <string>;
  * Note: Variable may be subscripted.
  */
 static void assign_single(

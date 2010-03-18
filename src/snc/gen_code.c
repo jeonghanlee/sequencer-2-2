@@ -41,7 +41,7 @@
 #include	"snc_main.h"
 #include	"gen_code.h"
 
-#define	DEBUG
+/* #define	DEBUG */
 
 static const int impossible = 0;
 
@@ -102,7 +102,8 @@ static void gen_preamble(char *prog_name, Options options,
 	/* Program name (comment) */
 	printf("\n/* Program \"%s\" */\n", prog_name);
 
-	/* Include files */
+	/* Includes */
+	printf("#include <string.h>\n");
 	printf("#include \"seqCom.h\"\n");
 
 	/* Local definitions */
@@ -125,29 +126,28 @@ static void gen_preamble(char *prog_name, Options options,
 
         /* Main program (if "main" option set) */
 	if (options.main) {
-	    printf("\n/* Main program */\n");
-	    printf("#include <string.h>\n");
-	    printf("#include \"epicsThread.h\"\n");
-	    printf("#include \"iocsh.h\"\n");
-	    printf("\n");
-	    printf("int main(int argc,char *argv[]) {\n");
-            printf("    char * macro_def;\n");
-            printf("    epicsThreadId threadId;\n");
-            printf("    int callIocsh = 0;\n");
-            printf("    if(argc>1 && strcmp(argv[1],\"-s\")==0) {\n");
-            printf("        callIocsh=1;\n");
-            printf("        --argc; ++argv;\n");
-            printf("    }\n");
-	    printf("    macro_def = (argc>1)?argv[1]:NULL;\n");
-	    printf("    threadId = seq((void *)&%s, macro_def, 0);\n", prog_name);
-            printf("    if(callIocsh) {\n");
-            printf("        seqRegisterSequencerCommands();\n");
-            printf("        iocsh(0);\n");
-            printf("    } else {\n");
-            printf("        epicsThreadExitMain();\n");
-            printf("    }\n");
-            printf("    return(0);\n");
-	    printf("}\n");
+		printf("\n/* Main program */\n");
+		printf("#include \"epicsThread.h\"\n");
+		printf("#include \"iocsh.h\"\n");
+		printf("\n");
+		printf("int main(int argc,char *argv[]) {\n");
+		printf("    char * macro_def;\n");
+		printf("    epicsThreadId threadId;\n");
+		printf("    int callIocsh = 0;\n");
+		printf("    if(argc>1 && strcmp(argv[1],\"-s\")==0) {\n");
+		printf("        callIocsh=1;\n");
+		printf("        --argc; ++argv;\n");
+		printf("    }\n");
+		printf("    macro_def = (argc>1)?argv[1]:NULL;\n");
+		printf("    threadId = seq((void *)&%s, macro_def, 0);\n", prog_name);
+		printf("    if(callIocsh) {\n");
+		printf("        seqRegisterSequencerCommands();\n");
+		printf("        iocsh(0);\n");
+		printf("    } else {\n");
+		printf("        epicsThreadExitMain();\n");
+		printf("    }\n");
+		printf("    return(0);\n");
+		printf("}\n");
 	}
 }
 
