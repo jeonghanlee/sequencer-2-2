@@ -1,5 +1,4 @@
 TOP = ../..
-
 include $(TOP)/configure/CONFIG
 #----------------------------------------
 #  ADD MACRO DEFINITIONS AFTER THIS LINE
@@ -9,9 +8,6 @@ include $(TOP)/configure/CONFIG
 
 #  snc product
 PROD_HOST += snc
-
-# parser generator tool 
-PROD_HOST += lemon
 
 snc_LIBS += $(EPICS_BASE_IOC_LIBS)
 
@@ -36,8 +32,6 @@ PROD_HOST =
 TESTPROD_HOST = lexer
 USR_CFLAGS = -DTEST_LEXER
 endif
-
-lemon_SRCS = lemon.c		# parser generator
 
 LEMON = $(INSTALL_BIN)/lemon
 
