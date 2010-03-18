@@ -40,6 +40,8 @@ static Options options = DEFAULT_OPTIONS;
 static char *in_file;	/* input file name */
 static char *out_file;	/* output file name */
 
+static int err_cnt;
+
 static void parse_args(int argc, char *argv[]);
 static void parse_option(char *s);
 static void print_usage(void);
@@ -80,15 +82,11 @@ int main(int argc, char *argv[])
 
 	exp = parse_program(in_file);
 
-#if 0
-	/* HACK *** TEMPORARY *** HACK */
-	options.line = FALSE;
-#endif
-
         prg = analyse_program(exp, options);
+
 	generate_code(prg);
 
-	exit(0);
+	exit(err_cnt?1:0);
 }
 
 /* Initialize options, in_file, and out_file from arguments. */
@@ -246,6 +244,19 @@ void report_at_expr(Expr *ep, const char *format, ...)
 	va_list args;
 
 	report_loc(ep->src_file, ep->line_num);
+
+	va_start(args, format);
+	vfprintf(stderr, format, args);
+	va_end(args);
+}
+
+void error_at_expr(Expr *ep, const char *format, ...)
+{
+	va_list args;
+
+	err_cnt++;
+	report_loc(ep->src_file, ep->line_num);
+	fprintf(stderr, "error: ");
 
 	va_start(args, format);
 	vfprintf(stderr, format, args);

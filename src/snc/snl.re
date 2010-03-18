@@ -176,6 +176,7 @@ snl:
 	"assign"	{ RET(ASSIGN,	"assign"); }
 	"break"		{ RET(BREAK,	"break"); }
 	"char"		{ RET(CHAR,	"char"); }
+	"continue"	{ RET(CONTINUE,	"continue"); }
 	"delay"		{ RET(DELAY,	"delay"); }
 	"double"	{ RET(DOUBLE,	"double"); }
 	"else"		{ RET(ELSE,	"else"); }

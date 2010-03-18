@@ -7,7 +7,7 @@
 #include "snc_main.h"
 #include "analysis.h"
 
-#define DEBUG
+/* #define DEBUG */
 
 typedef struct connect_var_arg {
 	SymTable st;
@@ -30,9 +30,6 @@ static void assign_list(ChanList *chan_list, Expr *dp, Var *vp, Expr *db_name_li
 static Chan *new_channel(ChanList *chan_list, Var *vp);
 static void alloc_channel_lists(Chan *cp, int length);
 static void connect_variables(SymTable st, Expr *scope, int opt_warn);
-#if 0
-, Expr *expr_list);
-#endif
 static int connect_states(SymTable st, Expr *ss_list);
 static void connect_variable(Expr *ep, Expr *scope, void *parg);
 static int db_chan_count(ChanList *chan_list);
@@ -77,15 +74,9 @@ Program *analyse_program(Expr *prog, Options options)
 	p->num_ss = connect_states(p->sym_table, prog);
 
 	connect_variables(p->sym_table, prog, options.warn);
-#if 0
-	, prog->prog_entry);
-	connect_variables(p->sym_table, prog, options.warn, prog->prog_statesets);
-	connect_variables(p->sym_table, prog, options.warn, prog->prog_exit);
-#endif
+
 	return p;
 }
-
-typedef void ScopeIter(Program *p, Expr *scope, Expr *defn_list, VarList *var_list);
 
 void analyse_defn(Expr *scope, Expr *parent_scope, void *parg)
 {
@@ -95,7 +86,7 @@ void analyse_defn(Expr *scope, Expr *parent_scope, void *parg)
 
 #ifdef	DEBUG
 	report("analyse_defn: scope=(%s:%s)\n",
-		expr_type_info[scope->type].name, scope->value);
+		expr_type_name(scope), scope->value);
 #endif	/*DEBUG*/
 
 	assert(is_scope(scope));
@@ -124,7 +115,9 @@ void analyse_defn(Expr *scope, Expr *parent_scope, void *parg)
 			if (scope->type == D_PROG)
 				analyse_option(&p->options, defn);
 			else if (scope->type == D_STATE)
+			{
 				analyse_state_option(&scope->extra.e_state->options, defn);
+			}
 			break;
 		case D_DECL:
 			analyse_declaration(p->sym_table, scope, defn);
@@ -151,9 +144,6 @@ void analyse_defn(Expr *scope, Expr *parent_scope, void *parg)
 
 VarList **pvar_list_from_scope(Expr *scope)
 {
-#if 0
-	report("pvar_list_from_scope(%s:%s)\n", expr_type_info[scope->type].name, scope->value);
-#endif
 	assert(is_scope(scope));
 	switch(scope->type)
 	{
@@ -226,17 +216,17 @@ static void analyse_option(Options *options, Expr *defn)
 	{
 		switch(*optname)
 		{
-		    case 'a': options->async = optval; break;
-		    case 'c': options->conn = optval; break;
-		    case 'd': options->debug = optval; break;
-		    case 'e': options->newef = optval; break;
-		    case 'i': options->init_reg = optval; break;
-		    case 'l': options->line = optval; break;
-		    case 'm': options->main = optval; break;
-		    case 'r': options->reent = optval; break;
-		    case 'w': options->warn = optval; break;
-		    default:
-			report_at_expr(defn, "warning: unknown option %s\n", optname);
+		case 'a': options->async = optval; break;
+		case 'c': options->conn = optval; break;
+		case 'd': options->debug = optval; break;
+		case 'e': options->newef = optval; break;
+		case 'i': options->init_reg = optval; break;
+		case 'l': options->line = optval; break;
+		case 'm': options->main = optval; break;
+		case 'r': options->reent = optval; break;
+		case 'w': options->warn = optval; break;
+		default: report_at_expr(defn,
+		  "warning: unknown option »%s«\n", optname);
 		}
 	}
 }
@@ -244,17 +234,19 @@ static void analyse_option(Options *options, Expr *defn)
 /* Options in state declarations. Note: latest given value for option wins. */
 static void analyse_state_option(StateOptions *options, Expr *defn)
 {
-	char		*optname = defn->value;
-	int		optval = defn->extra.e_option;
+	char	*optname = defn->value;
+	int	optval = defn->extra.e_option;
 
 	for (; *optname; optname++)
-	switch(*optname)
 	{
-	    case 't': options->do_reset_timers = optval; break;
-	    case 'e': options->no_entry_from_self = optval; break;
-	    case 'x': options->no_exit_from_self = optval; break;
-	    default:
-		report_at_expr(defn, "warning: unknown state option %s\n", optname);
+		switch(*optname)
+		{
+		case 't': options->do_reset_timers = optval; break;
+		case 'e': options->no_entry_from_self = optval; break;
+		case 'x': options->no_exit_to_self = optval; break;
+		default: report_at_expr(defn,
+		  "warning: unknown state option »%s«\n", optname);
+		}
 	}
 }
 
@@ -274,8 +266,8 @@ static void analyse_declaration(SymTable st, Expr *scope, Expr *defn)
 	if (!sym_table_insert(st, vp->name, var_list, vp))
 	{
 		Var *vp2 = sym_table_lookup(st, vp->name, var_list);
-		report_at_expr(defn,
-			"error: variable %s already declared at %s:%d\n",
+		error_at_expr(defn,
+			"variable »%s« already declared at %s:%d\n",
 			vp->name, vp2->decl->line_num);
 	}
 	else
@@ -291,7 +283,7 @@ static void analyse_assignment(SymTable st, ChanList *chan_list, Expr *scope, Ex
 
 	if (vp == 0)
 	{
-		report_at_expr(defn, "assign: variable %s not declared\n", name);
+		error_at_expr(defn, "assign: variable »%s« not declared\n", name);
 		return;
 	}
 	if (defn->assign_subscr != 0)
@@ -323,13 +315,13 @@ static void assign_single(
 	char		*name = vp->name;
 
 #ifdef	DEBUG
-	report("assign %s to '%s';\n", name, db_name);
+	report("assign %s to %s;\n", name, db_name);
 #endif	/*DEBUG*/
 
 	cp = vp->chan;
 	if (cp != 0)
 	{
-		report_at_expr(dp, "assign: %s already assigned\n", name);
+		error_at_expr(dp, "variable »%s« already assigned\n", name);
 		return;
 	}
 
@@ -357,12 +349,12 @@ static void assign_subscript(
 	int		subNum;
 
 #ifdef	DEBUG
-	report("assign %s[%s] to '%s';\n", name, subscript, db_name);
+	report("assign %s[%s] to »%s«;\n", name, subscript, db_name);
 #endif	/*DEBUG*/
 
 	if (vp->class != VC_ARRAY1 && vp->class != VC_ARRAY2)
 	{
-		report_at_expr(dp, "assign: variable %s not an array\n", name);
+		error_at_expr(dp, "assign: variable »%s« not an array\n", name);
 		return;
 	}
 
@@ -373,14 +365,14 @@ static void assign_subscript(
 	}
 	else if (cp->db_name != 0)
 	{
-		report_at_expr(dp, "assign: array %s already assigned\n", name);
+		error_at_expr(dp, "assign: array »%s« already assigned\n", name);
 		return;
 	}
 
 	subNum = atoi(subscript);
 	if (subNum < 0 || subNum >= vp->length1)
 	{
-		report_at_expr(dp, "assign: subscript %s[%d] is out of range\n",
+		error_at_expr(dp, "assign: subscript »%s[%d]« is out of range\n",
 			name, subNum);
 		return;
 	}
@@ -389,7 +381,7 @@ static void assign_subscript(
 		alloc_channel_lists(cp, vp->length1); /* allocate lists */
 	else if (cp->db_name_list[subNum] != 0)
 	{
-		report_at_expr(dp, "assign: %s[%d] already assigned\n",
+		error_at_expr(dp, "assign: »%s[%d]« already assigned\n",
 			name, subNum);
 		return;
 	}
@@ -423,14 +415,14 @@ static void assign_list(
 
 	if (vp->class != VC_ARRAY1 && vp->class != VC_ARRAY2)
 	{
-		report_at_expr(dp, "assign: variable %s is not an array\n", name);
+		error_at_expr(dp, "assign: variable »%s« is not an array\n", name);
 		return;
 	}
 
 	cp = vp->chan;
 	if (cp != 0)
 	{
-		report_at_expr(dp, "assign: variable %s already assigned\n", name);
+		error_at_expr(dp, "assign: variable »%s« already assigned\n", name);
 		return;
 	}
 
@@ -446,9 +438,9 @@ static void assign_list(
 			break; /* end of list */
 
 #ifdef	DEBUG
-		report("'%s', ", db_name_list->value);
+		report("»%s«, ", db_name_list->value);
 #endif	/*DEBUG*/
-		cp->db_name_list[elem_num] = db_name_list->value; /* DB name */
+		cp->db_name_list[elem_num] = db_name_list->value;
 		cp->count = vp->length2;
  
 		db_name_list = db_name_list->next;
@@ -474,8 +466,8 @@ static void analyse_monitor(SymTable st, Expr *scope, Expr *defn)
 
 	if (vp == 0)
 	{
-		report_at_expr(defn,
-			"monitor: variable %s not declared\n", name);
+		error_at_expr(defn,
+			"monitor: variable »%s« not declared\n", name);
 		return;
 	}
 
@@ -483,7 +475,7 @@ static void analyse_monitor(SymTable st, Expr *scope, Expr *defn)
 	cp = vp->chan;
 	if (cp == 0)
 	{
-		report_at_expr(defn, "monitor: variable %s not assigned\n", name);
+		error_at_expr(defn, "monitor: variable »%s« not assigned\n", name);
 		return;
 	}
 	if (e_subscr == 0)
@@ -502,12 +494,12 @@ static void analyse_monitor(SymTable st, Expr *scope, Expr *defn)
 	}
 	if (subNum < 0 || subNum >= cp->num_elem)
 	{
-		report_at_expr(defn, "monitor: subscript of %s out of range\n", name);
+		error_at_expr(defn, "monitor: subscript of »%s« out of range\n", name);
 		return;
 	}
 	if (cp->num_elem == 0 || cp->db_name_list[subNum] == 0)
 	{
-		report_at_expr(defn, "monitor: %s[%d] not assigned\n",
+		error_at_expr(defn, "monitor: »%s[%d]« not assigned\n",
 		 name, subNum);
 		return;
 	}
@@ -527,14 +519,14 @@ static void analyse_sync(SymTable st, Expr *scope, Expr *defn, int *num_queues)
 	vp = find_var(st, name, scope);
 	if (vp == 0)
 	{
-		report_at_expr(defn, "sync: variable %s not declared\n", name);
+		error_at_expr(defn, "sync: variable »%s« not declared\n", name);
 		return;
 	}
 
 	cp = vp->chan;
 	if (cp == 0)
 	{
-		report_at_expr(defn, "sync: variable %s not assigned\n", name);
+		error_at_expr(defn, "sync: variable »%s« not assigned\n", name);
 		return;
 	}
 
@@ -542,7 +534,7 @@ static void analyse_sync(SymTable st, Expr *scope, Expr *defn, int *num_queues)
 	vp = find_var(st, ef_name, scope);
 	if (vp == 0 || vp->type != V_EVFLAG)
 	{
-		report_at_expr(defn, "sync: event flag %s not declared\n",
+		error_at_expr(defn, "sync: event flag »%s« not declared\n",
 			ef_name);
 		return;
 	}
@@ -566,7 +558,7 @@ static void analyse_sync(SymTable st, Expr *scope, Expr *defn, int *num_queues)
 	/* e_subscr != 0 */
 	if (subNum < 0 || subNum >= cp->num_elem)
 	{
-		report_at_expr(defn, "sync: subscript %s[%d] out of range\n",
+		error_at_expr(defn, "sync: subscript »%s[%d]« out of range\n",
 			name, subNum);
 		return;
 	}
@@ -589,21 +581,21 @@ static void analyse_syncq(int *num_queues, SymTable st, Expr *scope, Expr *defn)
 	vp = find_var(st, name, scope);
 	if (vp == 0)
 	{
-		report_at_expr(defn, "syncQ: variable %s not declared\n", name);
+		error_at_expr(defn, "syncQ: variable »%s« not declared\n", name);
 		return;
 	}
 
 	cp = vp->chan;
 	if (cp == 0)
 	{
-		report_at_expr(defn, "syncQ: variable %s not assigned\n", name);
+		error_at_expr(defn, "syncQ: variable »%s« not assigned\n", name);
 		return;
 	}
 
 	/* Check that the variable has not already been syncQ'd */
 	if (vp->queued)
 	{
-		report_at_expr(defn, "syncQ: variable %s already syncQ'd\n", name);
+		error_at_expr(defn, "syncQ: variable »%s« already syncQ'd\n", name);
 		return;
 	}
 
@@ -611,14 +603,14 @@ static void analyse_syncq(int *num_queues, SymTable st, Expr *scope, Expr *defn)
 	efp = find_var(st, ef_name, scope);
 	if (efp == 0 || efp->type != V_EVFLAG)
 	{
-		report_at_expr(defn, "syncQ: event flag %s not declared\n", ef_name);
+		error_at_expr(defn, "syncQ: event flag %s not declared\n", ef_name);
 		return;
 	}
 
 	/* Check that the event flag has not already been syncQ'd */
 	if (efp->queued)
 	{
-		report_at_expr(defn, "syncQ: event flag %s already syncQ'd\n", ef_name);
+		error_at_expr(defn, "syncQ: event flag %s already syncQ'd\n", ef_name);
 		return;
 	}
 
@@ -653,8 +645,8 @@ static void analyse_syncq(int *num_queues, SymTable st, Expr *scope, Expr *defn)
 	subNum = atoi(s_subscr);
 	if (subNum < 0 || subNum >= cp->num_elem)
 	{
-		report_at_expr(defn,
-			"syncQ: subscript %s[%d] out of range\n", name, subNum);
+		error_at_expr(defn,
+			"syncQ: subscript »%s[%d]« out of range\n", name, subNum);
 		return;
 	}
 	cp->ef_var_list[subNum] = efp; /* sync to a specific element of the array */
@@ -723,8 +715,8 @@ Var *find_var(SymTable st, char *name, Expr *scope)
 	Var	*vp;
 
 #ifdef DEBUG
-	report("searching '%s' in '%s:%s', ", name, scope->value,
-		expr_type_info[scope->type].name);
+	report("searching %s in %s:%s, ", name, scope->value,
+		expr_type_name(scope));
 #endif
 	vp = sym_table_lookup(st, name, var_list);
 	if (vp)
@@ -778,7 +770,7 @@ static void connect_variable(Expr *ep, Expr *scope, void *parg)
 	assert(scope);
 
 #ifdef	DEBUG
-	report("connect_variable: '%s', line %d\n", ep->value, ep->line_num);
+	report("connect_variable: %s, line %d\n", ep->value, ep->line_num);
 #endif	/*DEBUG*/
 
 	vp = find_var(cv_arg->st, ep->value, scope);
@@ -786,12 +778,12 @@ static void connect_variable(Expr *ep, Expr *scope, void *parg)
 #ifdef	DEBUG
 	if (vp)
 	{
-		report_at_expr(ep, "'%s' found in scope (%s:%s)\n", ep->value,
+		report_at_expr(ep, "var %s found in scope (%s:%s)\n", ep->value,
 			expr_type_name(scope),
 			scope->value);
 	}
 	else
-		report_at_expr(ep, "'%s' not found\n", ep->value);
+		report_at_expr(ep, "var %s not found\n", ep->value);
 #endif	/*DEBUG*/
 	if (vp == 0)
 	{
@@ -800,7 +792,7 @@ static void connect_variable(Expr *ep, Expr *scope, void *parg)
 		/* variable not declared; add it to the variable list */
 		if (cv_arg->opt_warn)
 			report_at_expr(ep,
-			 "warning: variable '%s' used but not declared\n",
+			 "warning: variable »%s« used but not declared\n",
 			 ep->value);
 		vp = new(Var);
 		vp->name = ep->value;
@@ -845,7 +837,7 @@ void traverse_expr_tree(
 
 #ifdef DEBUG
 	report("traverse_expr_tree(type=%s,value=%s)\n",
-		expr_type_info[ep->type].name, ep->value);
+		expr_type_name(ep), ep->value);
 #endif
 
 	/* Call the function? */
@@ -859,7 +851,7 @@ void traverse_expr_tree(
 	{
 #ifdef DEBUG
 	report("traverse_expr_tree: new scope=(%s,%s)\n",
-		expr_type_info[ep->type].name, ep->value);
+		expr_type_name(ep), ep->value);
 #endif
 		scope = ep;
 	}
@@ -904,8 +896,8 @@ static int connect_states(SymTable st, Expr *prog)
 		if (!sym_table_insert(st, ssp->value, prog, ssp))
 		{
 			Expr *ssp2 = sym_table_lookup(st, ssp->value, prog);
-			report_at_expr(ssp,
-				"a state set with name '%s' was already "
+			error_at_expr(ssp,
+				"a state set with name »%s« was already "
 				"declared at line %d\n", ssp->value, ssp2->line_num);
 		}
 		foreach (sp, ssp->ss_states)
@@ -913,8 +905,8 @@ static int connect_states(SymTable st, Expr *prog)
 			if (!sym_table_insert(st, sp->value, ssp, sp))
 			{
 				Expr *sp2 = sym_table_lookup(st, sp->value, ssp);
-				report_at_expr(sp,
-					"a state with name '%s' in state set '%s' "
+				error_at_expr(sp,
+					"a state with name »%s« in state set »%s« "
 					"was already declared at line %d\n",
 					sp->value, ssp->value, sp2->line_num);
 #if 0
@@ -944,9 +936,9 @@ static int connect_states(SymTable st, Expr *prog)
 
 				if (next_sp == 0)
 				{
-					report_at_expr(tp,
-						"a state with name '%s' does not "
-						"exist in state set '%s'\n",
+					error_at_expr(tp,
+						"a state with name »%s« does not "
+						"exist in state set »%s«\n",
 					 	tp->value, ssp->value);
 				}
 				tp->extra.e_when->next_state = next_sp;

@@ -21,6 +21,9 @@ void report_at(const char *src_file, int line_num, const char *format, ...);
 struct expression;
 void report_at_expr(struct expression *ep, const char *format, ...);
 
+/* with location from this expression and increase error count */
+void error_at_expr(struct expression *ep, const char *format, ...);
+
 /* message only */
 void report(const char *format, ...);
 

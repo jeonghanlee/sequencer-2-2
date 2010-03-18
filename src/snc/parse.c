@@ -108,14 +108,21 @@ Expr *expr(
 	/* allocate extra data */
 	switch (type)
 	{
-	case D_SS:	ep->extra.e_ss = new(StateSet);	break;
-	case D_STATE:	ep->extra.e_state = new(State);	break;
-	case D_WHEN:	ep->extra.e_when = new(When);	break;
+	case D_SS:
+		ep->extra.e_ss = new(StateSet);
+		break;
+	case D_STATE:
+		ep->extra.e_state = new(State);
+		ep->extra.e_state->options = DEFAULT_STATE_OPTIONS;
+		break;
+	case D_WHEN:
+		ep->extra.e_when = new(When);
+		break;
 	}
 
 #ifdef	DEBUG
 	report("expr: ep=%p, type=%s, value=\"%s\", file=%s, line=%d",
-		ep, expr_type_info[type].name, tok.str, tok.file, tok.line);
+		ep, expr_type_name(ep), tok.str, tok.file, tok.line);
 #endif	/*DEBUG*/
         va_start(argp, tok);
 	for (i = 0; i < num_children; i++)

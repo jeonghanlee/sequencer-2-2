@@ -54,7 +54,7 @@ snc_version.h: ../sncVersion.pl $(TOP)/configure/CONFIG
 
 snl.c snl.h: snl.lem snl.lt $(LEMON)
 	$(RM) $@
-	$(LEMON) -s snl.lem
+	$(LEMON) snl.lem
 
 %.lem: ../%.lem
 	$(CP) $< .

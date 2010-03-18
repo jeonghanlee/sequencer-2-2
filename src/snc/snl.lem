@@ -71,9 +71,9 @@ program ::=
 	PROGRAM NAME(n)
 	program_param(pp)
 	global_defns(ds)
-	global_entry_code(en)
+	entry(en)
 	state_sets(ss)
-	global_exit_code(ex)
+	exit(ex)
 	c_codes(cc).
 {
 	*presult =  expr(D_PROG, n, pp, ds, en, ss, ex, cc);
@@ -179,11 +179,11 @@ option_value(p) ::= SUB(t).			{ p = t; }
 
 // State sets and states
 
-global_entry_code(p) ::= ENTRY block(xs).	{ p = xs.right; }
-global_entry_code(p) ::= .			{ p = 0; }
+//global_entry_code(p) ::= ENTRY block(xs).	{ p = xs.right; }
+//global_entry_code(p) ::= .			{ p = 0; }
 
-global_exit_code(p) ::= EXIT block(xs).		{ p = xs.right; }
-global_exit_code(p) ::= .			{ p = 0; }
+//global_exit_code(p) ::= EXIT block(xs).		{ p = xs.right; }
+//global_exit_code(p) ::= .			{ p = 0; }
 
 state_sets(p) ::= state_sets(xs) state_set(x).	{ p = link_expr(xs, x); }
 state_sets(p) ::= state_set(x).			{ p = x; }
@@ -217,13 +217,12 @@ state_defns(p) ::= state_defns(xs) state_defn(x). {
 }
 state_defns(p) ::= .				{ p = 0; }
 
-// state_defn(p) ::= assign(x).			{ p = x; }
-// state_defn(p) ::= monitor(x).		{ p = x; }
-// state_defn(p) ::= sync(x).			{ p = x; }
-// state_defn(p) ::= syncq(x).			{ p = x; }
+state_defn(p) ::= assign(x).			{ p = x; }
+state_defn(p) ::= monitor(x).			{ p = x; }
+state_defn(p) ::= sync(x).			{ p = x; }
+state_defn(p) ::= syncq(x).			{ p = x; }
 state_defn(p) ::= decl(x).			{ p = x; }
 state_defn(p) ::= option(x).			{ p = x; }
-// state_defn(p) ::= c_code(x).			{ p = x; }
 
 entry(p) ::= ENTRY(t) block(b).			{ p = expr(D_ENTRY, t, b.left, b.right); }
 entry(p) ::= .					{ p = 0; }
@@ -257,7 +256,8 @@ block_defn(p) ::= c_code(x).			{ p = x; }
 statements(p) ::= statements(xs) statement(x).	{ p = link_expr(xs, x); }
 statements(p) ::= .				{ p = 0; }
 
-statement(p) ::= BREAK(t) SEMICOLON.		{ p = expr(S_BREAK, t); }
+statement(p) ::= BREAK(t) SEMICOLON.		{ p = expr(S_JUMP, t); }
+statement(p) ::= CONTINUE(t) SEMICOLON.		{ p = expr(S_JUMP, t); }
 statement(p) ::= c_code(x).			{ p = x; }
 statement(p) ::= LBRACE(t) block_defns(ds) statements(xs) RBRACE.
 						{ p = expr(S_CMPND, t, ds, xs); }

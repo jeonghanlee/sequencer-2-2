@@ -78,7 +78,7 @@ void generate_code(Program *p)
 	gen_global_var_decls(p);
 
 	/* Generate definition C code */
-	gen_defn_c_code(p->prog);
+	gen_defn_c_code(p->prog, 0);
 
 	/* Generate code for each state set */
 	gen_ss_code(p);
@@ -196,31 +196,31 @@ static void gen_global_var_decls(Program *p)
 
 	printf("\n/* Variable declarations */\n");
 
-	if (opt_reent) printf("struct UserVar {\n");
+	if (opt_reent) printf("struct %s {\n", SNL_PREFIX);
 	/* Convert internal type to `C' type */
 	foreach (vp, p->prog->extra.e_prog->first)
 	{
-		if (vp->decl)
+		if (vp->decl && vp->type != V_EVFLAG && vp->type != V_NONE)
 			gen_line_marker(vp->decl);
 		gen_var_decl(vp, opt_reent ? "\t" : "static ");
 	}
 	foreach (ssp, p->prog->prog_statesets)
 	{
-		printf("%sstruct UserVar_ss_%s {\n", opt_reent?"\t":"", ssp->value);
+		printf("%sstruct %s_ss_%s {\n", opt_reent?"\t":"", SNL_PREFIX, ssp->value);
 		foreach (vp, ssp->extra.e_ss->var_list->first)
 		{
 			gen_var_decl(vp, opt_reent?"\t\t":"\t");
 		}
 		foreach (sp, ssp->ss_states)
 		{
-			printf("%sstruct UserVar_ss_%s_state_%s {\n", opt_reent?"\t\t":"\t", ssp->value, sp->value);
+			printf("%sstruct %s_ss_%s_state_%s {\n", opt_reent?"\t\t":"\t", SNL_PREFIX, ssp->value, sp->value);
 			foreach (vp, sp->extra.e_state->var_list->first)
 			{
 				gen_var_decl(vp, opt_reent?"\t\t\t":"\t\t");
 			}
-			printf("%s} UserVar_state_%s;\n", opt_reent?"\t\t":"\t", sp->value);
+			printf("%s} %s_state_%s;\n", opt_reent?"\t\t":"\t", SNL_PREFIX, sp->value);
 		}
-		printf("%s} UserVar_ss_%s;\n", opt_reent?"\t":"", ssp->value);
+		printf("%s} %s_ss_%s;\n", opt_reent?"\t":"", SNL_PREFIX, ssp->value);
 	}
 	if (opt_reent) printf("};\n");
 
@@ -229,14 +229,14 @@ static void gen_global_var_decls(Program *p)
 	{
 		printf("\n");
 		printf("/* Not used (avoids compilation warnings) */\n");
-		printf("struct UserVar {\n");
+		printf("struct %s {\n", SNL_PREFIX);
 		printf("\tint\tdummy;\n");
 		printf("};\n");
 	}
 }
 
 /* Generate definition C code (C code in definition section) */
-void gen_defn_c_code(Expr *scope)
+void gen_defn_c_code(Expr *scope, int level)
 {
 	Expr	*ep;
 	int	first = TRUE;
@@ -252,6 +252,7 @@ void gen_defn_c_code(Expr *scope)
 				printf("\n/* C code definitions */\n");
 			}
 			gen_line_marker(ep);
+			indent(level);
 			printf("%s\n", ep->value);
 		}
 	}
@@ -265,7 +266,7 @@ static void gen_global_c_code(Expr *global_c_list)
 	ep = global_c_list;
 	if (ep != NULL)
 	{
-		printf("\f/* Global C code */\n");
+		printf("\n/* Global C code */\n");
 		for (; ep != NULL; ep = ep->next)
 		{
 			assert(ep->type == T_TEXT);
@@ -331,10 +332,16 @@ static int assign_ef_bits(Expr *scope, ChanList *chan_list)
 
 static void gen_init_reg(char *prog_name)
 {
-	printf("\n\n/* Register sequencer commands and program */\n");
-	printf("\nvoid %sRegistrar (void) {\n", prog_name);
+	printf("\n/* Register sequencer commands and program */\n\n");
+	printf("void %sRegistrar (void) {\n", prog_name);
 	printf("    seqRegisterSequencerCommands();\n");
 	printf("    seqRegisterSequencerProgram (&%s);\n", prog_name);
 	printf("}\n");
 	printf("epicsExportRegistrar(%sRegistrar);\n", prog_name);
+}
+
+void indent(int level)
+{
+	while (level-- > 0)
+		printf("\t");
 }

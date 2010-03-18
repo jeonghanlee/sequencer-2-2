@@ -21,6 +21,7 @@ typedef struct expression	Expr;
 typedef struct variable		Var;
 typedef struct chan_list	ChanList;
 typedef struct var_list		VarList;
+typedef struct expr_pair	ExprPair;
 
 typedef enum var_type		VarType;
 typedef enum var_class		VarClass;
@@ -56,7 +57,7 @@ struct state_options			/* run-time state options */
 {
 	int	do_reset_timers:1;	/* reset timers on state entry from self */
 	int	no_entry_from_self:1;	/* don't do entry actions if entering from same state */
-	int	no_exit_from_self:1;	/* don't do exit actions if exiting to same state */
+	int	no_exit_to_self:1;	/* don't do exit actions if exiting to same state */
 };
 
 #define DEFAULT_STATE_OPTIONS (StateOptions){1,1,1}
@@ -158,6 +159,11 @@ struct var_list
 {
 	Var	*first, *last;		/* first and last member of the list */
 	Expr	*parent_scope;		/* next surrounding scope */
+};
+
+struct expr_pair
+{
+	Expr	*left, *right;
 };
 
 struct program
@@ -263,11 +269,11 @@ enum expr_type			/* description [child expressions...] */
 	E_TERNOP,		/* ternary operator [cond,then,else] */
 	E_VAR,			/* variable [] */
 
-	S_BREAK,		/* break stmt [] */
 	S_CHANGE,		/* state change statement [] */
 	S_CMPND,		/* compound statement [defns,stmts] */
 	S_FOR,			/* for statement [init,cond,iter,stmt] */
 	S_IF,			/* if statement [cond,then,else] */
+	S_JUMP,			/* break or continue stmt [] */
 	S_STMT,			/* simple statement [expr] */
 	S_WHILE,		/* while statement [cond,stmt] */
 
@@ -360,11 +366,11 @@ expr_type_info[]
 	{ "E_SUBSCR",	2 },
 	{ "E_TERNOP",	3 },
 	{ "E_VAR",	0 },
-	{ "S_BREAK",	0 },
 	{ "S_CHANGE",	0 },
 	{ "S_CMPND",	2 },
 	{ "S_FOR",	4 },
 	{ "S_IF",	3 },
+	{ "S_JUMP",	0 },
 	{ "S_STMT",	1 },
 	{ "S_WHILE",	2 },
 	{ "T_TEXT",	0 }

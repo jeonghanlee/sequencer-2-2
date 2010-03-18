@@ -23,12 +23,6 @@
 
 #include "types.h"
 
-struct expr_pair
-{
-	Expr	*left, *right;
-};
-typedef struct expr_pair ExprPair;
-
 Expr *expr(
 	int	type,		/* E_BINOP, E_ASGNOP, etc */
 	Token	tok,		/* "==", "+=", var name, constant, etc. */
