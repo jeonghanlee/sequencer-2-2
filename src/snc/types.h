@@ -117,7 +117,7 @@ struct variable				/* Variable or function definition */
 {
 	Var	*next;			/* link to next variable in list */
 	char	*name;			/* variable name */
-	char	*value;			/* initial value or NULL */
+	Expr	*value;			/* initial value or NULL */
 	int	type;			/* var type */
 	int	class;			/* simple, array, or pointer */
 	int	length1;		/* 1st dim. array lth (default=1) */
@@ -194,22 +194,27 @@ struct program
 /* Generic iteration on lists */
 #define foreach(e,l)		for (e = l; e != 0; e = e->next)
 
+/* #define bits(et)		(1<<et) */
+
 /* A bit mask containing expression types that are scopes. By definition,
    a scope is an expression that allows variable declarations. */
 #define scope_mask		( (1<<D_PROG) | (1<<D_SS) | (1<<D_STATE)\
 				| (1<<D_ENTRY) | (1<<D_EXIT) | (1<<D_WHEN) | (1<<S_CMPND) )
 #define is_scope(e)		(((1<<((e)->type)) & scope_mask) != 0)
-/* Expression types that may have sub-scopes */
+/* Expressions types that may have sub-scopes */
 #define has_sub_scope_mask	( (1<<D_ENTRY) | (1<<D_EXIT) | (1<<D_PROG) | (1<<D_SS)\
 				| (1<<D_STATE) | (1<<D_WHEN) | (1<<S_CMPND) | (1<<S_FOR)\
 				| (1<<S_IF) | (1<<S_STMT) | (1<<S_WHILE) )
-
+/* Expressions types that may have sub-expressions */
 #define has_sub_expr_mask	( (1<<D_DECL) | (1<<D_ENTRY) | (1<<D_EXIT) | (1<<D_PROG)\
 				| (1<<D_SS) | (1<<D_STATE) | (1<<D_WHEN) | (1<<E_BINOP)\
 				| (1<<E_DELAY) | (1<<E_FUNC) | (1<<E_PAREN) | (1<<E_POST)\
 				| (1<<E_PRE) | (1<<E_SUBSCR) | (1<<E_TERNOP) | (1<<E_VAR)\
 				| (1<<S_CHANGE) | (1<<S_CMPND) | (1<<S_FOR) | (1<<S_IF)\
-				| (1<<S_STMT) | (1<<S_WHILE) | (1<<T_TEXT) )
+				| (1<<S_STMT) | (1<<S_WHILE) )
+
+/* Expressions types that may have sub-scopes */
+#define	has_scope_mask		( scope_mask | (1<<S_FOR) | (1<<S_IF) | (1<<S_WHILE) )
 
 #define expr_type_name(e)	expr_type_info[(e)->type].name
 

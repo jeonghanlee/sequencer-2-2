@@ -17,9 +17,8 @@
 }
 
 %syntax_error {
-	report_at(TOKEN.file, TOKEN.line,
-        	"syntax error near token '%s'\n", TOKEN.str);
-	exit(1);
+	error_at(TOKEN.file, TOKEN.line,
+		"syntax error near token '%s'\n", TOKEN.str);
 }
 
 %token_type { Token }
@@ -141,8 +140,8 @@ subscript(p) ::= LBRACKET INTCON(n) RBRACKET. { p = n; }
 
 decl(p) ::= type(t) NAME(v) SEMICOLON.
 			{ p = decl(t, VC_SIMPLE,  v, 0,  0,  0); }
-decl(p) ::= type(t) NAME(v) EQUAL number(n) SEMICOLON.
-			{ p = decl(t, VC_SIMPLE,  v, 0,  0, n.str); }
+decl(p) ::= type(t) NAME(v) EQUAL expr(x) SEMICOLON.
+			{ p = decl(t, VC_SIMPLE,  v, 0,  0, x); }
 decl(p) ::= type(t) NAME(v) subscript(s) SEMICOLON.
 			{ p = decl(t, VC_ARRAY1,  v, s.str,  0,  0); }
 decl(p) ::= type(t) NAME(v) subscript(s1) subscript(s2) SEMICOLON.

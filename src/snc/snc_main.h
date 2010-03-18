@@ -17,6 +17,9 @@ void report_loc(const char *src_file, int line_num);
 /* location plus message */
 void report_at(const char *src_file, int line_num, const char *format, ...);
 
+/* location plus message and increase error count */
+void error_at(const char *src_file, int line_num, const char *format, ...);
+
 /* with location from this expression */
 struct expression;
 void report_at_expr(struct expression *ep, const char *format, ...);

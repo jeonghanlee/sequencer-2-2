@@ -359,38 +359,52 @@ static void gen_event_body(Expr *xp, int level)
 
 static void gen_var_access(Var *vp)
 {
-	Var *vp = ep->extra.e_var;
 	char *pVar_arr = global_opt_reent ? "pVar->" : "";
 
 #ifdef	DEBUG
-	report_at_expr(ep, "var_access: %s, scope=(%s,%s)\n",
+	report("var_access: %s, scope=(%s,%s)\n",
 		vp->name, expr_type_name(vp->scope), vp->scope->value);
 #endif
 
 	if (vp->type == V_NONE || vp->type == V_EVFLAG)
 	{
-		printf("%s", ep->value);
+		printf("%s", vp->name);
 	}
 	else if (vp->scope->type == D_PROG)
 	{
-		printf("(%s%s)", pVar_arr, ep->value);
+		printf("(%s%s)", pVar_arr, vp->name);
 	}
 	else if (vp->scope->type == D_SS)
 	{
 		printf("(%s%s_ss_%s.%s)",
-			pVar_arr, SNL_PREFIX, vp->scope->value, ep->value);
+			pVar_arr, SNL_PREFIX, vp->scope->value, vp->name);
 	}
 	else if (vp->scope->type == D_STATE)
 	{
 		printf("(%s%s_ss_%s.%s_state_%s.%s)",
 			pVar_arr, SNL_PREFIX,
 			vp->scope->extra.e_state->var_list->parent_scope->value, SNL_PREFIX,
-			vp->scope->value, ep->value);
+			vp->scope->value, vp->name);
 	}
 	else	/* compound or when => generate a local C variable */
 	{
-		printf("%s", ep->value);
+		printf("%s", vp->name);
 	}
+}
+
+int special_assign_op(int stmt_type, Expr *ep, int level)
+{
+	if (ep->binop_left->type == E_VAR
+		&& ep->binop_left->extra.e_var->type == V_STRING)
+	{
+		printf("strncpy(");
+		gen_var_access(ep->binop_left->extra.e_var);
+		printf(", ");
+		gen_expr(stmt_type, ep->binop_right, level);
+		printf(", MAX_STRING_SIZE-1)");
+		return TRUE;
+	}
+	return FALSE;
 }
 
 /* Recursively generate code for an expression (tree) */
@@ -405,6 +419,10 @@ static void gen_expr(
 
 	if (ep == 0)
 		return;
+
+#ifdef	DEBUG
+	report("gen_expr(%s,%s)\n", expr_type_name(ep), ep->value);
+#endif
 
 	switch(ep->type)
 	{
@@ -482,7 +500,7 @@ static void gen_expr(
 		break;
 	/* Expressions */
 	case E_VAR:
-		gen_var_access(ep);
+		gen_var_access(ep->extra.e_var);
 		break;
 	case E_CONST:
 		printf("%s", ep->value);
@@ -496,18 +514,14 @@ static void gen_expr(
 	case E_FUNC:
 		if (special_func(stmt_type, ep))
 			break;
+		printf("%s(", ep->value);
+		foreach (cep, ep->func_args)
 		{
-			int n = 0;
-			printf("%s(", ep->value);
-			foreach (cep, ep->func_args)
-			{
-				if (n > 0)
-					printf(", ");
-				gen_expr(stmt_type, cep, 0);
-				n++;
-			}
-			printf(")");
+			gen_expr(stmt_type, cep, 0);
+			if (cep->next)
+				printf(", ");
 		}
+		printf(")");
 		break;
 	case E_TERNOP:
 		gen_expr(stmt_type, ep->ternop_cond, 0);
@@ -517,12 +531,8 @@ static void gen_expr(
 		gen_expr(stmt_type, ep->ternop_else, 0);
 		break;
 	case E_BINOP:
-#if 0
-		if (strcmp(ep->value, "=") == 0)
-		{
-			special_assign_op(stmt_type, ep, 0);
-		}
-#endif
+		if (special_assign_op(stmt_type, ep, 0))
+			break;
 		gen_expr(stmt_type, ep->binop_left, 0);
 		printf(" %s ", ep->value);
 		gen_expr(stmt_type, ep->binop_right, 0);
@@ -748,7 +758,7 @@ static void gen_pv_func(
 	else
 	{
 #ifdef	DEBUG
-		report("gen_pv_func: var=%s\n", vp->name);
+		report("gen_pv_func: fun=%s, var=%s\n", ep->value, vp->name);
 #endif	/*DEBUG*/
 		vn = vp->name;
 		cp = vp->chan;
@@ -805,25 +815,40 @@ static void gen_pv_func(
 
 	/* Close the parameter list */
 	printf(")");
+#ifdef	DEBUG
+		report("gen_pv_func: done (fun=%s, var=%s)\n", ep->value, vp->name);
+#endif	/*DEBUG*/
+}
+
+static void var_init(Expr *dp, Expr *scope, void *parg)
+{
+	assert(dp);
+	assert(dp->type == D_DECL);
+
+	Var *vp = dp->extra.e_decl;
+	
+	assert(vp);
+	if (vp->value && vp->decl)
+	{
+		if (vp->type == V_NONE || vp->type == V_EVFLAG || vp->type == V_STRING)
+		{
+			error_at_expr(vp->decl,
+			  "initialisation not allowed for variables of this type");
+			return;
+		}
+		indent(1);
+		gen_var_access(vp);
+		printf(" = ");
+		gen_expr(ACTION_STMT, vp->value, 0);
+		printf(";\n");
+	}
 }
 
 static void gen_struct_var_init(Expr *prog)
 {
-	Expr	*sp, *ssp;
-	printf("/* TODO: Global variable init */\n");
-
-	/* For each state set ... */
-	foreach (ssp, prog->prog_statesets)
-	{
-		printf("/* TODO: Variable init for state set \"%s\" */\n", ssp->value);
-
-		/* For each state ... */
-		foreach (sp, ssp->ss_states)
-		{
-			printf("/* TODO: Variable init for state \"%s\" in state set \"%s\" */\n",
-				sp->value, ssp->value);
-		}
-	}
+	const int type_mask = (1<<D_DECL);
+	const int stop_mask = ~((1<<D_DECL) | has_scope_mask);
+	traverse_expr_tree(prog, type_mask, stop_mask, 0, var_init, 0);
 }
 
 /* Generate global entry handler code */

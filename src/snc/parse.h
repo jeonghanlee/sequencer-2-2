@@ -35,7 +35,7 @@ Expr *decl(
 	Token	var,		/* variable name token */
 	char	*s_length1,	/* array lth (1st dim, arrays only) */
 	char	*s_length2,	/* array lth (2nd dim, [n]x[m] arrays only) */
-	char	*value		/* initial value or NULL */
+	Expr	*value		/* initial value or NULL */
 );
 
 Expr *opt_defn(

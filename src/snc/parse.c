@@ -46,7 +46,7 @@ Expr *decl(
 	Token	var,		/* variable name token */
 	char	*s_length1,	/* array lth (1st dim, arrays only) */
 	char	*s_length2,	/* array lth (2nd dim, [n]x[m] arrays only) */
-	char	*value		/* initial value or NULL */
+	Expr	*value		/* initial value or NULL */
 )
 {
 	Expr	*ep;
@@ -77,7 +77,7 @@ Expr *decl(
         ep = expr(D_DECL, var, 0, 0);
 	ep->extra.e_decl = vp;
 #ifdef	DEBUG
-	report("decl: name=%s, type=%d, class=%d, "
+	report_at_expr(ep, "decl: name=%s, type=%d, class=%d, "
 		"length1=%d, length2=%d, value=%s\n",
 		vp->name, vp->type, vp->class,
 		vp->length1, vp->length2, vp->value);
@@ -123,7 +123,7 @@ Expr *expr(
 	}
 
 #ifdef	DEBUG
-	report("expr: ep=%p, type=%s, value=\"%s\", file=%s, line=%d",
+	report_at_expr(ep, "expr: ep=%p, type=%s, value=\"%s\", file=%s, line=%d",
 		ep, expr_type_name(ep), tok.str, tok.file, tok.line);
 #endif	/*DEBUG*/
         va_start(argp, tok);

@@ -239,6 +239,18 @@ void report_at(const char *src_file, int line_num, const char *format, ...)
 	va_end(args);
 }
 
+void error_at(const char *src_file, int line_num, const char *format, ...)
+{
+	va_list args;
+
+	err_cnt++;
+	report_loc(src_file, line_num);
+
+	va_start(args, format);
+	vfprintf(stderr, format, args);
+	va_end(args);
+}
+
 void report_at_expr(Expr *ep, const char *format, ...)
 {
 	va_list args;
