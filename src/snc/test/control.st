@@ -23,7 +23,7 @@ ss main {
     state inactive {
         int y = 0;
 	when () {
-%%	    long i;
+            int i;
 	    for ( i = 0; i < N || i > y; i++ ) {
 		init[i] = 1;
 		pvPut( init[i], ASYNC );
@@ -34,7 +34,7 @@ ss main {
 
     state active {
 	when ( pvPutComplete( init, TRUE, done ) ) {
-%%	    long i;
+            long i;
 	    printf( "init commands not all done:" );
 	    for ( i = 0; i < N; i++ )
 		printf( " %ld", done[i] );
@@ -52,7 +52,7 @@ ss main {
 
     state done {
 	when () {
-%%	    long i;
+            unsigned short i;
 	    for ( i = 0; i < N; i++ ) {
 		printf( "%s: done,stat,sevr,mess = %ld,%ld,%ld,%s\n",
 		    pvName( init[i] ),
