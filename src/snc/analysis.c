@@ -270,7 +270,7 @@ static void analyse_declaration(SymTable st, Expr *scope, Expr *defn)
 		Var *vp2 = sym_table_lookup(st, vp->name, var_list);
 		error_at_expr(defn,
 			"variable '%s' already declared at %s:%d\n",
-			vp->name, vp2->decl->line_num);
+			vp->name, vp2->decl->src_file, vp2->decl->line_num);
 	}
 	else
 	{
