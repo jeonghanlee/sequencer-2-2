@@ -41,7 +41,6 @@ struct options				/* run-time options */
 	int	async:1;		/* do pvGet() asynchronously */
 	int	conn:1;			/* wait for all conns to complete */
 	int	debug:1;		/* run-time debug */
-	int	reent:1;		/* reentrant at run-time */
 	int	newef:1;		/* new event flag mode */
 	int	main:1;			/* main program */
 
@@ -51,7 +50,7 @@ struct options				/* run-time options */
 	int	warn:1;			/* compiler warnings */
 };
 
-#define DEFAULT_OPTIONS (Options){0,1,0,0,1,0,1,1,1}
+#define DEFAULT_OPTIONS (Options){0,1,0,1,0,1,1,1}
 
 struct state_options			/* run-time state options */
 {

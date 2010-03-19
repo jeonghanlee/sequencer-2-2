@@ -90,10 +90,8 @@ static int special_func(int stmt_type, Expr *ep);
 #define	ACTION_STMT	2
 
 /*
- * HACK: use global variables to make program options and
- * symbol table available to subroutines
+ * HACK: use global variable to symbol table available to subroutines
  */
-static int global_opt_reent;
 static SymTable global_sym_table;
 
 static void register_special_funcs(void)
@@ -121,8 +119,7 @@ void gen_ss_code(Program *program)
 	Expr	*ssp;
 	Expr	*sp;
 
-	/* HACK: intialise globals */
-	global_opt_reent = program->options.reent;
+	/* HACK: intialise global variable */
 	global_sym_table = program->sym_table;
 
 	/* Insert special function names into symbol table */
@@ -185,7 +182,7 @@ static void gen_local_var_decls(Expr *scope, int level)
 		{
 			gen_line_marker(vp->decl);
 			indent(level);
-			gen_var_decl(vp, "");
+			gen_var_decl(vp);
 		}
 	}
 }
@@ -359,7 +356,7 @@ static void gen_event_body(Expr *xp, int level)
 
 static void gen_var_access(Var *vp)
 {
-	char *pVar_arr = global_opt_reent ? "pVar->" : "";
+	char *pVar_arr = "pVar->";
 
 #ifdef	DEBUG
 	report("var_access: %s, scope=(%s,%s)\n",
@@ -435,7 +432,7 @@ static void gen_expr(
 		{
 			gen_line_marker(vp->decl);
 			indent(level);
-			gen_var_decl(vp, "");
+			gen_var_decl(vp);
 		}
 		break;
 	/* Statements */

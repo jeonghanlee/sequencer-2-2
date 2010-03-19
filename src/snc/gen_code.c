@@ -151,7 +151,7 @@ static void gen_preamble(char *prog_name, Options options,
 	}
 }
 
-void gen_var_decl(Var *vp, const char *prefix)
+void gen_var_decl(Var *vp)
 {
 	char	*vstr;
 
@@ -174,7 +174,7 @@ void gen_var_decl(Var *vp, const char *prefix)
 	default:
 		assert(impossible);
 	}
-	printf("%s%s\t", prefix, vstr);
+	printf("%s\t", vstr);
 	if (vp->class == VC_POINTER || vp->class == VC_ARRAYP)
 		printf("*");
 	printf("%s", vp->name);
@@ -190,49 +190,41 @@ void gen_var_decl(Var *vp, const char *prefix)
 /* Generate a C variable declaration for each variable declared in SNL */
 static void gen_global_var_decls(Program *p)
 {
-	int	opt_reent = p->options.reent;
 	Var	*vp;
 	Expr	*sp, *ssp;
 
 	printf("\n/* Variable declarations */\n");
 
-	if (opt_reent) printf("struct %s {\n", SNL_PREFIX);
+	printf("struct %s {\n", SNL_PREFIX);
 	/* Convert internal type to `C' type */
 	foreach (vp, p->prog->extra.e_prog->first)
 	{
 		if (vp->decl && vp->type != V_EVFLAG && vp->type != V_NONE)
 			gen_line_marker(vp->decl);
-		gen_var_decl(vp, opt_reent ? "\t" : "static ");
+		indent(1); gen_var_decl(vp);
 	}
 	foreach (ssp, p->prog->prog_statesets)
 	{
-		printf("%sstruct %s_ss_%s {\n", opt_reent?"\t":"", SNL_PREFIX, ssp->value);
+		indent(1); printf("struct %s_ss_%s {\n", SNL_PREFIX, ssp->value);
 		foreach (vp, ssp->extra.e_ss->var_list->first)
 		{
-			gen_var_decl(vp, opt_reent?"\t\t":"\t");
+			indent(2); gen_var_decl(vp);
 		}
 		foreach (sp, ssp->ss_states)
 		{
-			printf("%sstruct %s_ss_%s_state_%s {\n", opt_reent?"\t\t":"\t", SNL_PREFIX, ssp->value, sp->value);
+			indent(2);
+			printf("struct %s_ss_%s_state_%s {\n",
+				SNL_PREFIX, ssp->value, sp->value);
 			foreach (vp, sp->extra.e_state->var_list->first)
 			{
-				gen_var_decl(vp, opt_reent?"\t\t\t":"\t\t");
+				indent(3); gen_var_decl(vp);
 			}
-			printf("%s} %s_state_%s;\n", opt_reent?"\t\t":"\t", SNL_PREFIX, sp->value);
+			indent(2);
+			printf("} %s_state_%s;\n", SNL_PREFIX, sp->value);
 		}
-		printf("%s} %s_ss_%s;\n", opt_reent?"\t":"", SNL_PREFIX, ssp->value);
+		indent(1); printf("} %s_ss_%s;\n", SNL_PREFIX, ssp->value);
 	}
-	if (opt_reent) printf("};\n");
-
-	/* Avoid compilation warnings if not re-entrant */
-	if (!opt_reent)
-	{
-		printf("\n");
-		printf("/* Not used (avoids compilation warnings) */\n");
-		printf("struct %s {\n", SNL_PREFIX);
-		printf("\tint\tdummy;\n");
-		printf("};\n");
-	}
+	printf("};\n");
 }
 
 /* Generate definition C code (C code in definition section) */

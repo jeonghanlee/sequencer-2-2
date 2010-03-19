@@ -223,7 +223,9 @@ static void analyse_option(Options *options, Expr *defn)
 		case 'i': options->init_reg = optval; break;
 		case 'l': options->line = optval; break;
 		case 'm': options->main = optval; break;
-		case 'r': options->reent = optval; break;
+		case 'r': report_at_expr(defn, "warning: "
+		  "option 'reentrant' is obsolete and has been removed\n");
+		  break;
 		case 'w': options->warn = optval; break;
 		default: report_at_expr(defn,
 		  "warning: unknown option '%s'\n", optname);

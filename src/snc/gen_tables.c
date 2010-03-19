@@ -43,8 +43,8 @@ typedef struct event_mask_args {
 	int	num_events;
 } event_mask_args;
 
-static void gen_channel_table(ChanList *chan_list, int num_events, int opt_reent);
-static void fill_channel_struct(Chan *cp, int elem_num, int num_events, int opt_reent);
+static void gen_channel_table(ChanList *chan_list, int num_events);
+static void fill_channel_struct(Chan *cp, int elem_num, int num_events);
 static void gen_state_table(Expr *ss_list, int num_events, int num_channels);
 static void fill_state_struct(Expr *sp, char *ss_name);
 static void gen_prog_params(char *param);
@@ -63,7 +63,7 @@ void gen_tables(Program *p)
 {
 	printf("\n/************************ Tables ************************/\n");
 
-	gen_channel_table(p->chan_list, p->num_events, p->options.reent);
+	gen_channel_table(p->chan_list, p->num_events);
 
 	gen_state_table(p->prog->prog_statesets, p->num_events, p->num_channels);
 
@@ -75,7 +75,7 @@ void gen_tables(Program *p)
 }
 
 /* Generate channel table with data for each defined channel */
-static void gen_channel_table(ChanList *chan_list, int num_events, int opt_reent)
+static void gen_channel_table(ChanList *chan_list, int num_events)
 {
 	Chan *cp;
 
@@ -94,7 +94,7 @@ static void gen_channel_table(ChanList *chan_list, int num_events, int opt_reent
 
 			for (n = 0; n < num_elem; n++)
 			{
-				fill_channel_struct(cp, n, num_events, opt_reent);
+				fill_channel_struct(cp, n, num_events);
 			}
 		}
 		printf("};\n");
@@ -125,7 +125,7 @@ static void gen_var_name(Var *vp)
 }
 
 /* Fill in a "seqChan" struct */
-static void fill_channel_struct(Chan *cp, int elem_num, int num_events, int opt_reent)
+static void fill_channel_struct(Chan *cp, int elem_num, int num_events)
 {
 	Var		*vp;
 	char		*suffix, elem_str[20], *db_name;
@@ -171,18 +171,9 @@ static void fill_channel_struct(Chan *cp, int elem_num, int num_events, int opt_
 	/* Ptr or offset to user variable */
 	printf("(void *)");
 
-	if (opt_reent)
-	{
-		printf("OFFSET(struct UserVar, ");
-		gen_var_name(vp);
-		printf("%s%s), ", elem_str, suffix);
-	}
-	else
-	{
-		printf("&");
-		gen_var_name(vp);
-		printf("%s%s, ", elem_str, suffix); /* variable ptr */
-	}
+	printf("OFFSET(struct UserVar, ");
+	gen_var_name(vp);
+	printf("%s%s), ", elem_str, suffix);
 
  	/* variable name with optional elem num */
 	printf("\"%s%s\", ", vp->name, elem_str);
@@ -354,10 +345,7 @@ static void gen_prog_table(char *name, Options options)
 
 	printf("\t/* numSS */              NUM_SS,\n");		/* number of state sets */
 
-	if (options.reent)
-		printf("\t/* user variable size */ sizeof(struct UserVar),\n");
-	else
-		printf("\t/* user variable size */ 0,\n");
+	printf("\t/* user variable size */ sizeof(struct UserVar),\n");
 
 	printf("\t/* *pParams */           prog_param,\n");	/* program parameters */
 
@@ -384,8 +372,7 @@ static void encode_options(Options options)
 		printf(" | OPT_DEBUG");
 	if (options.newef)
 		printf(" | OPT_NEWEF");
-	if (options.reent)
-		printf(" | OPT_REENT");
+	printf(" | OPT_REENT");
 	if (options.main)
 		printf(" | OPT_MAIN");
 	printf("),\n");
