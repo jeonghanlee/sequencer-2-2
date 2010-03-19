@@ -183,8 +183,6 @@ struct program
 	int	num_events;		/* number of event flags */
 	int	num_queues;		/* number of syncQ queues */
 	int	num_ss;			/* number of state sets */
-
-	int	num_errors;		/* accumulated number of errors */
 };
 
 /* Structure allocation */
