@@ -9,11 +9,6 @@
 
 /* #define DEBUG */
 
-typedef struct connect_var_arg {
-	SymTable st;
-	int opt_warn;
-} connect_var_arg;
-
 static const int impossible = 0;
 
 static void analyse_definitions(Program *p);
@@ -29,7 +24,7 @@ static void assign_single(ChanList *chan_list, Expr *dp, Var *vp, char *db_name)
 static void assign_list(ChanList *chan_list, Expr *dp, Var *vp, Expr *db_name_list);
 static Chan *new_channel(ChanList *chan_list, Var *vp);
 static void alloc_channel_lists(Chan *cp, int length);
-static void connect_variables(SymTable st, Expr *scope, int opt_warn);
+static void connect_variables(SymTable st, Expr *scope);
 static int connect_states(SymTable st, Expr *ss_list);
 static void connect_variable(Expr *ep, Expr *scope, void *parg);
 static int db_chan_count(ChanList *chan_list);
@@ -73,7 +68,7 @@ Program *analyse_program(Expr *prog, Options options)
 	p->num_channels = db_chan_count(p->chan_list);
 	p->num_ss = connect_states(p->sym_table, prog);
 
-	connect_variables(p->sym_table, prog, options.warn);
+	connect_variables(p->sym_table, prog);
 
 	return p;
 }
@@ -764,7 +759,7 @@ static int db_chan_count(ChanList *chan_list)
    local scope for the variable. */
 static void connect_variable(Expr *ep, Expr *scope, void *parg)
 {
-	connect_var_arg	*cv_arg = (connect_var_arg *)parg;
+	SymTable	st = *(SymTable *)parg;
 	Var		*vp;
 
 	assert(ep);
@@ -775,7 +770,7 @@ static void connect_variable(Expr *ep, Expr *scope, void *parg)
 	report("connect_variable: %s, line %d\n", ep->value, ep->line_num);
 #endif	/*DEBUG*/
 
-	vp = find_var(cv_arg->st, ep->value, scope);
+	vp = find_var(st, ep->value, scope);
 
 #ifdef	DEBUG
 	if (vp)
@@ -791,32 +786,28 @@ static void connect_variable(Expr *ep, Expr *scope, void *parg)
 	{
 		VarList *var_list = *pvar_list_from_scope(scope);
 
-		/* variable not declared; add it to the variable list */
-		if (cv_arg->opt_warn)
-			report_at_expr(ep,
-			 "warning: variable '%s' used but not declared\n",
-			 ep->value);
+		error_at_expr(ep, "variable '%s' used but not declared\n",
+			ep->value);
+		/* create a pseudo declaration so we can finish the analysis phase */
 		vp = new(Var);
 		vp->name = ep->value;
 		vp->type = V_NONE; /* undeclared type */
 		vp->length1 = 1;
 		vp->length2 = 1;
 		vp->value = 0;
-		sym_table_insert(cv_arg->st, vp->name, var_list, vp);
-		add_var(cv_arg->st, vp, scope);
+		sym_table_insert(st, vp->name, var_list, vp);
+		add_var(st, vp, scope);
 	}
-	ep->extra.e_var = vp; /* make connection */
+	ep->extra.e_var = vp; /* make connection (possibly empty) */
 }
 
-static void connect_variables(SymTable st, Expr *scope, int opt_warn)
+static void connect_variables(SymTable st, Expr *scope)
 {
-	connect_var_arg cv_arg = { st, opt_warn };
-
 #ifdef	DEBUG
 	report("**begin** connect_variables\n");
 #endif	/*DEBUG*/
 	traverse_expr_tree(scope, 1<<E_VAR, ~has_sub_expr_mask,
-		0, connect_variable, &cv_arg);
+		0, connect_variable, &st);
 #ifdef	DEBUG
 	report("**end** connect_variables\n");
 #endif	/*DEBUG*/

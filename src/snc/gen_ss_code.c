@@ -684,7 +684,7 @@ static void gen_ef_func(
 	{
 		vp = ap->extra.e_var;
 	}
-	if (vp == 0 || vp->type != V_EVFLAG)
+	if (vp->type != V_EVFLAG)
 	{
 		error_at_expr(ep, "argument to '%s' must be an event flag\n", fname);
 	}
@@ -746,28 +746,20 @@ static void gen_pv_func(
 		}
 	}
 
-	if (vp == 0)
+	assert(vp != 0);
+#ifdef	DEBUG
+	report("gen_pv_func: fun=%s, var=%s\n", ep->value, vp->name);
+#endif	/*DEBUG*/
+	vn = vp->name;
+	cp = vp->chan;
+	if (cp == 0)
 	{
 		error_at_expr(ep,
-			"parameter to '%s' is not a declared variable\n", fname);
-		cp = 0;
+			"parameter to '%s' was not assigned to a pv\n", fname);
 	}
 	else
 	{
-#ifdef	DEBUG
-		report("gen_pv_func: fun=%s, var=%s\n", ep->value, vp->name);
-#endif	/*DEBUG*/
-		vn = vp->name;
-		cp = vp->chan;
-		if (cp == 0)
-		{
-			error_at_expr(ep,
-				"parameter to '%s' was not assigned to a pv\n", fname);
-		}
-		else
-		{
-			id = cp->index;
-		}
+		id = cp->index;
 	}
 
 	printf("seq_%s(ssId, %d /* %s */", fname, id, vn);
@@ -784,7 +776,7 @@ static void gen_pv_func(
 	   length is always 1) */
 	if (add_length)
 	{
-		if (vp != 0 && ap->type != E_SUBSCR)
+		if (ap->type != E_SUBSCR)
 		{
 			printf(", %d", vp->length1);
 		}
@@ -813,7 +805,7 @@ static void gen_pv_func(
 	/* Close the parameter list */
 	printf(")");
 #ifdef	DEBUG
-		report("gen_pv_func: done (fun=%s, var=%s)\n", ep->value, vp->name);
+	report("gen_pv_func: done (fun=%s, var=%s)\n", ep->value, vp->name);
 #endif	/*DEBUG*/
 }
 

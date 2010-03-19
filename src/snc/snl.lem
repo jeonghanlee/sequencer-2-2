@@ -150,6 +150,8 @@ decl(p) ::= type(t) ASTERISK NAME(v) SEMICOLON.
 			{ p = decl(t, VC_POINTER, v, 0, 0, 0); }
 decl(p) ::= type(t) ASTERISK NAME(v) subscript(s) SEMICOLON.
 			{ p = decl(t, VC_ARRAYP,  v, s.str,  0,  0); }
+decl(p) ::= DECLARE NAME(v) SEMICOLON.
+			{ p = decl(V_NONE, VC_SIMPLE, v, 0,  0,  0); }
 
 %type number {Token}
 number(p) ::= INTCON(x).			{ p = x; }

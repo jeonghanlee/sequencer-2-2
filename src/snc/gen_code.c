@@ -52,9 +52,23 @@ static void gen_global_c_code(Expr *global_c_list);
 static void gen_init_reg(char *prog_name);
 static int assign_ef_bits(Expr *scope, ChanList *chan_list);
 
+void assert_var_declared(Expr *ep, Expr *scope, void *parg)
+{
+#ifdef	DEBUG
+	report("assert_var_declared: '%s' in scope (%s:%s)\n",
+		ep->value, expr_type_name(scope), scope->value);
+#endif
+	assert(ep->type == E_VAR);
+	assert(ep->extra.e_var != 0);
+	assert(ep->extra.e_var->decl != 0);
+}
+
 /* Generate C code from parse tree. */
 void generate_code(Program *p)
 {
+	/* assume there have been no errors, so all vars are declared */
+	traverse_expr_tree(p->prog, 1<<E_VAR, 0, 0, assert_var_declared, 0);
+
 #ifdef	DEBUG
 	report("-------------------- Code Generation --------------------\n");
 #endif	/*DEBUG*/

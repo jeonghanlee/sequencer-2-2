@@ -461,8 +461,7 @@ static void eval_event_mask(Expr *ep, Expr *scope, void *parg)
 	bitMask		*event_words = em_args->event_words;
 
 	vp = ep->extra.e_var;
-	if (vp == 0)
-		return; /* this shouldn't happen */
+	assert(vp != 0);
 	cp = vp->chan;
 
 	/* event flag? */
@@ -538,8 +537,7 @@ static void eval_event_mask_subscr(Expr *ep, Expr *scope, void *parg)
 	if (ep1->type != E_VAR)
 		return;
 	vp = ep1->extra.e_var;
-	if (vp == 0)
-		return;		/* not a declared variable */
+	assert(vp != 0);
 
 	cp = vp->chan;
 	if (cp == NULL)

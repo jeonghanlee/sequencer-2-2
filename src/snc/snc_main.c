@@ -84,7 +84,8 @@ int main(int argc, char *argv[])
 
         prg = analyse_program(exp, options);
 
-	generate_code(prg);
+	if (err_cnt == 0)
+		generate_code(prg);
 
 	exit(err_cnt?1:0);
 }
