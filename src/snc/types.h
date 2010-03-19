@@ -204,7 +204,8 @@ struct program
 				| (1<<S_IF) | (1<<S_STMT) | (1<<S_WHILE) )
 /* Expressions types that may have sub-expressions */
 #define has_sub_expr_mask	( (1<<D_DECL) | (1<<D_ENTRY) | (1<<D_EXIT) | (1<<D_PROG)\
-				| (1<<D_SS) | (1<<D_STATE) | (1<<D_WHEN) | (1<<E_BINOP)\
+				| (1<<D_SS) | (1<<D_STATE) | (1<<D_SYNC) | (1<<D_SYNCQ)\
+				| (1<<D_WHEN) | (1<<E_BINOP)\
 				| (1<<E_DELAY) | (1<<E_FUNC) | (1<<E_PAREN) | (1<<E_POST)\
 				| (1<<E_PRE) | (1<<E_SUBSCR) | (1<<E_TERNOP) | (1<<E_VAR)\
 				| (1<<S_CHANGE) | (1<<S_CMPND) | (1<<S_FOR) | (1<<S_IF)\
