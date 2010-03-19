@@ -58,6 +58,15 @@ monitor x;
 evflag  xFlag;
 sync    x[0] xFlag;
 
+declare pvStatOK;
+#if 0
+declare t;
+declare t;
+#endif
+declare secPastEpoch;
+declare t;
+declare nsec;
+
 %%TS_STAMP t;
 /* declare t; */
 long    i = 0;
@@ -181,6 +190,7 @@ ss limit {
 ss apples {
     state init {
         when ( efTestAndClear( xFlag ) ) {
+            /* int i; test shadowing */
             PRINTF( "xFlag\n" );
             for ( i = 0; i < 100; i++ )
                 x[1][i] = x[0][i] + 2;
