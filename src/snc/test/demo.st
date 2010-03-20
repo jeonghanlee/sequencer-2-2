@@ -35,27 +35,14 @@ program demo( PVSYS ",debug=1" )
 /* options */
 option  +r;
 
-/* control variables and limits for voltage control */
-double  voltage;
-assign  voltage  to VOLTAGE;
-monitor voltage;
-
-double  loLimit;
-assign  loLimit  to LOLIMIT;
-monitor loLimit;
-evflag  loFlag;
-sync    loLimit  to loFlag;
-
-double  hiLimit;
-assign  hiLimit  to HILIMIT;
-monitor hiLimit;
 evflag  hiFlag;
-sync    hiLimit  to hiFlag;
+evflag  loFlag;
+
+evflag  xFlag;
 
 double  x[2][100];
 assign  x to {"apple", "orange"};
 monitor x;
-evflag  xFlag;
 sync    x[0] xFlag;
 
 declare pvStatOK;
@@ -68,7 +55,6 @@ declare t;
 declare nsec;
 
 %%TS_STAMP t;
-/* declare t; */
 long    i = 0;
 
 /* temporary timer stuff */
@@ -92,6 +78,11 @@ ss light {
     /* control variables and transition points for light control */
     long    light = -1;
     assign  light    to LIGHT;
+
+    /* control variables and limits for voltage control */
+    double  voltage;
+    assign  voltage  to VOLTAGE;
+    monitor voltage;
 
     string  sstate;
     assign  sstate to "demo:STATE";
@@ -136,6 +127,20 @@ ss light {
 
 /* voltage ramp state set */
 ss ramp {
+
+    /* control variables and limits for voltage control */
+    double  voltage;
+    assign  voltage  to VOLTAGE;
+    monitor voltage;
+
+    double  loLimit;
+    assign  loLimit  to LOLIMIT;
+    monitor loLimit;
+
+    double  hiLimit;
+    assign  hiLimit  to HILIMIT;
+    monitor hiLimit;
+
     state START {
         when () {
             voltage = loLimit;
@@ -173,6 +178,17 @@ ss ramp {
 
 /* hi / lo limit constraint state set */
 ss limit {
+
+    double  loLimit;
+    assign  loLimit  to LOLIMIT;
+    monitor loLimit;
+    sync    loLimit  to loFlag;
+
+    double  hiLimit;
+    assign  hiLimit  to HILIMIT;
+    monitor hiLimit;
+    sync    hiLimit  to hiFlag;
+
     state START {
         when ( efTestAndClear( loFlag ) && loLimit > hiLimit ) {
             hiLimit = loLimit;
@@ -189,6 +205,12 @@ ss limit {
 /* apples and oranges */
 ss apples {
     state init {
+
+        double  x[2][100];
+        assign  x to {"apple", "orange"};
+        monitor x;
+        sync    x[0] xFlag;
+
         when ( efTestAndClear( xFlag ) ) {
             /* int i; test shadowing */
             PRINTF( "xFlag\n" );
