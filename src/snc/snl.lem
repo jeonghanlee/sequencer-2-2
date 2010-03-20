@@ -94,6 +94,8 @@ global_defn(p) ::= monitor(x).		{ p = x; }
 global_defn(p) ::= sync(x).		{ p = x; }
 global_defn(p) ::= syncq(x).		{ p = x; }
 global_defn(p) ::= decl(x).		{ p = x; }
+global_defn(p) ::= evflag_decl(x).	{ p = x; }
+global_defn(p) ::= foreign_decl(x).	{ p = x; }
 global_defn(p) ::= option(x).		{ p = x; }
 global_defn(p) ::= c_code(x).		{ p = x; }
 
@@ -138,6 +140,12 @@ opt_subscript(p) ::= .			{ p = 0; }
 %type subscript {Token}
 subscript(p) ::= LBRACKET INTCON(n) RBRACKET. { p = n; }
 
+foreign_decl(p) ::= DECLARE NAME(v) SEMICOLON.
+			{ p = decl(V_NONE,   VC_SIMPLE, v, 0, 0, 0); }
+
+evflag_decl(p) ::= EVFLAG NAME(v) SEMICOLON.
+			{ p = decl(V_EVFLAG, VC_SIMPLE, v, 0, 0, 0); }
+
 decl(p) ::= type(t) NAME(v) SEMICOLON.
 			{ p = decl(t, VC_SIMPLE,  v, 0,  0,  0); }
 decl(p) ::= type(t) NAME(v) EQUAL expr(x) SEMICOLON.
@@ -150,8 +158,6 @@ decl(p) ::= type(t) ASTERISK NAME(v) SEMICOLON.
 			{ p = decl(t, VC_POINTER, v, 0, 0, 0); }
 decl(p) ::= type(t) ASTERISK NAME(v) subscript(s) SEMICOLON.
 			{ p = decl(t, VC_ARRAYP,  v, s.str,  0,  0); }
-decl(p) ::= DECLARE NAME(v) SEMICOLON.
-			{ p = decl(V_NONE, VC_SIMPLE, v, 0,  0,  0); }
 
 %type number {Token}
 number(p) ::= INTCON(x).			{ p = x; }
@@ -169,7 +175,6 @@ type(p) ::= UNSIGNED LONG.			{ p = V_ULONG;	}
 type(p) ::= FLOAT.				{ p = V_FLOAT;	}
 type(p) ::= DOUBLE.				{ p = V_DOUBLE;	}
 type(p) ::= STRING.				{ p = V_STRING;	}
-type(p) ::= EVFLAG.				{ p = V_EVFLAG;	}
 
 option(p) ::= OPTION option_value(v) NAME(n) SEMICOLON.
 						{ p = opt_defn(n, v); }
