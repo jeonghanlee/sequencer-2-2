@@ -19,7 +19,7 @@ static void analyse_assignment(SymTable st, ChanList *chan_list, Expr *scope, Ex
 static void analyse_monitor(SymTable st, Expr *scope, Expr *defn);
 static void analyse_sync(SymTable st, Expr *scope, Expr *defn, int *num_queues);
 static void analyse_syncq(int *num_queues, SymTable st, Expr *scope, Expr *defn);
-static void assign_subscript(ChanList *chan_list, Expr *dp, Var *vp, char *subscr,	char *db_name);
+static void assign_subscript(ChanList *chan_list, Expr *dp, Var *vp, char *subscr, char *db_name);
 static void assign_single(ChanList *chan_list, Expr *dp, Var *vp, char *db_name);
 static void assign_list(ChanList *chan_list, Expr *dp, Var *vp, Expr *db_name_list);
 static Chan *new_channel(ChanList *chan_list, Var *vp);

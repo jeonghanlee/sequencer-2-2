@@ -259,7 +259,7 @@ static void gen_state_table(Expr *ss_list, int num_events, int num_channels)
 		{
 			fill_state_struct(sp, ssp->value);
 		}
-		printf("\n};\n");
+		printf("};\n");
 	}
 
 	free(event_mask);

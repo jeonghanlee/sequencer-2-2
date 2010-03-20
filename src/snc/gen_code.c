@@ -214,8 +214,10 @@ static void gen_global_var_decls(Program *p)
 	foreach (vp, p->prog->extra.e_prog->first)
 	{
 		if (vp->decl && vp->type != V_EVFLAG && vp->type != V_NONE)
+		{
 			gen_line_marker(vp->decl);
-		indent(1); gen_var_decl(vp);
+			indent(1); gen_var_decl(vp);
+		}
 	}
 	foreach (ssp, p->prog->prog_statesets)
 	{
@@ -241,7 +243,7 @@ static void gen_global_var_decls(Program *p)
 	printf("};\n");
 }
 
-/* Generate definition C code (C code in definition section) */
+/* Generate C code in definition section */
 void gen_defn_c_code(Expr *scope, int level)
 {
 	Expr	*ep;
@@ -264,7 +266,7 @@ void gen_defn_c_code(Expr *scope, int level)
 	}
 }
 
-/* Generate global C code (C code following state program) */
+/* Generate global C code following state sets */
 static void gen_global_c_code(Expr *global_c_list)
 {
 	Expr		*ep;
@@ -309,7 +311,7 @@ static int assign_ef_bits(Expr *scope, ChanList *chan_list)
 		}
 	}
 
-	/* Associate event flags with DB channels */
+	/* Associate event flags with channels */
 	for (cp = chan_list->first; cp != NULL; cp = cp->next)
 	{
 		if (cp->num_elem == 0)

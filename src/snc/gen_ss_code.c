@@ -363,6 +363,8 @@ static void gen_var_access(Var *vp)
 		vp->name, expr_type_name(vp->scope), vp->scope->value);
 #endif
 
+	assert(vp->scope->type & scope_mask);
+
 	if (vp->type == V_NONE || vp->type == V_EVFLAG)
 	{
 		printf("%s", vp->name);
@@ -383,7 +385,7 @@ static void gen_var_access(Var *vp)
 			vp->scope->extra.e_state->var_list->parent_scope->value, SNL_PREFIX,
 			vp->scope->value, vp->name);
 	}
-	else	/* compound or when => generate a local C variable */
+	else	/* compound or when stmt => generate a local C variable */
 	{
 		printf("%s", vp->name);
 	}
