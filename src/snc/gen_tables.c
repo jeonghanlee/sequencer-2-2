@@ -35,6 +35,7 @@
 #include	"analysis.h"
 #include	"snc_main.h"
 #include	"sym_table.h"
+#include	"gen_code.h"
 
 /* #define	DEBUG */
 
@@ -114,13 +115,13 @@ static void gen_var_name(Var *vp)
 	}
 	else if (vp->scope->type == D_SS)
 	{
-		printf("UserVar_ss_%s.%s", vp->scope->value, vp->name);
+		printf("%s_ss_%s.%s", SNL_PREFIX, vp->scope->value, vp->name);
 	}
 	else if (vp->scope->type == D_STATE)
 	{
-		printf("UserVar_ss_%s.UserVar_state_%s.%s",
+		printf("%s_ss_%s.%s_state_%s.%s", SNL_PREFIX,
 			vp->scope->extra.e_state->var_list->parent_scope->value,
-			vp->scope->value, vp->name);
+			SNL_PREFIX, vp->scope->value, vp->name);
 	}
 }
 
@@ -171,7 +172,7 @@ static void fill_channel_struct(Chan *cp, int elem_num, int num_events)
 	/* Ptr or offset to user variable */
 	printf("(void *)");
 
-	printf("OFFSET(struct UserVar, ");
+	printf("OFFSET(struct %s, ", SNL_PREFIX);
 	gen_var_name(vp);
 	printf("%s%s), ", elem_str, suffix);
 
@@ -345,7 +346,7 @@ static void gen_prog_table(char *name, Options options)
 
 	printf("\t/* numSS */              NUM_SS,\n");		/* number of state sets */
 
-	printf("\t/* user variable size */ sizeof(struct UserVar),\n");
+	printf("\t/* user variable size */ sizeof(struct %s),\n", SNL_PREFIX);
 
 	printf("\t/* *pParams */           prog_param,\n");	/* program parameters */
 
