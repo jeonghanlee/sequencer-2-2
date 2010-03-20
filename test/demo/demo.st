@@ -35,6 +35,11 @@ program demo( PVSYS ",debug=1" )
 /* options */
 option  +r;
 
+declare pvStatOK;
+declare t;
+declare secPastEpoch;
+declare nsec;
+
 /* control variables and transition points for light control */
 long    light;
 assign  light    to LIGHT;
