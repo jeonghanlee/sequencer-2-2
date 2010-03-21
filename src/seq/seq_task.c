@@ -96,7 +96,7 @@ SPROG		*pSP;	/* ptr to original (global) state program table */
 	seq_connect(pSP);
 
 	/* Call sequencer entry function */
-	pSP->entryFunc((SS_ID)pSS, pSP->pVar);
+	pSP->entryFunc(pSS, pSP->pVar);
 
 	/* Create each additional state-set task (additional state-set thread
 	   names are derived from the first ss) */
@@ -111,7 +111,7 @@ SPROG		*pSP;	/* ptr to original (global) state program table */
 			threadName,			/* thread name */
 			pSP->threadPriority,		/* priority */
 			pSP->stackSize,			/* stack size */
-			(EPICSTHREADFUNC)ss_entry,		/* entry point */
+			(EPICSTHREADFUNC)ss_entry,	/* entry point */
 			pSS);				/* parameter */
 
 		errlogPrintf("Spawning thread %p: \"%s\"\n", tid,
@@ -134,7 +134,7 @@ SSCB	*pSS;
 	epicsBoolean	ev_trig;
 	STATE		*pST, *pStNext;
 	double		delay;
-	char		*pVar;
+	USER_VAR	*pVar;
 	int		nWords;
 	SS_ID		ssId;
 
@@ -160,7 +160,7 @@ SSCB	*pSS;
 	pVar = pSP->pVar;
 
 	/* state-set id */
-	ssId = (SS_ID)pSS;
+	ssId = pSS;
 
 	/*
 	 * ============= Main loop ==============
@@ -170,9 +170,9 @@ SSCB	*pSS;
 		/* If we've changed state, do any entry actions. Also do these
                  * even if it's the same state if option to do so is enabled. 
                  */
-		if ( pSS->prevState != pSS->currentState ||
-                     pST->options & OPT_DOENTRYFROMSELF )
-	  	         if ( pST->entryFunc ) pST->entryFunc( ssId, pVar );
+		if (pSS->prevState != pSS->currentState ||
+                     pST->options & OPT_DOENTRYFROMSELF)
+	  	         if (pST->entryFunc) pST->entryFunc(ssId, pVar);
 
 		seq_clearDelay(pSS, pST); /* Clear delay list */
 		pST->delayFunc(ssId, pVar); /* Set up new delay list */
@@ -206,7 +206,7 @@ SSCB	*pSS;
 			 &pSS->transNum, &pSS->nextState); /* check events */
 
 		        /* Clear all event flags (old ef mode only) */
-			if ( ev_trig && ((pSP->options & OPT_NEWEF) == 0) )
+			if (ev_trig && ((pSP->options & OPT_NEWEF) == 0))
 			{
 			    register int i;
 
@@ -230,12 +230,12 @@ SSCB	*pSS;
 		pST->actionFunc(ssId, pVar, pSS->transNum);
 
 		/* If changing state, do any exit actions. */
-		if ( pSS->currentState != pSS->nextState ||
-                     pST->options & OPT_DOEXITTOSELF )
-		         if ( pST->exitFunc ) pST->exitFunc( ssId, pVar );
+		if (pSS->currentState != pSS->nextState ||
+                     pST->options & OPT_DOEXITTOSELF)
+		         if (pST->exitFunc) pST->exitFunc(ssId, pVar);
 
 		/* Flush any outstanding DB requests */
-		pvSysFlush( pvSys );
+		pvSysFlush(pvSys);
 
 		/* Change to next state */
 		pSS->prevState = pSS->currentState;
@@ -274,7 +274,7 @@ SSCB	*pSS;
 	    pvSysAttach(pvSys);
 
 	/* Register this thread with the EPICS watchdog (no callback func) */
-	taskwdInsert(pSS->threadId, (SEQVOIDFUNCPTR)0, (void *)0);
+	taskwdInsert(pSS->threadId, 0, (void *)0);
 
 	return;
 }
@@ -290,7 +290,7 @@ int	phase;
 	if (phase == 1 && pSS->threadId == pSP->threadId)
 	{
 	    DEBUG("   Call exit function\n");
-	    pSP->exitFunc((SS_ID)pSS, pSP->pVar);
+	    pSP->exitFunc(pSS, pSP->pVar);
 
 	    DEBUG("   Disconnect all channels\n");
 	    seq_disconnect(pSP);
@@ -342,8 +342,8 @@ STATE           *pST;
         /* On state change set time we entered this state; or if transition from
          * same state if option to do so is on for this state. 
          */
-	if ( (pSS->currentState != pSS->prevState) ||
-             !(pST->options & OPT_NORESETTIMERS) )
+	if ((pSS->currentState != pSS->prevState) ||
+             !(pST->options & OPT_NORESETTIMERS))
 	{
 		pvTimeGetCurrentDouble(&pSS->timeEntered);
 	}
@@ -606,7 +606,7 @@ void *seqAuxThread(void *tArgs)
 	extern		epicsThreadId seqAuxThreadId;
 
 	/* Register this thread with the EPICS watchdog */
-	taskwdInsert(epicsThreadGetIdSelf(),(SEQVOIDFUNCPTR)0, (void *)0);
+	taskwdInsert(epicsThreadGetIdSelf(), 0, 0);
 
 	/* All state program threads will use a common PV context (subtract
 	   1 from debug level for PV debugging) */

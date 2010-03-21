@@ -274,12 +274,12 @@ SPROG			*pSP;
 	pSP->numEvents = pSeqProg->numEvents;
 	pSP->options = pSeqProg->options;
 	pSP->pProgName = pSeqProg->pProgName;
-	pSP->entryFunc = (ENTRY_FUNC)pSeqProg->entryFunc;
-	pSP->exitFunc = (EXIT_FUNC)pSeqProg->exitFunc;
+	pSP->entryFunc = pSeqProg->entryFunc;
+	pSP->exitFunc = pSeqProg->exitFunc;
 	pSP->varSize = pSeqProg->varSize;
 	/* Allocate user variable area if reentrant option (+r) is set */
 	if ((pSP->options & OPT_REENT) != 0)
-		pSP->pVar = (char *)calloc(pSP->varSize, 1);
+		pSP->pVar = (USER_VAR *)calloc(pSP->varSize, 1);
 
 #ifdef	DEBUG
 	printf("init_sprog: num SS=%d, num Chans=%d, num Events=%d, "
@@ -375,11 +375,11 @@ SPROG			*pSP;
 					       nstates++, pState++, pSeqState++)
 		{
 			pState->pStateName = pSeqState->pStateName;
-			pState->actionFunc = (ACTION_FUNC)pSeqState->actionFunc;
-			pState->eventFunc = (EVENT_FUNC)pSeqState->eventFunc;
-			pState->delayFunc = (DELAY_FUNC)pSeqState->delayFunc;
-			pState->entryFunc = (ENTRY_FUNC)pSeqState->entryFunc;
-			pState->exitFunc = (EXIT_FUNC)pSeqState->exitFunc;
+			pState->actionFunc = pSeqState->actionFunc;
+			pState->eventFunc = pSeqState->eventFunc;
+			pState->delayFunc = pSeqState->delayFunc;
+			pState->entryFunc = pSeqState->entryFunc;
+			pState->exitFunc = pSeqState->exitFunc;
 			pState->pEventMask = pSeqState->pEventMask;
                         pState->options = pSeqState->options;
 #ifdef	DEBUG

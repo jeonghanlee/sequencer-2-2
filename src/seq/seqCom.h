@@ -42,11 +42,11 @@
 #include	<stdio.h>	/* standard i/o defs */
 #include	<stdlib.h>	/* standard library defs */
 
-#include	"shareLib.h" /* reset share lib defines */
+#include	"shareLib.h"	/* reset share lib defines */
 #include	"pvAlarm.h"	/* status and severity defs */
 #include	"epicsThread.h"	/* time stamp defs */
 #include	"epicsTime.h"	/* time stamp defs */
-#include        "epicsExport.h" /* for Registrar routine */
+#include	"epicsExport.h"	/* for Registrar routine */
 #endif
 
 #ifdef __cplusplus
@@ -83,15 +83,16 @@ typedef unsigned long   bitMask;
 #define	FALSE		0
 #endif	/*TRUE*/
 
-typedef	long	SS_ID;		/* state set id */
+typedef	struct state_set_control_block *SS_ID;	/* state set id */
+
+typedef struct UserVar USER_VAR;		/* defined by program */
 
 /* Prototype for action, event, delay, and exit functions */
-typedef	long	(*PFUNC)();
-typedef	void	(*ACTION_FUNC)();
-typedef	long	(*EVENT_FUNC)();
-typedef	void	(*DELAY_FUNC)();
-typedef void    (*ENTRY_FUNC)();
-typedef	void	(*EXIT_FUNC)();
+typedef void ACTION_FUNC(SS_ID ssId, USER_VAR *pVar, short transNum);
+typedef long EVENT_FUNC(SS_ID ssId, USER_VAR *pVar, short *pTransNum, short *pNextState);
+typedef void DELAY_FUNC(SS_ID ssId, USER_VAR *pVar);
+typedef void ENTRY_FUNC(SS_ID ssId, USER_VAR *pVar);
+typedef void EXIT_FUNC(SS_ID ssId, USER_VAR *pVar);
 
 #ifdef	OFFSET
 #undef	OFFSET
@@ -104,7 +105,7 @@ typedef	void	(*EXIT_FUNC)();
 struct	seqChan
 {
 	char		*dbAsName;	/* assigned channel name */
-	void		*pVar;		/* ptr to variable (-r option)
+	USER_VAR	*pVar;		/* ptr to variable (-r option)
 					 * or structure offset (+r option) */
 	char		*pVarName;	/* variable name, including subscripts*/
 	char		*pVarType;	/* variable type, e.g. "int" */
@@ -121,13 +122,13 @@ struct	seqChan
 struct	seqState
 {
 	char		*pStateName;	/* state name */
-	ACTION_FUNC	actionFunc;	/* action routine for this state */
-	EVENT_FUNC	eventFunc;	/* event routine for this state */
-	DELAY_FUNC	delayFunc; 	/* delay setup routine for this state */
-        ENTRY_FUNC      entryFunc;      /* statements performed on entry to state */
-	EXIT_FUNC       exitFunc;       /* statements performed on exit from state */
+	ACTION_FUNC	*actionFunc;	/* action routine for this state */
+	EVENT_FUNC	*eventFunc;	/* event routine for this state */
+	DELAY_FUNC	*delayFunc;	/* delay setup routine for this state */
+	ENTRY_FUNC	*entryFunc;	/* statements performed on entry to state */
+	EXIT_FUNC	*exitFunc;	/* statements performed on exit from state */
 	bitMask		*pEventMask;	/* event mask for this state */
-        bitMask         options;        /* State specific option mask */ 
+	bitMask		options;	/* State specific option mask */ 
 };
 
 /* Structure to hold information about a State Set */
@@ -152,8 +153,8 @@ struct	seqProgram
 	char		*pParams;	/* program paramters */
 	long		numEvents;	/* number of event flags */
 	long		options;	/* options (bit-encoded) */
-	ENTRY_FUNC	entryFunc;	/* entry function */
-	EXIT_FUNC	exitFunc;	/* exit function */
+	ENTRY_FUNC	*entryFunc;	/* entry function */
+	EXIT_FUNC	*exitFunc;	/* exit function */
 	int		numQueues;	/* number of syncQ queues */
 };
 
@@ -167,36 +168,36 @@ struct	seqProgram
 #ifndef INCLseqh /* prefer more-specific seq.h prototype */
 #endif
 epicsShareFunc void	epicsShareAPI seq_efSet(SS_ID, long);		/* set an event flag */
-epicsShareFunc long	epicsShareAPI seq_efTest(SS_ID, long);	/* test an event flag */
-epicsShareFunc long	epicsShareAPI seq_efClear(SS_ID, long);	/* clear an event flag */
-epicsShareFunc long	epicsShareAPI seq_efTestAndClear(SS_ID, long);/* test & clear an event flag */
+epicsShareFunc long	epicsShareAPI seq_efTest(SS_ID, long);		/* test an event flag */
+epicsShareFunc long	epicsShareAPI seq_efClear(SS_ID, long);		/* clear an event flag */
+epicsShareFunc long	epicsShareAPI seq_efTestAndClear(SS_ID, long);	/* test & clear an event flag */
 epicsShareFunc long	epicsShareAPI seq_pvGet(SS_ID, long, long);	/* get pv value */
 epicsShareFunc int	epicsShareAPI seq_pvGetQ(SS_ID, int);		/* get queued pv value */
-epicsShareFunc int	epicsShareAPI seq_pvFreeQ(SS_ID, int);	/* free elements on pv queue */
+epicsShareFunc int	epicsShareAPI seq_pvFreeQ(SS_ID, int);		/* free elements on pv queue */
 epicsShareFunc long	epicsShareAPI seq_pvPut(SS_ID, long, long);	/* put pv value */
-epicsShareFunc epicsTimeStamp epicsShareAPI seq_pvTimeStamp(SS_ID, long);   /* get time stamp value */
+epicsShareFunc epicsTimeStamp epicsShareAPI seq_pvTimeStamp(SS_ID, long); /* get time stamp value */
 epicsShareFunc long	epicsShareAPI seq_pvAssign(SS_ID, long, char *);/* assign/connect to a pv */
 epicsShareFunc long	epicsShareAPI seq_pvMonitor(SS_ID, long);	/* enable monitoring on pv */
 epicsShareFunc long	epicsShareAPI seq_pvStopMonitor(SS_ID, long);	/* disable monitoring on pv */
-epicsShareFunc char   *epicsShareAPI seq_pvName(SS_ID, long);	/* returns pv name */
+epicsShareFunc char	*epicsShareAPI seq_pvName(SS_ID, long);		/* returns pv name */
 epicsShareFunc long	epicsShareAPI seq_pvStatus(SS_ID, long);	/* returns pv alarm status code */
 epicsShareFunc long	epicsShareAPI seq_pvSeverity(SS_ID, long);	/* returns pv alarm severity */
-epicsShareFunc char   *epicsShareAPI seq_pvMessage(SS_ID, long);	/* returns pv error message */
+epicsShareFunc char	*epicsShareAPI seq_pvMessage(SS_ID, long);	/* returns pv error message */
 epicsShareFunc long	epicsShareAPI seq_pvAssigned(SS_ID, long);	/* returns TRUE if assigned */
 epicsShareFunc long	epicsShareAPI seq_pvConnected(SS_ID, long);	/* TRUE if connected */
 epicsShareFunc long	epicsShareAPI seq_pvGetComplete(SS_ID, long);	/* TRUE if last get completed */
 epicsShareFunc long	epicsShareAPI seq_pvPutComplete(SS_ID, long, long, long, long *);
-					 /* TRUE if last put completed */
+									/* TRUE if last put completed */
 epicsShareFunc long	epicsShareAPI seq_pvChannelCount(SS_ID);	/* returns number of channels */
 epicsShareFunc long	epicsShareAPI seq_pvConnectCount(SS_ID);	/* returns number of channels conn'ed */
-epicsShareFunc long	epicsShareAPI seq_pvAssignCount(SS_ID);	/* returns number of channels ass'ned */
-epicsShareFunc long	epicsShareAPI seq_pvCount(SS_ID, long);	/* returns number of elements in arr */
+epicsShareFunc long	epicsShareAPI seq_pvAssignCount(SS_ID);		/* returns number of channels ass'ned */
+epicsShareFunc long	epicsShareAPI seq_pvCount(SS_ID, long);		/* returns number of elements in arr */
 epicsShareFunc void	epicsShareAPI seq_pvFlush();			/* flush put/get requests */
-epicsShareFunc long	epicsShareAPI seq_pvIndex(SS_ID, long);	/* returns index of pv */
-epicsShareFunc long	epicsShareAPI seq_seqLog(SS_ID, const char *, ...);	/* Logging */
+epicsShareFunc long	epicsShareAPI seq_pvIndex(SS_ID, long);		/* returns index of pv */
+epicsShareFunc long	epicsShareAPI seq_seqLog(SS_ID, const char *, ...); /* Logging */
 epicsShareFunc void	epicsShareAPI seq_delayInit(SS_ID, long, double);/* initialize a delay entry */
 epicsShareFunc long	epicsShareAPI seq_delay(SS_ID, long);		/* test a delay entry */
-epicsShareFunc char   *epicsShareAPI seq_macValueGet(SS_ID, char *);	/* Given macro name, return ptr to val*/
+epicsShareFunc char	*epicsShareAPI seq_macValueGet(SS_ID, char *);	/* Given macro name, return ptr to val*/
 epicsShareFunc long	epicsShareAPI seq_optGet (SS_ID ssId, char *opt); /* check an option for TRUE/FALSE */
 
 epicsShareFunc long epicsShareAPI seqShow (epicsThreadId);

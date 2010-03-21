@@ -61,8 +61,6 @@
 #define		ERROR (-1)
 #define		LOCAL static
 
-typedef		void (*SEQVOIDFUNCPTR) (); /* used for task watchdog only */
-
 /* global variable for PV system context */
 #ifdef		DECLARE_PV_SYS
 		void *pvSys;
@@ -75,7 +73,7 @@ struct	db_channel
 {
 	/* These are supplied by SNC */
 	char		*dbAsName;	/* channel name from assign statement */
-	char		*pVar;		/* ptr to variable */
+	void		*pVar;		/* ptr to variable */
 	char		*pVarName;	/* variable name string */
 	char		*pVarType;	/* variable type string (e.g. ("int") */
 	long		count;		/* number of elements in array */
@@ -105,8 +103,8 @@ struct	db_channel
 	short		getType;	/* db get type (e.g. DBR_STS_INT) */
 	short		putType;	/* db put type (e.g. DBR_INT) */
 	char		*message;	/* last db access error message */
-        epicsBoolean    gotFirstMonitor;
-        epicsBoolean    gotFirstConnect;
+	epicsBoolean	gotFirstMonitor;
+	epicsBoolean	gotFirstConnect;
 	epicsBoolean	monitored;	/* TRUE if channel IS monitored */
 	void		*evid;		/* event id (supplied by PV lib) */
 	struct state_program *sprog;	/* state program that owns this struct*/
@@ -128,13 +126,13 @@ typedef struct queue_entry QENTRY;
 struct	state_info_block
 {
 	char		*pStateName;	/* state name */
-	ACTION_FUNC	actionFunc;	/* ptr to action rout. for this state */
-	EVENT_FUNC	eventFunc;	/* ptr to event rout. for this state */
-	DELAY_FUNC	delayFunc;	/* ptr to delay rout. for this state */
-        ENTRY_FUNC	entryFunc;      /* ptr to entry rout. for this state */
-	EXIT_FUNC	exitFunc;       /* ptr to exit rout. for this state */
+	ACTION_FUNC	*actionFunc;	/* ptr to action rout. for this state */
+	EVENT_FUNC	*eventFunc;	/* ptr to event rout. for this state */
+	DELAY_FUNC	*delayFunc;	/* ptr to delay rout. for this state */
+	ENTRY_FUNC	*entryFunc;	/* ptr to entry rout. for this state */
+	EXIT_FUNC	*exitFunc;	/* ptr to exit rout. for this state */
 	bitMask		*pEventMask;	/* event mask for this state */
-        bitMask         options;        /* options mask for this state */
+	bitMask		options;	/* options mask for this state */
 };
 typedef	struct	state_info_block STATE;
 
@@ -191,20 +189,20 @@ struct	state_program
 	long		assignCount;	/* number of db channels assigned */
 	long		connCount;	/* number of channels connected */
 	long		firstConnectCount;
-        long		numMonitoredChans;
-        long		firstMonitorCount;
-        epicsBoolean	allFirstConnectAndMonitor;
+	long		numMonitoredChans;
+	long		firstMonitorCount;
+	epicsBoolean	allFirstConnectAndMonitor;
 	SSCB		*pSS;		/* array of state set control blocks */
 	long		numSS;		/* number of state sets */
-	char		*pVar;		/* ptr to user variable area */
+	USER_VAR	*pVar;		/* ptr to user variable area */
 	long		varSize;	/* # bytes in user variable area */
 	MACRO		*pMacros;	/* ptr to macro table */
 	char		*pParams;	/* program paramters */
 	bitMask		*pEvents;	/* event bits for event flags & db */
 	long		numEvents;	/* number of events */
 	long		options;	/* options (bit-encoded) */
-	ENTRY_FUNC	entryFunc;	/* entry function */
-	EXIT_FUNC	exitFunc;	/* exit function */
+	ENTRY_FUNC	*entryFunc;	/* entry function */
+	EXIT_FUNC	*exitFunc;	/* exit function */
 	epicsMutexId	logSemId;	/* logfile locking semaphore */
 	FILE		*logFd;		/* logfile file descr. */
 	char		*pLogFile;	/* logfile name */
@@ -217,8 +215,8 @@ typedef	struct state_program SPROG;
 /* Auxiliary thread arguments */
 struct	auxiliary_args
 {
-        char		*pPvSysName;	/* PV system ("ca", "ktl", ...) */
-        long		debug;		/* debug level */
+	char		*pPvSysName;	/* PV system ("ca", "ktl", ...) */
+	long		debug;		/* debug level */
 };
 typedef struct auxiliary_args AUXARGS;
 
@@ -240,6 +238,6 @@ char	*seqMacValGet (MACRO *, char *);
 void	seqMacEval (char *, char *, long, MACRO *);
 epicsStatus seq_log ();
 SPROG	*seqFindProg (epicsThreadId);
-SPROG  *seqFindProg(epicsThreadId tid);
+SPROG	*seqFindProg(epicsThreadId tid);
 
 #endif	/*INCLseqPvth*/
