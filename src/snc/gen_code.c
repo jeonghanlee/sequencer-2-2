@@ -45,14 +45,12 @@
 
 static const int impossible = 0;
 
-static void gen_preamble(char *prog_name, Options options,
-	int num_ss, int num_channels, int num_events, int num_queues);
-static void gen_global_var_decls(Program *p);
+static void gen_preamble(char *prog_name, int opt_main);
+static void gen_user_var(Expr *prog);
 static void gen_global_c_code(Expr *global_c_list);
 static void gen_init_reg(char *prog_name);
-static int assign_ef_bits(Expr *scope, ChanList *chan_list);
 
-void assert_var_declared(Expr *ep, Expr *scope, void *parg)
+int assert_var_declared(Expr *ep, Expr *scope, void *parg)
 {
 #ifdef DEBUG
 	report("assert_var_declared: '%s' in scope (%s:%s)\n",
@@ -61,6 +59,7 @@ void assert_var_declared(Expr *ep, Expr *scope, void *parg)
 	assert(ep->type == E_VAR);
 	assert(ep->extra.e_var != 0);
 	assert(ep->extra.e_var->decl != 0);
+	return FALSE;		/* there are no children anyway */
 }
 
 /* Generate C code from parse tree. */
@@ -73,23 +72,19 @@ void generate_code(Program *p)
 	report("-------------------- Code Generation --------------------\n");
 #endif
 
-	/* Assign bits for event flags */
-	p->num_events = assign_ef_bits(p->prog, p->chan_list);
-
 #ifdef DEBUG
 	report("gen_tables:\n");
 	report(" num_channels = %d\n", p->num_channels);
-	report(" num_events = %d\n", p->num_events);
+	report(" num_event_flags = %d\n", p->num_event_flags);
 	report(" num_queues = %d\n", p->num_queues);
 	report(" num_ss = %d\n", p->num_ss);
 #endif
 
 	/* Generate preamble code */
-	gen_preamble(p->name, p->options, p->num_ss,
-		p->num_channels, p->num_events, p->num_queues);
+	gen_preamble(p->name, p->options.main);
 
 	/* Generate global variable declarations */
-	gen_global_var_decls(p);
+	gen_user_var(p->prog);
 
 	/* Generate definition C code */
 	gen_defn_c_code(p->prog, 0);
@@ -110,8 +105,7 @@ void generate_code(Program *p)
 }
 
 /* Generate preamble (includes, defines, etc.) */
-static void gen_preamble(char *prog_name, Options options,
-	int num_ss, int num_channels, int num_events, int num_queues)
+static void gen_preamble(char *prog_name, int opt_main)
 {
 	/* Program name (comment) */
 	printf("\n/* Program \"%s\" */\n", prog_name);
@@ -119,12 +113,6 @@ static void gen_preamble(char *prog_name, Options options,
 	/* Includes */
 	printf("#include <string.h>\n");
 	printf("#include \"seqCom.h\"\n");
-
-	/* Local definitions */
-	printf("\n#define NUM_SS %d\n", num_ss);
-	printf("#define NUM_CHANNELS %d\n", num_channels);
-	printf("#define NUM_EVENTS %d\n", num_events);
-	printf("#define NUM_QUEUES %d\n", num_queues);
 
 	/* The following definition should be consistent with db_access.h */
 	printf("\n");
@@ -136,16 +124,18 @@ static void gen_preamble(char *prog_name, Options options,
 	printf("#define SYNC %d\n", 2);
 
 	/* Main program (if "main" option set) */
-	if (options.main) {
-		printf("\nextern struct seqProgram %s;\n", prog_name);
+	if (opt_main) {
 		printf("\n/* Main program */\n");
 		printf("#include \"epicsThread.h\"\n");
 		printf("#include \"iocsh.h\"\n");
+		printf("\n");
+		printf("extern struct seqProgram %s;\n", prog_name);
 		printf("\n");
 		printf("int main(int argc,char *argv[]) {\n");
 		printf("    char * macro_def;\n");
 		printf("    epicsThreadId threadId;\n");
 		printf("    int callIocsh = 0;\n");
+		printf("\n");
 		printf("    if(argc>1 && strcmp(argv[1],\"-s\")==0) {\n");
 		printf("        callIocsh=1;\n");
 		printf("        --argc; ++argv;\n");
@@ -196,11 +186,16 @@ void gen_var_decl(Var *vp)
 		printf("[%d][%d]", vp->length1, vp->length2);
 	if (vp->type == V_STRING)
 		printf("[MAX_STRING_SIZE]");
-	printf(";\n");
 }
 
-/* Generate a C variable declaration for each variable declared in SNL */
-static void gen_global_var_decls(Program *p)
+/* Generate the UserVar struct containing all program variables with
+   'infinite' (global) lifetime. These are: variables declared at the
+   top-level, inside a state set, and inside a state. Note that state
+   set and state local variables are _visible_ only inside the block
+   where they are declared, but still have gobal lifetime. To avoid
+   name collisions, generate a nested struct for each state set, and
+   for each state in a state set. */
+static void gen_user_var(Expr *prog)
 {
 	Var	*vp;
 	Expr	*sp, *ssp;
@@ -209,20 +204,20 @@ static void gen_global_var_decls(Program *p)
 
 	printf("struct %s {\n", SNL_PREFIX);
 	/* Convert internal type to `C' type */
-	foreach (vp, p->prog->extra.e_prog->first)
+	foreach (vp, prog->extra.e_prog->first)
 	{
 		if (vp->decl && vp->type != V_EVFLAG && vp->type != V_NONE)
 		{
 			gen_line_marker(vp->decl);
-			indent(1); gen_var_decl(vp);
+			indent(1); gen_var_decl(vp); printf(";\n");
 		}
 	}
-	foreach (ssp, p->prog->prog_statesets)
+	foreach (ssp, prog->prog_statesets)
 	{
 		indent(1); printf("struct UV_%s {\n", ssp->value);
 		foreach (vp, ssp->extra.e_ss->var_list->first)
 		{
-			indent(2); gen_var_decl(vp);
+			indent(2); gen_var_decl(vp); printf(";\n");
 		}
 		foreach (sp, ssp->ss_states)
 		{
@@ -231,7 +226,7 @@ static void gen_global_var_decls(Program *p)
 				ssp->value, sp->value);
 			foreach (vp, sp->extra.e_state->var_list->first)
 			{
-				indent(3); gen_var_decl(vp);
+				indent(3); gen_var_decl(vp); printf(";\n");
 			}
 			indent(2);
 			printf("} UV_%s;\n", sp->value);
@@ -267,66 +262,18 @@ void gen_defn_c_code(Expr *scope, int level)
 /* Generate global C code following state sets */
 static void gen_global_c_code(Expr *global_c_list)
 {
-	Expr		*ep;
+	Expr	*ep;
 
-	ep = global_c_list;
-	if (ep != NULL)
+	if (global_c_list != NULL)
 	{
 		printf("\n/* Global C code */\n");
-		for (; ep != NULL; ep = ep->next)
+		foreach (ep, global_c_list)
 		{
 			assert(ep->type == T_TEXT);
 			gen_line_marker(ep);
 			printf("%s\n", ep->value);
 		}
 	}
-}
-
-/* Assign event bits to event flags and associate pv channels with
- * event flags. Return number of event flags found.
- */
-static int assign_ef_bits(Expr *scope, ChanList *chan_list)
-{
-	Var	*vp;
-	Chan	*cp;
-	int	n;
-	int	num_events;
-	VarList	*var_list;
-
-	/* Assign event flag numbers (starting at 1) */
-#if 0
-	printf("\n/* Event flags */\n");
-#endif
-
-	var_list = *pvar_list_from_scope(scope);
-
-	num_events = 0;
-	foreach (vp, var_list->first)
-	{
-		if (vp->type == V_EVFLAG)
-		{
-			num_events++;
-			vp->ef_num = num_events;
-#if 0
-			printf("#define %s\t%d\n", vp->name, num_events);
-#endif
-		}
-	}
-
-	/* Associate event flags with channels */
-	foreach (cp, chan_list->first)
-	{
-		for (n = 0; n < cp->num_elem; n++)
-		{
-			vp = cp->ef_vars[n];
-			if (vp != NULL)
-			{
-				cp->ef_nums[n] = vp->ef_num;
-			}
-		}
-	}
-
-	return num_events;
 }
 
 static void gen_init_reg(char *prog_name)

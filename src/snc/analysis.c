@@ -26,10 +26,10 @@ static Chan *new_channel(ChanList *chan_list, Var *vp);
 static void alloc_channel_lists(Chan *cp, int length);
 static void connect_variables(SymTable st, Expr *scope);
 static int connect_states(SymTable st, Expr *ss_list);
-static void connect_variable(Expr *ep, Expr *scope, void *parg);
 static int pv_chan_count(ChanList *chan_list);
 static void add_var(SymTable st, Var *vp, Expr *scope);
 static Var *find_var(SymTable st, char *name, Expr *scope);
+static int assign_ef_bits(Expr *scope, ChanList *chan_list);
 
 Program *analyse_program(Expr *prog, Options options)
 {
@@ -70,10 +70,13 @@ Program *analyse_program(Expr *prog, Options options)
 
 	connect_variables(p->sym_table, prog);
 
+	/* Assign bits for event flags */
+	p->num_event_flags = assign_ef_bits(p->prog, p->chan_list);
+
 	return p;
 }
 
-void analyse_defn(Expr *scope, Expr *parent_scope, void *parg)
+int analyse_defn(Expr *scope, Expr *parent_scope, void *parg)
 {
 	Program	*p = (Program *)parg;
 
@@ -135,6 +138,7 @@ void analyse_defn(Expr *scope, Expr *parent_scope, void *parg)
 			assert(impossible);
 		}
 	}
+	return TRUE; /* always descend into children */
 }
 
 VarList **pvar_list_from_scope(Expr *scope)
@@ -725,7 +729,7 @@ static int pv_chan_count(ChanList *chan_list)
    If there is no such structure, e.g. because the variable has not been
    declared, then allocate one, assign type V_NONE, and assign the most
    local scope for the variable. */
-static void connect_variable(Expr *ep, Expr *scope, void *parg)
+static int connect_variable(Expr *ep, Expr *scope, void *parg)
 {
 	SymTable	st = *(SymTable *)parg;
 	Var		*vp;
@@ -759,14 +763,15 @@ static void connect_variable(Expr *ep, Expr *scope, void *parg)
 		/* create a pseudo declaration so we can finish the analysis phase */
 		vp = new(Var);
 		vp->name = ep->value;
-		vp->type = V_NONE; /* undeclared type */
+		vp->type = V_NONE;	/* undeclared type */
 		vp->length1 = 1;
 		vp->length2 = 1;
 		vp->value = 0;
 		sym_table_insert(st, vp->name, var_list, vp);
 		add_var(st, vp, scope);
 	}
-	ep->extra.e_var = vp; /* make connection (possibly empty) */
+	ep->extra.e_var = vp;		/* make connection */
+	return FALSE;			/* there are no children anyway */
 }
 
 static void connect_variables(SymTable st, Expr *scope)
@@ -790,8 +795,9 @@ void traverse_expr_tree(
 	void		*parg		/* argument to pass to function */
 )
 {
-	Expr		*cep;
-	int		i;
+	Expr	*cep;
+	int	i;
+	int	descend = TRUE;
 
 	if (ep == 0)
 		return;
@@ -804,8 +810,11 @@ void traverse_expr_tree(
 	/* Call the function? */
 	if (call_mask & (1<<ep->type))
 	{
-		iteratee(ep, scope, parg);
+		descend = iteratee(ep, scope, parg);
 	}
+
+	if (!descend)
+		return;
 
 	/* Are we just entering a new scope? */
 	if (is_scope(ep))
@@ -831,13 +840,14 @@ void traverse_expr_tree(
 	}
 }
 
-static void assign_next_delay_id(Expr *ep, Expr *scope, void *parg)
+static int assign_next_delay_id(Expr *ep, Expr *scope, void *parg)
 {
 	int *delay_id = (int *)parg;
 
 	assert(ep->type == E_DELAY);
 	ep->extra.e_delay = *delay_id;
 	*delay_id += 1;
+	return FALSE;	/* delays cannot be nested as they do not return a value */
 }
 
 /* Check for duplicate state set and state names and resolve transitions between states */
@@ -913,4 +923,40 @@ static int connect_states(SymTable st, Expr *prog)
 		num_ss++;
 	}
 	return num_ss;
+}
+
+/* Assign event bits to event flags and associate pv channels with
+ * event flags. Return number of event flags found.
+ */
+static int assign_ef_bits(Expr *scope, ChanList *chan_list)
+{
+	Var	*vp;
+	Chan	*cp;
+	int	n;
+	int	num_event_flags;
+	VarList	*var_list;
+
+	var_list = *pvar_list_from_scope(scope);
+
+	/* Assign event flag numbers (starting at 1) */
+	num_event_flags = 0;
+	foreach (vp, var_list->first)
+	{
+		if (vp->type == V_EVFLAG)
+		{
+			num_event_flags++;
+			vp->ef_num = num_event_flags;
+		}
+	}
+	/* Associate event flags with channels */
+	foreach (cp, chan_list->first)
+	{
+		for (n = 0; n < cp->num_elem; n++)
+		{
+			vp = cp->ef_vars[n];
+			if (vp != NULL)
+				cp->ef_nums[n] = vp->ef_num;
+		}
+	}
+	return num_event_flags;
 }

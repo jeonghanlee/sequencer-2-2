@@ -77,7 +77,7 @@ static void gen_exit_body(Expr *xp, int level);
 static void gen_delay_body(Expr *xp, int level);
 static void gen_event_body(Expr *xp, int level);
 static void gen_action_body(Expr *xp, int level);
-static void gen_delay(Expr *ep, Expr *scope, void *parg);
+static int gen_delay(Expr *ep, Expr *scope, void *parg);
 static void gen_expr(int stmt_type, Expr *ep, int level);
 static void gen_ef_func(int stmt_type, Expr *ep, char *fname, int func_code);
 static void gen_pv_func(int stmt_type, Expr *ep,
@@ -183,6 +183,20 @@ static void gen_local_var_decls(Expr *scope, int level)
 			gen_line_marker(vp->decl);
 			indent(level);
 			gen_var_decl(vp);
+
+			/* optional initialisation */
+			if (vp->value)
+			{
+				if (vp->type == V_STRING)
+				{
+					error_at_expr(vp->decl,
+					  "initialisation not allowed for variables of this type");
+					return;
+				}
+				printf(" = ");
+				gen_expr(ACTION_STMT, vp->value, 0);
+			}
+			printf(";\n");
 		}
 	}
 }
@@ -250,12 +264,11 @@ static void gen_delay_body(Expr *xp, int level)
 	}
 }
 
-/* Evaluate the expression within a delay() function and generate
- * a call to seq_delayInit().  Adds ssId, delay id parameters and cast to
- * double.
+/* Generate call to seq_delayInit() with extra arguments ssId and delay id,
+   and cast the argument proper to double.
  * Example:  seq_delayInit(ssId, 1, (double)(<some expression>));
  */
-static void gen_delay(Expr *ep, Expr *scope, void *parg)
+static int gen_delay(Expr *ep, Expr *scope, void *parg)
 {
 	assert(ep->type == E_DELAY);
 	gen_line_marker(ep);
@@ -265,6 +278,7 @@ static void gen_delay(Expr *ep, Expr *scope, void *parg)
 	gen_expr(EVENT_STMT, ep->delay_args, 0);
 	/* Complete the function call */
 	printf("));\n");
+	return FALSE;	/* no sense descending into children, as delay cannot be nested */
 }
 
 /* Generate action processing functions:
@@ -337,15 +351,10 @@ static void gen_event_body(Expr *xp, int level)
 		indent(level); printf("{\n");
 
 		next_sp = tp->extra.e_when->next_state;
+		/* NULL at this point would have been an error in analysis phase */
+		assert(next_sp != 0);
 		indent(level+1);
-		if (next_sp == 0)
-		{
-			printf("*pNextState = state_%s_does_not_exist;\n", "tp->value");
-		}
-		else
-		{
-			printf("*pNextState = %d;\n", next_sp->extra.e_state->index);
-		}
+		printf("*pNextState = %d;\n", next_sp->extra.e_state->index);
 		indent(level+1); printf("*pTransNum = %d;\n", trans_num);
 		indent(level+1); printf("return TRUE;\n");
 		indent(level); printf("}\n");
@@ -414,7 +423,9 @@ static void gen_expr(
 )
 {
 	Expr	*cep;		/* child expression */
+#if 0
 	Var	*vp;
+#endif
 
 	if (ep == 0)
 		return;
@@ -425,6 +436,7 @@ static void gen_expr(
 
 	switch(ep->type)
 	{
+#if 0
 	/* Definitions */
 	case D_DECL:
 		vp = ep->extra.e_decl;
@@ -437,6 +449,7 @@ static void gen_expr(
 			gen_var_decl(vp);
 		}
 		break;
+#endif
 	/* Statements */
 	case S_CMPND:
 		indent(level);
@@ -811,13 +824,14 @@ static void gen_pv_func(
 #endif	/*DEBUG*/
 }
 
-static void var_init(Expr *dp, Expr *scope, void *parg)
+/* Generate initialisation code for one element of the UserVar struct. */
+static int iter_user_var_init(Expr *dp, Expr *scope, void *parg)
 {
 	assert(dp);
 	assert(dp->type == D_DECL);
 
 	Var *vp = dp->extra.e_decl;
-	
+
 	assert(vp);
 	if (vp->value && vp->decl)
 	{
@@ -825,21 +839,24 @@ static void var_init(Expr *dp, Expr *scope, void *parg)
 		{
 			error_at_expr(vp->decl,
 			  "initialisation not allowed for variables of this type");
-			return;
+			return FALSE;
 		}
+		gen_line_marker(dp);
 		indent(1);
 		gen_var_access(vp);
 		printf(" = ");
 		gen_expr(ACTION_STMT, vp->value, 0);
 		printf(";\n");
 	}
+	return FALSE;		/* do not descend into children */
 }
 
-static void gen_struct_var_init(Expr *prog)
+/* Generate initialisation for variables with global lifetime. */
+static void gen_user_var_init(Expr *prog)
 {
 	const int type_mask = (1<<D_DECL);
-	const int stop_mask = ~((1<<D_DECL) | has_scope_mask);
-	traverse_expr_tree(prog, type_mask, stop_mask, 0, var_init, 0);
+	const int stop_mask = ~((1<<D_DECL)|(1<<D_PROG)|(1<<D_SS)|(1<<D_STATE));
+	traverse_expr_tree(prog, type_mask, stop_mask, 0, iter_user_var_init, 0);
 }
 
 /* Generate global entry handler code */
@@ -848,7 +865,7 @@ static void gen_entry_handler(Expr *prog)
 	assert(prog->type = D_PROG);
 	printf("\n/* Entry handler */\n");
 	printf("static void entry_handler(SS_ID ssId, struct %s *pVar)\n{\n", SNL_PREFIX);
-	gen_struct_var_init(prog);
+	gen_user_var_init(prog);
 	if (prog->prog_entry)
 		gen_entry_body(prog->prog_entry, 1);
 	printf("}\n");

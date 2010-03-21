@@ -70,21 +70,21 @@ struct token				/* for the lexer and parser */
 
 struct when				/* extra data for when clauses */
 {
-	Expr		*next_state;
-	VarList		*var_list;
+	Expr		*next_state;	/* declaration of target state */
+	VarList		*var_list;	/* list of local variables */
 };
 
 struct state				/* extra data for state clauses */
 {
-	int		index;
-	StateOptions	options;
-	VarList		*var_list;
+	int		index;		/* index in array of seqState structs */
+	StateOptions	options;	/* state options */
+	VarList		*var_list;	/* list of 'local' variables */
 };
 
 struct state_set			/* extra data for state set clauses */
 {
-	int	num_states;
-	VarList	*var_list;
+	int	num_states;		/* number of states, useful for iteration */
+	VarList	*var_list;		/* list of 'local' variables */
 };
 
 struct expression			/* generic syntax node */
@@ -117,8 +117,8 @@ struct variable				/* Variable or function definition */
 	Var	*next;			/* link to next variable in list */
 	char	*name;			/* variable name */
 	Expr	*value;			/* initial value or NULL */
-	int	type;			/* var type */
-	int	class;			/* simple, array, or pointer */
+	int	type;			/* var type, see enum var_type */
+	int	class;			/* var class, see enum var_class */
 	int	length1;		/* 1st dim. array lth (default=1) */
 	int	length2;		/* 2nd dim. array lth (default=1) */
 	int	ef_num;			/* bit number if this is an event flag */
@@ -164,17 +164,16 @@ struct program
 	/* result of parsing phase */
 	Expr	*prog;			/* prog of syntax tree */
 
-	/* these point to children of the prog node, for convenience */
+	/* these point into children of the prog node, for convenience */
 	char	*name;			/* ptr to program name (string) */
 	char	*param;			/* parameter string for program stmt */
 
-	/* these are calculated by te analysis phase */
+	/* these are calculated by the analysis phase */
 	Options options;		/* program options, from source or command line */
 	SymTable sym_table;		/* symbol table */
 	ChanList *chan_list;		/* channel list */
-
 	int	num_channels;		/* number of channels */
-	int	num_events;		/* number of event flags */
+	int	num_event_flags;	/* number of event flags */
 	int	num_queues;		/* number of syncQ queues */
 	int	num_ss;			/* number of state sets */
 };
@@ -231,9 +230,9 @@ enum var_type
 /* Variable classes */
 enum var_class
 {
-	VC_SIMPLE,		/* simple (un-dimensioned) variable */
-	VC_ARRAY1,		/* single dim. array */
-	VC_ARRAY2,		/* multiple dim. array */
+	VC_SCALAR,		/* scalar variable */
+	VC_ARRAY1,		/* 1-dimensional array */
+	VC_ARRAY2,		/* 2-dimensional array */
 	VC_POINTER,		/* pointer */
 	VC_ARRAYP		/* array of pointers */
 };
@@ -271,13 +270,16 @@ enum expr_type			/* description [child expressions...] */
 	S_FOR,			/* for statement [init,cond,iter,stmt] */
 	S_IF,			/* if statement [cond,then,else] */
 	S_JUMP,			/* break or continue stmt [] */
-	S_STMT,			/* simple statement [expr] */
+	S_STMT,			/* simple statement, i.e. 'expr;'  [expr] */
 	S_WHILE,		/* while statement [cond,stmt] */
 
 	T_TEXT			/* C code or other text to be inserted [] */
 };
 /* CAUTION: must not be more than 32 expression types */
 
+/* Accessors for child expressions. Would like to define structs for the
+   various expression types with children, but then we could no longer
+   uniformly iterate over all children... */
 #define assign_subscr	children[0]
 #define assign_pvs	children[1]
 #define binop_left	children[0]
