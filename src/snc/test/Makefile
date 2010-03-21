@@ -6,6 +6,7 @@ include $(TOP)/configure/CONFIG
 
 SNC = $(INSTALL_HOST_BIN)/snc
 
+OBJS_IOC += simple.st
 OBJS_IOC += control.st
 OBJS_IOC += demo.st
 OBJS_IOC += johng.st
