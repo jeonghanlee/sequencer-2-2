@@ -41,7 +41,7 @@
 
 static const int impossible = 0;
 
-enum fcode {
+enum {
 	F_NONE, F_DELAY, F_EFSET, F_EFTEST, F_EFCLEAR, F_EFTESTANDCLEAR,
 	F_PVGET, F_PVGETQ, F_PVFREEQ, F_PVPUT, F_PVTIMESTAMP, F_PVASSIGN,
 	F_PVMONITOR, F_PVSTOPMONITOR, F_PVCOUNT, F_PVINDEX, F_PVNAME,
@@ -356,8 +356,6 @@ static void gen_event_body(Expr *xp, int level)
 
 static void gen_var_access(Var *vp)
 {
-	char *pVar_arr = "pVar->";
-
 #ifdef	DEBUG
 	report("var_access: %s, scope=(%s,%s)\n",
 		vp->name, expr_type_name(vp->scope), vp->scope->value);
@@ -365,24 +363,26 @@ static void gen_var_access(Var *vp)
 
 	assert(vp->scope->type & scope_mask);
 
-	if (vp->type == V_NONE || vp->type == V_EVFLAG)
+	if (vp->type == V_NONE)
 	{
 		printf("%s", vp->name);
 	}
+	else if (vp->type == V_EVFLAG)
+	{
+		printf("%d", vp->ef_num);
+	}
 	else if (vp->scope->type == D_PROG)
 	{
-		printf("(%s%s)", pVar_arr, vp->name);
+		printf("(pVar->%s)", vp->name);
 	}
 	else if (vp->scope->type == D_SS)
 	{
-		printf("(%s%s_ss_%s.%s)",
-			pVar_arr, SNL_PREFIX, vp->scope->value, vp->name);
+		printf("(pVar->UV_%s.%s)", vp->scope->value, vp->name);
 	}
 	else if (vp->scope->type == D_STATE)
 	{
-		printf("(%s%s_ss_%s.%s_state_%s.%s)",
-			pVar_arr, SNL_PREFIX,
-			vp->scope->extra.e_state->var_list->parent_scope->value, SNL_PREFIX,
+		printf("(pVar->UV_%s.UV_%s.%s)",
+			vp->scope->extra.e_state->var_list->parent_scope->value,
 			vp->scope->value, vp->name);
 	}
 	else	/* compound or when stmt => generate a local C variable */
@@ -560,9 +560,9 @@ static void gen_expr(
 		indent(level);
 		printf("%s\n", ep->value);
 		break;
-#if 0
+#ifdef DEBUG
 	default:
-		error_at_expr(ep, "internal error: unhandled expression type %s=%s\n",
+		report_at_expr(ep, "unhandled expression (%s:%s)\n",
 			expr_type_name(ep), ep->value);
 #endif
 	}
@@ -591,7 +591,7 @@ static int special_func(
 		return FALSE; /* not a special function */
 
 #ifdef	DEBUG
-	report("special_func: func_code=%d\n", func_code);
+	report("special_func: code=%d, name=%s\n", func_code, fname);
 #endif	/*DEBUG*/
 	switch (func_code)
 	{
@@ -644,7 +644,7 @@ static int special_func(
 	    case F_PVCHANNELCOUNT:
 	    case F_PVCONNECTCOUNT:
 	    case F_PVASSIGNCOUNT:
-		/* DB functions NOT requiring a channel structure */
+		/* pv functions NOT requiring a channel structure */
 		printf("seq_%s(ssId)", fname);
 		return TRUE;
 
@@ -696,7 +696,7 @@ static void gen_ef_func(
 	}
 	else
 	{
-		printf("seq_%s(ssId, %s)", fname, vp->name);
+		printf("seq_%s(ssId, %d)", fname, vp->ef_num);
 	}
 }
 
@@ -739,7 +739,7 @@ static void gen_pv_func(
 	}
 	else if (ap->type == E_SUBSCR)
 	{
-		/* Form should be: <db variable>[<expression>] */
+		/* Form should be: <pv variable>[<expression>] */
 		Expr *ep2 = ap->subscr_operand;
 		subscr = ap->subscr_index;
 		if (ep2->type == E_VAR)

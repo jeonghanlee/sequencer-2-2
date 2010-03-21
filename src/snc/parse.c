@@ -51,20 +51,25 @@ Expr *decl(
 {
 	Expr	*ep;
 	Var	*vp;
-	int	length1, length2;
+	int	length1 = 1, length2 = 1;
 
-	length1 = length2 = 1;
 	if (s_length1 != NULL)
 	{
 		length1 = atoi(s_length1);
-		if (length1 <= 0)
+		if (length1 <= 0) {
+			error_at(var.file, var.line,
+				"invalid array size (must be >= 1)\n");
 			length1 = 1;
+		}
 	}
 	if (s_length2 != NULL)
 	{
 		length2 = atoi(s_length2);
-		if (length2 <= 0)
+		if (length2 <= 0) {
+			error_at(var.file, var.line,
+				"invalid array size (must be >= 1)\n");
 			length2 = 1;
+		}
 	}
 	vp = new(Var);
 	vp->name = var.str;

@@ -133,21 +133,15 @@ struct variable				/* Variable or function definition */
 struct channel				/* channel assignment info */
 {
 	Chan	*next;			/* link to next channel in list */
-	char	*db_name;		/* database name (assign all to 1 pv) */
-	char	**db_name_list;		/* list of names (assign each to a pv) */
-	int	num_elem;		/* number of elements assigned in db_name_list */
-	Var	*var;			/* ptr to variable definition */
-	int	count;			/* count for db access */
-	int	mon_flag;		/* TRUE if channel is "monitored" */
-	int	*mon_flag_list;		/* ptr to list of monitor flags */
-	Var	*ef_var;		/* ptr to event flag variable for sync */
-	Var	**ef_var_list;		/* ptr to list of event flag variables */
-	int	ef_num;			/* event flag number */
-	int	*ef_num_list;		/* list of event flag numbers */
-	int	index;			/* index in database channel array (seqChan) */
+	char	**pv_names;		/* array of pv names */
+	int	num_elem;		/* number of elements */
+	Var	*var;			/* variable definition */
+	int	count;			/* request count for pv access */
+	int	*mon_flags;		/* array of monitor flags */
+	Var	**ef_vars;		/* array of event flag variables */
+	int	*ef_nums;		/* array of event flag numbers (for sync'ed vars) */
+	int	index;			/* index in channel array (seqChan) */
 };
-/* Note: Only one of db_name or db_name_list can have a non-zero value */
-/* TODO: this is ugly, should unify these alternatives */
 
 struct chan_list
 {
@@ -179,7 +173,7 @@ struct program
 	SymTable sym_table;		/* symbol table */
 	ChanList *chan_list;		/* channel list */
 
-	int	num_channels;		/* number of db channels */
+	int	num_channels;		/* number of channels */
 	int	num_events;		/* number of event flags */
 	int	num_queues;		/* number of syncQ queues */
 	int	num_ss;			/* number of state sets */
@@ -282,6 +276,7 @@ enum expr_type			/* description [child expressions...] */
 
 	T_TEXT			/* C code or other text to be inserted [] */
 };
+/* CAUTION: must not be more than 32 expression types */
 
 #define assign_subscr	children[0]
 #define assign_pvs	children[1]

@@ -41,7 +41,7 @@
 #include	"snc_main.h"
 #include	"gen_code.h"
 
-/* #define	DEBUG */
+/* #define DEBUG */
 
 static const int impossible = 0;
 
@@ -54,7 +54,7 @@ static int assign_ef_bits(Expr *scope, ChanList *chan_list);
 
 void assert_var_declared(Expr *ep, Expr *scope, void *parg)
 {
-#ifdef	DEBUG
+#ifdef DEBUG
 	report("assert_var_declared: '%s' in scope (%s:%s)\n",
 		ep->value, expr_type_name(scope), scope->value);
 #endif
@@ -69,20 +69,20 @@ void generate_code(Program *p)
 	/* assume there have been no errors, so all vars are declared */
 	traverse_expr_tree(p->prog, 1<<E_VAR, 0, 0, assert_var_declared, 0);
 
-#ifdef	DEBUG
+#ifdef DEBUG
 	report("-------------------- Code Generation --------------------\n");
-#endif	/*DEBUG*/
+#endif
 
 	/* Assign bits for event flags */
 	p->num_events = assign_ef_bits(p->prog, p->chan_list);
 
-#ifdef	DEBUG
+#ifdef DEBUG
 	report("gen_tables:\n");
 	report(" num_channels = %d\n", p->num_channels);
 	report(" num_events = %d\n", p->num_events);
 	report(" num_queues = %d\n", p->num_queues);
 	report(" num_ss = %d\n", p->num_ss);
-#endif	/*DEBUG*/
+#endif
 
 	/* Generate preamble code */
 	gen_preamble(p->name, p->options, p->num_ss,
@@ -135,11 +135,9 @@ static void gen_preamble(char *prog_name, Options options,
 	printf("#define ASYNC %d\n", 1);
 	printf("#define SYNC %d\n", 2);
 
-	/* Forward references of tables: */
-	printf("\nextern struct seqProgram %s;\n", prog_name);
-
-        /* Main program (if "main" option set) */
+	/* Main program (if "main" option set) */
 	if (options.main) {
+		printf("\nextern struct seqProgram %s;\n", prog_name);
 		printf("\n/* Main program */\n");
 		printf("#include \"epicsThread.h\"\n");
 		printf("#include \"iocsh.h\"\n");
@@ -221,7 +219,7 @@ static void gen_global_var_decls(Program *p)
 	}
 	foreach (ssp, p->prog->prog_statesets)
 	{
-		indent(1); printf("struct %s_ss_%s {\n", SNL_PREFIX, ssp->value);
+		indent(1); printf("struct UV_%s {\n", ssp->value);
 		foreach (vp, ssp->extra.e_ss->var_list->first)
 		{
 			indent(2); gen_var_decl(vp);
@@ -229,16 +227,16 @@ static void gen_global_var_decls(Program *p)
 		foreach (sp, ssp->ss_states)
 		{
 			indent(2);
-			printf("struct %s_ss_%s_state_%s {\n",
-				SNL_PREFIX, ssp->value, sp->value);
+			printf("struct UV_%s_%s {\n",
+				ssp->value, sp->value);
 			foreach (vp, sp->extra.e_state->var_list->first)
 			{
 				indent(3); gen_var_decl(vp);
 			}
 			indent(2);
-			printf("} %s_state_%s;\n", SNL_PREFIX, sp->value);
+			printf("} UV_%s;\n", sp->value);
 		}
-		indent(1); printf("} %s_ss_%s;\n", SNL_PREFIX, ssp->value);
+		indent(1); printf("} UV_%s;\n", ssp->value);
 	}
 	printf("};\n");
 }
@@ -284,7 +282,7 @@ static void gen_global_c_code(Expr *global_c_list)
 	}
 }
 
-/* Assign event bits to event flags and associate db channels with
+/* Assign event bits to event flags and associate pv channels with
  * event flags. Return number of event flags found.
  */
 static int assign_ef_bits(Expr *scope, ChanList *chan_list)
@@ -296,41 +294,34 @@ static int assign_ef_bits(Expr *scope, ChanList *chan_list)
 	VarList	*var_list;
 
 	/* Assign event flag numbers (starting at 1) */
+#if 0
 	printf("\n/* Event flags */\n");
+#endif
 
 	var_list = *pvar_list_from_scope(scope);
 
 	num_events = 0;
-	for (vp = var_list->first; vp != NULL; vp = vp->next)
+	foreach (vp, var_list->first)
 	{
 		if (vp->type == V_EVFLAG)
 		{
 			num_events++;
 			vp->ef_num = num_events;
+#if 0
 			printf("#define %s\t%d\n", vp->name, num_events);
+#endif
 		}
 	}
 
 	/* Associate event flags with channels */
-	for (cp = chan_list->first; cp != NULL; cp = cp->next)
+	foreach (cp, chan_list->first)
 	{
-		if (cp->num_elem == 0)
+		for (n = 0; n < cp->num_elem; n++)
 		{
-			if (cp->ef_var != NULL)
+			vp = cp->ef_vars[n];
+			if (vp != NULL)
 			{
-				vp = cp->ef_var;
-				cp->ef_num = vp->ef_num;
-			}
-		}
-		else
-		{
-			for (n = 0; n < cp->num_elem; n++)
-			{
-			    vp = cp->ef_var_list[n];
-			    if (vp != NULL)
-			    {
-				cp->ef_num_list[n] = vp->ef_num;
-			    }
+				cp->ef_nums[n] = vp->ef_num;
 			}
 		}
 	}

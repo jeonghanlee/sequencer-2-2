@@ -19,15 +19,15 @@ static void analyse_assignment(SymTable st, ChanList *chan_list, Expr *scope, Ex
 static void analyse_monitor(SymTable st, Expr *scope, Expr *defn);
 static void analyse_sync(SymTable st, Expr *scope, Expr *defn, int *num_queues);
 static void analyse_syncq(int *num_queues, SymTable st, Expr *scope, Expr *defn);
-static void assign_subscript(ChanList *chan_list, Expr *dp, Var *vp, char *subscr, char *db_name);
-static void assign_single(ChanList *chan_list, Expr *dp, Var *vp, char *db_name);
-static void assign_list(ChanList *chan_list, Expr *dp, Var *vp, Expr *db_name_list);
+static void assign_subscript(ChanList *chan_list, Expr *dp, Var *vp, char *subscr, char *pv_name);
+static void assign_single(ChanList *chan_list, Expr *dp, Var *vp, char *pv_name);
+static void assign_list(ChanList *chan_list, Expr *dp, Var *vp, Expr *pv_name_list);
 static Chan *new_channel(ChanList *chan_list, Var *vp);
 static void alloc_channel_lists(Chan *cp, int length);
 static void connect_variables(SymTable st, Expr *scope);
 static int connect_states(SymTable st, Expr *ss_list);
 static void connect_variable(Expr *ep, Expr *scope, void *parg);
-static int db_chan_count(ChanList *chan_list);
+static int pv_chan_count(ChanList *chan_list);
 static void add_var(SymTable st, Var *vp, Expr *scope);
 static Var *find_var(SymTable st, char *name, Expr *scope);
 
@@ -65,7 +65,7 @@ Program *analyse_program(Expr *prog, Options options)
 
 	analyse_definitions(p);
 
-	p->num_channels = db_chan_count(p->chan_list);
+	p->num_channels = pv_chan_count(p->chan_list);
 	p->num_ss = connect_states(p->sym_table, prog);
 
 	connect_variables(p->sym_table, prog);
@@ -297,7 +297,7 @@ static void analyse_assignment(SymTable st, ChanList *chan_list, Expr *scope, Ex
 	}
 }
 
-/* "Assign" statement: Assign a variable to a DB channel.
+/* "Assign" statement: Assign a variable to a channel.
  * Format: assign <variable> to <string>;
  * Note: Variable may be subscripted.
  */
@@ -305,14 +305,14 @@ static void assign_single(
 	ChanList	*chan_list,
 	Expr		*dp,
 	Var		*vp,
-	char		*db_name
+	char		*pv_name
 )
 {
 	Chan		*cp;
 	char		*name = vp->name;
 
 #ifdef	DEBUG
-	report("assign %s to %s;\n", name, db_name);
+	report("assign %s to %s;\n", name, pv_name);
 #endif	/*DEBUG*/
 
 	cp = vp->chan;
@@ -325,20 +325,20 @@ static void assign_single(
 	/* Build structure for this channel */
 	cp = new_channel(chan_list, vp);
 
-	cp->db_name = db_name;	/* DB name */
+	cp->pv_names[0] = pv_name;
 
 	/* The entire variable is assigned */
 	cp->count = vp->length1 * vp->length2;
 }
 
-/* "Assign" statement: assign an array element to a DB channel.
+/* "Assign" statement: assign an array element to a channel.
  * Format: assign <variable>[<subscr>] to <string>; */
 static void assign_subscript(
 	ChanList	*chan_list,
 	Expr		*dp,
 	Var		*vp,
 	char		*subscript,	/* subscript value or 0 */
-	char		*db_name
+	char		*pv_name
 )
 {
 	Chan		*cp;
@@ -346,7 +346,7 @@ static void assign_subscript(
 	int		subNum;
 
 #ifdef	DEBUG
-	report("assign %s[%s] to '%s';\n", name, subscript, db_name);
+	report("assign %s[%s] to '%s';\n", name, subscript, pv_name);
 #endif	/*DEBUG*/
 
 	if (vp->class != VC_ARRAY1 && vp->class != VC_ARRAY2)
@@ -360,7 +360,7 @@ static void assign_subscript(
 	{
 		cp = new_channel(chan_list, vp);
 	}
-	else if (cp->db_name != 0)
+	else if (cp->pv_names[0] != 0)
 	{
 		error_at_expr(dp, "assign: array '%s' already assigned\n", name);
 		return;
@@ -374,32 +374,30 @@ static void assign_subscript(
 		return;
 	}
 
-	if (cp->db_name_list == 0)
-		alloc_channel_lists(cp, vp->length1); /* allocate lists */
-	else if (cp->db_name_list[subNum] != 0)
+	if (cp->pv_names[subNum] != 0)
 	{
 		error_at_expr(dp, "assign: '%s[%d]' already assigned\n",
 			name, subNum);
 		return;
 	}
 
-	cp->db_name_list[subNum] = db_name;
+	cp->pv_names[subNum] = pv_name;
 	cp->count = vp->length2; /* could be a 2-dimensioned array */
 }
 
-/* Assign statement: assign an array to multiple DB channels.
+/* Assign statement: assign an array to multiple channels.
  * Format: assign <variable> to { <string>, <string>, ... };
  * Assignments for double dimensioned arrays:
- * <var>[0][0] assigned to 1st db name,
- * <var>[1][0] assigned to 2nd db name, etc.
- * If db name list contains fewer names than the array dimension,
+ * <var>[0][0] assigned to 1st pv name,
+ * <var>[1][0] assigned to 2nd pv name, etc.
+ * If pv name list contains fewer names than the array dimension,
  * the remaining elements receive 0 assignments.
  */
 static void assign_list(
 	ChanList	*chan_list,
 	Expr		*dp,
 	Var		*vp,
-	Expr		*db_name_list
+	Expr		*pv_name_list
 )
 {
 	Chan		*cp;
@@ -425,22 +423,19 @@ static void assign_list(
 
 	cp = new_channel(chan_list, vp);
 
-	/* Allocate lists */
-	alloc_channel_lists(cp, vp->length1); /* allocate lists */
-
 	/* fill in the array of pv names */
 	for (elem_num = 0; elem_num < vp->length1; elem_num++)
 	{
-		if (db_name_list == 0)
+		if (pv_name_list == 0)
 			break; /* end of list */
 
 #ifdef	DEBUG
-		report("'%s', ", db_name_list->value);
+		report("'%s', ", pv_name_list->value);
 #endif	/*DEBUG*/
-		cp->db_name_list[elem_num] = db_name_list->value;
+		cp->pv_names[elem_num] = pv_name_list->value;
 		cp->count = vp->length2;
  
-		db_name_list = db_name_list->next;
+		pv_name_list = pv_name_list->next;
 	}
 #ifdef	DEBUG
 	report("};\n");
@@ -477,15 +472,10 @@ static void analyse_monitor(SymTable st, Expr *scope, Expr *defn)
 	}
 	if (e_subscr == 0)
 	{
-		if (cp->num_elem == 0)
-		{	/* monitor one channel for this variable */
-			cp->mon_flag = TRUE;
-			return;
-		}
-		/* else monitor all channels in db list */
+		/* else monitor all channels in pv list */
 		for (subNum = 0; subNum < cp->num_elem; subNum++)
 		{	/* 1 pv per element of the array */
-			cp->mon_flag_list[subNum] = TRUE;
+			cp->mon_flags[subNum] = TRUE;
 		}
 		return;
 	}
@@ -494,13 +484,13 @@ static void analyse_monitor(SymTable st, Expr *scope, Expr *defn)
 		error_at_expr(defn, "monitor: subscript of '%s' out of range\n", name);
 		return;
 	}
-	if (cp->num_elem == 0 || cp->db_name_list[subNum] == 0)
+	if (cp->pv_names[subNum] == 0)
 	{
 		error_at_expr(defn, "monitor: '%s[%d]' not assigned\n",
-		 name, subNum);
+			name, subNum);
 		return;
 	}
-	cp->mon_flag_list[subNum] = TRUE;
+	cp->mon_flags[subNum] = TRUE;
 }
 
 static void analyse_sync(SymTable st, Expr *scope, Expr *defn, int *num_queues)
@@ -519,14 +509,12 @@ static void analyse_sync(SymTable st, Expr *scope, Expr *defn, int *num_queues)
 		error_at_expr(defn, "sync: variable '%s' not declared\n", name);
 		return;
 	}
-
 	cp = vp->chan;
 	if (cp == 0)
 	{
 		error_at_expr(defn, "sync: variable '%s' not assigned\n", name);
 		return;
 	}
-
 	/* Find the event flag varible */
 	vp = find_var(st, ef_name, scope);
 	if (vp == 0 || vp->type != V_EVFLAG)
@@ -535,31 +523,22 @@ static void analyse_sync(SymTable st, Expr *scope, Expr *defn, int *num_queues)
 			ef_name);
 		return;
 	}
-
 	if (e_subscr == 0)
-	{	/* no subscript */
-		if (cp->db_name != 0)
-		{	/* 1 pv assigned to this variable */
-			cp->ef_var = vp;
-			return;
-		}
-
-		/* 1 pv per element in the array */
+	{
 		for (subNum = 0; subNum < cp->num_elem; subNum++)
 		{
-			cp->ef_var_list[subNum] = vp;
+			cp->ef_vars[subNum] = vp;
 		}
-		return;
 	}
-
-	/* e_subscr != 0 */
-	if (subNum < 0 || subNum >= cp->num_elem)
+	else if (subNum < 0 || subNum >= cp->num_elem)
 	{
 		error_at_expr(defn, "sync: subscript '%s[%d]' out of range\n",
 			name, subNum);
-		return;
 	}
-	cp->ef_var_list[subNum] = vp; /* sync to a specific element of the array */
+	else
+	{
+		cp->ef_vars[subNum] = vp; /* sync to a specific element of the array */
+	}
 }
 
 static void analyse_syncq(int *num_queues, SymTable st, Expr *scope, Expr *defn)
@@ -621,32 +600,22 @@ static void analyse_syncq(int *num_queues, SymTable st, Expr *scope, Expr *defn)
 
 	if (e_subscr == 0)
 	{
-		int i;
-
-		/* no subscript */
-		if (cp->db_name != 0)
-		{	/* 1 pv assigned to this variable */
-			cp->ef_var = efp;
+		for (subNum = 0; subNum < cp->num_elem; subNum++)
+		{
+			cp->ef_vars[subNum] = efp;
+		}
+	}
+	else
+	{
+		subNum = atoi(s_subscr);
+		if (subNum < 0 || subNum >= cp->num_elem)
+		{
+			error_at_expr(defn,
+				"syncQ: subscript '%s[%d]' out of range\n", name, subNum);
 			return;
 		}
-
-		/* 1 pv per element in the array */
-		for (i = 0; i < cp->num_elem; i++)
-		{
-			cp->ef_var_list[i] = efp;
-		}
-		return;
+		cp->ef_vars[subNum] = efp; /* sync to a specific element of the array */
 	}
-
-	/* subscript != 0 */
-	subNum = atoi(s_subscr);
-	if (subNum < 0 || subNum >= cp->num_elem)
-	{
-		error_at_expr(defn,
-			"syncQ: subscript '%s[%d]' out of range\n", name, subNum);
-		return;
-	}
-	cp->ef_var_list[subNum] = efp; /* sync to a specific element of the array */
 }
 
 /* Allocate a channel structure for this variable, add it to the channel list,
@@ -654,6 +623,8 @@ static void analyse_syncq(int *num_queues, SymTable st, Expr *scope, Expr *defn)
 static Chan *new_channel(ChanList *chan_list, Var *vp)
 {
 	Chan *cp = new(Chan);
+
+	alloc_channel_lists(cp, vp->length1);
 
 	/* mutually connect variable and channel */
 	cp->var = vp;
@@ -674,16 +645,16 @@ static Chan *new_channel(ChanList *chan_list, Var *vp)
 static void alloc_channel_lists(Chan *cp, int length)
 {
 	/* allocate an array of pv names */
-	cp->db_name_list = (char **)calloc(sizeof(char **), length);
+	cp->pv_names = (char **)calloc(sizeof(char **), length);
 
 	/* allocate an array for monitor flags */
-	cp->mon_flag_list = (int *)calloc(sizeof(int **), length);
+	cp->mon_flags = (int *)calloc(sizeof(int **), length);
 
 	/* allocate an array for event flag var ptrs */
-	cp->ef_var_list = (Var **)calloc(sizeof(Var **), length);
+	cp->ef_vars = (Var **)calloc(sizeof(Var **), length);
 
 	/* allocate an array for event flag numbers */
-	cp->ef_num_list = (int *)calloc(sizeof(int **), length);
+	cp->ef_nums = (int *)calloc(sizeof(int **), length);
 
 	cp->num_elem = length;
 }
@@ -734,9 +705,9 @@ Var *find_var(SymTable st, char *name, Expr *scope)
 		return find_var(st, name, var_list->parent_scope);
 }
 
-/* Sets cp->index for each variable, & returns number of db channels defined. 
+/* Sets cp->index for each variable, & returns number of channels defined. 
  */
-static int db_chan_count(ChanList *chan_list)
+static int pv_chan_count(ChanList *chan_list)
 {
 	int	nchan;
 	Chan	*cp;
@@ -745,10 +716,7 @@ static int db_chan_count(ChanList *chan_list)
 	foreach (cp, chan_list->first)
 	{
 		cp->index = nchan;
-		if (cp->num_elem == 0)
-			nchan += 1;
-		else
-			nchan += cp->num_elem; /* array with multiple channels */
+		nchan += cp->num_elem; /* array with multiple channels */
 	}
 	return nchan;
 }
@@ -902,9 +870,6 @@ static int connect_states(SymTable st, Expr *prog)
 					"a state with name '%s' in state set '%s' "
 					"was already declared at line %d\n",
 					sp->value, ssp->value, sp2->line_num);
-#if 0
-				sp->extra.e_state->index = -1;
-#endif
 			}
 			assert(sp->extra.e_state);
 #ifdef	DEBUG

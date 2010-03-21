@@ -37,7 +37,7 @@
 #include	"sym_table.h"
 #include	"gen_code.h"
 
-/* #define	DEBUG */
+/* #define DEBUG */
 
 typedef struct event_mask_args {
 	bitMask	*event_words;
@@ -48,16 +48,15 @@ static void gen_channel_table(ChanList *chan_list, int num_events);
 static void fill_channel_struct(Chan *cp, int elem_num, int num_events);
 static void gen_state_table(Expr *ss_list, int num_events, int num_channels);
 static void fill_state_struct(Expr *sp, char *ss_name);
-static void gen_prog_params(char *param);
-static void gen_prog_table(char *name, Options options);
+static void gen_prog_table(char *name, Options options, char *pparam);
 static void encode_options(Options options);
 static void encode_state_options(StateOptions options);
 static void gen_ss_table(SymTable st, Expr *ss_list);
-static void eval_state_event_mask(Expr *sp, int num_events,
+static void gen_state_event_mask(Expr *sp, int num_events,
 	bitMask *event_words, int num_event_words);
-static void eval_event_mask(Expr *ep, Expr *scope, void *parg);
-static void eval_event_mask_subscr(Expr *ep, Expr *scope, void *parg);
-static char *db_type_str(int type);
+static void iter_event_mask(Expr *ep, Expr *scope, void *parg);
+static void iter_event_mask_subscr(Expr *ep, Expr *scope, void *parg);
+static char *pv_type_str(int type);
 
 /* Generate all kinds of tables for a SNL program. */
 void gen_tables(Program *p)
@@ -70,9 +69,7 @@ void gen_tables(Program *p)
 
 	gen_ss_table(p->sym_table, p->prog->prog_statesets);
 
-	gen_prog_params(p->param);
-
-	gen_prog_table(p->name, p->options);
+	gen_prog_table(p->name, p->options, p->param);
 }
 
 /* Generate channel table with data for each defined channel */
@@ -87,13 +84,11 @@ static void gen_channel_table(ChanList *chan_list, int num_events)
 		foreach (cp, chan_list->first)
 		{
 			int n;
-#ifdef	DEBUG
+#ifdef DEBUG
 			report("gen_channel_table: index=%d, num_elem=%d\n",
 				cp->index, cp->num_elem);
-#endif	/*DEBUG*/
-			int num_elem = cp->num_elem ? cp->num_elem : 1;
-
-			for (n = 0; n < num_elem; n++)
+#endif
+			for (n = 0; n < cp->num_elem; n++)
 			{
 				fill_channel_struct(cp, n, num_events);
 			}
@@ -115,13 +110,13 @@ static void gen_var_name(Var *vp)
 	}
 	else if (vp->scope->type == D_SS)
 	{
-		printf("%s_ss_%s.%s", SNL_PREFIX, vp->scope->value, vp->name);
+		printf("UV_%s.%s", vp->scope->value, vp->name);
 	}
 	else if (vp->scope->type == D_STATE)
 	{
-		printf("%s_ss_%s.%s_state_%s.%s", SNL_PREFIX,
+		printf("UV_%s.UV_%s.%s",
 			vp->scope->extra.e_state->var_list->parent_scope->value,
-			SNL_PREFIX, vp->scope->value, vp->name);
+			vp->scope->value, vp->name);
 	}
 }
 
@@ -129,7 +124,7 @@ static void gen_var_name(Var *vp)
 static void fill_channel_struct(Chan *cp, int elem_num, int num_events)
 {
 	Var		*vp;
-	char		*suffix, elem_str[20], *db_name;
+	char		*suffix, elem_str[20], *pv_name;
 	int		ef_num, mon_flag;
 
 	vp = cp->var;
@@ -147,27 +142,14 @@ static void fill_channel_struct(Chan *cp, int elem_num, int num_events)
 	else
 		suffix = "";
 
-	/* Pick up other db info */
+	pv_name = cp->pv_names[elem_num];
+	mon_flag = cp->mon_flags[elem_num];
+	ef_num = cp->ef_nums[elem_num];
 
-	if (cp->num_elem == 0)
-	{
-		db_name = cp->db_name;
-		mon_flag = cp->mon_flag;
-		ef_num = cp->ef_num;
-	}
-	else
-	{
-		db_name = cp->db_name_list[elem_num];
-		mon_flag = cp->mon_flag_list[elem_num];
-		ef_num = cp->ef_num_list[elem_num];
-	}
+	if (pv_name == NULL)
+		pv_name = ""; /* not assigned */
 
-	if (db_name == NULL)
-		db_name = ""; /* not assigned */
-
-	/* Now, fill in the dbCom structure */
-
-	printf("  {\"%s\", ", db_name);/* unexpanded db channel name */
+	printf("  {\"%s\", ", pv_name);/* unexpanded channel name */
 
 	/* Ptr or offset to user variable */
 	printf("(void *)");
@@ -180,9 +162,9 @@ static void fill_channel_struct(Chan *cp, int elem_num, int num_events)
 	printf("\"%s%s\", ", vp->name, elem_str);
 
  	/* variable type */
-	printf("\n    \"%s\", ", db_type_str(vp->type));
+	printf("\n    \"%s\", ", pv_type_str(vp->type));
 
-	/* count for db requests */
+	/* count, for requests */
 	printf("%d, ", cp->count);
 
 	/* event number */
@@ -204,8 +186,8 @@ static void fill_channel_struct(Chan *cp, int elem_num, int num_events)
 	printf(",\n\n");
 }
 
-/* Convert variable type to db type as a string */
-static char *db_type_str(int type)
+/* Convert variable type to pv type as a string */
+static char *pv_type_str(int type)
 {
 	switch (type)
 	{
@@ -244,7 +226,7 @@ static void gen_state_table(Expr *ss_list, int num_events, int num_channels)
 		printf("\n/* Event masks for state set %s */\n", ssp->value);
 		foreach (sp, ssp->ss_states)
 		{
-			eval_state_event_mask(sp, num_events, event_mask, num_event_words);
+			gen_state_event_mask(sp, num_events, event_mask, num_event_words);
 			printf("\t/* Event mask for state %s: */\n", sp->value);
 			printf("static bitMask\tEM_%s_%s[] = {\n",
 				ssp->value, sp->value);
@@ -273,40 +255,40 @@ static void fill_state_struct(Expr *sp, char *ss_name)
 
 	printf("\t/* State \"%s\" */ {\n", sp->value);
 
-	printf("\t/* state name */       \"%s\",\n", sp->value);
+	printf("\t/* state name */        \"%s\",\n", sp->value);
 
-	printf("\t/* action function */ (ACTION_FUNC) A_%s_%s,\n", ss_name, sp->value);
+	printf("\t/* action function */   A_%s_%s,\n", ss_name, sp->value);
 
-	printf("\t/* event function */  (EVENT_FUNC) E_%s_%s,\n", ss_name, sp->value);
+	printf("\t/* event function */    E_%s_%s,\n", ss_name, sp->value);
 
-	printf("\t/* delay function */   (DELAY_FUNC) D_%s_%s,\n", ss_name, sp->value);
+	printf("\t/* delay function */    D_%s_%s,\n", ss_name, sp->value);
 
 	/* Check if there are any entry or exit "transitions" in this
-	   state so that if so the state block will be initialized to include a
+	   state so that if so the state struct will be initialized to include a
 	   reference to the function which implements them, but otherwise just
 	   include a null pointer in those members */
 
-	printf("\t/* entry function */   (ENTRY_FUNC)");
+	printf("\t/* entry function */    ");
 	if (sp->state_entry)
-		printf(" I_%s_%s,\n", ss_name, sp->value);
+		printf("I_%s_%s,\n", ss_name, sp->value);
 	else
-		printf(" 0,\n");
+		printf("0,\n");
 
-	printf("\t/* exit function */   (EXIT_FUNC)");
+	printf("\t/* exit function */     ");
 	if (sp->state_exit)
-		printf(" O_%s_%s,\n", ss_name, sp->value);
+		printf("O_%s_%s,\n", ss_name, sp->value);
 	else
-		printf(" 0,\n");
+		printf("0,\n");
 
-	printf("\t/* event mask array */ EM_%s_%s,\n", ss_name, sp->value);
+	printf("\t/* event mask array */  EM_%s_%s,\n", ss_name, sp->value);
 
-	printf("\t/* state options */   ");
+	printf("\t/* state options */     ");
 	encode_state_options(sp->extra.e_state->options);
 	printf("}");
 	printf(",\n\n");
 }
 
-/* Write the state option bitmask into a state block */
+/* Write the state option bitmask into a state struct */
 static void encode_state_options(StateOptions options)
 {
 	printf("(0");
@@ -319,45 +301,37 @@ static void encode_state_options(StateOptions options)
 	printf(")");
 } 
 
-/* Generate the program parameter list */
-static void gen_prog_params(char *param)
-{
-	printf("\n/* Program parameter list */\n");
-
-	printf("static char prog_param[] = \"%s\";\n", param);
-}
-
 /* Generate a single program structure ("struct seqProgram") */
-static void gen_prog_table(char *name, Options options)
+static void gen_prog_table(char *name, Options options, char *pparam)
 {
 	printf("\n/* State Program table (global) */\n");
 
 	printf("struct seqProgram %s = {\n", name);
 
-	printf("\t/* magic number */       %d,\n", MAGIC);	/* magic number */
+	printf("\t/* magic number */      %d,\n", MAGIC);	/* magic number */
 
-	printf("\t/* *name */              \"%s\",\n", name);	/* program name */
+	printf("\t/* *name */             \"%s\",\n", name);	/* program name */
 
-	printf("\t/* *pChannels */         seqChan,\n");	/* table of db channels */
+	printf("\t/* *pChannels */        seqChan,\n");	/* table of channels */
 
-	printf("\t/* numChans */           NUM_CHANNELS,\n");	/* number of db channels */
+	printf("\t/* numChans */          NUM_CHANNELS,\n");	/* number of channels */
 
-	printf("\t/* *pSS */               seqSS,\n");		/* array of SS blocks */
+	printf("\t/* *pSS */              seqSS,\n");		/* array of SS structs */
 
-	printf("\t/* numSS */              NUM_SS,\n");		/* number of state sets */
+	printf("\t/* numSS */             NUM_SS,\n");		/* number of state sets */
 
-	printf("\t/* user variable size */ sizeof(struct %s),\n", SNL_PREFIX);
+	printf("\t/* user var size */     sizeof(struct %s),\n", SNL_PREFIX);
 
-	printf("\t/* *pParams */           prog_param,\n");	/* program parameters */
+	printf("\t/* *pParams */          \"%s\",\n", pparam);	/* program parameters */
 
-	printf("\t/* numEvents */          NUM_EVENTS,\n");	/* number event flags */
+	printf("\t/* numEvents */         NUM_EVENTS,\n");	/* number event flags */
 
-	printf("\t/* encoded options */    ");
+	printf("\t/* encoded options */   ");
 	encode_options(options);
 
-	printf("\t/* entry handler */      (ENTRY_FUNC) entry_handler,\n");
-	printf("\t/* exit handler */       (EXIT_FUNC) exit_handler,\n");
-	printf("\t/* numQueues */          NUM_QUEUES\n");	/* number of syncQ queues */
+	printf("\t/* entry handler */     entry_handler,\n");
+	printf("\t/* exit handler */      exit_handler,\n");
+	printf("\t/* numQueues */         NUM_QUEUES\n");	/* number of syncQ queues */
 
 	printf("};\n");
 }
@@ -398,22 +372,22 @@ static void gen_ss_table(SymTable st, Expr *ss_list)
 
 		printf("\t/* State set \"%s\" */ {\n", ssp->value);
 
-		printf("\t/* ss name */            \"%s\",\n", ssp->value);
+		printf("\t/* ss name */           \"%s\",\n", ssp->value);
 
-		printf("\t/* ptr to state block */ state_%s,\n", ssp->value);
+		printf("\t/* state struct */      state_%s,\n", ssp->value);
 
-		printf("\t/* number of states */   %d,\n", ssp->extra.e_ss->num_states);
+		printf("\t/* number of states */  %d,\n", ssp->extra.e_ss->num_states);
 
 		err_sp = sym_table_lookup(st, "error", ssp);
 
-		printf("\t/* error state */        %d},\n",
+		printf("\t/* error state */       %d},\n\n",
 			err_sp ? err_sp->extra.e_state->index : -1);
 	}
 	printf("};\n");
 }
 
 /* Evaluate composite event mask for a single state */
-static void eval_state_event_mask(Expr *sp, int num_events,
+static void gen_state_event_mask(Expr *sp, int num_events,
 	bitMask *event_words, int num_event_words)
 {
 	int		n;
@@ -435,24 +409,24 @@ static void eval_state_event_mask(Expr *sp, int num_events,
 
 		/* look for simple variables, e.g. "when(x > 0)" */
 		traverse_expr_tree(tp->when_cond, 1<<E_VAR, 0, 0,
-			eval_event_mask, &em_args);
+			iter_event_mask, &em_args);
 
 		/* look for subscripted variables, e.g. "when(x[i] > 0)" */
 		traverse_expr_tree(tp->when_cond, 1<<E_SUBSCR, 0, 0,
-			eval_event_mask_subscr, &em_args);
+			iter_event_mask_subscr, &em_args);
 	}
-#ifdef	DEBUG
+#ifdef DEBUG
 	report("event mask for state %s is", sp->value);
 	for (n = 0; n < num_event_words; n++)
 		report(" 0x%lx", event_words[n]);
 	report("\n");
-#endif	/*DEBUG*/
+#endif
 }
 
 /* Evaluate the event mask for a given transition (when() statement). 
  * Called from traverse_expr_tree() when ep->type==E_VAR.
  */
-static void eval_event_mask(Expr *ep, Expr *scope, void *parg)
+static void iter_event_mask(Expr *ep, Expr *scope, void *parg)
 {
 	event_mask_args	*em_args = (event_mask_args *)parg;
 	Chan		*cp;
@@ -461,21 +435,22 @@ static void eval_event_mask(Expr *ep, Expr *scope, void *parg)
 	int		num_events = em_args->num_events;
 	bitMask		*event_words = em_args->event_words;
 
+	assert(ep->type == E_VAR);
 	vp = ep->extra.e_var;
 	assert(vp != 0);
-	cp = vp->chan;
 
 	/* event flag? */
 	if (vp->type == V_EVFLAG)
 	{
-#ifdef	DEBUG
-		report("  eval_event_mask: %s, ef_num=%d\n",
+#ifdef DEBUG
+		report("  iter_event_mask: %s, ef_num=%d\n",
 		 vp->name, vp->ef_num);
-#endif	/*DEBUG*/
+#endif
 		bitSet(event_words, vp->ef_num);
 		return;
 	}
 
+	cp = vp->chan;
 	/* if not associated with channel, return */
 	if (cp == 0)
 		return;
@@ -484,32 +459,19 @@ static void eval_event_mask(Expr *ep, Expr *scope, void *parg)
 	   are assumed to refer to the same event flag) */
 	if (vp->queued)
 	{
-		int ef_num = cp->num_elem == 0 ?
-					cp->ef_num : cp->ef_num_list[0];
-#ifdef	DEBUG
-		report("  eval_event_mask: %s, ef_num=%d\n",
+		int ef_num = cp->ef_nums[0];
+#ifdef DEBUG
+		report("  iter_event_mask: %s, ef_num=%d\n",
 		 vp->name, ef_num);
-#endif	/*DEBUG*/
+#endif
 		bitSet(event_words, ef_num);
 	}
-
-	/* scalar database channel? */
-	else if (cp->num_elem == 0)
-	{
-#ifdef	DEBUG
-		report("  eval_event_mask: %s, db event bit=%d\n",
-		 vp->name, cp->index + 1);
-#endif	/*DEBUG*/
-		bitSet(event_words, cp->index + num_events + 1);
-	}
-
-	/* array database channel? (set all bits) */
 	else
 	{
-#ifdef	DEBUG
-		report("  eval_event_mask: %s, db event bits=%d..%d\n",
+#ifdef DEBUG
+		report("  iter_event_mask: %s, event bits=%d..%d\n",
 			vp->name, cp->index + 1, cp->index + vp->length1);
-#endif	/*DEBUG*/
+#endif
 		for (n = 0; n < vp->length1; n++)
 		{
 			bitSet(event_words, cp->index + n + num_events + 1);
@@ -521,7 +483,7 @@ static void eval_event_mask(Expr *ep, Expr *scope, void *parg)
  * for subscripted database variables. 
  * Called from traverse_expr_tree() when ep->type==E_SUBSCR.
  */
-static void eval_event_mask_subscr(Expr *ep, Expr *scope, void *parg)
+static void iter_event_mask_subscr(Expr *ep, Expr *scope, void *parg)
 {
 	event_mask_args	*em_args = (event_mask_args *)parg;
 	int		num_events = em_args->num_events;
@@ -537,23 +499,13 @@ static void eval_event_mask_subscr(Expr *ep, Expr *scope, void *parg)
 	assert(ep1 != 0);
 	if (ep1->type != E_VAR)
 		return;
+	assert(ep1->type == E_VAR);
 	vp = ep1->extra.e_var;
 	assert(vp != 0);
 
 	cp = vp->chan;
 	if (cp == NULL)
-		return;
-
-	/* Only do this if the array is assigned to multiple pv's */
-	if (cp->num_elem == 0)
-	{
-#ifdef	DEBUG
-		report("  eval_event_mask_subscr: %s, db event bit=%d\n",
-		 vp->name, cp->index);
-#endif	/*DEBUG*/
-		bitSet(event_words, cp->index + num_events + 1);
-		return;
-	}
+		return;		/* not assigned to a pv */
 
 	/* Is this subscript a constant? */
 	ep2 = ep->subscr_index;
@@ -562,22 +514,26 @@ static void eval_event_mask_subscr(Expr *ep, Expr *scope, void *parg)
 	{
 		subscr = atoi(ep2->value);
 		if (subscr < 0 || subscr >= cp->num_elem)
+		{
+			error_at_expr(ep2, "subscript out of range\n");
 			return;
-#ifdef	DEBUG
-		report("  eval_event_mask_subscr: %s, db event bit=%d\n",
-		 vp->name, cp->index + subscr + 1);
-#endif	/*DEBUG*/
+		}
+#ifdef DEBUG
+		report("  iter_event_mask_subscr: %s, event bit=%d\n",
+			vp->name, cp->index + subscr + 1);
+#endif
 		bitSet(event_words, cp->index + subscr + num_events + 1);
-		return;
 	}
-
-	/* subscript is an expression -- set all event bits for this variable */
-#ifdef	DEBUG
-	report("  eval_event_mask_subscr: %s, db event bits=%d..%d\n",
-		vp->name, cp->index + 1, cp->index + vp->length1);
-#endif	/*DEBUG*/
-	for (n = 0; n < vp->length1; n++)
+	else
 	{
-		bitSet(event_words, cp->index + n + num_events + 1);
+		/* subscript is an expression -- set all event bits for this variable */
+#ifdef DEBUG
+		report("  iter_event_mask_subscr: %s, event bits=%d..%d\n",
+			vp->name, cp->index + 1, cp->index + vp->length1);
+#endif
+		for (n = 0; n < vp->length1; n++)
+		{
+			bitSet(event_words, cp->index + n + num_events + 1);
+		}
 	}
 }
