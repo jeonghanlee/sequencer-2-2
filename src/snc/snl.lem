@@ -264,6 +264,7 @@ statements(p) ::= .				{ p = 0; }
 
 statement(p) ::= BREAK(t) SEMICOLON.		{ p = expr(S_JUMP, t); }
 statement(p) ::= CONTINUE(t) SEMICOLON.		{ p = expr(S_JUMP, t); }
+statement(p) ::= STATE NAME(t) SEMICOLON.	{ p = expr(S_CHANGE, t); }
 statement(p) ::= c_code(x).			{ p = x; }
 statement(p) ::= LBRACE(t) block_defns(ds) statements(xs) RBRACE.
 						{ p = expr(S_CMPND, t, ds, xs); }

@@ -88,7 +88,7 @@ typedef	struct state_set_control_block *SS_ID;	/* state set id */
 typedef struct UserVar USER_VAR;		/* defined by program */
 
 /* Prototype for action, event, delay, and exit functions */
-typedef void ACTION_FUNC(SS_ID ssId, USER_VAR *pVar, short transNum);
+typedef void ACTION_FUNC(SS_ID ssId, USER_VAR *pVar, short transNum, short *pNextState);
 typedef long EVENT_FUNC(SS_ID ssId, USER_VAR *pVar, short *pTransNum, short *pNextState);
 typedef void DELAY_FUNC(SS_ID ssId, USER_VAR *pVar);
 typedef void ENTRY_FUNC(SS_ID ssId, USER_VAR *pVar);

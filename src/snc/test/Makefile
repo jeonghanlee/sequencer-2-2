@@ -15,6 +15,7 @@ PROD_LIBS += seq
 seq_DIR = $(INSTALL_LIB)
 
 PROD += simple
+PROD += change
 PROD += control
 PROD += demo
 PROD += johng

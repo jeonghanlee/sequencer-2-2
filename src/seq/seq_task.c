@@ -222,12 +222,14 @@ SSCB	*pSS;
 		/* An event triggered:
 		 * execute the action statements and enter the new state. */
 
+		epicsMutexMustLock(pSP->caSemId);
+		/* Execute the action for this event */
+		pST->actionFunc(ssId, pVar, pSS->transNum, &pSS->nextState);
+		epicsMutexUnlock(pSP->caSemId);
+
 		/* Change event mask ptr for next state */
 		pStNext = pSS->pStates + pSS->nextState;
 		pSS->pMask = (pStNext->pEventMask);
-
-		/* Execute the action for this event */
-		pST->actionFunc(ssId, pVar, pSS->transNum);
 
 		/* If changing state, do any exit actions. */
 		if (pSS->currentState != pSS->nextState ||
@@ -311,6 +313,8 @@ LOCAL long seq_waitConnect(SPROG *pSP, SSCB *pSS)
 	epicsStatus	status;
 	double		delay;
 
+	if (pSP->numChans == 0)
+		return OK;
 	delay = 10.0; /* 10, 20, 30, 40, 40,... sec */
 	while (1) {
 		status = epicsEventWaitWithTimeout(

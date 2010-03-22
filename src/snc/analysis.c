@@ -25,6 +25,7 @@ static void assign_list(ChanList *chan_list, Expr *dp, Var *vp, Expr *pv_name_li
 static Chan *new_channel(ChanList *chan_list, Var *vp);
 static void alloc_channel_lists(Chan *cp, int length);
 static void connect_variables(SymTable st, Expr *scope);
+static void connect_state_change_stmts(SymTable st, Expr *scope);
 static int connect_states(SymTable st, Expr *ss_list);
 static int pv_chan_count(ChanList *chan_list);
 static void add_var(SymTable st, Var *vp, Expr *scope);
@@ -69,6 +70,8 @@ Program *analyse_program(Expr *prog, Options options)
 	p->num_ss = connect_states(p->sym_table, prog);
 
 	connect_variables(p->sym_table, prog);
+
+	connect_state_change_stmts(p->sym_table, prog);
 
 	/* Assign bits for event flags */
 	p->num_event_flags = assign_ef_bits(p->prog, p->chan_list);
@@ -923,6 +926,66 @@ static int connect_states(SymTable st, Expr *prog)
 		num_ss++;
 	}
 	return num_ss;
+}
+
+typedef struct {
+	SymTable	st;
+	Expr		*ssp;
+	int		in_when;
+} connect_state_change_arg;
+
+static int iter_connect_state_change_stmts(Expr *ep, Expr *scope, void *parg)
+{
+	connect_state_change_arg *pcsc_arg = (connect_state_change_arg *)parg;
+
+	assert(pcsc_arg != 0);
+	assert(ep != 0);
+	if (ep->type == D_SS)
+	{
+		pcsc_arg->ssp = ep;
+		return TRUE;
+	}
+	else if (ep->type == D_ENTRY || ep->type == D_EXIT)
+	{
+		/* to flag erroneous state change statements, see below */
+		pcsc_arg->in_when = FALSE;
+		return TRUE;
+	}
+	else if (ep->type == D_WHEN)
+	{
+		pcsc_arg->in_when = TRUE;
+		return TRUE;
+	}
+	else
+	{
+		assert(ep->type == S_CHANGE);
+		if (!pcsc_arg->ssp || !pcsc_arg->in_when)
+		{
+			error_at_expr(ep, "state change statement not allowed here\n");
+		}
+		else
+		{
+			Expr *sp = sym_table_lookup(pcsc_arg->st, ep->value, pcsc_arg->ssp);
+			if (sp == 0)
+			{
+				error_at_expr(ep,
+					"a state with name '%s' does not "
+					"exist in state set '%s'\n",
+				 	ep->value, pcsc_arg->ssp->value);
+				return FALSE;
+			}
+			ep->extra.e_change = sp;
+		}
+		return FALSE;
+	}
+}
+
+static void connect_state_change_stmts(SymTable st, Expr *scope)
+{
+	connect_state_change_arg csc_arg = {st, 0, FALSE};
+	traverse_expr_tree(scope,
+		(1<<S_CHANGE)|(1<<D_SS)|(1<<D_ENTRY)|(1<<D_EXIT)|(1<<D_WHEN),
+		expr_mask, 0, iter_connect_state_change_stmts, &csc_arg);
 }
 
 /* Assign event bits to event flags and associate pv channels with

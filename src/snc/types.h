@@ -106,6 +106,7 @@ struct expression			/* generic syntax node */
 		StateSet *e_ss;		/* state set data */
 		State	*e_state;	/* state data */
 		When	*e_when;	/* transition data */
+		Expr	*e_change;	/* declaration of target state */
 		VarList	*e_entry;	/* local declarations */
 		VarList	*e_exit;	/* local declarations */
 		VarList	*e_cmpnd;	/* block local definitions */
@@ -186,8 +187,8 @@ struct program
 
 /* #define bits(et)		(1<<et) */
 
-/* A bit mask containing expression types that are scopes. By definition,
-   a scope is an expression that allows variable declarations. */
+/* Expression types that are scopes. By definition, a scope is an expression
+   that allows variable declarations as (immediate) subexpressions. */
 #define scope_mask		( (1<<D_PROG) | (1<<D_SS) | (1<<D_STATE)\
 				| (1<<D_ENTRY) | (1<<D_EXIT) | (1<<D_WHEN) | (1<<S_CMPND) )
 #define is_scope(e)		(((1<<((e)->type)) & scope_mask) != 0)
@@ -203,9 +204,13 @@ struct program
 				| (1<<E_PRE) | (1<<E_SUBSCR) | (1<<E_TERNOP) | (1<<E_VAR)\
 				| (1<<S_CHANGE) | (1<<S_CMPND) | (1<<S_FOR) | (1<<S_IF)\
 				| (1<<S_STMT) | (1<<S_WHILE) )
-
 /* Expressions types that may have sub-scopes */
 #define	has_scope_mask		( scope_mask | (1<<S_FOR) | (1<<S_IF) | (1<<S_WHILE) )
+/* Expression types that are actually expressions i.e. no definitions or statements.
+   These are the ones that start with E_. */
+#define	expr_mask		( (1<<E_BINOP) | (1<<E_CONST) | (1<<E_DELAY) | (1<<E_FUNC)\
+				| (1<<E_PAREN) | (1<<E_POST) | (1<<E_PRE) | (1<<E_STRING)\
+				| (1<<E_SUBSCR) | (1<<E_TERNOP) | (1<<E_VAR) | (1<<T_TEXT) )
 
 #define expr_type_name(e)	expr_type_info[(e)->type].name
 

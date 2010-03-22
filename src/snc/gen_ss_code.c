@@ -88,6 +88,7 @@ static int special_func(int stmt_type, Expr *ep);
 
 #define	EVENT_STMT	1
 #define	ACTION_STMT	2
+#define	OTHER_STMT	3
 
 /*
  * HACK: use global variable to symbol table available to subroutines
@@ -158,7 +159,8 @@ void gen_ss_code(Program *program)
 			/* Generate action processing function */
 			gen_state_func(ssp->value, sp->value,
 				sp->state_whens, gen_action_body,
-				"Action", "A", "void", ", short transNum");
+				"Action", "A", "void",
+                                ", short transNum, short *pNextState");
 		}
 	}
 
@@ -194,7 +196,7 @@ static void gen_local_var_decls(Expr *scope, int level)
 					return;
 				}
 				printf(" = ");
-				gen_expr(ACTION_STMT, vp->value, 0);
+				gen_expr(OTHER_STMT, vp->value, 0);
 			}
 			printf(";\n");
 		}
@@ -229,7 +231,7 @@ static void gen_entry_body(Expr *xp, int level)
 	gen_defn_c_code(xp, level);
 	foreach (ep, xp->entry_stmts)
 	{
-		gen_expr(ACTION_STMT, ep, 1);
+		gen_expr(OTHER_STMT, ep, 1);
 	}
 }
 
@@ -242,7 +244,7 @@ static void gen_exit_body(Expr *xp, int level)
 	gen_defn_c_code(xp, level);
 	foreach (ep, xp->exit_stmts)
 	{
-		gen_expr(ACTION_STMT, xp, 1);
+		gen_expr(OTHER_STMT, xp, 1);
 	}
 }
 
@@ -479,6 +481,7 @@ static void gen_expr(
 		gen_expr(stmt_type, cep, cep->type == S_CMPND ? level : level+1);
 		if (ep->if_else != 0)
 		{
+			indent(level);
 			printf("else\n");
 			cep = ep->if_else;
 			gen_expr(stmt_type, cep, cep->type == S_CMPND ? level : level+1);
@@ -509,6 +512,25 @@ static void gen_expr(
 	case S_JUMP:
 		indent(level);
 		printf("%s;\n", ep->value);
+		break;
+	case S_CHANGE:
+		if (stmt_type != ACTION_STMT)
+		{
+			error_at_expr(ep, "state change statement not allowed here\n");
+			break;
+		}
+		indent(level);
+#if 0
+                printf("{\n");
+		indent(level+1);
+#endif
+		printf("{*pNextState = %d; return;}\n", ep->extra.e_change->extra.e_state->index);
+#if 0
+		indent(level+1);
+		printf("return;\n");
+		indent(level);
+                printf("}\n");
+#endif
 		break;
 	/* Expressions */
 	case E_VAR:
@@ -845,7 +867,7 @@ static int iter_user_var_init(Expr *dp, Expr *scope, void *parg)
 		indent(1);
 		gen_var_access(vp);
 		printf(" = ");
-		gen_expr(ACTION_STMT, vp->value, 0);
+		gen_expr(OTHER_STMT, vp->value, 0);
 		printf(";\n");
 	}
 	return FALSE;		/* do not descend into children */
