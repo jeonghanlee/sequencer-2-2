@@ -6,25 +6,33 @@ include $(TOP)/configure/CONFIG
 
 SNC = $(INSTALL_HOST_BIN)/snc
 
-OBJS_IOC += simple.st
-OBJS_IOC += control.st
-OBJS_IOC += demo.st
-OBJS_IOC += johng.st
-OBJS_IOC += local.st
-#OBJS_IOC += misplacedExit.st
-OBJS_IOC += sncDelay.st
-OBJS_IOC += sncEntry.st
-OBJS_IOC += sncEntryOpte.st
-OBJS_IOC += sncEntryVar.st
-OBJS_IOC += sncExEntry.st
-OBJS_IOC += sncExOpt.st
-OBJS_IOC += sncExOpt_DuplOpt.st
-OBJS_IOC += sncExOpt_UnrecOpt.st
-OBJS_IOC += sncExample.st
-OBJS_IOC += sncExitOptx.st
-OBJS_IOC += sncOptt.st
-OBJS_IOC += sncOpttVar.st
-#OBJS_IOC += tcsSeq.st
+SNCFLAGS = +m
+
+PROD_LIBS += Com
+#seq_DIR = $(INSTALL_LIB)
+
+PROD_LIBS += seq
+seq_DIR = $(INSTALL_LIB)
+
+PROD += simple
+PROD += control
+PROD += demo
+PROD += johng
+PROD += local
+#PROD += misplacedExit
+PROD += sncDelay
+PROD += sncEntry
+PROD += sncEntryOpte
+PROD += sncEntryVar
+PROD += sncExEntry
+PROD += sncExOpt
+PROD += sncExOpt_DuplOpt
+PROD += sncExOpt_UnrecOpt
+PROD += sncExample
+PROD += sncExitOptx
+PROD += sncOptt
+PROD += sncOpttVar
+#PROD += tcsSeq
 
 include $(TOP)/configure/RULES
 #----------------------------------------
