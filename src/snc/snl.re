@@ -144,8 +144,11 @@ char *strdupft(uchar *start, uchar *stop) {
 static int scan(Scanner *s, Token *t) {
 	uchar *cursor = s->cur;
 	uchar *end = cursor;
+	int in_c_code = 0;
 
 snl:
+	if (in_c_code)
+		goto c_code;
 	t->line = s->line;
 	t->file = s->file;
 	s->tok = cursor;
@@ -167,6 +170,7 @@ snl:
 			}
 	"%{"		{
 				s->tok = cursor;
+				in_c_code = 1;
 				goto c_code;
 			}
 	"%%" SPC*	{
@@ -333,7 +337,7 @@ line_marker_str:
 line_marker_skip:
 /*!re2c
 	.*		{ goto snl; }
-	"\n"		{ cursor -= 1; goto snl;}
+	"\n"		{ cursor -= 1; goto snl; }
 */
 
 comment:
@@ -353,10 +357,9 @@ comment:
 
 c_code:
 /*!re2c
-	"}%"		{
-				RET(CCODE, strdupft(s->tok, cursor - 2));
-			}
+	"}%"		{ RET(CCODE, strdupft(s->tok, cursor - 2)); }
 	.		{ goto c_code; }
+	"#" SPC*	{ goto line_marker; }
 	"\n"		{
 				if (cursor == s->eof) {
 					scan_report(s, "at eof: unterminated literal c-code section\n");
