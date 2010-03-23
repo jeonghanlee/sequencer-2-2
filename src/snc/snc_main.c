@@ -178,8 +178,7 @@ static void parse_option(char *s)
 		options.newef = opt_val;
 		break;
 	case 'r':
-		report("warning: option r ('reentrant') is obsolete "
-				"and has been removed\n");
+		options.reent = opt_val;
 		break;
 	case 'i':
 		options.init_reg = opt_val;
@@ -212,6 +211,7 @@ static void print_usage(void)
 	report("  -l           - suppress line numbering\n");
 	report("  +m           - generate main program\n");
 	report("  -i           - don't register commands/programs\n");
+	report("  +r           - make reentrant at run-time\n");
 	report("  -w           - suppress compiler warnings\n");
 	report("example:\n snc +a -c vacuum.st\n");
 }

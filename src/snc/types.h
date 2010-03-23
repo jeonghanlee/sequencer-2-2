@@ -41,6 +41,7 @@ struct options				/* run-time options */
 	unsigned async:1;		/* do pvGet() asynchronously */
 	unsigned conn:1;		/* wait for all conns to complete */
 	unsigned debug:1;		/* run-time debug */
+	unsigned reent:1;		/* reentrant at run-time */
 	unsigned newef:1;		/* new event flag mode */
 	unsigned main:1;		/* main program */
 
@@ -50,13 +51,13 @@ struct options				/* run-time options */
 	unsigned warn:1;		/* compiler warnings */
 };
 
-#define DEFAULT_OPTIONS (Options){0,1,0,1,0,1,1,1}
+#define DEFAULT_OPTIONS (Options){0,1,0,0,1,0,1,1,1}
 
 struct state_options			/* run-time state options */
 {
-	int	do_reset_timers:1;	/* reset timers on state entry from self */
-	int	no_entry_from_self:1;	/* don't do entry actions if entering from same state */
-	int	no_exit_to_self:1;	/* don't do exit actions if exiting to same state */
+	unsigned do_reset_timers:1;	/* reset timers on state entry from self */
+	unsigned no_entry_from_self:1;	/* don't do entry actions if entering from same state */
+	unsigned no_exit_to_self:1;	/* don't do exit actions if exiting to same state */
 };
 
 #define DEFAULT_STATE_OPTIONS (StateOptions){1,1,1}

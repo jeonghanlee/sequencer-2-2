@@ -143,7 +143,7 @@ char *strdupft(uchar *start, uchar *stop) {
 
 static int scan(Scanner *s, Token *t) {
 	uchar *cursor = s->cur;
-	uchar *end;
+	uchar *end = cursor;
 
 snl:
 	t->line = s->line;

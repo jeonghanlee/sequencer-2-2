@@ -91,8 +91,10 @@ static int special_func(int stmt_type, Expr *ep);
 #define	OTHER_STMT	3
 
 /*
- * HACK: use global variable to symbol table available to subroutines
+ * HACK: use global variables to make program options and
+ * symbol table available to subroutines
  */
+static int global_opt_reent;
 static SymTable global_sym_table;
 
 static void register_special_funcs(void)
@@ -120,7 +122,8 @@ void gen_ss_code(Program *program)
 	Expr	*ssp;
 	Expr	*sp;
 
-	/* HACK: intialise global variable */
+	/* HACK: intialise globals */
+	global_opt_reent = program->options.reent;
 	global_sym_table = program->sym_table;
 
 	/* Insert special function names into symbol table */
@@ -367,7 +370,10 @@ static void gen_event_body(Expr *xp, int level)
 
 static void gen_var_access(Var *vp)
 {
-#ifdef	DEBUG
+	char *pre = global_opt_reent ? "(pVar->" : "";
+	char *post = global_opt_reent ? ")" : "";
+
+#ifdef DEBUG
 	report("var_access: %s, scope=(%s,%s)\n",
 		vp->name, expr_type_name(vp->scope), vp->scope->value);
 #endif
@@ -384,17 +390,17 @@ static void gen_var_access(Var *vp)
 	}
 	else if (vp->scope->type == D_PROG)
 	{
-		printf("(pVar->%s)", vp->name);
+		printf("%s%s%s", pre, vp->name, post);
 	}
 	else if (vp->scope->type == D_SS)
 	{
-		printf("(pVar->UV_%s.%s)", vp->scope->value, vp->name);
+		printf("%sUV_%s.%s%s", pre, vp->scope->value, vp->name, post);
 	}
 	else if (vp->scope->type == D_STATE)
 	{
-		printf("(pVar->UV_%s.UV_%s.%s)",
+		printf("%sUV_%s.UV_%s.%s%s", pre,
 			vp->scope->extra.e_state->var_list->parent_scope->value,
-			vp->scope->value, vp->name);
+			vp->scope->value, vp->name, post);
 	}
 	else	/* compound or when stmt => generate a local C variable */
 	{

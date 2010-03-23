@@ -46,7 +46,7 @@
 static const int impossible = 0;
 
 static void gen_preamble(char *prog_name, int opt_main);
-static void gen_user_var(Expr *prog);
+static void gen_user_var(Program *p);
 static void gen_global_c_code(Expr *global_c_list);
 static void gen_init_reg(char *prog_name);
 
@@ -84,7 +84,7 @@ void generate_code(Program *p)
 	gen_preamble(p->name, p->options.main);
 
 	/* Generate global variable declarations */
-	gen_user_var(p->prog);
+	gen_user_var(p);
 
 	/* Generate definition C code */
 	gen_defn_c_code(p->prog, 0);
@@ -155,28 +155,28 @@ static void gen_preamble(char *prog_name, int opt_main)
 
 void gen_var_decl(Var *vp)
 {
-	char	*vstr;
+	char	*type_str;
 
 	switch (vp->type)
 	{
-	case V_CHAR:	vstr = "char";		break;
-	case V_INT:	vstr = "int";		break;
-	case V_LONG:	vstr = "long";		break;
-	case V_SHORT:	vstr = "short";		break;
-	case V_UCHAR:	vstr = "unsigned char";	break;
-	case V_UINT:	vstr = "unsigned int";	break;
-	case V_ULONG:	vstr = "unsigned long";	break;
-	case V_USHORT:	vstr = "unsigned short";break;
-	case V_FLOAT:	vstr = "float";		break;
-	case V_DOUBLE:	vstr = "double";	break;
-	case V_STRING:	vstr = "char";		break;
+	case V_CHAR:	type_str = "char";		break;
+	case V_INT:	type_str = "int";		break;
+	case V_LONG:	type_str = "long";		break;
+	case V_SHORT:	type_str = "short";		break;
+	case V_UCHAR:	type_str = "unsigned char";	break;
+	case V_UINT:	type_str = "unsigned int";	break;
+	case V_ULONG:	type_str = "unsigned long";	break;
+	case V_USHORT:	type_str = "unsigned short";	break;
+	case V_FLOAT:	type_str = "float";		break;
+	case V_DOUBLE:	type_str = "double";		break;
+	case V_STRING:	type_str = "char";		break;
 	case V_EVFLAG:
 	case V_NONE:
 		return;
 	default:
 		assert(impossible);
 	}
-	printf("%s\t", vstr);
+	printf("%s\t", type_str);
 	if (vp->class == VC_POINTER || vp->class == VC_ARRAYP)
 		printf("*");
 	printf("%s", vp->name);
@@ -195,45 +195,49 @@ void gen_var_decl(Var *vp)
    where they are declared, but still have gobal lifetime. To avoid
    name collisions, generate a nested struct for each state set, and
    for each state in a state set. */
-static void gen_user_var(Expr *prog)
+static void gen_user_var(Program *p)
 {
+	int	opt_reent = p->options.reent;
 	Var	*vp;
 	Expr	*sp, *ssp;
 
 	printf("\n/* Variable declarations */\n");
 
-	printf("struct %s {\n", SNL_PREFIX);
+	if (opt_reent) printf("struct %s {\n", SNL_PREFIX);
 	/* Convert internal type to `C' type */
-	foreach (vp, prog->extra.e_prog->first)
+	foreach (vp, p->prog->extra.e_prog->first)
 	{
 		if (vp->decl && vp->type != V_EVFLAG && vp->type != V_NONE)
 		{
 			gen_line_marker(vp->decl);
-			indent(1); gen_var_decl(vp); printf(";\n");
+			if (!opt_reent) printf("static");
+			indent(1);
+			gen_var_decl(vp); printf(";\n");
 		}
 	}
-	foreach (ssp, prog->prog_statesets)
+	foreach (ssp, p->prog->prog_statesets)
 	{
-		indent(1); printf("struct UV_%s {\n", ssp->value);
+		int level = opt_reent;
+		indent(level); printf("struct UV_%s {\n", ssp->value);
 		foreach (vp, ssp->extra.e_ss->var_list->first)
 		{
-			indent(2); gen_var_decl(vp); printf(";\n");
+			indent(level+1); gen_var_decl(vp); printf(";\n");
 		}
 		foreach (sp, ssp->ss_states)
 		{
-			indent(2);
+			indent(level+1);
 			printf("struct UV_%s_%s {\n",
 				ssp->value, sp->value);
 			foreach (vp, sp->extra.e_state->var_list->first)
 			{
-				indent(3); gen_var_decl(vp); printf(";\n");
+				indent(level+2); gen_var_decl(vp); printf(";\n");
 			}
-			indent(2);
+			indent(level+1);
 			printf("} UV_%s;\n", sp->value);
 		}
-		indent(1); printf("} UV_%s;\n", ssp->value);
+		indent(level); printf("} UV_%s;\n", ssp->value);
 	}
-	printf("};\n");
+	if (opt_reent) printf("};\n");
 }
 
 /* Generate C code in definition section */
