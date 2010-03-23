@@ -373,12 +373,14 @@ static void gen_var_access(Var *vp)
 	char *pre = global_opt_reent ? "(pVar->" : "";
 	char *post = global_opt_reent ? ")" : "";
 
+	assert(vp);
+	assert(vp->scope);
+
 #ifdef DEBUG
 	report("var_access: %s, scope=(%s,%s)\n",
 		vp->name, expr_type_name(vp->scope), vp->scope->value);
 #endif
-
-	assert(vp->scope->type & scope_mask);
+	assert((1<<vp->scope->type) & scope_mask);
 
 	if (vp->type == V_NONE)
 	{

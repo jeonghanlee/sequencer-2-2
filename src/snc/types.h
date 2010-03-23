@@ -247,7 +247,7 @@ enum var_class
 enum expr_type			/* description [child expressions...] */
 {
 	D_ASSIGN,		/* assign statement [subscr,pvs] */
-	D_DECL,			/* variable declaration [] */
+	D_DECL,			/* variable declaration [init] */
 	D_ENTRY,		/* entry statement [defns,stmts] */
 	D_EXIT,			/* exit statement [defns,stmts] */
 	D_MONITOR,		/* monitor statement [subscr] */
@@ -292,6 +292,7 @@ enum expr_type			/* description [child expressions...] */
 #define binop_right	children[1]
 #define cmpnd_defns	children[0]
 #define cmpnd_stmts	children[1]
+#define decl_init	children[0]
 #define delay_args	children[0]
 #define entry_defns	children[0]
 #define entry_stmts	children[1]
@@ -350,7 +351,7 @@ expr_type_info[]
 #ifdef expr_type_GLOBAL
 = {
 	{ "D_ASSIGN",	2 },
-	{ "D_DECL",	0 },
+	{ "D_DECL",	1 },
 	{ "D_ENTRY",	2 },
 	{ "D_EXIT",	2 },
 	{ "D_MONITOR",	1 },

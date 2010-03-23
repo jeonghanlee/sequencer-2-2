@@ -59,7 +59,7 @@ int assert_var_declared(Expr *ep, Expr *scope, void *parg)
 	assert(ep->type == E_VAR);
 	assert(ep->extra.e_var != 0);
 	assert(ep->extra.e_var->decl != 0);
-	return FALSE;		/* there are no children anyway */
+	return TRUE;		/* there are no children anyway */
 }
 
 /* Generate C code from parse tree. */

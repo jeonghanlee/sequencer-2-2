@@ -46,7 +46,7 @@ Expr *decl(
 	Token	var,		/* variable name token */
 	char	*s_length1,	/* array lth (1st dim, arrays only) */
 	char	*s_length2,	/* array lth (2nd dim, [n]x[m] arrays only) */
-	Expr	*value		/* initial value or NULL */
+	Expr	*init		/* initial value or NULL */
 )
 {
 	Expr	*ep;
@@ -77,9 +77,9 @@ Expr *decl(
 	vp->type = type;
 	vp->length1 = length1;
 	vp->length2 = length2;
-	vp->value = value;
+	vp->value = init;
 
-        ep = expr(D_DECL, var, 0, 0);
+        ep = expr(D_DECL, var, init);
 	ep->extra.e_decl = vp;
 #ifdef	DEBUG
 	report_at_expr(ep, "decl: name=%s, type=%d, class=%d, "
