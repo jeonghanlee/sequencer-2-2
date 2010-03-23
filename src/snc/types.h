@@ -38,16 +38,16 @@ struct sym_table
 
 struct options				/* run-time options */
 {
-	int	async:1;		/* do pvGet() asynchronously */
-	int	conn:1;			/* wait for all conns to complete */
-	int	debug:1;		/* run-time debug */
-	int	newef:1;		/* new event flag mode */
-	int	main:1;			/* main program */
+	unsigned async:1;		/* do pvGet() asynchronously */
+	unsigned conn:1;		/* wait for all conns to complete */
+	unsigned debug:1;		/* run-time debug */
+	unsigned newef:1;		/* new event flag mode */
+	unsigned main:1;		/* main program */
 
 					/* compile time options */
-	int	init_reg:1;		/* register commands/programs */
-	int	line:1;			/* line numbering */
-	int	warn:1;			/* compiler warnings */
+	unsigned init_reg:1;		/* register commands/programs */
+	unsigned line:1;		/* line numbering */
+	unsigned warn:1;		/* compiler warnings */
 };
 
 #define DEFAULT_OPTIONS (Options){0,1,0,1,0,1,1,1}
