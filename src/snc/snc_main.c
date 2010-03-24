@@ -263,6 +263,19 @@ void report_at_expr(Expr *ep, const char *format, ...)
 	va_end(args);
 }
 
+void warning_at_expr(Expr *ep, const char *format, ...)
+{
+	va_list args;
+
+	if (!options.warn) return;
+	report_loc(ep->src_file, ep->line_num);
+	fprintf(stderr, "warning: ");
+
+	va_start(args, format);
+	vfprintf(stderr, format, args);
+	va_end(args);
+}
+
 void error_at_expr(Expr *ep, const char *format, ...)
 {
 	va_list args;
