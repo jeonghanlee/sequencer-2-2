@@ -25,17 +25,19 @@
 31mar00,wfl     Supported entry handler.
 ***************************************************************************/
 
-#include	<stdio.h>
-#include	<stdlib.h>
-#include	<string.h>
-#include	<assert.h>
-#include        <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <assert.h>
+#include <stdarg.h>
+#include <errno.h>
+#include <limits.h>
 
 #define expr_type_GLOBAL
-#include	"types.h"
+#include "types.h"
 #undef expr_type_GLOBAL
-#include	"parse.h"
-#include	"snc_main.h"
+#include "parse.h"
+#include "snc_main.h"
 
 /* #define DEBUG */
 
@@ -74,6 +76,10 @@ Expr *decl(
 	vp = new(Var);
 	vp->name = var.str;
 	vp->class = class;
+	if (class == VC_EVFLAG)
+	{
+		vp->chan.evflag = new(EvFlag);
+	}
 	vp->type = type;
 	vp->length1 = length1;
 	vp->length2 = length2;
@@ -169,4 +175,20 @@ Expr *link_expr(
 	ep1->last = ep2->last;
 	ep2->last = 0;
 	return ep1;
+}
+
+boolean strtoui(
+	char *str,		/* string representing a number */
+	uint limit,		/* result should be < limit */
+	uint *pnumber		/* location for result if successful */
+)
+{
+	unsigned long result;
+
+	errno = 0;
+	result = strtoul(str, 0, 0);
+	if (errno || result >= limit)
+		return FALSE;
+	*pnumber = result;
+	return TRUE;
 }

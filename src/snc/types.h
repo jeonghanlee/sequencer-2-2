@@ -17,15 +17,17 @@ typedef struct state		State;
 typedef struct state_set	StateSet;
 typedef struct program		Program;
 typedef struct channel		Chan;
+typedef struct event_flag	EvFlag;
+typedef struct sync_queue	SyncQ;
 typedef struct expression	Expr;
 typedef struct variable		Var;
 typedef struct chan_list	ChanList;
+typedef struct sync_queue_list	SyncQList;
 typedef struct var_list		VarList;
 typedef struct expr_pair	ExprPair;
 
-typedef enum var_type		VarType;
-typedef enum var_class		VarClass;
-typedef enum expr_type		ExprType;
+typedef unsigned int		uint;
+typedef unsigned int		boolean;
 
 struct sym_table
 {
@@ -38,26 +40,26 @@ struct sym_table
 
 struct options				/* run-time options */
 {
-	unsigned async:1;		/* do pvGet() asynchronously */
-	unsigned conn:1;		/* wait for all conns to complete */
-	unsigned debug:1;		/* run-time debug */
-	unsigned reent:1;		/* reentrant at run-time */
-	unsigned newef:1;		/* new event flag mode */
-	unsigned main:1;		/* main program */
+	uint	async:1;		/* do pvGet() asynchronously */
+	uint	conn:1;			/* wait for all conns to complete */
+	uint	debug:1;		/* run-time debug */
+	uint	reent:1;		/* reentrant at run-time */
+	uint	newef:1;		/* new event flag mode */
+	uint	main:1;			/* main program */
 
 					/* compile time options */
-	unsigned init_reg:1;		/* register commands/programs */
-	unsigned line:1;		/* line numbering */
-	unsigned warn:1;		/* compiler warnings */
+	uint	init_reg:1;		/* register commands/programs */
+	uint	line:1;			/* line numbering */
+	uint	warn:1;			/* compiler warnings */
 };
 
 #define DEFAULT_OPTIONS (Options){0,1,0,0,1,0,1,1,1}
 
 struct state_options			/* run-time state options */
 {
-	unsigned do_reset_timers:1;	/* reset timers on state entry from self */
-	unsigned no_entry_from_self:1;	/* don't do entry actions if entering from same state */
-	unsigned no_exit_to_self:1;	/* don't do exit actions if exiting to same state */
+	uint	do_reset_timers:1;	/* reset timers on state entry from self */
+	uint	no_entry_from_self:1;	/* don't do entry actions if entering from same state */
+	uint	no_exit_to_self:1;	/* don't do exit actions if exiting to same state */
 };
 
 #define DEFAULT_STATE_OPTIONS (StateOptions){1,1,1}
@@ -71,8 +73,8 @@ struct token				/* for the lexer and parser */
 
 struct when				/* extra data for when clauses */
 {
-	Expr		*next_state;	/* declaration of target state */
-	VarList		*var_list;	/* list of local variables */
+	Expr	*next_state;		/* declaration of target state */
+	VarList	*var_list;		/* list of local variables */
 };
 
 struct state				/* extra data for state clauses */
@@ -114,40 +116,72 @@ struct expression			/* generic syntax node */
 	}	extra;
 };
 
+struct event_flag
+{
+	uint	index;
+	uint	queued;
+};
+
 struct variable				/* Variable or function definition */
 {
 	Var	*next;			/* link to next variable in list */
 	char	*name;			/* variable name */
 	Expr	*value;			/* initial value or NULL */
-	int	type;			/* var type, see enum var_type */
-	int	class;			/* var class, see enum var_class */
-	int	length1;		/* 1st dim. array lth (default=1) */
-	int	length2;		/* 2nd dim. array lth (default=1) */
-	int	ef_num;			/* bit number if this is an event flag */
-	Chan	*chan;			/* ptr to channel struct if assigned */
-	int	queued;			/* whether queued via syncQ */
-	int	maxqsize;		/* max syncQ queue size */
-	int	qindex;			/* index in syncQ queue array */
+	uint	type:4;			/* var type, one of enum var_type */
+	uint	class:4;		/* var class, one of enum var_class */
+	uint	length1;		/* 1st dim. array lth (default=1) */
+	uint	length2;		/* 2nd dim. array lth (default=1) */
 	Expr	*decl;			/* declaration of this variable (or NULL) */
 	Expr	*scope;			/* declaration of this variable (or NULL) */
+	/* channel stuff */
+	uint	assign:2;		/* assigned: one of enum multiplicity */
+	uint	monitor:2;		/* monitored: one of enum multiplicity */
+	uint	sync:2;			/* sync'd: one of enum multiplicity */
+	uint	syncq:2;		/* syncq'd: one of enum multiplicity */
+	union {
+		Chan	*single;	/* single channel if assign == ALL */
+		Chan	**multi;	/* multiple channels if assign == SOME */
+		EvFlag	*evflag;	/* event flag data if this is an event flag */
+	} chan;
+	uint	index;			/* index (base) in seqChan array */
 };
+/* Laws (Invariants):
+L1: sync == M_MULTI || syncq == M_MULTI => monitor == M_MULTI => assign == M_MULTI
+L2: assign == M_NONE => monitor == M_NONE => sync == M_NONE && syncq == M_NONE
+L3: assign == M_MULTI => class == VC_ARRAY1 || class == VC_ARRAY2
+L4: sync == M_SINGLE || syncq == M_SINGLE => monitor == M_SINGLE
+*/
 
 struct channel				/* channel assignment info */
 {
 	Chan	*next;			/* link to next channel in list */
-	char	**pv_names;		/* array of pv names */
-	int	num_elem;		/* number of elements */
+	char	*name;			/* channel (pv) name */
+	uint	index;			/* index (offset) if array element */
 	Var	*var;			/* variable definition */
-	int	count;			/* request count for pv access */
-	int	*mon_flags;		/* array of monitor flags */
-	Var	**ef_vars;		/* array of event flag variables */
-	int	*ef_nums;		/* array of event flag numbers (for sync'ed vars) */
-	int	index;			/* index in channel array (seqChan) */
+	uint	count;			/* request count for pv access */
+	uint	monitor:1;		/* whether this channel is monitored */
+	Var	*sync;			/* event flag variable if sync'd */
+	SyncQ	*syncq;			/* sync queue if syncQ'd */
+};
+
+struct sync_queue
+{
+	SyncQ	*next;
+	uint	index;
+	uint	size;
+	Var	*ef_var;
 };
 
 struct chan_list
 {
 	Chan	*first, *last;		/* first and last member of the list */
+	uint	num_elems;		/* number of elements in this list */
+};
+
+struct sync_queue_list
+{
+	SyncQ	*first, *last;		/* first and last member of the list */
+	uint	num_elems;		/* number of elements in this list */
 };
 
 struct var_list
@@ -164,20 +198,19 @@ struct expr_pair
 struct program
 {
 	/* result of parsing phase */
-	Expr	*prog;			/* prog of syntax tree */
+	Expr		*prog;		/* prog of syntax tree */
 
 	/* these point into children of the prog node, for convenience */
-	char	*name;			/* ptr to program name (string) */
-	char	*param;			/* parameter string for program stmt */
+	char		*name;		/* ptr to program name (string) */
+	char		*param;		/* parameter string for program stmt */
 
-	/* these are calculated by the analysis phase */
-	Options options;		/* program options, from source or command line */
-	SymTable sym_table;		/* symbol table */
-	ChanList *chan_list;		/* channel list */
-	int	num_channels;		/* number of channels */
-	int	num_event_flags;	/* number of event flags */
-	int	num_queues;		/* number of syncQ queues */
-	int	num_ss;			/* number of state sets */
+	/* these are calculated in the analysis phase */
+	Options		options;	/* program options, from source or command line */
+	SymTable	sym_table;	/* symbol table */
+	ChanList	*chan_list;	/* channel list, incl. number of channels */
+	SyncQList	*syncq_list;	/* syncq list, incl. number of syncqs */
+	uint		num_ss;		/* number of state sets */
+	uint		num_event_flags;/* number of event flags */
 };
 
 /* Structure allocation */
@@ -215,18 +248,17 @@ struct program
 
 #define expr_type_name(e)	expr_type_info[(e)->type].name
 
-/* Variable types */
+/* Variable (element) types */
 enum var_type
 {
-	V_NONE,			/* undeclared */
+	V_NONE,			/* no base type */
 	V_CHAR,			/* char */
 	V_SHORT,		/* short */
 	V_INT,			/* int */
 	V_LONG,			/* long */
 	V_FLOAT,		/* float */
 	V_DOUBLE,		/* double */
-	V_STRING,		/* strings (array of char) */
-	V_EVFLAG,		/* event flag */
+	V_STRING,		/* string (array of 40 char) */
 	V_UCHAR,		/* unsigned char */
 	V_USHORT,		/* unsigned short */
 	V_UINT,			/* unsigned int */
@@ -240,7 +272,17 @@ enum var_class
 	VC_ARRAY1,		/* 1-dimensional array */
 	VC_ARRAY2,		/* 2-dimensional array */
 	VC_POINTER,		/* pointer */
-	VC_ARRAYP		/* array of pointers */
+	VC_ARRAYP,		/* array of pointers */
+	VC_EVFLAG,		/* event flag */
+	VC_FOREIGN		/* C-code variable, unknown type */
+};
+
+/* for channel assign, monitor, sync, and syncq */
+enum multiplicity
+{
+	M_NONE,			/* not at all */
+	M_SINGLE,		/* whole variable (array or scalar) */
+	M_MULTI			/* array, each element treated separately */
 };
 
 /* Expression types */
@@ -329,7 +371,7 @@ enum expr_type			/* description [child expressions...] */
 #define sync_evflag	children[1]
 #define syncq_subscr	children[0]
 #define syncq_evflag	children[1]
-#define syncq_maxqsize	children[2]
+#define syncq_size	children[2]
 #define ternop_cond	children[0]
 #define ternop_then	children[1]
 #define ternop_else	children[2]

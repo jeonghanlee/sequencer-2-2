@@ -183,7 +183,7 @@ static void gen_local_var_decls(Expr *scope, int level)
 	/* Convert internal type to `C' type */
 	foreach (vp, var_list->first)
 	{
-		if (vp->decl && vp->type != V_EVFLAG && vp->type != V_NONE)
+		if (vp->decl && vp->type != V_NONE)
 		{
 			gen_line_marker(vp->decl);
 			indent(level);
@@ -382,13 +382,13 @@ static void gen_var_access(Var *vp)
 #endif
 	assert((1<<vp->scope->type) & scope_mask);
 
-	if (vp->type == V_NONE)
+	if (vp->class == VC_EVFLAG)
+	{
+		printf("%d", vp->chan.evflag->index);
+	}
+	else if (vp->type == V_NONE)
 	{
 		printf("%s", vp->name);
-	}
-	else if (vp->type == V_EVFLAG)
-	{
-		printf("%d", vp->ef_num);
 	}
 	else if (vp->scope->type == D_PROG)
 	{
@@ -729,18 +729,17 @@ static void gen_ef_func(
 	{
 		vp = ap->extra.e_var;
 	}
-	if (vp->type != V_EVFLAG)
-	{
-		error_at_expr(ep, "argument to '%s' must be an event flag\n", fname);
-	}
 	if ((func_code == F_EFSET || func_code == F_EFCLEAR) && stmt_type == EVENT_STMT)
 	{
 		error_at_expr(ep, "%s cannot be used in a when condition\n", fname);
+		return;
 	}
-	else
+	if (vp->class != VC_EVFLAG)
 	{
-		printf("seq_%s(ssId, %d)", fname, vp->ef_num);
+		error_at_expr(ep, "argument to '%s' must be an event flag\n", fname);
+		return;
 	}
+	printf("seq_%s(ssId, %d)", fname, vp->chan.evflag->index);
 }
 
 /* Generate code for pv functions requiring a database variable.
@@ -762,7 +761,6 @@ static void gen_pv_func(
 	Var	*vp;
 	char	*vn;
 	int	id;
-	Chan	*cp;
 	int	num;
 
 	ap = ep->func_args; /* ptr to 1-st parameter in the function */
@@ -796,15 +794,14 @@ static void gen_pv_func(
 	report("gen_pv_func: fun=%s, var=%s\n", ep->value, vp->name);
 #endif	/*DEBUG*/
 	vn = vp->name;
-	cp = vp->chan;
-	if (cp == 0)
+	if (vp->assign == M_NONE)
 	{
 		error_at_expr(ep,
 			"parameter to '%s' was not assigned to a pv\n", fname);
 	}
 	else
 	{
-		id = cp->index;
+		id = vp->index;
 	}
 
 	printf("seq_%s(ssId, %d /* %s */", fname, id, vn);
@@ -865,7 +862,7 @@ static int iter_user_var_init(Expr *dp, Expr *scope, void *parg)
 	assert(vp);
 	if (vp->value && vp->decl)
 	{
-		if (vp->type == V_NONE || vp->type == V_EVFLAG || vp->type == V_STRING)
+		if (vp->type == V_NONE || vp->type == V_STRING)
 		{
 			error_at_expr(vp->decl,
 			  "initialisation not allowed for variables of this type");

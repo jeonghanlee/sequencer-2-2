@@ -74,9 +74,7 @@ void generate_code(Program *p)
 
 #ifdef DEBUG
 	report("gen_tables:\n");
-	report(" num_channels = %d\n", p->num_channels);
 	report(" num_event_flags = %d\n", p->num_event_flags);
-	report(" num_queues = %d\n", p->num_queues);
 	report(" num_ss = %d\n", p->num_ss);
 #endif
 
@@ -157,6 +155,8 @@ void gen_var_decl(Var *vp)
 {
 	char	*type_str;
 
+	assert(vp->type != V_NONE);
+
 	switch (vp->type)
 	{
 	case V_CHAR:	type_str = "char";		break;
@@ -170,9 +170,7 @@ void gen_var_decl(Var *vp)
 	case V_FLOAT:	type_str = "float";		break;
 	case V_DOUBLE:	type_str = "double";		break;
 	case V_STRING:	type_str = "char";		break;
-	case V_EVFLAG:
 	case V_NONE:
-		return;
 	default:
 		assert(impossible);
 	}
@@ -207,7 +205,7 @@ static void gen_user_var(Program *p)
 	/* Convert internal type to `C' type */
 	foreach (vp, p->prog->extra.e_prog->first)
 	{
-		if (vp->decl && vp->type != V_EVFLAG && vp->type != V_NONE)
+		if (vp->decl && vp->type != V_NONE)
 		{
 			gen_line_marker(vp->decl);
 			if (!opt_reent) printf("static");

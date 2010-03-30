@@ -141,10 +141,10 @@ opt_subscript(p) ::= .			{ p = 0; }
 subscript(p) ::= LBRACKET INTCON(n) RBRACKET. { p = n; }
 
 foreign_decl(p) ::= DECLARE NAME(v) SEMICOLON.
-			{ p = decl(V_NONE,   VC_SCALAR, v, 0, 0, 0); }
+			{ p = decl(V_NONE,   VC_FOREIGN, v, 0, 0, 0); }
 
 evflag_decl(p) ::= EVFLAG NAME(v) SEMICOLON.
-			{ p = decl(V_EVFLAG, VC_SCALAR, v, 0, 0, 0); }
+			{ p = decl(V_NONE, VC_EVFLAG, v, 0, 0, 0); }
 
 decl(p) ::= type(t) NAME(v) SEMICOLON.
 			{ p = decl(t, VC_SCALAR,  v, 0,  0,  0); }

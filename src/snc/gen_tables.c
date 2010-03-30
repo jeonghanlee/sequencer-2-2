@@ -36,6 +36,7 @@
 #include	"snc_main.h"
 #include	"sym_table.h"
 #include	"gen_code.h"
+#include	"parse.h"
 
 /* #define DEBUG */
 
@@ -45,7 +46,7 @@ typedef struct event_mask_args {
 } event_mask_args;
 
 static void gen_channel_table(ChanList *chan_list, int num_event_flags, int opt_reent);
-static void fill_channel_struct(Chan *cp, int elem_num, int num_event_flags, int opt_reent);
+static void gen_channel(Chan *cp, int num_event_flags, int opt_reent);
 static void gen_state_table(Expr *ss_list, int num_event_flags, int num_channels);
 static void fill_state_struct(Expr *sp, char *ss_name);
 static void gen_prog_table(Program *p);
@@ -63,7 +64,8 @@ void gen_tables(Program *p)
 {
 	printf("\n/************************ Tables ************************/\n");
 	gen_channel_table(p->chan_list, p->num_event_flags, p->options.reent);
-	gen_state_table(p->prog->prog_statesets, p->num_event_flags, p->num_channels);
+	gen_state_table(p->prog->prog_statesets, p->num_event_flags,
+		p->chan_list->num_elems);
 	gen_ss_table(p->sym_table, p->prog->prog_statesets);
 	gen_prog_table(p);
 }
@@ -79,17 +81,9 @@ static void gen_channel_table(ChanList *chan_list, int num_event_flags, int opt_
 		printf("static struct seqChan seqChan[] = {\n");
 		foreach (cp, chan_list->first)
 		{
-			int n;
-#ifdef DEBUG
-			report("gen_channel_table: index=%d, num_elem=%d\n",
-				cp->index, cp->num_elem);
-#endif
-			for (n = 0; n < cp->num_elem; n++)
-			{
-				fill_channel_struct(cp, n, num_event_flags, opt_reent);
-			}
+			gen_channel(cp, num_event_flags, opt_reent);
+			printf("%s", cp->next ? ",\n" : "\n};\n");
 		}
-		printf("};\n");
 	}
 	else
 	{
@@ -117,39 +111,35 @@ static void gen_var_name(Var *vp)
 }
 
 /* Generate a seqChan structure */
-static void fill_channel_struct(Chan *cp, int elem_num, int num_event_flags, int opt_reent)
+static void gen_channel(Chan *cp, int num_event_flags, int opt_reent)
 {
-	Var		*vp;
-	char		*suffix, elem_str[20], *pv_name;
-	int		ef_num, mon_flag;
+	Var	*vp;
+	char	*suffix, elem_str[20], *pv_name;
+	uint	ef_num, mon_flag;
 
 	vp = cp->var;
-
 	/* Figure out text needed to handle subscripts */
 	if (vp->class == VC_ARRAY1 || vp->class == VC_ARRAYP)
-		sprintf(elem_str, "[%d]", elem_num);
+		sprintf(elem_str, "[%d]", cp->index);
 	else if (vp->class == VC_ARRAY2)
-		sprintf(elem_str, "[%d][0]", elem_num);
+		sprintf(elem_str, "[%d][0]", cp->index);
 	else
 		elem_str[0] = '\0';
-
 	if (vp->type == V_STRING)
 		suffix = "[0]";
 	else
 		suffix = "";
-
-	pv_name = cp->pv_names[elem_num];
-	mon_flag = cp->mon_flags[elem_num];
-	ef_num = cp->ef_nums[elem_num];
-
+	pv_name = cp->name;
+	mon_flag = cp->monitor;
+	if (cp->sync)
+		ef_num = cp->sync->chan.evflag->index;
+	else
+		ef_num = 0;
 	if (pv_name == NULL)
 		pv_name = ""; /* not assigned */
-
 	printf("  {\"%s\", ", pv_name);/* unexpanded channel name */
-
 	/* Ptr or offset to user variable */
 	printf("(void *)");
-
 	if (opt_reent)
 	{
 		printf("OFFSET(struct %s, ", SNL_PREFIX);
@@ -162,33 +152,24 @@ static void fill_channel_struct(Chan *cp, int elem_num, int num_event_flags, int
 		gen_var_name(vp);
 		printf("%s%s, ", elem_str, suffix);
 	}
-
  	/* variable name with optional elem num */
 	printf("\"%s%s\", ", vp->name, elem_str);
-
  	/* variable type */
 	printf("\n    \"%s\", ", pv_type_str(vp->type));
-
 	/* count, for requests */
 	printf("%d, ", cp->count);
-
 	/* event number */
-	printf("%d, ", cp->index + elem_num + num_event_flags + 1);
-
+	printf("%d, ", num_event_flags + vp->index + cp->index + 1);
 	/* event flag number (or 0) */
 	printf("%d, ", ef_num);
-
 	/* monitor flag */
 	printf("%d, ", mon_flag);
-
 	/* syncQ queue */
-	if (!vp->queued)
+	if (!cp->syncq)
 		printf("0, 0, 0");
 	else
-		printf("%d, %d, %d", vp->queued, vp->maxqsize, vp->qindex);
-
+		printf("%d, %d, %d", 1, cp->syncq->size, cp->syncq->index);
 	printf("}");
-	printf(",\n\n");
 }
 
 /* Convert variable type to pv type as a string */
@@ -295,7 +276,7 @@ static void gen_prog_table(Program *p)
 	printf("\t/* magic number */      %d,\n", MAGIC);
 	printf("\t/* name */              \"%s\",\n", p->name);
 	printf("\t/* channels */          seqChan,\n");
-	printf("\t/* num. channels */     %d,\n", p->num_channels);
+	printf("\t/* num. channels */     %d,\n", p->chan_list->num_elems);
 	printf("\t/* state sets */        seqSS,\n");
 	printf("\t/* num. state sets */   %d,\n", p->num_ss);
 	if (p->options.reent)
@@ -307,7 +288,7 @@ static void gen_prog_table(Program *p)
 	printf("\t/* encoded options */   "); encode_options(p->options);
 	printf("\t/* entry handler */     entry_handler,\n");
 	printf("\t/* exit handler */      exit_handler,\n");
-	printf("\t/* num. queues */       %d\n", p->num_queues);
+	printf("\t/* num. queues */       %d\n", p->syncq_list->num_elems);
 	printf("};\n");
 }
 
@@ -409,30 +390,33 @@ static int iter_event_mask_scalar(Expr *ep, Expr *scope, void *parg)
 	vp = ep->extra.e_var;
 	assert(vp != 0);
 
-	/* this subroutine handles only the scalar variables */
-	if (vp->class != VC_SCALAR)
-		return FALSE;
+	/* this subroutine handles only the scalar variables and event flags */
+	if (vp->class != VC_SCALAR && vp->class != VC_EVFLAG)
+		return FALSE;		/* no children anyway */
 
 	/* event flag? */
-	if (vp->type == V_EVFLAG)
+	if (vp->class == VC_EVFLAG)
 	{
 #ifdef DEBUG
 		report("  iter_event_mask_scalar: evflag: %s, ef_num=%d\n",
-		 vp->name, vp->ef_num);
+			vp->name, vp->chan.evflag->index);
 #endif
-		bitSet(event_words, vp->ef_num);
-		return FALSE;
+		bitSet(event_words, vp->chan.evflag->index);
+		return FALSE;		/* no children anyway */
 	}
 
-	cp = vp->chan;
 	/* if not associated with channel, return */
-	if (cp == 0)
+	if (vp->assign == M_NONE)
 		return FALSE;
+	assert(vp->assign == M_SINGLE);		/* by L3 */
+	cp = vp->chan.single;
 
 	/* value queued via syncQ? */
-	if (vp->queued)
+	if (vp->syncq != M_NONE)
 	{
-		int ef_num = cp->ef_nums[0];
+		int ef_num;
+		assert(vp->syncq == M_SINGLE);	/* by L1 */
+		ef_num = cp->syncq->ef_var->chan.evflag->index;
 #ifdef DEBUG
 		report("  iter_event_mask_scalar: queued var: %s, ef_num=%d\n",
 			vp->name, ef_num);
@@ -445,9 +429,9 @@ static int iter_event_mask_scalar(Expr *ep, Expr *scope, void *parg)
 		assert(vp->length1 == 1);
 #ifdef DEBUG
 		report("  iter_event_mask_scalar: var: %s, event bit=%d\n",
-			vp->name, cp->index + 1);
+			vp->name, vp->index + cp->index + num_event_flags + 1);
 #endif
-		bitSet(event_words, cp->index + num_event_flags + 1);
+		bitSet(event_words, vp->index + cp->index + num_event_flags + 1);
 	}
 	return FALSE;		/* no children anyway */
 }
@@ -456,13 +440,13 @@ static int iter_event_mask_scalar(Expr *ep, Expr *scope, void *parg)
 static int iter_event_mask_array(Expr *ep, Expr *scope, void *parg)
 {
 	event_mask_args	*em_args = (event_mask_args *)parg;
-	int		num_event_flags = em_args->num_event_flags;
+	uint		num_event_flags = em_args->num_event_flags;
 	bitMask		*event_words = em_args->event_words;
 
 	Chan		*cp=0;
 	Var		*vp=0;
 	Expr		*e_var=0, *e_ix=0;
-	int		ix, n;
+	uint		ix, n;
 
 	assert(ep->type == E_SUBSCR || ep->type == E_VAR);
 
@@ -488,45 +472,63 @@ static int iter_event_mask_array(Expr *ep, Expr *scope, void *parg)
 	if (vp->class != VC_ARRAY1 && vp->class != VC_ARRAY2 && vp->class != VC_ARRAYP)
 		return TRUE;
 
-	cp = vp->chan;
-	if (cp == NULL)
-		return TRUE;		/* not assigned to a pv */
-
-	/* an array variable subscripted with a constant */
-	if (e_ix && e_ix->type == E_CONST)
+	if (vp->assign == M_NONE)
 	{
-		ix = atoi(e_ix->value);
-		if (ix < 0 || ix >= cp->num_elem)
-		{
-			error_at_expr(e_ix, "subscript out of range\n");
-			return FALSE;
-		}
+		return FALSE;
+	}
+	else if (vp->assign == M_SINGLE)
+	{
+		cp = vp->chan.single;
 #ifdef DEBUG
 		report("  iter_event_mask_array: %s, event bit=%d\n",
-			vp->name, cp->index + ix + 1);
+			vp->name, vp->index + cp->index + ix + num_event_flags + 1);
 #endif
-		bitSet(event_words, cp->index + ix + num_event_flags + 1);
-		return FALSE;	/* important: do NOT descend further
-				   otherwise will find the array var and
-				   set all the bits (see below) */
-	}
-	else if (e_ix)	/* subscript is an expression */
-	{
-		/* must descend for the array variable (see below) and
-		   possible array vars inside subscript expression */
+		bitSet(event_words, vp->index + cp->index + ix + num_event_flags + 1);
 		return TRUE;
 	}
-	else /* no subscript */
+	else
 	{
-		/* set all event bits for this variable */
-#ifdef DEBUG
-		report("  iter_event_mask_array: %s, event bits=%d..%d\n",
-			vp->name, cp->index + 1, cp->index + vp->length1);
-#endif
-		for (n = 0; n < vp->length1; n++)
+		assert(vp->assign == M_MULTI);
+		/* an array variable subscripted with a constant */
+		if (e_ix && e_ix->type == E_CONST)
 		{
-			bitSet(event_words, cp->index + n + num_event_flags + 1);
+			if (!strtoui(e_ix->value, vp->length1, &ix))
+			{
+				error_at_expr(e_ix,
+					"subscript in '%s[%s]' out of range\n",
+					vp->name, e_ix->value);
+				return FALSE;
+			}
+			cp = vp->chan.multi[ix];
+#ifdef DEBUG
+			report("  iter_event_mask_array: %s, event bit=%d\n",
+				vp->name, vp->index + cp->index + ix + num_event_flags + 1);
+#endif
+			bitSet(event_words, vp->index + cp->index + ix + num_event_flags + 1);
+			return FALSE;	/* important: do NOT descend further
+				   	   otherwise will find the array var and
+				   	   set all the bits (see below) */
 		}
-		return FALSE;	/* no children anyway */
+		else if (e_ix)	/* subscript is an expression */
+		{
+			/* must descend for the array variable (see below) and
+		   	   possible array vars inside subscript expression */
+			return TRUE;
+		}
+		else /* no subscript */
+		{
+			/* set all event bits for this variable */
+			cp = vp->chan.multi[0];
+#ifdef DEBUG
+			report("  iter_event_mask_array: %s, event bits=%d..%d\n",
+				vp->name, cp->index + num_event_flags + 1,
+				vp->index + cp->index + num_event_flags + vp->length1);
+#endif
+			for (n = 0; n < vp->length1; n++)
+			{
+				bitSet(event_words, vp->index + cp->index + n + num_event_flags + 1);
+			}
+			return FALSE;	/* no children anyway */
+		}
 	}
 }
