@@ -144,10 +144,10 @@ char *strdupft(uchar *start, uchar *stop) {
 static int scan(Scanner *s, Token *t) {
 	uchar *cursor = s->cur;
 	uchar *end = cursor;
-	int in_c_code = 0;
+	uchar *c_code_start = 0;
 
 snl:
-	if (in_c_code)
+	if (c_code_start)
 		goto c_code;
 	t->line = s->line;
 	t->file = s->file;
@@ -169,8 +169,7 @@ snl:
 				goto line_marker;
 			}
 	"%{"		{
-				s->tok = cursor;
-				in_c_code = 1;
+				s->tok = c_code_start = cursor;
 				goto c_code;
 			}
 	"%%" SPC*	{
@@ -314,6 +313,7 @@ line_marker_str:
 /*!re2c
 	(["] (ESC|ANY\[\n\\"])* ["])
 			{
+				uchar saved = cursor[-1];
 				cursor[-1] = 0;
 				if (!s->file) {
 					s->file = strdup((char *)(s->tok + 1));
@@ -321,15 +321,12 @@ line_marker_str:
 					free(s->file);
 					s->file = strdup((char *)(s->tok + 1));
 				}
+				cursor[-1] = saved;
 				goto line_marker_skip;
 			}
 	"\n"		{
-				if (cursor == s->eof) {
-					cursor -= 1;
-					goto snl;
-				}
-				s->line++;
-				goto string_cat;
+				cursor -= 1;
+				goto line_marker_skip;
 			}
 	.		{ goto line_marker_skip; }
 */
@@ -357,9 +354,9 @@ comment:
 
 c_code:
 /*!re2c
-	"}%"		{ RET(CCODE, strdupft(s->tok, cursor - 2)); }
+	"}%"		{ RET(CCODE, strdupft(c_code_start, cursor - 2)); }
 	.		{ goto c_code; }
-	"#" SPC*	{ goto line_marker; }
+	"#" SPC+	{ s->tok = cursor; goto line_marker; }
 	"\n"		{
 				if (cursor == s->eof) {
 					scan_report(s, "at eof: unterminated literal c-code section\n");
@@ -380,6 +377,7 @@ c_code_line:
 				if (cursor == s->eof) {
 					cursor -= 1;
 				}
+				s->line++;
 				if (end > s->tok) {
 					RET(CCODE, strdupft(s->tok, end));
 				}
