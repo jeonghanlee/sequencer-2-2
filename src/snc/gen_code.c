@@ -41,8 +41,6 @@
 #include	"snc_main.h"
 #include	"gen_code.h"
 
-/* #define DEBUG */
-
 static const int impossible = 0;
 
 static void gen_preamble(char *prog_name, int opt_main);

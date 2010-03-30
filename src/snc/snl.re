@@ -117,12 +117,6 @@ char *strdupft(uchar *start, uchar *stop) {
 	*stop = 0;
 	result = strdup((char*)start);
 	*stop = c;
-#if 0
-	int len = stop - start;
-	result = malloc(len + 1);
-	memcpy(result, start, len);
-	result[len] = 0;
-#endif
 	return result;
 }
 

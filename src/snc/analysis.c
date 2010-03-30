@@ -9,10 +9,7 @@
 #include "parse.h"
 #include "analysis.h"
 
-/* #define DEBUG */
-
 static const int impossible = 0;
-static const int precondition = 0;
 
 static void analyse_definitions(Program *p);
 static void analyse_option(Options *options, Expr *defn);
@@ -60,7 +57,7 @@ Program *analyse_program(Expr *prog, Options options)
 	p->syncq_list = new(SyncQList);
 
 #ifdef DEBUG
-	report("created synmbol table, channel list, and syncq list\n");
+	report("created symbol table, channel list, and syncq list\n");
 #endif
 
 	analyse_definitions(p);

@@ -37,8 +37,6 @@
 #include	"snc_main.h"
 #include	"sym_table.h"
 
-/* #define DEBUG */
-
 static const int impossible = 0;
 
 enum {
@@ -252,11 +250,10 @@ static void gen_exit_body(Expr *xp, int level)
 }
 
 /* Generate a function for each state that sets up delay processing:
- * This function gets called prior to the event function to guarantee
- * that the initial delay value specified in delay() calls are used.
- * Each delay() call is assigned a (per state) unique id.  The maximum
- * number of delays is recorded in the state set structure.
- */
+   This function gets called prior to the event function to guarantee
+   that the initial delay value specified in delay() calls are used.
+   Each delay() call is assigned a (per state) unique id.  The maximum
+   number of delays is recorded in the state set structure. */
 static void gen_delay_body(Expr *xp, int level)
 {
 	Expr	*tp;
@@ -271,8 +268,7 @@ static void gen_delay_body(Expr *xp, int level)
 
 /* Generate call to seq_delayInit() with extra arguments ssId and delay id,
    and cast the argument proper to double.
- * Example:  seq_delayInit(ssId, 1, (double)(<some expression>));
- */
+   Example:  seq_delayInit(ssId, 1, (double)(<some expression>)); */
 static int gen_delay(Expr *ep, Expr *scope, void *parg)
 {
 	assert(ep->type == E_DELAY);
@@ -288,8 +284,7 @@ static int gen_delay(Expr *ep, Expr *scope, void *parg)
 
 /* Generate action processing functions:
    Each state has one action routine.  It's name is derived from the
-   state set name and the state name.
-*/
+   state set name and the state name. */
 static void gen_action_body(Expr *xp, int level)
 {
 	Expr	*tp;
@@ -433,9 +428,6 @@ static void gen_expr(
 )
 {
 	Expr	*cep;		/* child expression */
-#if 0
-	Var	*vp;
-#endif
 
 	if (ep == 0)
 		return;
@@ -446,20 +438,6 @@ static void gen_expr(
 
 	switch(ep->type)
 	{
-#if 0
-	/* Definitions */
-	case D_DECL:
-		vp = ep->extra.e_decl;
-		assert(vp != 0);
-		assert(vp->decl != 0);
-		if (vp->type != V_EVFLAG && vp->type != V_NONE)
-		{
-			gen_line_marker(vp->decl);
-			indent(level);
-			gen_var_decl(vp);
-		}
-		break;
-#endif
 	/* Statements */
 	case S_CMPND:
 		indent(level);
@@ -528,17 +506,7 @@ static void gen_expr(
 			break;
 		}
 		indent(level);
-#if 0
-                printf("{\n");
-		indent(level+1);
-#endif
 		printf("{*pNextState = %d; return;}\n", ep->extra.e_change->extra.e_state->index);
-#if 0
-		indent(level+1);
-		printf("return;\n");
-		indent(level);
-                printf("}\n");
-#endif
 		break;
 	/* Expressions */
 	case E_VAR:
@@ -636,7 +604,7 @@ static int special_func(
 
 #ifdef	DEBUG
 	report("special_func: code=%d, name=%s\n", func_code, fname);
-#endif	/*DEBUG*/
+#endif
 	switch (func_code)
 	{
 	    case F_DELAY:
@@ -744,11 +712,9 @@ static void gen_ef_func(
 }
 
 /* Generate code for pv functions requiring a database variable.
- * The channel id (index into channel array) is substituted for the variable
- *
- * "add_length" => the array length (1 if not an array) follows the channel id 
- * "num_params > 0" => add default (zero) parameters up to the spec. number
- */
+   The channel id (index into channel array) is substituted for the variable.
+   "add_length" => the array length (1 if not an array) follows the channel id 
+   "num_params > 0" => add default (zero) parameters up to the spec. number */
 static void gen_pv_func(
 	int	stmt_type,
 	Expr	*ep,		/* function call expression */
@@ -793,7 +759,7 @@ static void gen_pv_func(
 	assert(vp != 0);
 #ifdef	DEBUG
 	report("gen_pv_func: fun=%s, var=%s\n", ep->value, vp->name);
-#endif	/*DEBUG*/
+#endif
 	vn = vp->name;
 	if (vp->assign == M_NONE)
 	{
@@ -849,7 +815,7 @@ static void gen_pv_func(
 	printf(")");
 #ifdef	DEBUG
 	report("gen_pv_func: done (fun=%s, var=%s)\n", ep->value, vp->name);
-#endif	/*DEBUG*/
+#endif
 }
 
 /* Generate initialisation code for one element of the UserVar struct. */

@@ -38,8 +38,6 @@
 #include	"gen_code.h"
 #include	"parse.h"
 
-/* #define DEBUG */
-
 typedef struct event_mask_args {
 	bitMask	*event_words;
 	int	num_event_flags;
