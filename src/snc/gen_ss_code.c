@@ -247,7 +247,7 @@ static void gen_exit_body(Expr *xp, int level)
 	gen_defn_c_code(xp, level);
 	foreach (ep, xp->exit_stmts)
 	{
-		gen_expr(OTHER_STMT, xp, 1);
+		gen_expr(OTHER_STMT, ep, 1);
 	}
 }
 
@@ -603,8 +603,9 @@ static void gen_expr(
 		indent(level);
 		printf("%s\n", ep->value);
 		break;
-#ifdef DEBUG
 	default:
+		assert(impossible);
+#ifdef DEBUG
 		report_at_expr(ep, "unhandled expression (%s:%s)\n",
 			expr_type_name(ep), ep->value);
 #endif
