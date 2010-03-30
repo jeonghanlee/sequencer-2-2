@@ -4,7 +4,7 @@ int x[2];
 assign x to {"x", "y"};
 
 evflag f;
-
+monitor x;
 sync x to f;
 
 ss main {
