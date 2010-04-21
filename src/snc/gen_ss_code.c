@@ -40,6 +40,14 @@
 static const int impossible = 0;
 
 enum {
+	C_NONE, C_TRUE, C_FALSE, C_SYNC, C_ASYNC, C_CODE_LAST
+};
+
+static char *const_code_str[] = {
+	NULL, "TRUE", "FALSE", "SYNC", "ASYNC", NULL
+};
+
+enum {
 	F_NONE, F_DELAY, F_EFSET, F_EFTEST, F_EFCLEAR, F_EFTESTANDCLEAR,
 	F_PVGET, F_PVGETQ, F_PVFREEQ, F_PVPUT, F_PVTIMESTAMP, F_PVASSIGN,
 	F_PVMONITOR, F_PVSTOPMONITOR, F_PVCOUNT, F_PVINDEX, F_PVNAME,
@@ -83,6 +91,7 @@ static void gen_pv_func(int stmt_type, Expr *ep,
 static void gen_entry_handler(Expr *prog);
 static void gen_exit_handler(Expr *prog);
 static int special_func(int stmt_type, Expr *ep);
+static int special_const(int stmt_type,	Expr *ep);
 
 #define	EVENT_STMT	1
 #define	ACTION_STMT	2
@@ -114,6 +123,25 @@ static int func_name_to_code(char *fname)
 	return fcode;
 }
 
+static void register_special_consts(void)
+{
+	int const_code;
+
+	for (const_code = C_CODE_LAST-1; const_code_str[const_code] != NULL; const_code--)
+	{
+		/* use address of const_code_str array as the symbol type */
+		sym_table_insert(global_sym_table, const_code_str[const_code], const_code_str, (void*)const_code);
+	}
+}
+
+static int const_name_to_code(char *const_name)
+{
+	int const_code = (int)sym_table_lookup(global_sym_table, const_name, const_code_str);
+
+	assert(const_code == 0 || strcmp(const_name, const_code_str[const_code]) == 0);
+	return const_code;
+}
+
 /* Generate state set C code from analysed syntax tree */
 void gen_ss_code(Program *program)
 {
@@ -124,8 +152,9 @@ void gen_ss_code(Program *program)
 	global_opt_reent = program->options.reent;
 	global_sym_table = program->sym_table;
 
-	/* Insert special function names into symbol table */
+	/* Insert special names into symbol table */
 	register_special_funcs();
+	register_special_consts();
 
 	/* Generate entry handler code */
 	gen_entry_handler(program->prog);
@@ -513,6 +542,8 @@ static void gen_expr(
 		gen_var_access(ep->extra.e_var);
 		break;
 	case E_CONST:
+		if (special_const(stmt_type, ep))
+			break;
 		printf("%s", ep->value);
 		break;
 	case E_STRING:
@@ -580,6 +611,23 @@ static void gen_expr(
 	}
 }
 
+static int special_const(int stmt_type,	Expr *ep)
+{
+	int n_const;
+	char *const_name = ep->value;
+	int const_code = const_name_to_code(const_name);
+	switch(const_code)
+	{
+		case C_TRUE:	n_const = 1; break;
+		case C_FALSE:	n_const = 0; break;
+		case C_ASYNC:	n_const = 1; break;
+		case C_SYNC:	n_const = 2; break;
+		default:	return FALSE;
+	}
+	printf("%d", n_const);
+	return TRUE;
+}
+
 /* Process special function (returns TRUE if this is a special function)
 	Checks for one of the following special functions:
 	 - event flag functions, e.g. efSet()
@@ -588,10 +636,7 @@ static void gen_expr(
 	 - macValueGet()
 	 - seqLog()
 */
-static int special_func(
-	int stmt_type,
-	Expr *ep		/* function call expression */
-)
+static int special_func(int stmt_type,	Expr *ep)
 {
 	char	*fname;		/* function name */
 	Expr	*ap;		/* arguments */

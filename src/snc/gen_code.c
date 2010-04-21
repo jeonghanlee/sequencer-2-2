@@ -114,11 +114,6 @@ static void gen_preamble(char *prog_name, int opt_main)
 	printf("\n");
 	printf("#define MAX_STRING_SIZE 40\n");
 
-	/* The following definition should be consistent with seq_if.c */
-	printf("\n");
-	printf("#define ASYNC %d\n", 1);
-	printf("#define SYNC %d\n", 2);
-
 	/* Main program (if "main" option set) */
 	if (opt_main) {
 		printf("\n/* Main program */\n");
