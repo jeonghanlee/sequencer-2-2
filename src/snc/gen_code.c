@@ -56,7 +56,9 @@ int assert_var_declared(Expr *ep, Expr *scope, void *parg)
 #endif
 	assert(ep->type == E_VAR);
 	assert(ep->extra.e_var != 0);
-	assert(ep->extra.e_var->decl != 0);
+	assert(ep->extra.e_var->decl != 0 ||
+		(ep->extra.e_var->type == V_NONE &&
+	 	ep->extra.e_var->class == VC_FOREIGN));
 	return TRUE;		/* there are no children anyway */
 }
 

@@ -260,9 +260,14 @@ static void analyse_declaration(SymTable st, Expr *scope, Expr *defn)
 	if (!sym_table_insert(st, vp->name, var_list, vp))
 	{
 		Var *vp2 = sym_table_lookup(st, vp->name, var_list);
-		error_at_expr(defn,
-			"variable '%s' already declared at %s:%d\n",
-			vp->name, vp2->decl->src_file, vp2->decl->line_num);
+		if (vp2->decl)
+			error_at_expr(defn,
+			 "variable '%s' already declared at %s:%d\n",
+			 vp->name, vp2->decl->src_file, vp2->decl->line_num);
+		else
+			error_at_expr(defn,
+			 "variable '%s' already (implicitly) declared\n",
+			 vp->name);
 	}
 	else
 	{
@@ -1019,7 +1024,7 @@ static int connect_variable(Expr *ep, Expr *scope, void *parg)
 	{
 		VarList *var_list = *pvar_list_from_scope(scope);
 
-		error_at_expr(ep, "variable '%s' used but not declared\n",
+		warning_at_expr(ep, "variable '%s' used but not declared\n",
 			ep->value);
 		/* create a pseudo declaration so we can finish the analysis phase */
 		vp = new(Var);
