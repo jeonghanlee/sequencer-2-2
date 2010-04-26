@@ -441,10 +441,8 @@ static int iter_event_mask_array(Expr *ep, Expr *scope, void *parg)
 	uint		num_event_flags = em_args->num_event_flags;
 	bitMask		*event_words = em_args->event_words;
 
-	Chan		*cp=0;
 	Var		*vp=0;
 	Expr		*e_var=0, *e_ix=0;
-	uint		ix, n;
 
 	assert(ep->type == E_SUBSCR || ep->type == E_VAR);
 
@@ -476,12 +474,12 @@ static int iter_event_mask_array(Expr *ep, Expr *scope, void *parg)
 	}
 	else if (vp->assign == M_SINGLE)
 	{
-		cp = vp->chan.single;
+		uint ix = vp->chan.single->index;
 #ifdef DEBUG
 		report("  iter_event_mask_array: %s, event bit=%d\n",
-			vp->name, vp->index + cp->index + ix + num_event_flags + 1);
+			vp->name, vp->index + ix + num_event_flags + 1);
 #endif
-		bitSet(event_words, vp->index + cp->index + ix + num_event_flags + 1);
+		bitSet(event_words, vp->index + ix + num_event_flags + 1);
 		return TRUE;
 	}
 	else
@@ -490,6 +488,8 @@ static int iter_event_mask_array(Expr *ep, Expr *scope, void *parg)
 		/* an array variable subscripted with a constant */
 		if (e_ix && e_ix->type == E_CONST)
 		{
+			uint ix;
+
 			if (!strtoui(e_ix->value, vp->length1, &ix))
 			{
 				error_at_expr(e_ix,
@@ -497,12 +497,12 @@ static int iter_event_mask_array(Expr *ep, Expr *scope, void *parg)
 					vp->name, e_ix->value);
 				return FALSE;
 			}
-			cp = vp->chan.multi[ix];
 #ifdef DEBUG
-			report("  iter_event_mask_array: %s, event bit=%d\n",
-				vp->name, vp->index + cp->index + ix + num_event_flags + 1);
+			report("  iter_event_mask_array: %s, event bit=%d+%d+%d+1=%d\n",
+				vp->name, vp->index, ix, num_event_flags,
+                                vp->index + ix + num_event_flags + 1);
 #endif
-			bitSet(event_words, vp->index + cp->index + ix + num_event_flags + 1);
+			bitSet(event_words, vp->index + ix + num_event_flags + 1);
 			return FALSE;	/* important: do NOT descend further
 				   	   otherwise will find the array var and
 				   	   set all the bits (see below) */
@@ -516,15 +516,15 @@ static int iter_event_mask_array(Expr *ep, Expr *scope, void *parg)
 		else /* no subscript */
 		{
 			/* set all event bits for this variable */
-			cp = vp->chan.multi[0];
+			uint ix;
 #ifdef DEBUG
 			report("  iter_event_mask_array: %s, event bits=%d..%d\n",
-				vp->name, cp->index + num_event_flags + 1,
-				vp->index + cp->index + num_event_flags + vp->length1);
+				vp->name, vp->index + num_event_flags + 1,
+				vp->index + num_event_flags + vp->length1);
 #endif
-			for (n = 0; n < vp->length1; n++)
+			for (ix = 0; ix < vp->length1; ix++)
 			{
-				bitSet(event_words, vp->index + cp->index + n + num_event_flags + 1);
+				bitSet(event_words, vp->index + ix + num_event_flags + 1);
 			}
 			return FALSE;	/* no children anyway */
 		}
