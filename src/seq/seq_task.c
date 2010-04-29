@@ -222,10 +222,10 @@ SSCB	*pSS;
 		/* An event triggered:
 		 * execute the action statements and enter the new state. */
 
-		epicsMutexMustLock(pSP->caSemId);
+		/* epicsMutexMustLock(pSP->caSemId); */
 		/* Execute the action for this event */
 		pST->actionFunc(ssId, pVar, pSS->transNum, &pSS->nextState);
-		epicsMutexUnlock(pSP->caSemId);
+		/* epicsMutexUnlock(pSP->caSemId); */
 
 		/* Change event mask ptr for next state */
 		pStNext = pSS->pStates + pSS->nextState;
