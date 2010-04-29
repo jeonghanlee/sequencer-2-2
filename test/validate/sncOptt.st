@@ -13,14 +13,9 @@ ss ss1
 	state low
 	{
   	    option -t; /* Don't reset timers on re-entry to state */
-#if 0
 	    entry 
 	    { 
 		printf("Print something on entry to low\n");
-	    }
-#endif
-	    entry 
-	    { 
 		printf("Also pause on entry to low\n");
 		epicsThreadSleep(1.0);
 	    }
