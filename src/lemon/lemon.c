@@ -265,6 +265,7 @@ struct lemon {
   char *tokendest;         /* Code to execute to destroy token data */
   char *vardest;           /* Code for the default non-terminal destructor */
   char *filename;          /* Name of the input file */
+  char *outputdir;         /* Name of the output directory */
   char *outname;           /* Name of the current output file */
   char *tokenprefix;       /* A prefix added to token names in the .h file */
   int nconflict;           /* Number of parsing conflicts */
@@ -1405,6 +1406,7 @@ char **argv;
   static int statistics = 0;
   static int mhflag = 0;
   static int nolinenosflag = 0;
+  static char *outputdir = 0;
   static struct s_options options[] = {
     {OPT_FLAG, "b", (char*)&basisflag, "Print only the basis in report."},
     {OPT_FLAG, "c", (char*)&compress, "Don't compress the action table."},
@@ -1416,6 +1418,7 @@ char **argv;
     {OPT_FLAG, "s", (char*)&statistics,
                                    "Print parser stats to standard output."},
     {OPT_FLAG, "x", (char*)&version, "Print the version number."},
+    {OPT_STR,  "o", (char*)&outputdir, "Directory for output files (default: same as input)."},
     {OPT_FLAG,0,0,0}
   };
   int i;
@@ -1432,6 +1435,7 @@ char **argv;
   }
   memset(&lem, 0, sizeof(lem));
   lem.errorcnt = 0;
+  lem.outputdir = outputdir;
 
   /* Initialize the machine */
   Strsafe_init();
@@ -2719,13 +2723,36 @@ char *suffix;
 {
   char *name;
   char *cp;
+  char *inputname;
+  int outputdirlen;
+  char *outputdir;
 
-  name = malloc( lemonStrlen(lemp->filename) + lemonStrlen(suffix) + 5 );
+  outputdir = lemp->outputdir;
+  if (!outputdir) {
+    outputdir = "";
+  }
+  outputdirlen = lemonStrlen(outputdir);
+
+  inputname = strrchr(lemp->filename,'/');
+  if (outputdirlen > 0 && inputname) {
+    inputname += 1;
+  } else {
+    inputname = lemp->filename;
+  }
+
+  name = malloc( outputdirlen + 1 + lemonStrlen(inputname) + lemonStrlen(suffix) + 1);
   if( name==0 ){
     fprintf(stderr,"Can't allocate space for a filename.\n");
     exit(1);
   }
-  strcpy(name,lemp->filename);
+  strcpy(name,"");
+  if (outputdirlen > 0) {
+    strcat(name,outputdir);
+    if (outputdir[outputdirlen-1] != '/') {
+      strcat(name,"/");
+    }
+  }
+  strcat(name,inputname);
   cp = strrchr(name,'.');
   if( cp ) *cp = 0;
   strcat(name,suffix);
