@@ -11,7 +11,7 @@ SNCFLAGS = +m
 PROD_LIBS += Com
 #seq_DIR = $(INSTALL_LIB)
 
-PROD_LIBS += seq
+PROD_LIBS += seq pv ca
 seq_DIR = $(INSTALL_LIB)
 
 PROD += simple
