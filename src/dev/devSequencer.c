@@ -164,71 +164,70 @@ typedef struct {
             (TARGET) = (SOURCE); \
             (UPDATEFLAG) = updated; \
         }
+#define NEW(type) (type*)calloc(1,sizeof(type))
 
 LOCAL seqShowScanPvt* seqShowScanPvtInit(struct link* pLink)
 {
-     seqShowScanPvt   *pvtPt;
-     char             inpStr[80];
-     char             *inpArg[3];
-     char             *tempChar;
-     int              argN  = 0;
-     int              i     = 0;
+    seqShowScanPvt   *pvtPt;
+    char             inpStr[strlen(pLink->value.instio.string)+1];
+    char             *inpArg[3];
+    int              argN  = 0;
+    int              i     = 0;
 
-     pvtPt = (seqShowScanPvt *)malloc(sizeof(seqShowScanPvt));
-     if(!pvtPt) return NULL;
-     
-     pvtPt->updateFlag = 1;
-     pvtPt->pSP        = NULL;
-     pvtPt->mutexId    = epicsMutexCreate();
-     scanIoInit(&pvtPt->ioScanPvt);
+    pvtPt = NEW(seqShowScanPvt);
+    if(!pvtPt) return NULL;
 
-    strcpy(inpStr,(&pLink->value.instio)->string);
+    pvtPt->updateFlag = 1;
+    pvtPt->pSP        = NULL;
+    pvtPt->mutexId    = epicsMutexCreate();
+    scanIoInit(&pvtPt->ioScanPvt);
 
-     /* Find deliminater in INP string
-        and replace null characeter to point end of string.
-        And assign to sperated strings */
-     while(argN<3) {
-         if(*(inpStr+i) == NULL) break;
-         inpArg[argN++] = inpStr+i;
-         while(i<80) {
-             tempChar = inpStr + (i++);
-             if((*tempChar < '0' || *tempChar > '9') &&
-                (*tempChar < 'a' || *tempChar > 'z') &&
-                (*tempChar < 'A' || *tempChar > 'Z') ) {
-                     if(*tempChar == NULL) i-=1;
-                     *tempChar = NULL;
-                      break;
-             }
-         }
-     }
-     for(i=argN;i<3;i++) inpArg[i] = nullStr;
+    strcpy(inpStr,pLink->value.instio.string);
 
-     strcpy(pvtPt->progName,inpArg[0]);
-     strcpy(pvtPt->stateSetName,nullStr);
-     if(!strcmp(inpArg[1],nStateSets))          pvtPt->type = seqShownStateSets;
-     else if(!strcmp(inpArg[1],nAssign))        pvtPt->type = seqShownAssign;
-     else if(!strcmp(inpArg[1],nConnect))       pvtPt->type = seqShownConnect;
-     else if(!strcmp(inpArg[1],nChans))         pvtPt->type = seqShownChans;
-     else if(!strcmp(inpArg[1],nQueues))        pvtPt->type = seqShownQueues;
-     else if(!strcmp(inpArg[1],pQueues))        pvtPt->type = seqShowpQueues;
-     else if(!strcmp(inpArg[1],logFile))        pvtPt->type = seqShowlogFile;
-     else if(!strcmp(inpArg[1],threadPriority)) pvtPt->type = seqShowthreadPriority;
-     else if(!strcmp(inpArg[1],varSize))        pvtPt->type = seqShowvarSize;
-     else {
-              strcpy(pvtPt->stateSetName,inpArg[1]);
-              if(!strcmp(inpArg[2],threadId))          pvtPt->type = seqShowthreadId;
-              else if(!strcmp(inpArg[2],threadIdHex))  pvtPt->type = seqShowthreadIdHex;
-              else if(!strcmp(inpArg[2],timeElapsed))  pvtPt->type = seqShowtimeElapsed;
-              else if(!strcmp(inpArg[2],nStates))      pvtPt->type = seqShownStates;
-              else if(!strcmp(inpArg[2],firstState))   pvtPt->type = seqShowfirstState;
-              else if(!strcmp(inpArg[2],prevState))    pvtPt->type = seqShowprevState;
-              else if(!strcmp(inpArg[2],nextState))    pvtPt->type = seqShownextState;
-              else if(!strcmp(inpArg[2],nullStr) || !strcmp(inpArg[2],currentState))      
-                                                       pvtPt->type = seqShowcurrentState;
-              else                                     pvtPt->type = seqShowsyntaxErr;
-     } 
+    /* Find deliminater in INP string
+       and replace null characeter to point end of string.
+       And assign to sperated strings */
+    while(argN<3) {
+        if(inpStr[i] == '\0') break;
+        inpArg[argN++] = inpStr+i;
+        while(i<80) {
+            char *tempChar = inpStr + (i++);
+            if((*tempChar < '0' || *tempChar > '9') &&
+               (*tempChar < 'a' || *tempChar > 'z') &&
+               (*tempChar < 'A' || *tempChar > 'Z') ) {
+                    if(*tempChar == '\0') i-=1;
+                    *tempChar = '\0';
+                    break;
+            }
+        }
+    }
+    for(i=argN;i<3;i++) inpArg[i] = nullStr;
 
-     return pvtPt;
+    strcpy(pvtPt->progName,inpArg[0]);
+    strcpy(pvtPt->stateSetName,nullStr);
+    if(!strcmp(inpArg[1],nStateSets))          pvtPt->type = seqShownStateSets;
+    else if(!strcmp(inpArg[1],nAssign))        pvtPt->type = seqShownAssign;
+    else if(!strcmp(inpArg[1],nConnect))       pvtPt->type = seqShownConnect;
+    else if(!strcmp(inpArg[1],nChans))         pvtPt->type = seqShownChans;
+    else if(!strcmp(inpArg[1],nQueues))        pvtPt->type = seqShownQueues;
+    else if(!strcmp(inpArg[1],pQueues))        pvtPt->type = seqShowpQueues;
+    else if(!strcmp(inpArg[1],logFile))        pvtPt->type = seqShowlogFile;
+    else if(!strcmp(inpArg[1],threadPriority)) pvtPt->type = seqShowthreadPriority;
+    else if(!strcmp(inpArg[1],varSize))        pvtPt->type = seqShowvarSize;
+    else {
+        strcpy(pvtPt->stateSetName,inpArg[1]);
+        if(!strcmp(inpArg[2],threadId))          pvtPt->type = seqShowthreadId;
+        else if(!strcmp(inpArg[2],threadIdHex))  pvtPt->type = seqShowthreadIdHex;
+        else if(!strcmp(inpArg[2],timeElapsed))  pvtPt->type = seqShowtimeElapsed;
+        else if(!strcmp(inpArg[2],nStates))      pvtPt->type = seqShownStates;
+        else if(!strcmp(inpArg[2],firstState))   pvtPt->type = seqShowfirstState;
+        else if(!strcmp(inpArg[2],prevState))    pvtPt->type = seqShowprevState;
+        else if(!strcmp(inpArg[2],nextState))    pvtPt->type = seqShownextState;
+        else if(!strcmp(inpArg[2],nullStr) || !strcmp(inpArg[2],currentState))      
+                                                 pvtPt->type = seqShowcurrentState;
+        else                                     pvtPt->type = seqShowsyntaxErr;
+    } 
+    return pvtPt;
 }
 
 LOCAL void devSeqScanThreadSpawn(void) 
