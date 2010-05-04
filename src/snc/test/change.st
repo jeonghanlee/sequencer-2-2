@@ -1,7 +1,7 @@
 /* Test state change statement */
 program changetest
 
-%%#include <stdlib.h>
+%%#include <time.h>
 
 entry {
     /* uncomment to get repeatability */
@@ -12,7 +12,7 @@ ss main {
     int x = 0;
     state zero {
         when (delay(1)) {
-        	x = random() %10 - 5;
+        	x = time(0) %10 - 5;
             seqLog("state=zero, new random x=%d\n", x);
             if (x > 0) {
                 state pos;
