@@ -1,0 +1,128 @@
+EPICS sequencer 2.0.98 (darcs tag R2-0-98)
+------------------------------------------
+
+This is an alpha release for an upcoming seq-2.1.0.
+
+Most of the changes relative to seq-2.0.12 are to the SNL compiler, but a small number of changes have been made to the runtime library as well.
+
+The extensions are mostly conservative: existing SNL programs should compile and work just as with seq-2.0.12 (with one exception, see next paragraph). This is not easy to guarantee, however, as there are many corner cases where the manual is imprecise and the code was convoluted (and possibly erroneous), especially with regard to the "syncQ" feature. See also my request below.
+
+There is one (mis-)feature I have removed: 2.0.12 (and earlier versions) allow more than one entry or exit block inside the same state. This has no semantic value at all, the action statements are simply concatenated as if they had been written in one block. So if you (for whatever reason, which? Tell me!) relied on this, then for each state you'll have to merge all its entry blocks into one (and similar for its exit blocks).
+
+What's in it for you?
+=====================
+
+The most important extensions are local definitions and the new state change command. Suggestions, criticism, or encouragements regarding these extensions are welcome, of course. (Send them to tech-talk@aps.anl.gov, core-talk@aps.anl.gov, or benjamin.franksen@bessy.de).
+
+Local Definitions
+-----------------
+
+Here, 'definitions' is to be understood as in the SNL manual, i.e. options, variable declarations, assign, monitor, sync, and syncQ constructs. These definitions have to appear (in any order) right after the opening brace and before any other content (code, states,transitions), similar as in C. However, not every definition is allowed everywhere:
+
+ * option definitions are restricted just as before, i.e. at the top level
+   (for program options) and inside a state (for state options)
+ * assign, monitor, sync, and syncQ can appear inside a state set (ss
+   <state_set_name> {...}) and inside a state (state <state_name> {...}), in
+   addition to the top level
+ * foreign declarations (see below) and event flag declarations are
+   restricted to the top-level
+ * variable declarations can appear at the start of any block (state set,
+   state, transition, entry, exit, and compound statement blocks); their
+   scope is always limited (statically) to the smallest enclosing block
+
+Local variable declarations come in two flavours, depending on where they appear:
+
+(1) Variables of /unlimited life time/ are global variables and those which are local to a state set or a state clause. Only variables of this sort can be assigned to a process variable, monitored, synced etc.
+
+(2) Variables declared in any other block have lifetime limited to the enclosing block, they disappear when the block exits, just as block local variables in C.
+
+Variable declarations are restricted to the small set of types offered by SNL just as before. Scalar variable declarations may be initialized with an arbitrary expression (for top-level variables the C compiler will only allow constant expressions, but this isn't checked by the SNL compiler).
+
+State Change Command
+--------------------
+
+This is an experimental feature. It adds a new primitive action statement
+
+    state <state-name>;
+
+Its operational meaning is to immediately return from the enclosing transition action block and to enter the named state, instead of the default state that is given after the block as before. Entry and exit blocks are respected exactly as with all other state changes.
+
+I have termed this an experimental feature because I am not sure it is good to offer something like that. It is certainly similar to a "goto", in that it enables unstructured control flow. I am interested in your opinion!
+
+Minor Extensions/Improvements
+-----------------------------
+
+ * You can avoid the usual 'warning: variable xxx used but not defined' by
+   declaring foreign (i.e. C) variables, using a /foreign declaration
+   statement/. The syntax is simple:
+
+      declare xxx;
+
+   declares that  xxx  is defined somewhere outside the control of the SNL
+   compiler. Foreign declarations may appear only at the top-level scope.
+ * Fixed the generated line markers, so that error and warning messages now
+   correctly point to the source location (this was seriously broken in the
+   old version).
+ * The syntax now accepts a larger subset of C. For instance, 'character'
+   literals are now recognized, as well as the 'continue' statement.
+
+Download
+========
+
+Releases can be downloaded from
+
+   http://www-csr.bessy.de/control/SoftDist/sequencer/releases/
+
+The darcs repository is located at
+
+   http://www-csr.bessy.de/control/SoftDist/sequencer/repo/
+
+Build and Install
+=================
+
+As usual, you need to adapt configure/RELEASE so that EPICS_BASE refers to the install location of the EPICS base you want to use. This version has been tested with base-3.14.8.2 and base-3.14.11.
+
+Apart from EPICS base (and its dependencies, e.g. Perl), building this version of seq requires an additional tool named re2c to be installed. This can be downloaded from http://sourceforge.net/projects/re2c/files/ (sources and Windows binaries), the home page is http://re2c.org/. If you are on a linux system, you will probably want to use the re2c package your distribution provides.
+
+Internals
+=========
+
+The compiler is not a re-write from scratch, but changes are numerous and pervasive.
+
+The ancient versions of yacc and lexx that are bundled with EPICS base (in a modified version and thus never upgraded) are no longer used. Since lex/yacc suffers from severe backward compatibility disease (witness all the traditional-C stuff they still carry around, global vars and everything), I decided to look for something better. Shying away from more radical steps (for instance, it would have been much, much easier to re-implement the whole compiler in Haskell) because of all the usual issues involved (portability, nobody else would understand the code, etc, etc), I chose a more conservative approch: the new snc version uses re2c as the lexer generator, and lemon as the parser generator. Re2c is available for many platforms (including Windows), whereas lemon consists of just one source file (plus one template file) and so can be easily bundled with the sequencer. Both tools generate very fast code (reportedly better than lex/yacc).
+
+Other internal changes include:
+
+ * use standard ANSI C
+ * clean separation between compiler stages: lexing, parsing, analysis,
+   code generation
+ * no global variables, very few static ones
+ * unified error, warning, and debug reporting
+ * improved type safety by using unions instead of casts
+   (plus a number of supporting macros) e.g. for the various syntactic
+   constructs; added many new struct types
+ * use a hash table (the gpHash from libCom) for name lookup instead of
+   doing linear search all over the place
+ * complete re-implementation of lexing and parsing (using re2c and
+   lemon); the new parser spec has only three parsing conflicts and
+   these are unavoidable: one is the well-known if-else ambiguity, the
+   remaining two are due to escaped C code, where the parser cannot
+   decide whether it is a declaration or a statement (the old version
+   had a total of 744 conflicts)
+ * generated code contains fewer '#define's making accidental name
+   clashes less probable
+ * the interface between the sequencer library and the generated code
+   is now more type safe (no more XXX_FUNC casts, SS_ID and USER_VAR
+   became anonymous struct types)
+ * in order to implement the state change command, an additional argument
+   is needed for the action callback
+
+Request for Help
+================
+
+For better test coverage, I would like you all to SEND ME SNL PROGRAMS. Especially if you are using the 'syncQ' construct. These must be self-contained, i.e. they should not depend on external header files, or if they do, please send them along. I do not necessarily plan to run these programs, just compile them and see that the result is identical (up to improvements) to what the previous version generates.
+
+Reporting Bugs
+==============
+
+I am glad to receive bug reports, questions, comments, whatever.  Send them to <benjamin.franksen@bessy.de>
