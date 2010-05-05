@@ -1034,6 +1034,10 @@ static int connect_variable(Expr *ep, Expr *scope, void *parg)
 		vp->length1 = 1;
 		vp->length2 = 1;
 		vp->value = 0;
+		/* add this variable to the top-level scope, NOT the current scope */
+		while (var_list->parent_scope) {
+			var_list = *pvar_list_from_scope(var_list->parent_scope);
+		}
 		sym_table_insert(st, vp->name, var_list, vp);
 		add_var(st, vp, scope);
 	}
