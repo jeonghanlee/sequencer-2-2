@@ -33,6 +33,9 @@ TESTPROD_HOST = lexer
 USR_CFLAGS = -DTEST_LEXER
 endif
 
+INSTALL_DOC = $(INSTALL_LOCATION)/docs
+DOCS += snl.bnf
+
 include $(TOP)/configure/RULES
 #----------------------------------------
 #  ADD RULES AFTER THIS LINE
@@ -55,3 +58,8 @@ vpath %.re ..
 
 lexer.c: snl.re snl.h
 	$(RE2C) -o $@ $<
+
+$(COMMON_DIR)/snl.bnf: snl.lem
+	$(RM) $@
+	$(LEMON) o=. -g $< > $@.tmp
+	$(MV) $@.tmp $@
