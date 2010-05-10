@@ -1,3 +1,14 @@
+/**************************************************************************
+		GTA PROJECT   AT division
+	Copyright, 1989-93, The Regents of the University of California.
+		 Los Alamos National Laboratory
+
+	Copyright, 2010, Helmholtz-Zentrum Berlin f. Materialien
+		und Energie GmbH, Germany (HZB)
+		(see file Copyright.HZB included in this distribution)
+***************************************************************************
+		Common types, enumerations, and macros
+***************************************************************************/
 #ifndef INCLtypesh
 #define INCLtypesh
 

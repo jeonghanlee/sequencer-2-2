@@ -1,8 +1,11 @@
-/*seqPvt.h
- *
- *	DESCRIPTION: Definitions for the run-time sequencer.
- *
- *      Author:         Andy Kozubal
+/**************************************************************************
+	Copyright, 2010, Helmholtz-Zentrum Berlin f. Materialien
+		und Energie GmbH, Germany (HZB)
+		(see file Copyright.HZB included in this distribution)
+***************************************************************************
+		Definitions for the run-time sequencer
+***************************************************************************/
+/*      Author:         Andy Kozubal
  *      Date:           
  *
  *      Experimental Physics and Industrial Control System (EPICS)

@@ -1,7 +1,12 @@
+/**************************************************************************
+	Copyright, 2010, Helmholtz-Zentrum Berlin f. Materialien
+		und Energie GmbH, Germany (HZB)
+		(see file Copyright.HZB included in this distribution)
+***************************************************************************
+		Various reporting and printing procedures
+***************************************************************************/
 #ifndef INCLsncmainh
 #define INCLsncmainh
-
-/* Export various reporting and printing procedures. */
 
 /* append '# <line_num> "<src_file>"\n' to output (if not disabled by cmd-line option) */
 void gen_line_marker_prim(int line_num, char *src_file);

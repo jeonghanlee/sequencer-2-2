@@ -3,21 +3,12 @@
 	Copyright, 1989-93, The Regents of the University of California.
 		         Los Alamos National Laboratory
 
-	DESCRIPTION: Structures for parsing the state notation language.
-
-	ENVIRONMENT: UNIX
-	HISTORY:
-18nov91,ajk	Replaced lstLib stuff with in-line links.
-28oct93,ajk	Added support for assigning array elements to pv's.
-28oct93,ajk	Added support for pointer declarations (see VC_*)
-05nov93,ajk	Changed structures var & db_chan to handle array assignments.
-05nov93,ajk	changed malloc() to calloc() 3 places.
-20jul95,ajk	Added unsigned types (V_U...).
-08aug96,wfl	Added syncQ variables to var struct.
-01sep99,grw     Added E_OPTION, E_ENTRY, E_EXIT.
-07sep99,wfl	Added E_DECL (for local variable declarations).
+	Copyright, 2010, Helmholtz-Zentrum Berlin f. Materialien
+		und Energie GmbH, Germany (HZB)
+		(see file Copyright.HZB included in this distribution)
+***************************************************************************
+		Parser support routines
 ***************************************************************************/
-
 #ifndef INCLparseh
 #define INCLparseh
 

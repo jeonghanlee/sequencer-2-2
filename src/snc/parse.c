@@ -3,28 +3,12 @@
 	Copyright, 1990, The Regents of the University of California.
 		         Los Alamos National Laboratory
 
-	DESCRIPTION: Parsing support routines for state notation compiler.
-
-	ENVIRONMENT: UNIX
-	HISTORY:
-19nov91,ajk	Replaced lstLib calls with built-in links.
-20nov91,ajk	Removed snc_init() - no longer did anything useful.
-20nov91,ajk	Added option_stmt() routine.
-28apr92,ajk	Implemented new event flag mode.
-29opc93,ajk	Implemented assignment of pv's to array elements.
-29oct93,ajk	Implemented variable class (VC_SIMPLE, VC_ARRAY, & VC_POINTER).
-29oct93,ajk	Added 'v' (vxWorks include) option.
-17may94,ajk	Removed old event flag (-e) option.
-08aug96,wfl	Added new syncq_stmt() routine.
-29apr99,wfl	Avoided compilation warnings; removed unused vx_opt option.
-17may99,wfl	Fixed crash in debug output.
-06jul99,wfl	Added "+m" (main) option.
-07sep99,wfl	Added E_DECL expression type (for local declarations).
-22sep99,grw     Supported entry and exit actions; supported state options.
-06mar00,wfl	Avoided NULL pointer crash when DEBUG is enabled.
-31mar00,wfl     Supported entry handler.
+	Copyright, 2010, Helmholtz-Zentrum Berlin f. Materialien
+		und Energie GmbH, Germany (HZB)
+		(see file Copyright.HZB included in this distribution)
+***************************************************************************
+		Parser support routines
 ***************************************************************************/
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

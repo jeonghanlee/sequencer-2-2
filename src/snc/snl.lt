@@ -1,3 +1,10 @@
+/**************************************************************************
+	Copyright, 2010, Helmholtz-Zentrum Berlin f. Materialien
+		und Energie GmbH, Germany (HZB)
+		(see file Copyright.HZB included in this distribution)
+***************************************************************************
+		Lemon parser template
+***************************************************************************/
 /* Driver template for the LEMON parser generator.
 ** The author disclaims copyright to this source code.
 */

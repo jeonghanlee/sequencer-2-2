@@ -4,14 +4,14 @@
 	and the University of Chicago.
 	Los Alamos National Laboratory
 
- 	seq_main.c,v 1.2 1995/06/27 15:25:58 wright Exp
+	Copyright, 2010, Helmholtz-Zentrum Berlin f. Materialien
+		und Energie GmbH, Germany (HZB)
+		(see file Copyright.HZB included in this distribution)
 
 	DESCRIPTION: Seq() initiates a sequence as a group of cooperating
 	tasks.  An optional string parameter specifies the values for
 	macros.  The PV context and auxiliary thread are shared by all state
 	programs.
-
-	ENVIRONMENT: VxWorks
 
 	HISTORY:
 23apr91,ajk	Fixed problem with state program invoking the sequencer.

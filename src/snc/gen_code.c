@@ -3,33 +3,12 @@
 	Copyright, 1990, The Regents of the University of California.
 		 Los Alamos National Laboratory
 
-	DESCRIPTION: Phase 2 code generation routines for SNC.
-		Produces code and tables in C output file.
-		See also:  gen_ss_code.c and gen_tables.c
-	ENVIRONMENT: UNIX
-	HISTORY:
-19nov91,ajk	Replaced lstLib calls with built-in linked list.
-19nov91,ajk	Removed extraneous "static" from "UserVar" declaration.
-01mar94,ajk	Implemented new interface to sequencer (seqCom.h).
-01mar94,ajk	Implemented assignment of array elements to db channels.
-01mar94,ajk	Changed algorithm for assigning event bits.
-20jul95,ajk	Added unsigned types.
-11aug96,wfl	Supported syncQ queues.
-13jan98,wfl     Supported E_COMMA token (for compound expressions).
-01oct98,wfl	Supported setting initial value on declaration.
-29apr99,wfl     Avoided compilation warnings; removed unused include files.
-17may99,wfl	Added main program under UNIX.
-06jul99,wfl	Changed to use "+m" (main) option; minor cosmetic changes.
-07sep99,wfl	Added ASYNC/SYNC defns in generated output;
-		Supported E_DECL (for local declarations).
-22sep99,grw     Supported entry and exit actions.
-18feb00,wfl     More partial support for local declarations (still not done).
-29feb00,wfl	Added errlogInit() and taskwdInit() to Unix main program.
-06mar00,wfl	Added threadInit() to main program; removed ASYNC/SYNC #defines.
-17mar00,wfl	Added necessary includes for C main program.
-31mar00,wfl	Supported entry handler.
+	Copyright, 2010, Helmholtz-Zentrum Berlin f. Materialien
+		und Energie GmbH, Germany (HZB)
+		(see file Copyright.HZB included in this distribution)
+***************************************************************************
+		Code generation
 ***************************************************************************/
-
 #include	<stdio.h>
 #include	<stdlib.h>
 #include	<string.h>

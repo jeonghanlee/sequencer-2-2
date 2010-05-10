@@ -3,29 +3,11 @@
 	Copyright, 1990, The Regents of the University of California.
 		 Los Alamos National Laboratory
 
-	DESCRIPTION: gen_ss_code.c -- routines to generate state set code
-
-	ENVIRONMENT: UNIX
-	HISTORY:
-19nov91,ajk	Changed find_var() to findVar().
-28apr92,ajk	Implemented efClear() & efTestAndClear().
-01mar94,ajk	Changed table generation to the new structures defined 
-		in seqCom.h.
-09aug96,wfl	Supported pvGetQ().
-13aug96,wfl	Supported pvFreeQ().
-23jun97,wfl	Avoided SEGV if variable or event flag was undeclared.
-13jan98,wfl     Fixed handling of compound expressions, using E_COMMA.
-29apr99,wfl     Avoided compilation warnings.
-29apr99,wfl	Removed unnecessary include files.
-06jul99,wfl	Cosmetic changes to improve look of generated C code
-07sep99,wfl	Added support for local declarations (not yet complete);
-		Added support for "pvName", "pvMessage" and pvPutComplete";
-		Supported "pv" functions with array length and optional parms;
-		Added sequencer variable name to generated seq_pv*() calls
-22sep99,grw	Supported entry and exit actions
-18feb00,wfl	More partial support for local declarations (still not done)
-31mar00,wfl	Put 'when' code in a block (allows local declarations);
-		supported entry handler
+	Copyright, 2010, Helmholtz-Zentrum Berlin f. Materialien
+		und Energie GmbH, Germany (HZB)
+		(see file Copyright.HZB included in this distribution)
+***************************************************************************
+		State set code generation
 ***************************************************************************/
 #include	<stdio.h>
 #include	<string.h>

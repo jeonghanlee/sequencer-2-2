@@ -1,8 +1,11 @@
-/*	* base/include seqCom.h,v 1.3 1995/10/10 01:25:08 wright Exp
- *
- *	DESCRIPTION: Common defs for state programs and run-time sequencer.
- *
- *      Author:         Andy Kozubal
+/**************************************************************************
+	Copyright, 2010, Helmholtz-Zentrum Berlin f. Materialien
+		und Energie GmbH, Germany (HZB)
+		(see file Copyright.HZB included in this distribution)
+***************************************************************************
+		Common defs for state programs and run-time sequencer
+***************************************************************************/
+/*      Author:         Andy Kozubal
  *      Date:           01mar94
  *
  *      Experimental Physics and Industrial Control System (EPICS)

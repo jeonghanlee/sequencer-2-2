@@ -1,0 +1,111 @@
+src/snc/snc_main.c
+------------------
+20nov91,ajk    Removed call to init_snc().
+20nov91,ajk    Removed some debug stuff.
+28apr92,ajk    Implemented new event flag mode.
+29oct93,ajk    Added 'v' (vxWorks include) option.
+17may94,ajk    Changed setlinebuf() to setvbuf().
+17may94,ajk    Removed event flag option (-e).
+17feb95,ajk    Changed yyparse() to Global_yyparse(), because FLEX makes
+               yyparse() static.
+02mar95,ajk    Changed bcopy () to strcpy () in 2 places.
+26jun95,ajk    Due to popular demand, reinstated event flag (-e) option.
+29apr99,wfl    Avoided compilation warnings.
+29apr99,wfl    Removed unused vx_opt option.
+06jul99,wfl    Supported "+m" (main) option; minor cosmetic changes.
+
+src/snc/parse.h
+---------------
+18nov91,ajk    Replaced lstLib stuff with in-line links.
+28oct93,ajk    Added support for assigning array elements to pv's.
+28oct93,ajk    Added support for pointer declarations (see VC_*)
+05nov93,ajk    Changed structures var & db_chan to handle array assignments.
+05nov93,ajk    changed malloc() to calloc() 3 places.
+20jul95,ajk    Added unsigned types (V_U...).
+08aug96,wfl    Added syncQ variables to var struct.
+01sep99,grw     Added E_OPTION, E_ENTRY, E_EXIT.
+07sep99,wfl    Added E_DECL (for local variable declarations).
+
+src/snc/parse.c
+---------------
+19nov91,ajk    Replaced lstLib calls with built-in links.
+20nov91,ajk    Removed snc_init() - no longer did anything useful.
+20nov91,ajk    Added option_stmt() routine.
+28apr92,ajk    Implemented new event flag mode.
+29opc93,ajk    Implemented assignment of pv's to array elements.
+29oct93,ajk    Implemented variable class (VC_SIMPLE, VC_ARRAY, & VC_POINTER).
+29oct93,ajk    Added 'v' (vxWorks include) option.
+17may94,ajk    Removed old event flag (-e) option.
+08aug96,wfl    Added new syncq_stmt() routine.
+29apr99,wfl    Avoided compilation warnings; removed unused vx_opt option.
+17may99,wfl    Fixed crash in debug output.
+06jul99,wfl    Added "+m" (main) option.
+07sep99,wfl    Added E_DECL expression type (for local declarations).
+22sep99,grw     Supported entry and exit actions; supported state options.
+06mar00,wfl    Avoided NULL pointer crash when DEBUG is enabled.
+31mar00,wfl     Supported entry handler.
+
+src/snc/gen_tables.c
+--------------------
+28apr92,ajk    Implemented new event flag mode.
+01mar94,ajk    Implemented new interface to sequencer (see seqCom.h).
+01mar94,ajk    Implemented assignment of array elements to db channels.
+17may94,ajk    removed old event flag (-e) option.
+25may95,ajk    re-instated old event flag (-e) option.
+20jul95,ajk    Added unsigned types.
+22jul96,ajk    Added castS to action, event, delay, and exit functions.
+08aug96,wfl    Added emission of code for syncQ queues.
+11mar98,wfl    Corrected calculation of number of event words.
+29apr99,wfl    Avoided compilation warnings.
+29apr99,wfl    Removed unnecessary include files and unused vx_opt option.
+06jul99,wfl    Supported "+m" (main) option; minor cosmetic changes.
+07sep99,wfl    Set all event bits when array referenced in "when" test.
+22sep99,grw     Supported entry and exit actions; supported state options;
+               avoided warnings when no variables are mapped to channels.
+18feb00,wfl     Partial support for local declarations (not yet complete).
+31mar00,wfl    Supported entry handler.
+
+src/snc/gen_ss_code.c
+---------------------
+19nov91,ajk    Changed find_var() to findVar().
+28apr92,ajk    Implemented efClear() & efTestAndClear().
+01mar94,ajk    Changed table generation to the new structures defined $
+               in seqCom.h.
+09aug96,wfl    Supported pvGetQ().
+13aug96,wfl    Supported pvFreeQ().
+23jun97,wfl    Avoided SEGV if variable or event flag was undeclared.
+13jan98,wfl     Fixed handling of compound expressions, using E_COMMA.
+29apr99,wfl     Avoided compilation warnings.
+29apr99,wfl    Removed unnecessary include files.
+06jul99,wfl    Cosmetic changes to improve look of generated C code
+07sep99,wfl    Added support for local declarations (not yet complete);
+               Added support for "pvName", "pvMessage" and pvPutComplete";
+               Supported "pv" functions with array length and optional parms;
+               Added sequencer variable name to generated seq_pv*() calls
+22sep99,grw    Supported entry and exit actions
+18feb00,wfl    More partial support for local declarations (still not done)
+31mar00,wfl    Put 'when' code in a block (allows local declarations);
+               supported entry handler
+
+src/snc/gen_code.c
+------------------
+19nov91,ajk    Replaced lstLib calls with built-in linked list.
+19nov91,ajk    Removed extraneous "static" from "UserVar" declaration.
+01mar94,ajk    Implemented new interface to sequencer (seqCom.h).
+01mar94,ajk    Implemented assignment of array elements to db channels.
+01mar94,ajk    Changed algorithm for assigning event bits.
+20jul95,ajk    Added unsigned types.
+11aug96,wfl    Supported syncQ queues.
+13jan98,wfl     Supported E_COMMA token (for compound expressions).
+01oct98,wfl    Supported setting initial value on declaration.
+29apr99,wfl     Avoided compilation warnings; removed unused include files.
+17may99,wfl    Added main program under UNIX.
+06jul99,wfl    Changed to use "+m" (main) option; minor cosmetic changes.
+07sep99,wfl    Added ASYNC/SYNC defns in generated output;
+               Supported E_DECL (for local declarations).
+22sep99,grw     Supported entry and exit actions.
+18feb00,wfl     More partial support for local declarations (still not done).
+29feb00,wfl    Added errlogInit() and taskwdInit() to Unix main program.
+06mar00,wfl    Added threadInit() to main program; removed ASYNC/SYNC #defines.
+17mar00,wfl    Added necessary includes for C main program.
+31mar00,wfl    Supported entry handler.

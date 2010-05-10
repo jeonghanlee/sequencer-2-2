@@ -1,3 +1,14 @@
+/**************************************************************************
+		GTA PROJECT   AT division
+	Copyright, 1990, The Regents of the University of California.
+		 Los Alamos National Laboratory
+
+	Copyright, 2010, Helmholtz-Zentrum Berlin für Materialien
+		und Energie GmbH, Berlin, Germany (HZB)
+		(see file Copyright.HZB included in this distribution)
+***************************************************************************
+		Code generation
+***************************************************************************/
 #ifndef INCLgencodeh
 #define INCLgencodeh
 

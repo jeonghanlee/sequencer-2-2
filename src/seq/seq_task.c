@@ -4,12 +4,13 @@
 		The Regents of the University of California and
 		the University of Chicago.
 		Los Alamos National Laboratory
-	seq_task.c,v 1.3 1995/10/19 16:30:18 wright Exp
 
-	DESCRIPTION: Seq_task.c: Thread creation and control for sequencer
-	state-sets.
+	Copyright, 2010, Helmholtz-Zentrum Berlin f. Materialien
+		und Energie GmbH, Germany (HZB)
+		(see file Copyright.HZB included in this distribution)
 
-	ENVIRONMENT: VxWorks
+	DESCRIPTION: Thread creation and control for sequencer state-sets.
+
 	HISTORY:
 
 04dec91,ajk	Implemented linked list of state programs, eliminating task

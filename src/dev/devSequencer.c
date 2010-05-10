@@ -1,3 +1,7 @@
+/*	Copyright, 2010, Helmholtz-Zentrum Berlin f. Materialien
+		und Energie GmbH, Germany (HZB)
+		(see file Copyright.HZB included in this distribution)
+*/
 /* Device support to permit database access to sequencer internals
  *
  * This is experimental only. Note the following:

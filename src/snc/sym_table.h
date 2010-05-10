@@ -1,3 +1,10 @@
+/**************************************************************************
+	Copyright, 2010, Helmholtz-Zentrum Berlin f. Materialien
+		und Energie GmbH, Germany (HZB)
+		(see file Copyright.HZB included in this distribution)
+***************************************************************************
+		Symbol table
+***************************************************************************/
 #ifndef INCLsymtableh
 #define INCLsymtableh
 

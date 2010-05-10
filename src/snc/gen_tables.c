@@ -3,29 +3,12 @@
 	Copyright, 1990, The Regents of the University of California.
 		 Los Alamos National Laboratory
 
-	DESCRIPTION: Generate tables for run-time sequencer.
-
-	ENVIRONMENT: UNIX
-	HISTORY:
-28apr92,ajk	Implemented new event flag mode.
-01mar94,ajk	Implemented new interface to sequencer (see seqCom.h).
-01mar94,ajk	Implemented assignment of array elements to db channels.
-17may94,ajk	removed old event flag (-e) option.
-25may95,ajk	re-instated old event flag (-e) option.
-20jul95,ajk	Added unsigned types.
-22jul96,ajk	Added castS to action, event, delay, and exit functions.
-08aug96,wfl	Added emission of code for syncQ queues.
-11mar98,wfl	Corrected calculation of number of event words.
-29apr99,wfl	Avoided compilation warnings.
-29apr99,wfl	Removed unnecessary include files and unused vx_opt option.
-06jul99,wfl	Supported "+m" (main) option; minor cosmetic changes.
-07sep99,wfl	Set all event bits when array referenced in "when" test.
-22sep99,grw     Supported entry and exit actions; supported state options;
-		avoided warnings when no variables are mapped to channels.
-18feb00,wfl     Partial support for local declarations (not yet complete).
-31mar00,wfl	Supported entry handler.
+	Copyright, 2010, Helmholtz-Zentrum Berlin f. Materialien
+		und Energie GmbH, Germany (HZB)
+		(see file Copyright.HZB included in this distribution)
+***************************************************************************
+		Generate tables for runtime sequencer
 ***************************************************************************/
-
 #include	<stdio.h>
 #include	<stdlib.h>
 #include	<string.h>

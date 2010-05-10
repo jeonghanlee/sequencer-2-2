@@ -3,24 +3,11 @@
 	Copyright, 1990, The Regents of the University of California.
 		         Los Alamos National Laboratory
 
-	DESCRIPTION: Main program and miscellaneous routines for
-	State Notation Compiler.
-
-	ENVIRONMENT: UNIX
-	HISTORY:
-20nov91,ajk	Removed call to init_snc().
-20nov91,ajk	Removed some debug stuff.
-28apr92,ajk	Implemented new event flag mode.
-29oct93,ajk	Added 'v' (vxWorks include) option.
-17may94,ajk	Changed setlinebuf() to setvbuf().
-17may94,ajk	Removed event flag option (-e).
-17feb95,ajk	Changed yyparse() to Global_yyparse(), because FLEX makes
-		yyparse() static.
-02mar95,ajk	Changed bcopy () to strcpy () in 2 places.
-26jun95,ajk	Due to popular demand, reinstated event flag (-e) option.
-29apr99,wfl	Avoided compilation warnings.
-29apr99,wfl	Removed unused vx_opt option.
-06jul99,wfl	Supported "+m" (main) option; minor cosmetic changes.
+	Copyright, 2010, Helmholtz-Zentrum Berlin f. Materialien
+		und Energie GmbH, Germany (HZB)
+		(see file Copyright.HZB included in this distribution)
+***************************************************************************
+		Main program, reporting and printing procedures
 ***************************************************************************/
 #include	<stdio.h>
 #include	<stdlib.h>
