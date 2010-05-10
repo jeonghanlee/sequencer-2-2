@@ -9,8 +9,6 @@
 	All active state programs are inserted into the list when created
 	and removed from the list when deleted.
 
-	ENVIRONMENT: VxWorks
-
 	HISTORY:
 09dec91,ajk	original
 29apr92,ajk	Added mutual exclusion locks	

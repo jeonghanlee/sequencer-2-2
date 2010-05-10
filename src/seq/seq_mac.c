@@ -10,8 +10,6 @@
 	The macro table contains name & value pairs.  These are both pointers
 	to strings.
 
-	ENVIRONMENT: VxWorks
-
 	HISTORY:
 01mar94,ajk	Added seq_macValueGet() as state program interface routine.
 29apr99,wfl     Avoided compilation warnings.

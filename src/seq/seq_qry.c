@@ -8,7 +8,6 @@
 	seqShow - prints state set info.
 	seqChanShow - printf channel (pv) info.
 
-	ENVIRONMENT: VxWorks
 	HISTORY:
 25nov91,ajk	Display task names(s) with id(s).
 		Display logfile name and file descriptor.
