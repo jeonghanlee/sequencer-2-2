@@ -1,7 +1,4 @@
-/* pvtest.cc,v 1.1.1.1 2000/04/04 03:23:09 wlupton Exp
- *
- * Test pv classes
- */
+/* Test pv classes */
 
 #include <stdio.h>
 #include <stdlib.h>

@@ -1,6 +1,4 @@
-/* pv.h,v 1.3 2001/02/16 18:45:39 mrk Exp
- *
- * Definitions for EPICS sequencer message system-independent library (pv)
+/* Definitions for EPICS sequencer message system-independent library (pv)
  * (NB, "pv" = "process variable").
  *
  * This is a simple layer which is specifically designed to provide the

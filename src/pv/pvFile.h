@@ -1,6 +1,4 @@
-/* pvFile.h,v 1.2 2001/02/23 20:45:22 jba Exp
- *
- * Definitions for demonstration EPICS sequencer file library (pvFile)
+/* Definitions for demonstration EPICS sequencer file library (pvFile)
  *
  * William Lupton, W. M. Keck Observatory
  */

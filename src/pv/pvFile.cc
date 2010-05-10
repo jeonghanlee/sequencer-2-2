@@ -1,6 +1,4 @@
-/* pvFile.cc,v 1.1.1.1 2000/04/04 03:22:15 wlupton Exp
- *
- * Implementation of demonstration EPICS sequencer file library (pvFile)
+/* Implementation of demonstration EPICS sequencer file library (pvFile)
  *
  * William Lupton, W. M. Keck Observatory
  */

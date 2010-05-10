@@ -1,6 +1,4 @@
-/* pvKtl.cc,v 1.2 2001/02/16 18:45:39 mrk Exp
- *
- * Implementation of EPICS sequencer KTL library (pvKtl)
+/* Implementation of EPICS sequencer KTL library (pvKtl)
  *
  * William Lupton, W. M. Keck Observatory
  */

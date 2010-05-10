@@ -1,6 +1,4 @@
-/* pv.cc,v 1.4 2001/02/16 21:45:16 norume Exp
- *
- * Implementation of EPICS sequencer message system-independent library (pv)
+/* Implementation of EPICS sequencer message system-independent library (pv)
  * (NB, "pv" = "process variable").
  *
  * William Lupton, W. M. Keck Observatory

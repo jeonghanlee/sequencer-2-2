@@ -1,7 +1,4 @@
-/* johng.st,v 1.1.1.1 2000/04/04 03:22:42 wlupton Exp
- *
- * Demo Unix/KTL EPICS sequencer for John G (doesn't do anything useful)
- */
+/* Demo Unix/KTL EPICS sequencer for John G (doesn't do anything useful) */
 
 /* select KTL message system */
 program johng( "pvsys=ktl" )

@@ -1,6 +1,4 @@
-/* pvCa.h,v 1.4 2001/10/15 21:41:42 jhill Exp
- *
- * Definitions for EPICS sequencer CA library (pvCa)
+/* Definitions for EPICS sequencer CA library (pvCa)
  *
  * William Lupton, W. M. Keck Observatory
  */

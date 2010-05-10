@@ -1,6 +1,4 @@
-/* pvKtlCnv.cc,v 1.1.1.1 2000/04/04 03:22:15 wlupton Exp
- *
- * Implementation of EPICS sequencer KTL type conversion (pvKtlCnv)
+/* Implementation of EPICS sequencer KTL type conversion (pvKtlCnv)
  *
  * Uses large amounts of code from the cdevData class
  *

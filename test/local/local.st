@@ -1,7 +1,4 @@
-/* local.st,v 1.1.1.1 2000/04/04 03:22:43 wlupton Exp
- *
- * Sequence to illustrate / test local variable declarations
- */
+/* Sequence to illustrate / test local variable declarations */
 
 program local( "pvsys=ktl" )
 

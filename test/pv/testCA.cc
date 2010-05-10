@@ -1,5 +1,3 @@
-// testCA.cc,v 1.2 2004/01/15 14:11:09 mrk Exp
-//
 // CA test program illustrating R3.14 behavior
 
 #include <stdio.h>

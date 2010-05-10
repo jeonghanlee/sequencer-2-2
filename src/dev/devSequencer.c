@@ -1,6 +1,4 @@
-/* devSequencer.c,v 1.4 2003/08/07 14:34:37 mrk Exp
- *
- * Device support to permit database access to sequencer internals
+/* Device support to permit database access to sequencer internals
  *
  * This is experimental only. Note the following:
  *
