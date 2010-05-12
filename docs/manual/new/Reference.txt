@@ -7,123 +7,114 @@ syntax and semantics.
 Typographical conventions
 -------------------------
 
-TODO: this is all wrong! Needs to be fixed.
+Formal syntax is given in BNF (Backus-Naur Form):
 
-We use a lax variant of BNF (Backus-Naur Form).
-The idea is that the meaning will be clear without explanation.
-However, here are some explanatory notes.
-
--  words and symbols in ``teletype`` font are to be taken literally
-   ("terminals")
--  words in *italics* are syntactic terms which will be
-   defined below ("nonterminals"), except in a few cases where the
-   meaning is obvious
--  where the name of a nonterminal is enclosed in square brackets,
-   that term is optional
--  where a term is followed by an ellipsis (``...``), it may
-   optionally be repeated (so if the term was not optional this means
-   that there can be one or more instances of it; if the term was
-   optional this means that there can be zero or more instances of it)
--  where a term is followed by a separator (e.g. a comma) and an
-   ellipsis, it is to be understood that the separator will separate
-   each repeated instance of the term
+-  the grammar consists of a set of rules of the form
+   left-hand-side ::= right-hand-side
+-  the left hand side of a rule is a single word that
+   denotes a non-terminal symbol of the grammar
+-  the right hand side is a (possibly empty) sequence of symbols,
+   either terminal or non-terminal
+-  multiple definitions for the same non-terminal mean that
+   any of the given rules may apply
+-  anything inside double quotes is a terminal symbol of the
+   grammar and should be understood literally
+-  cross-linked words rendered bold in html
+   denote non-terminals and refer to the rules that define them
 
 .. _StateProgram:
 
 Program
 -------
 
-*program*
-^^^^^^^^^
+.. productionlist::
+   program: "program" `identifier` `program_param` `global_defns` `entry` `state_sets` `exit` `c_codes`
 
-``program`` *program_name* [``(`` ``"`` *parameter_list* ``"`` ``)``] ``;``
+This is the overall structure of an SNL program. After the keyword
+"program" comes the name of the program, followed by an optional
+program parameter, global definitions, an optional entry block, the
+state sets, an optional exit block, and finally some embedded c code.
 
-*[entry_handler]*
+Program Name and Parameter
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-*definition...*
-
-*state_set...*
-
-*[exit_handler]*
-
-*program_name*
-^^^^^^^^^^^^^^
-
-The name of the program. This is used as the name of the global
+The program name is an identifier. It is used as the name of the global
 variable which contains or points to all the state program data
 structures (the address of this global variable is passed to the
-``seq`` function when creating the run-time sequencer). It is also
-used as the base for the state set thread names unless overridden
-via the *name* parameter (see :ref:`SpecifyingRunTimeParameters`).
+``seq`` function when creating the run-time sequencer). It is also used
+as the base for the state set thread names unless overridden via the
+*name* parameter (see :ref:`SpecifyingRunTimeParameters`).
 
-*parameter_list*
-^^^^^^^^^^^^^^^^^
+.. productionlist::
+   program_param: "(" `string` ")"
+   program_param: 
 
-A list of comma-separated parameters in the same form as they are
-specified on the command line (see :ref:`SpecifyingRunTimeParameters`).
-Command-line parameters override those specified here.
+The program name may be followed by an optional string enclosed in
+parentheses. The string content must be a list of comma-separated
+parameters in the same form as they are specified on the command line
+(see :ref:`SpecifyingRunTimeParameters`). Command-line parameters
+override those specified here.
 
-*definition*
-^^^^^^^^^^^^
+.. productionlist::
+   global_defns: `global_defns` `global_defn`
+   global_defns: `global_defn`
+   global_defn: `assign`
+   global_defn: `monitor`
+   global_defn: `sync`
+   global_defn: `syncq`
+   global_defn: `decl`
+   global_defn: `evflag_decl`
+   global_defn: `foreign_decl`
+   global_defn: `option`
+   global_defn: `c_code`
 
-See `Definitions`_.
+Global (top-level) definitions, see `Definitions`_ for details.
 
 .. _entry_handler:
 
-*entry_handler*
-^^^^^^^^^^^^^^^^
+Global Entry and Exit Blocks
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-A state program may specify entry code to run prior to state set
-thread creation. This is run in the context of the first state set
-thread, before the other threads are created and is specified as
-follows:
+.. productionlist::
+   entry: "entry" `block`
+   entry: 
+   exit: "exit" `block`
+   exit: 
 
-``entry {``
+A state program may specify optional entry code to run prior to state
+set thread creation, and exit code to run prior to thread deletion.
+Both are run in the context of the first state set thread, before the
+other threads are created, resp. after they have been deleted. The
+entry or exit code is a regular SNL code block an thus can contain
+local definitions. However, no control system variable access functions
+may be called within the entry code.
 
-  *[statement]...*;
+Global entry and exit blocks should not be confused with the entry and
+exit blocks of a state, which have the same syntax, but are executed at
+each transition from/to a new state.
 
-``}``
-
-The entry code consists of zero or more statements as described in
-`Statements and Expressions`_. However, no control system variable
-access functions may be called within the entry code.
-
-This handler should not be confused with the entry block of a
-state, which has the same syntax, but is executed at each
-transition to a new state.
-
-*state_set*
-^^^^^^^^^^^^
-
-See `State Sets`_.
-
-*exit_handler*
-^^^^^^^^^^^^^^^
-
-When a state program is stopped via *seqStop* , all state set
+When a state program is stopped via ``seqStop``, all state set
 threads within the state program are deleted. The state program may
 specify exit code to run prior to thread deletion. This is run in
-the context of the first state set thread and is specified as
-follows:
+the context of the first state set thread.
 
-``exit {``
+c_codes
+^^^^^^^
 
-*[statement]...*;
+.. productionlist::
+   c_codes: `c_codes` `c_code`
+   c_codes: 
+   c_code: `embedded_c_code`
 
-``}``
-
-The exit code consists of zero or more statements as described in
-`Statements and Expressions`_. However, no control system variable
-access functions may be called within the exit code.
-
-This handler should not be confused with the exit block of a state,
-which has the same syntax, but is executed at each transition from
-a state to the next state.
+At the end of the program may come zero or more embedded
+C code blocks. See `Escape to C Code`_.
 
 .. _Definitions:
 
 Definitions
 -----------
+
+
 
 *definition*
 ^^^^^^^^^^^^
@@ -136,8 +127,8 @@ Definitions
   *syncq_stmt* \|
   *compiler_option_stmt*
 
-*decl_stmt*
-^^^^^^^^^^^^
+decl_stmt
+^^^^^^^^^
 
 Variable declarations are similar to C except that the types are
 limited to the following, only scalar initialization is permitted,
@@ -155,7 +146,7 @@ and only one variable may be declared per declaration statement.
   evflag event_flag;
 
 Type *string* produces an array of char with length equal to the
-constant *MAX_STRING_SIZE* , which is defined (as 40) in one of
+constant *MAX_STRING_SIZE*, which is defined (as 40) in one of
 the included header files. Unsigned types and pointer types may
 also be specified. For example::
 
@@ -183,19 +174,21 @@ Variables may also be declared as arrays.
 
 Note that arrays of strings and event flags are not implemented.
 
-*assign_stmt*
-^^^^^^^^^^^^^^
+assign
+^^^^^^
+
+.. productionlist::
+   assign: "assign" `identifier` `to` `string` ";"
+   assign: "assign" `identifier` `subscript` `to` `string` ";"
+   assign: "assign" `identifier` `to` "{" `strings` "}" ";"
+   to: "to"
+   to:
+   strings: `strings` "," `string`
+   strings: `string`
 
 Once a variable is declared, it may be assigned to a control system
 variable. Thereafter, that variable is used to interact with the
-underlying control system. The following are all variations on
-assignment (note that the ``to`` is optional):
-
-  ``assign`` *var* [``to``] ``"`` *pv_name* ``";``
-
-  ``assign`` *var* [ *index* ] [``to``] *pv_name* ``;``
-
-  ``assign`` *array_var* [``to``] ``{`` *pv_name* ``,`` ... ``}`` ``;``
+underlying control system.
 
 A control system variable name may contain one or more macro names
 enclosed in braces, as in "*{sys}{sub}voltage*". Macros are named
@@ -207,35 +200,41 @@ underlying variable, whichever is smaller. The native count is
 determined when the initial connection is established. Pointer
 types may not be assigned to control system variables.
 
-*monitor_stmt*
-^^^^^^^^^^^^^^^
+monitor
+^^^^^^^
+
+.. productionlist::
+   monitor: "monitor" `identifier` `opt_subscript` ";"
 
 To make the state program event-driven, input variables can be
 monitored. Monitored variables are automatically updated with the
 current value of the underlying control system variable (the
 variable must first be assigned to a control system variable).
 
-  ``monitor`` *assigned_var* ``;``
+sync
+^^^^
 
-  ``monitor`` *assigned_var* [ ``[`` *index* ``]`` ] ``;``
-
-*sync_stmt*
-^^^^^^^^^^^^
+.. productionlist::
+   sync: "sync" `identifier` `opt_subscript` `to` `identifier` ";"
+   opt_subscript: `subscript`
+   opt_subscript: 
+   subscript: "[" `integer_literal` "]"
 
 An event flag can be associated with an SNL variable (which may be
 an array, and thus associated with several control system
 variables). When a monitor is posted on any of the associated
 control system variables, the corresponding event flag is set (even
-if it was already set). Note that the "*to*" is optional.
-
-  ``sync`` *assigned_var* *[* to*]* event_flag ``;``
-
-  ``sync`` *assigned_var* [*index* ] *[* to*]* event_flag ``;``
+if it was already set).
 
 .. _syncq_stmt:
 
-*syncq_stmt*
-^^^^^^^^^^^^^
+syncq
+^^^^^
+
+.. productionlist::
+   syncq: "syncQ" `identifier` `opt_subscript` `to` `identifier` `syncq_size` ";"
+   syncq_size: `integer_literal`
+   syncq_size: 
 
 An event flag can be associated with a monitor queue which, in
 turn, is associated with an SNL variable (which may be an array,
@@ -249,15 +248,11 @@ be accommodated in the queue (if the variable is array-valued, only
 the first item will be saved). The *pvGetQ* function reads items
 from the queue.
 
-  ``syncQ`` *assigned_var* *[* to*]* *event_flag* *[queue_size]* ``;``
-
-  ``syncQ`` *assigned_var* [*index* ] *[* to*]* *event_flag* [ *queue_size* ] ``;``
-
 Note that the square brackets around "*to*" and *queue_size*
 indicate optional items rather than literal square brackets.
 
-*compiler_option_stmt*
-^^^^^^^^^^^^^^^^^^^^^^^^
+option
+^^^^^^
 
 A compiler option is specified as follows:
 
@@ -270,6 +265,10 @@ and must include the "*+*" or "*-*" sign. Example::
 
 State Sets
 ----------
+
+.. productionlist::
+   state_sets: `state_sets` `state_set`
+   state_sets: `state_set`
 
 *state_set*
 ^^^^^^^^^^^^
@@ -317,7 +316,7 @@ A state option is specified as follows:
 
 option *state_option_name*;
 
-Currently there are three allowable options, *t* , *e* and *x*.
+Currently there are three allowable options, *t*, *e* and *x*.
 The option string must be preceded by a "*+*" or "*-*", for
 instance *option -te*.
 
@@ -335,10 +334,10 @@ as the current state.
 *-x* Execute *exit* blocks even if the next state is the same as
 the current state.
 
-*+t* , *+e* and *+x* are also permitted, though "*+*" is
+*+t*, *+e* and *+x* are also permitted, though "*+*" is
 interpreted as "perform the default action for this option". For
 instance *option +tx* would have the same effect as if no option
-specification were given for *t* and *x* , so its use is only
+specification were given for *t* and *x*, so its use is only
 documentary. Note that more than one option line is allowed, and
 that syntax must be used to specify both "*+*" and "*-*" options,
 for example::
@@ -424,7 +423,7 @@ are missing (but are not hard to add should the need arise).
 *expression*
 ^^^^^^^^^^^^
 
-*expression* , *expression*... \|
+*expression*, *expression*... \|
 
 *expression binop expression* \|
 
@@ -489,7 +488,7 @@ These are the usual C unary operators.
 The usual C syntax is supported for numbers, character constants,
 strings and names. Note that, taken together,
 
-*expression* , *expression...*
+*expression*, *expression...*
 
 *name* ( *expression*)
 
@@ -582,7 +581,7 @@ However, it can also be an array (each of whose elements may be
 assigned to a different control system variable). In this case, the
 single argument form returns *TRUE* if the last puts of all the
 elements of the array have completed (the missing arguments are
-implicitly *0* and *NULL* respectively). If *any* is *TRUE* , then
+implicitly *0* and *NULL* respectively). If *any* is *TRUE*, then
 the function returns *TRUE* if any put has completed since the last
 call. If *pComplete* is non-NULL, it should be a *long* array of
 the same length as the SNL variable and its elements will be set to
@@ -624,7 +623,7 @@ current. This call is appropriate only if the asynchronous (*+a*)
 compile option is specified or *pvGet* 's optional *ASYNC* argument
 was used.
 
-Unlike *pvPutComplete* , *pvGetComplete* doesn't support arrays.
+Unlike *pvPutComplete*, *pvGetComplete* doesn't support arrays.
 
 pvGetQ
 ^^^^^^
@@ -656,7 +655,7 @@ clears the associated event flag (the variable should have been
 associated with a queue and an event flag via the *syncQ*
 statement).
 
-As with *pvGetQ* , if the SNL variable is an array then the
+As with *pvGetQ*, if the SNL variable is an array then the
 behavior is the same regardless of whether the array name or an
 array element name is specified.
 
@@ -859,11 +858,6 @@ the specified macro name. If the macro does not exist, it returns
 C Compatibility Features
 ------------------------
 
-Comments
-^^^^^^^^
-
-C-style comments may be placed anywhere in the state program.
-
 Escape to C Code
 ^^^^^^^^^^^^^^^^
 
@@ -989,3 +983,29 @@ Reference to variable *sw1* is made as::
 
 This conversion is automatically performed by the SNC for all SNL
 statements, but you will have to handle escaped C code yourself.
+
+Syntax Summary
+--------------
+
+.. include:: bnf.inc
+
+Lexical Syntax
+^^^^^^^^^^^^^^
+
+.. productionlist::
+   identifier: <same as in C>
+   integer_literal: <same as in C>
+   floating_point_literal: <same as in C>
+   string_literal: <same as in C>
+   embedded_c_code: "%{" <any ASCII character> "}%"
+   embedded_c_code: "%%" <any ASCII character> "\n"
+
+Lexical syntax is exactly as in C, except that anything enclosed
+between "%{" and "}%", or between "%%" and the end of the line,
+is copied verbatim to the output (and thus should better be valid C
+code).
+
+Comments
+^^^^^^^^
+
+C-style comments may be placed anywhere in the state program.

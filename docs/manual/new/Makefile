@@ -38,7 +38,7 @@ help:
 realclean clean:
 	-rm -rf $(BUILDDIR)
 
-html:
+html: bnf.inc
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 
 # 	@echo
@@ -96,3 +96,6 @@ doctest:
 	$(SPHINXBUILD) -b doctest $(ALLSPHINXOPTS) $(BUILDDIR)/doctest
 	@echo "Testing of doctests in the sources finished, look at the " \
 	      "results in $(BUILDDIR)/doctest/output.txt."
+
+bnf.inc: ../../snl.bnf bnf2txt.pl
+	perl -n bnf2txt.pl $< > $@

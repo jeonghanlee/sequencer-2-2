@@ -121,3 +121,5 @@
 ^include($|/)
 ^lib($|/)
 ^html($|/)
+^docs/manual/new/bnf.inc$
+^docs/snl.bnf$
