@@ -1,0 +1,991 @@
+SNL Reference
+=============
+
+This chapter is supposed to give a detailed reference for the SNL
+syntax and semantics.
+
+Typographical conventions
+-------------------------
+
+TODO: this is all wrong! Needs to be fixed.
+
+We use a lax variant of BNF (Backus-Naur Form).
+The idea is that the meaning will be clear without explanation.
+However, here are some explanatory notes.
+
+-  words and symbols in ``teletype`` font are to be taken literally
+   ("terminals")
+-  words in *italics* are syntactic terms which will be
+   defined below ("nonterminals"), except in a few cases where the
+   meaning is obvious
+-  where the name of a nonterminal is enclosed in square brackets,
+   that term is optional
+-  where a term is followed by an ellipsis (``...``), it may
+   optionally be repeated (so if the term was not optional this means
+   that there can be one or more instances of it; if the term was
+   optional this means that there can be zero or more instances of it)
+-  where a term is followed by a separator (e.g. a comma) and an
+   ellipsis, it is to be understood that the separator will separate
+   each repeated instance of the term
+
+.. _StateProgram:
+
+Program
+-------
+
+*program*
+^^^^^^^^^
+
+``program`` *program_name* [``(`` ``"`` *parameter_list* ``"`` ``)``] ``;``
+
+*[entry_handler]*
+
+*definition...*
+
+*state_set...*
+
+*[exit_handler]*
+
+*program_name*
+^^^^^^^^^^^^^^
+
+The name of the program. This is used as the name of the global
+variable which contains or points to all the state program data
+structures (the address of this global variable is passed to the
+``seq`` function when creating the run-time sequencer). It is also
+used as the base for the state set thread names unless overridden
+via the *name* parameter (see :ref:`SpecifyingRunTimeParameters`).
+
+*parameter_list*
+^^^^^^^^^^^^^^^^^
+
+A list of comma-separated parameters in the same form as they are
+specified on the command line (see :ref:`SpecifyingRunTimeParameters`).
+Command-line parameters override those specified here.
+
+*definition*
+^^^^^^^^^^^^
+
+See `Definitions`_.
+
+.. _entry_handler:
+
+*entry_handler*
+^^^^^^^^^^^^^^^^
+
+A state program may specify entry code to run prior to state set
+thread creation. This is run in the context of the first state set
+thread, before the other threads are created and is specified as
+follows:
+
+``entry {``
+
+  *[statement]...*;
+
+``}``
+
+The entry code consists of zero or more statements as described in
+`Statements and Expressions`_. However, no control system variable
+access functions may be called within the entry code.
+
+This handler should not be confused with the entry block of a
+state, which has the same syntax, but is executed at each
+transition to a new state.
+
+*state_set*
+^^^^^^^^^^^^
+
+See `State Sets`_.
+
+*exit_handler*
+^^^^^^^^^^^^^^^
+
+When a state program is stopped via *seqStop* , all state set
+threads within the state program are deleted. The state program may
+specify exit code to run prior to thread deletion. This is run in
+the context of the first state set thread and is specified as
+follows:
+
+``exit {``
+
+*[statement]...*;
+
+``}``
+
+The exit code consists of zero or more statements as described in
+`Statements and Expressions`_. However, no control system variable
+access functions may be called within the exit code.
+
+This handler should not be confused with the exit block of a state,
+which has the same syntax, but is executed at each transition from
+a state to the next state.
+
+.. _Definitions:
+
+Definitions
+-----------
+
+*definition*
+^^^^^^^^^^^^
+
+*definition* =
+  *decl_stmt* \|
+  *assign_stmt* \|
+  *monitor_stmt* \|
+  *sync_stmt* \|
+  *syncq_stmt* \|
+  *compiler_option_stmt*
+
+*decl_stmt*
+^^^^^^^^^^^^
+
+Variable declarations are similar to C except that the types are
+limited to the following, only scalar initialization is permitted,
+and only one variable may be declared per declaration statement.
+
+::
+
+  char assigned_var;
+  short assigned_var;
+  int assigned_var;
+  long assigned_var;
+  float assigned_var;
+  double assigned_var;
+  string assigned_var;
+  evflag event_flag;
+
+Type *string* produces an array of char with length equal to the
+constant *MAX_STRING_SIZE* , which is defined (as 40) in one of
+the included header files. Unsigned types and pointer types may
+also be specified. For example::
+
+  unsigned short *assigned_var;
+
+Variables may also be declared as arrays.
+
+::
+
+  char assigned_var [*array_length* ];
+  short assigned_var [*array_length* ];
+  int assigned_var [*array_length* ];
+  long assigned_var [*array_length* ];
+  float assigned_var [*array_length* ];
+  double assigned_var [*array_length* ];
+
+::
+
+  char assigned_var [*array_length* ][*array_length* ];
+  short assigned_var [*array_length* ][*array_length* ];
+  int assigned_var [*array_length* ][*array_length* ];
+  long assigned_var [*array_length* ][*array_length* ];
+  float assigned_var [*array_length* ][*array_length* ];
+  double assigned_var [*array_length* ][*array_length* ];
+
+Note that arrays of strings and event flags are not implemented.
+
+*assign_stmt*
+^^^^^^^^^^^^^^
+
+Once a variable is declared, it may be assigned to a control system
+variable. Thereafter, that variable is used to interact with the
+underlying control system. The following are all variations on
+assignment (note that the ``to`` is optional):
+
+  ``assign`` *var* [``to``] ``"`` *pv_name* ``";``
+
+  ``assign`` *var* [ *index* ] [``to``] *pv_name* ``;``
+
+  ``assign`` *array_var* [``to``] ``{`` *pv_name* ``,`` ... ``}`` ``;``
+
+A control system variable name may contain one or more macro names
+enclosed in braces, as in "*{sys}{sub}voltage*". Macros are named
+following the same rules as C language variables.
+
+For control system variables declared as arrays, the requested
+count is the length of the array or the native count for the
+underlying variable, whichever is smaller. The native count is
+determined when the initial connection is established. Pointer
+types may not be assigned to control system variables.
+
+*monitor_stmt*
+^^^^^^^^^^^^^^^
+
+To make the state program event-driven, input variables can be
+monitored. Monitored variables are automatically updated with the
+current value of the underlying control system variable (the
+variable must first be assigned to a control system variable).
+
+  ``monitor`` *assigned_var* ``;``
+
+  ``monitor`` *assigned_var* [ ``[`` *index* ``]`` ] ``;``
+
+*sync_stmt*
+^^^^^^^^^^^^
+
+An event flag can be associated with an SNL variable (which may be
+an array, and thus associated with several control system
+variables). When a monitor is posted on any of the associated
+control system variables, the corresponding event flag is set (even
+if it was already set). Note that the "*to*" is optional.
+
+  ``sync`` *assigned_var* *[* to*]* event_flag ``;``
+
+  ``sync`` *assigned_var* [*index* ] *[* to*]* event_flag ``;``
+
+.. _syncq_stmt:
+
+*syncq_stmt*
+^^^^^^^^^^^^^
+
+An event flag can be associated with a monitor queue which, in
+turn, is associated with an SNL variable (which may be an array,
+and thus associated with several control system variables). The
+queue size defaults to 100 but can be overridden on a per-queue
+basis. When a monitor is posted on any of the associated control
+system variables, the variable's value is written to the end of the
+queue and the corresponding event flag is set. If the queue is
+already full, the last entry is overwritten. Only scalar items can
+be accommodated in the queue (if the variable is array-valued, only
+the first item will be saved). The *pvGetQ* function reads items
+from the queue.
+
+  ``syncQ`` *assigned_var* *[* to*]* *event_flag* *[queue_size]* ``;``
+
+  ``syncQ`` *assigned_var* [*index* ] *[* to*]* *event_flag* [ *queue_size* ] ``;``
+
+Note that the square brackets around "*to*" and *queue_size*
+indicate optional items rather than literal square brackets.
+
+*compiler_option_stmt*
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+A compiler option is specified as follows:
+
+  ``option`` *compiler_option_name*;
+
+Possible compiler options are given in :ref:`CompilerOptions`,
+and must include the "*+*" or "*-*" sign. Example::
+
+  option +r; /* make code reentrant */
+
+State Sets
+----------
+
+*state_set*
+^^^^^^^^^^^^
+
+ss *state_set_name* {
+
+*state_def...*
+
+}
+
+*state_set_name*
+^^^^^^^^^^^^^^^^^^
+
+The name of the state set. The normal C variable naming rules
+apply.
+
+*state_def*
+^^^^^^^^^^^^
+
+state *state_name* {
+
+*[state_option_stmt]...*
+
+*[entry_action]...*
+
+*event_action...*
+
+*[exit_action]...*
+
+}
+
+*state_name*
+^^^^^^^^^^^^^
+
+The name of the state. The normal C variable naming rules apply.
+State names need only be unique within the state set (*e.g.* each
+state set within a state program could have a *start* state).
+
+.. _state_option_stmt:
+
+*state_option_stmt*
+^^^^^^^^^^^^^^^^^^^^^
+
+A state option is specified as follows:
+
+option *state_option_name*;
+
+Currently there are three allowable options, *t* , *e* and *x*.
+The option string must be preceded by a "*+*" or "*-*", for
+instance *option -te*.
+
+The options are:
+
+*-t* Don't reset the time specifying when the state was entered if
+coming from the same state. When this option is used the *delay*
+function will return whether the given time delay has elapsed from
+the moment the current state was entered from a different state,
+rather than from when it was entered for the current iteration.
+
+*-e* Execute *entry* blocks even if the previous state was the same
+as the current state.
+
+*-x* Execute *exit* blocks even if the next state is the same as
+the current state.
+
+*+t* , *+e* and *+x* are also permitted, though "*+*" is
+interpreted as "perform the default action for this option". For
+instance *option +tx* would have the same effect as if no option
+specification were given for *t* and *x* , so its use is only
+documentary. Note that more than one option line is allowed, and
+that syntax must be used to specify both "*+*" and "*-*" options,
+for example::
+
+  state low {
+    option -e; /* Do entry{} every time ... */
+    option +x; /* but only do exit{} when really leaving */
+    entry { ... }
+    ...
+    exit { ... }
+  }
+
+.. _entry_action:
+
+*entry_action*
+^^^^^^^^^^^^^^^
+
+entry {
+
+*[statement]...*
+
+}
+
+*entry* blocks are executed when the state is entered. There can be
+more than one of them.
+
+*event_action*
+^^^^^^^^^^^^^^^
+
+when ( *expression*) {
+
+*[statement]...*
+
+} state *new_state*
+
+*new_state*
+^^^^^^^^^^^^
+
+The name of the new state to enter. This can be the current state.
+
+.. _exit_action:
+
+*exit_action*
+^^^^^^^^^^^^^^
+
+exit {
+
+*[statement]...*
+
+}
+
+*exit* blocks are executed when the state is left. See the options
+*-e* and *-x* above for more details about controlling this
+behavior. Note that the statements in all entry blocks of a state
+are executed before any of the expressions in *when* conditions are
+evaluated.
+
+Statements and Expressions
+--------------------------
+
+*statement*
+^^^^^^^^^^^
+
+::
+
+  { *[statement]...* } \|
+
+  *expression*; \|
+
+  if ( *expression*) *statement* \|
+
+  else *statement* \|
+
+  while ( *expression*) *statement* \|
+
+  for ( *expression*; *expression*; *expression*) *statement* \|
+
+  break;
+
+As can be seen, most C statements are supported. Strangely, some
+are missing (but are not hard to add should the need arise).
+
+*expression*
+^^^^^^^^^^^^
+
+*expression* , *expression*... \|
+
+*expression binop expression* \|
+
+*expression asgnop expression* \|
+
+*unop expression* \|
+
+``++`` *expression* \|
+
+``--`` *expression* \|
+
+*expression* ``++`` \|
+
+*expression* ``--`` \|
+
+*number* \|
+
+*char_const* \|
+
+*string* \|
+
+*name* \|
+
+*name* ``(`` *expression* ``)`` \|
+
+*expression* ``[`` *expression* ``]`` \|
+
+``(`` *expression* ``)``
+
+*binop*
+^^^^^^^
+
+  ``-`` \| ``+`` \| ``*`` \| ``/`` \| ``>`` \|
+  ``>=`` \| ``==`` \| ``!=`` \| ``<=`` \| ``<`` \| ``|| \| ``&&``
+  \| ``<<`` \| ``>>`` \| ``|`` \| ``^`` \| ``&`` \| ``%`` \|
+  ``?`` \| ``:`` \| ``.`` \| ``->``
+
+These are the usual C binary operators (with the C precendences). Note
+that SNL makes no use of the semantics of structure member access (a
+side-effect that you may notice is that the state notation compiler
+will warn that structure tags are unused variables).
+
+*asgnop*
+^^^^^^^^
+
+  ``=`` \| ``+=`` \| ``-=`` \| ``&=`` \|  ``|=`` \| ``/=``
+  \| ``*=`` \| ``%=`` \| ``<<=`` \|
+  ``>>=`` \| ``^=``
+
+These are the usual C assignment operators.
+
+*unop*
+^^^^^^
+
+  ``+`` \| ``-`` \| ``*`` \| ``&`` \| ``!`` \| ``~``
+
+These are the usual C unary operators.
+
+*number*, *char_const*, *string*, *name*
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The usual C syntax is supported for numbers, character constants,
+strings and names. Note that, taken together,
+
+*expression* , *expression...*
+
+*name* ( *expression*)
+
+imply that function calls are permitted (syntactically, the
+argument list is a comma-separated expression).
+
+.. _BuiltinFunctions:
+
+Built-in Functions
+------------------
+
+The following special functions are built into the SNL. In most
+cases the state notation compiler performs some special
+interpretation of the parameters to these functions. Therefore,
+some are either not available through escaped C code or their use
+in escaped C code is subject to special rules.
+
+The term *assigned_var* refers to any SNL variable that is
+assigned to a control system variable (or, if it's an array,
+variables). When using such a variable as a function argument, the
+function is automatically given access to the details of the
+underlying control system variable.
+
+Several of these functions are primarily intended to be called only
+from *when* clauses or only from action code. However, unlike in
+previous versions, it is safe to call any function both in *when*
+clauses and in action code.
+
+*int* function returns should be assumed to be a *pvStat* error
+code unless otherwise spacified.
+
+delay
+^^^^^
+
+.. cfunction::
+  int delay(double delay_in_seconds)
+
+The delay function returns *TRUE* if the specified time has elapsed
+since entering the state. It should be used only within a *when*
+expression.
+
+The *-t* state option (see `state_option_stmt`_) controls whether
+the delay is measured from when the current state was entered from
+a different state (*-t*) or from any state, including itself (*+t*
+, the default)
+
+.. _pvPut:
+
+pvPut
+^^^^^
+
+.. cfunction::
+  int pvPut(assigned_var)
+  int pvPut(assigned_var, SYNC)
+  int pvPut(assigned_var, ASYNC)
+
+This function puts (or writes) the value of an SNL variable to the
+underlying control system variable. The function returns the status
+from the PV layer (*e.g.* *pvStatOK* for success).
+
+By default, *pvPut* does not wait for the put to be complete;
+completion must be inferred by other means. The optional *SYNC*
+argument causes it to block on completion with a hard-coded timeout
+of 10s. The optional *ASYNC* argument allows completion to be
+checked via a subsequent call to *pvPutComplete* (typically in a
+*when* clause).
+
+Note that, when using channel access, the *SYNC* and *ASYNC*
+arguments result in use of *ca_put_callback*; if neither
+optional argument is specified, *ca_put* is called as with
+previous versions.
+
+.. _pvPutComplete:
+
+pvPutComplete
+^^^^^^^^^^^^^
+
+.. cfunction::
+  int pvPutComplete(assigned_var)
+  int pvPutComplete(array_name)
+  int pvPutComplete(array_name, long any)
+  int pvPutComplete(array_name, long any, long *pComplete)
+
+This function returns *TRUE* if the last put of this control system
+variable has completed. This call is appropriate only if *pvPut* 's
+optional *ASYNC* argument was used.
+
+The first form is appropriate when the SNL variable is a scalar.
+However, it can also be an array (each of whose elements may be
+assigned to a different control system variable). In this case, the
+single argument form returns *TRUE* if the last puts of all the
+elements of the array have completed (the missing arguments are
+implicitly *0* and *NULL* respectively). If *any* is *TRUE* , then
+the function returns *TRUE* if any put has completed since the last
+call. If *pComplete* is non-NULL, it should be a *long* array of
+the same length as the SNL variable and its elements will be set to
+*TRUE* if and only if the corresponding put has completed.
+
+.. _pvGet:
+
+pvGet
+^^^^^
+
+.. cfunction::
+  int pvGet(assigned_var)
+  int pvGet(assigned_var, SYNC)
+  int pvGet(assigned_var, ASYNC)
+
+This function gets (or reads) the value of an SNL variable from the
+underlying control system variable. The function returns the status
+from the PV layer (*e.g.* *pvStatOK* for success). By default, the
+state set will block until the read operation is complete with a
+hard-coded timeout of 10s. The asynchronous (*+a*) compile option
+can be used to prevent this, in which case completion can be
+checked via a subsequent call to *pvGetComplete* (typically in a
+*when* clause).
+
+The optional *SYNC* and *ASYNC* arguments override the compile
+option. *SYNC* blocks and so gives default behavior if *+a* was not
+specified; *ASYNC* doesn't block and so gives default behavior if
+*+a* was specified.
+
+pvGetComplete
+^^^^^^^^^^^^^
+
+.. cfunction::
+  int pvGetComplete(assigned_var)
+
+This function returns *TRUE* if the last get of this control system
+variable has completed, *i.e.* the value in the variable is
+current. This call is appropriate only if the asynchronous (*+a*)
+compile option is specified or *pvGet* 's optional *ASYNC* argument
+was used.
+
+Unlike *pvPutComplete* , *pvGetComplete* doesn't support arrays.
+
+pvGetQ
+^^^^^^
+
+.. cfunction::
+  int pvGetQ(assigned_var)
+  int pvGetQ(array_name)
+
+This function removes the oldest value from a SNL variable's
+monitor queue (the variable should have been associated with a
+queue and an event flag via the *syncQ* statement) and updates the
+corresponding SNL variable. Despite its name, this function is
+really closer to *efTestAndClear* than it is to *pvGet*. It
+returns *TRUE* if the queue was not empty.
+
+If the SNL variable is an array then the behavior is the same
+regardless of whether the array name or an array element name is
+specified. This is because a single queue is associated with the
+entire array.
+
+pvFreeQ
+^^^^^^^
+
+.. cfunction::
+  void pvFreeQ(assigned_var)
+
+This function deletes all entries from an SNL variable's queue and
+clears the associated event flag (the variable should have been
+associated with a queue and an event flag via the *syncQ*
+statement).
+
+As with *pvGetQ* , if the SNL variable is an array then the
+behavior is the same regardless of whether the array name or an
+array element name is specified.
+
+pvMonitor
+^^^^^^^^^
+
+.. cfunction::
+  int pvMonitor(assigned_var)
+
+This function initiates a monitor on the underlying control system
+variable.
+
+pvStopMonitor
+^^^^^^^^^^^^^
+
+.. cfunction::
+  int pvStopMonitor(assigned_var)
+
+This function terminates a monitor on the underlying control system
+variable.
+
+pvFlush
+^^^^^^^
+
+.. cfunction::
+  void pvFlush()
+
+This function causes the PV layer to flush its input-output buffer.
+It just might be needed if performing asynchronous operations
+*within* an action block (note that the buffer is always flushed on
+exit from an action block).
+
+pvCount
+^^^^^^^
+
+.. cfunction::
+  int pvCount(assigned_var)
+
+This function returns the element count associated with the control
+system variable.
+
+pvStatus
+^^^^^^^^
+
+.. cfunction::
+  pvStat pvStatus(assigned_var)
+
+This function returns the current alarm status for the control
+system variable (*e.g.* *pvStatHIHI*; defined in *pvAlarm.h*).
+The status and severity are only valid after either a *pvGet* call
+has completed or a monitor has been delivered.
+
+pvSeverity
+^^^^^^^^^^
+
+.. cfunction::
+  pvSevr pvSeverity(assigned_var)
+
+This function returns the current alarm severity (*e.g.*
+*pvSevrMAJOR*). The notes above apply
+
+pvTimeStamp
+^^^^^^^^^^^
+
+.. cfunction::
+  TS_STAMP pvTimeStamp(assigned_var)
+
+This function returns the time stamp for the last pvGet or monitor
+of this variable. The compiler does recognize type TS_STAMP.
+Therefore, variable declarations for this type should be in escaped
+C code. This will generate a compiler warning, which can be
+ignored.
+
+pvAssign
+^^^^^^^^
+
+.. cfunction::
+  int pvAssign(var, process_variable_name)
+
+This function assigns or re-assigned the SNL variable ``var`` to
+``process_variable_name``. If ``process_variable_name`` is an empty
+string then ``var`` is de-assigned (not associated with any process
+variable).
+
+pvAssigned
+^^^^^^^^^^
+
+.. cfunction::
+  int pvAssigned(assigned_var)
+
+This function returns *TRUE* if the SNL variable is currently
+assigned to a control system variable.
+
+pvConnected
+^^^^^^^^^^^
+
+.. cfunction::
+  int pvConnected(assigned_var)
+
+This function returns *TRUE* if the underlying control system
+variable is currently connected.
+
+pvIndex
+^^^^^^^
+
+.. cfunction::
+  int pvIndex(assigned_var)
+
+This function returns the index associated with a control system
+variable. See `User Functions within the State Program`_.
+
+pvChannelCount
+^^^^^^^^^^^^^^
+
+.. cfunction::
+  int pvChannelCount()
+
+This function returns the total number of control system variables
+associated with the state program (the term "channel" is a
+carry-over from the days when the only support message system was
+channel access).
+
+pvAssignCount
+^^^^^^^^^^^^^
+
+.. cfunction::
+  int pvAssignCount()
+
+This function returns the total number of SNL variables in this
+program that are assigned to underlying control system variables.
+Note: if all SNL variables are assigned then the following
+expression is *TRUE*::
+
+  pvAssignCount() == pvChannelCount()
+
+Each element of an SNL array counts as variable for the purposes of
+*pvAssignCount*.
+
+pvConnectCount
+^^^^^^^^^^^^^^
+
+.. cfunction::
+  int pvConnectCount()
+
+This function returns the total number of underlying control system
+variables that are connected. Note: if all variables are connected
+then the following expression is *TRUE*::
+
+  pvConnectCount() == pvChannelCount()
+
+efSet
+^^^^^
+
+.. cfunction::
+  void efSet(event_flag)
+
+This function sets the event flag and causes the execution of the
+*when* statements for all state sets that are pending on this event
+flag.
+
+efTest
+^^^^^^
+
+.. cfunction::
+  int efTest(event_flag)
+
+This function returns *TRUE* if the event flag was set.
+
+efClear
+^^^^^^^
+
+.. cfunction::
+  int efClear(event_flag)
+
+This function clears the event flag and causes the execution of the
+*when* statements for all state sets that are pending on this event
+flag.
+
+efTestAndClear
+^^^^^^^^^^^^^^
+
+.. cfunction::
+  int efTestAndClear(event_flag)
+
+This function clears the event flag and returns *TRUE* if the event
+flag was set. It is intended for use within a *when* clause.
+
+.. _macValueGet:
+
+macValueGet
+^^^^^^^^^^^
+
+.. cfunction::
+  char* macValueGet(char *macro_name)
+
+This function returns a pointer to a string that is the value for
+the specified macro name. If the macro does not exist, it returns
+*NULL*.
+
+C Compatibility Features
+------------------------
+
+Comments
+^^^^^^^^
+
+C-style comments may be placed anywhere in the state program.
+
+Escape to C Code
+^^^^^^^^^^^^^^^^
+
+Because the SNL does not support the full C language, C code may be
+escaped in the program. The escaped code is not compiled by SNC,
+but is passed the C compiler. There are two escape methods
+allowed:
+
+#. Any code between *%%* and the next newline character is escaped.
+   Example::
+
+    %% for (i=0; i < NVAL; i++) {
+
+#. Any code between *%{* and *}%* is escaped. Example::
+
+    %{
+    extern float smooth();
+    extern LOGICAL accelerator_mode;
+    }%
+
+If you are using the C pre-processor prior to compiling with *snc*
+, and you wish to defer interpretation of a preprocessor directive
+("*#*" statement), then you should use the form::
+
+  %%#include <ioLib.h>
+  %%#include <abcLib.h>
+
+Any variable declared in escaped C code and used in SNL code will
+be flagged with a warning message by the SNC. However, it will be
+passed on to the C compiler correctly.
+
+User Functions within the State Program
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The last state set may be followed by C code, usually containing
+one or more user-supplied functions. For example::
+
+  program example
+  ...
+  /* last SNL statement */
+  %{
+    LOCAL float smooth (pArray, numElem)
+    { ... }
+  }%
+
+There is little reason to do this, since a state program can of
+course be linked against C libraries.
+
+Calling pvGet etc. from C
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The built-in SNL functions such as *pvGet* cannot be directly used
+in user-supplied functions. However, most of the built-in functions
+have a C language equivalent, which begin with the prefix ``seq_``
+(*e.g.* pvGet becomes seq_pvGet). These C functions must pass a
+parameter identifying the calling state program, and if a control
+system variable name is required, the index of that variable must
+be supplied. This index is obtained via the pvIndex function.
+Furthermore, if the code is complied with the *+r* option, the
+database variables must be referenced as a structure element as
+described in `Variable Modification for Reentrant Option`_
+(this isn't a problem if individual SNL variables are passed as
+parameters to C code, because the compiler will do the work).
+Examination of the intermediate C code that the compiler produces
+will indicate how to use the built-in functions and database
+variables.
+
+.. _VariableScope:
+
+Variable Scope
+^^^^^^^^^^^^^^
+
+TODO: this needs updating
+
+All variables declared in a state program are made static
+(non-global) in the C file, and thus are not accessible outside the
+state program module.
+
+Local variables can be escaped and declared within *when* clauses
+(this will result in a "variable used but not declared" warning
+from the compiler; ignore it). However, when using the *+r* option,
+the same name cannot be used for SNL and local variables (because
+the compiler is not clever enough to realize that use of the local
+variable is intended; see `Variable Modification for Reentrant Option`_.
+For example::
+
+  when ( pvPutComplete( init, TRUE, done)) {
+    %% long i;
+    printf( "init commands not all done:");
+    for ( i = 0; i < N; i++)
+    printf( " %ld", done[i]);
+    printf( "\\n");
+  } state active
+
+Variable Modification for Reentrant Option
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If the reentrant option (*+r*) is specified to SNC then all
+variables are made part of a structure. Suppose we have the
+following declarations in the SNL::
+
+  int sw1;
+  float v5;
+  short wf2[1024];
+
+The C file will contain the following declaration::
+
+  struct UserVar {
+    int sw1;
+    float v5;
+    short wf2[1025];
+  };
+
+The sequencer allocates the structure area at run time and passes a
+pointer to this structure into the state program. This structure
+has the following type::
+
+  struct UserVar *pVar;
+
+Reference to variable *sw1* is made as::
+
+  pVar->sw1
+
+This conversion is automatically performed by the SNC for all SNL
+statements, but you will have to handle escaped C code yourself.

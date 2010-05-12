@@ -1,0 +1,365 @@
+Download and Install
+====================
+
+The sequencer is distributed as an EPICS R3.14 *makeBaseApp*
+application. This chapter describes how to obtain, unpack, build,
+install, verify and use the distribution.
+
+Prerequisites
+-------------
+
+You need to have an EPICS base (`3.14.x
+<http://www.aps.anl.gov/epics/base/R3-14/>`_) and its dependencies
+(`GNU Make  <http://www.gnu.org/software/make/>`_, `Perl
+<www.perl.org/>`_) installed, see http://www.aps.anl.gov/epics/.
+
+Building this version requires an additional tool named re2c to be
+installed. Re2c can be downloaded from
+http://sourceforge.net/projects/re2c/files/ (sources and Windows
+binaries), the home page is http://re2c.org/. If you are on a linux
+system, you will probably want to use the re2c package your
+distribution provides.
+
+Obtaining the Distribution
+--------------------------
+
+Releases can be downloaded from
+
+  | http://www-csr.bessy.de/control/SoftDist/sequencer/releases/
+
+The most current release is `2.0.98
+<http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2.0.98.tar.gz>`_,
+which is an alpha of the upcoming 2.1.
+
+A `darcs <http://darcs.net/>`_ repository containing the latest
+changes is located at
+
+  | http://www-csr.bessy.de/control/SoftDist/sequencer/repo/
+
+You can create your local copy ('clone') with
+
+::
+
+  darcs get http://www-csr.bessy.de/control/SoftDist/sequencer/repo/
+
+
+In what follows, we will assume that you downloaded 2.0.0. However,
+the instructions will apply to this or any later version.
+
+Note that, from 2.0.0, the third digit is the patch level and will
+be incremented each time a new version is released, no matter how
+minor the changes. The second digit is the minor version number and
+will be incremented each time functional changes are made. The
+first digit is the major version number and will be incremented
+only when major changes are made.
+
+Unpacking the Distribution
+--------------------------
+
+*cd* to the directory that you wish to be the parent of the
+sequencer tree. Then unpack and untar the file. For example (these
+steps can be combined by clever use of pipes using syntax that I
+can never remember, or else if you have GNU tar, its *-z* option
+will decompress on the fly).
+
+::
+
+  % gunzip seq-2.0.0.tar.gz
+  % tar xvf seq-2.0.0.tar
+
+This creates a directory tree with the following general structure
+(this is part of the file in the top-level directory).
+
+Configuring
+-----------
+
+It will be necessary to edit the files *configure/RELEASE* and
+*configure/CONFIG* before building. Here are copies of these files,
+with the lines that you are likely have to change highlit:
+
+|  #RELEASE Location of external products
+|  *EPICS\_BASE=/home/wlupton/epics/anl/base*
+|  TEMPLATE\_TOP=$(EPICS\_BASE)/templates/makeBaseApp/top
+|  *SEQ=/home/wlupton/epics/seq*
+
+|  #CONFIG
+|  include $(TOP)/configure/CONFIG\_APP
+|  # Add any changes to make rules here
+
+  #CROSS\_COMPILER\_TARGET\_ARCHS = vxWorks-68040
+  *CROSS\_COMPILER\_TARGET\_ARCHS =*
+
+  # shareable library version (from CONFIG\_BASE)
+  SHRLIB\_VERSION = $(EPICS\_VERSION).$(EPICS\_REVISION)
+
+  # sequencer version number (replaces old Version file)
+  SEQ\_VERSION = 2.0.0
+
+  # override to use snc from SEQ
+  SNC = $(SEQ)/bin/$(EPICS\_HOST\_ARCH)/snc
+
+  # which message systems to support (comment to disable)
+  *PVCA = TRUE*
+  *#PVFILE = TRUE*
+  *#PVKTL = TRUE*
+
+In *RELEASE* , you should select EPICS base via the *EPICS\_BASE*
+macro and the top of the sequencer tree via the *SEQ* macro.
+
+In *CONFIG* , you should select the target architectures for which
+to build via the *CROSS\_COMPILER\_TARGET\_ARCHS* macro (a subset
+of those for which EPICS has been built), and the message systems
+to support via the *PVXXX* macros.
+
+Building and installing
+-----------------------
+
+Ensure that your environment is configured for building EPICS
+applications. The only EPICS requirement is that the
+*EPICS\_HOST\_ARCH* environment variable be set correctly (you can
+use the *$EPICS\_BASE/startup/EpicsHostArch* script to set it).
+However, if you built EPICS with shareable library support, your
+*LD\_LIBRARY\_PATH* environment variable will have to include
+*$EPICS\_BASE/lib/$EPICS\_HOST\_ARCH* , and if you are using gcc
+with shareable library support, it will have to include the
+directory that contains *libstdc++.so* . These notes are written
+from a Solaris standpoint; details may vary slightly under other
+architectures.
+
+*cd* to the top of the sequencer tree and run GNU make. The tree
+should build without incident. Please feed back any build problems
+(and their resolutions!) to me. My e-mail address is on the front
+cover of this manual.
+
+Note that make builds in the *configure* directory, then the *src*
+tree, and finally the *test* tree. A failure in the *test* tree
+will not impact your ability to write sequences.
+
+.. _Verifyingtheinstallation:
+
+Verifying the installation
+--------------------------
+
+Under Solaris, the *-R* loader option will have been used to link
+executables, so *LD\_LIBRARY\_PATH* should need no further
+additions. Under other operating systems, it may be necessary to
+append *$SUPPORT/lib/$EPICS\_HOST\_ARCH* , where *SUPPORT* has the
+value that you gave it in *configure/RELEASE* .
+
+*cd* to *$SUPPORT/bin/$EPICS\_HOST\_ARCH* . It should look like
+this:
+
+demo sncDelay sncEntryVar sncExample sncOpttVar
+
+demo.vws sncEntry sncExEntry sncExitOptx
+
+snc sncEntryOpte sncExOpt sncOptt
+
+Try running demo. This includes its own CA server, so no IOC or
+portable CA server is needed. It should look something like this:
+
+% *./demo*
+
+Starting iocInit
+
+##################################################################
+
+### @(#)EPICS IOC CORE built on Mar 22 2000
+
+### @(#)Version R3.14.0.alpha $2000/04/04 03:21:38$
+
+### @(#)Built date Mar 22 2000
+
+##################################################################
+
+db\_attach\_pvAdapter I dont know what to call
+
+iocInit: All initialization complete
+
+@(#)SEQ Version 2.0.0: Fri Mar 31 16:50:09 HST 2000
+
+osiSockDiscoverInterfaces(): ignoring loopback interface: lo0
+
+osiSockDiscoverInterfaces(): net intf hme0 found
+
+osiSockDiscoverInterfaces(): ignoring loopback interface: lo0
+
+osiSockDiscoverInterfaces(): net intf hme0 found
+
+Spawning thread 0xa54c0: "demo\_1"
+
+Spawning thread 0xa5580: "demo\_2"
+
+Spawning state program "demo", thread 0x98240: "demo"
+
+demo\_1 2000/03/31 17:14:24: start -> ramp\_up
+
+demo 2000/03/31 17:14:31: light\_off -> light\_on
+
+demo\_1 2000/03/31 17:14:35: ramp\_up -> ramp\_down
+
+If you see the "*start -> ramp\_up* " *etc.* messages, things are
+good. If not, some channels haven't connected (use the "*-* " to
+command to find out which).
+
+Issue the "*i* " command. You should something like this::
+
+  > i
+  NAME ID PRI STATE WAIT
+  _main_ 2adf8 0 OK
+  errlog 323a0 10 OK
+  taskwd 32508 10 OK
+  cbLow 3cf48 59 OK
+  cbMedium 30e10 64 OK
+  cbHigh 30ed8 71 OK
+  dbCaLink 313f0 50 OK
+  CAC process 31570 50 OK
+  scanOnce 4c5f0 70 OK
+  scan10 4c878 60 OK
+  scan5 4c908 61 OK
+  scan2 4c9b0 62 OK
+  scan1 4ca40 63 OK
+  scan0.5 4cad0 64 OK
+  scan0.2 4cb60 65 OK
+  scan0.1 4cbf0 66 OK
+  CAtcp 4cda0 20 OK
+  CAudp 4ce30 19 OK
+  seqAux 4def0 51 OK
+  CAonline 4df80 7 OK
+  CAC process 8ee70 50 OK
+  demo 9b310 50 OK
+  CAC UDP Recv 9c588 10 OK
+  CAC UDP Send 9c618 10 OK
+  osiTimerQueue 9c6e0 0 OK
+  demo_1 9cac0 50 OK
+  demo_2 9cb50 50 OK
+  CAC TCP Recv 9d070 10 OK
+  CAC TCP Send 9d100 10 OK
+  CA event b2cd8 19 OK
+  CAclient b2d68 10 OK
+
+Finally, go to an xterm and do the following::
+
+  % caget ss0
+  ss0 light
+  % caget ss1
+  ss1 ramp
+
+This illustrates the very basic "sequencer device support" in this
+release. These records are returning the names of the first two
+state-sets of the above sequence.
+
+Most (maybe all) of the other test programs do not connect to
+control system variables and can be run without an IOC. For
+example:
+
+  % sncExitOptx
+
+@(#)SEQ Version 2.0.0: Fri Mar 31 16:50:09 HST 2000
+
+Spawning state program "sncexitoptx", thread 0x30868:
+"sncexitoptx"
+
+low, delay timeout, incr v and now reenter low
+
+v = 1
+
+Pause on each exit of low, including 'iterations'
+
+low, delay timeout, incr v and now reenter low
+
+v = 2
+
+Pause on each exit of low, including 'iterations'
+
+low, delay timeout, incr v and now reenter low
+
+v = 3
+
+Pause on each exit of low, including 'iterations'
+
+*^D*
+
+.. _using-the-installation:
+
+Using the installation
+----------------------
+
+This section assumes that you are working in a *makeBaseApp*
+environment. The more general information in :ref:`UsingmakeBaseApp`
+should help if this is not the case.
+
+You need to edit your own *configure/RELEASE* and *configure/CONFIG*
+files to reference the correct sequencer version. The necessary
+changes are similar to those that were made to build the sequencer
+(see `Configuring`_). Here are versions of the files with the lines
+that must be added for the sequencer highlit::
+
+  #RELEASE Location of external products
+  EPICS_BASE=_EPICS_BASE_
+  TEMPLATE_TOP=_TEMPLATE_TOP_
+  *SEQ=_SEQ_TOP_*
+
+  #CONFIG
+  include $(TOP)/configure/CONFIG_APP
+  # Add any changes to make rules here
+
+  #CROSS_COMPILER_TARGET_ARCHS = vxWorks-68040
+
+  *SNC = $(SEQ)/bin/$(EPICS_HOST_ARCH)/snc*
+
+You can refer to the various *Makefile* s in the test tree to see
+how to write your own sequences. For example, here is the
+*Makefile* for the above *sncExitOptx* program
+(*test/validate/Makefile* )::
+
+  TOP = ../..
+  include $(TOP)/configure/CONFIG
+
+  SNCFLAGS = +m
+
+  SEQS += sncDelay sncEntry sncEntryOpte sncEntryVar
+  SEQS += sncExitOptx sncOptt sncOpttVar
+
+  PROD = $(SEQS)
+  OBJS_vxWorks = $(SEQS)
+
+  PROD_LIBS += seq
+  seq_DIR = $(SEQ_LIB)
+
+  include $(TOP)/test/Makefile.pv
+
+  PROD_LIBS += Com
+
+  include $(TOP)/configure/RULES
+
+This *Makefile* includes *test/Makefile.pv* but you will probably
+want to look at that and bring what you need inline (it handles all
+the possible message systems and you will likely be using only a
+single message system). For example, to use CA, the following would
+be fine.
+
+::
+
+  TOP = ../..
+  include $(TOP)/configure/CONFIG
+
+  SNCFLAGS = +m
+
+  SEQS = sncDelay sncEntry sncEntryOpte sncEntryVar sncExitOptx \
+    sncOptt sncOpttVar
+  PROD = $(SEQS)
+  OBJS_vxWorks = $(SEQS)
+
+  PROD_LIBS += seq pv pvCa ca Com
+  seq_DIR = $(SEQ_LIB)
+
+  include $(TOP)/configure/RULES
+
+The only real requirements here are that *SEQ* is defined to point
+to the head of the tree in which the sequencer has been installed
+(see *configure/RELEASE* ; *SEQ\_LIB* is automatically defined by a
+make rule in *configure* ), and that *SNC* is defined like this
+(see *configure/CONFIG* )::
+
+  SNC = $(SUPPORT)/bin/$(EPICS_HOST_ARCH)/snc

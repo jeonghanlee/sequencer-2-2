@@ -1,0 +1,282 @@
+Compiling a State Program
+=========================
+
+The sequencer is distributed as an EPICS R3.14 *makeBaseApp*
+application. The first sections of this chapter show how to build a
+Unix sequence independent of any particular build environment.
+These sections are followed by a section describing how to use
+*makeBaseApp* to build sequences.
+
+Files needed
+------------
+
+In order to compile and run an EPICS sequence, a C/C++ compiler and
+the following files are required.
+
+#. **snc**, the SNL compiler
+#. sequencer include files *seqCom.h* and *pvAlarm.h*
+#. EPICS include files *shareLib.h*, *epicsTypes.h* and
+   *tsStamp.h*
+#. if using the *+m* compiler option, EPICS include files
+   *osiThread.h*, *osiSem.h*, *errlog.h* and *taskwd.h* (and files
+   included by them)
+#. sequencer libraries *libseq*, *libpv* and *libpvXxx* (for
+   message systems, *e.g.* *libpvCa* for CA); on an IOC, these are
+   linked into *seqLibrary* and *pvLibrary*
+#. libraries for any message systems other than CA
+#. EPICS libraries *libca* (if using CA) and *libCom*; on an IOC,
+   these are linked into *iocCoreLibrary*
+
+The State Notation Compiler
+---------------------------
+
+The state notation compiler (SNC) converts the state notation
+language (SNL) into C code, which is then compiled to produce a
+run-time object module. The C pre-processor may be used prior to
+SNC. If we have a state program file named *test.st* then the steps
+to compile are similar to the following::
+
+  snc test.st
+  gcc -c test.c -o test.o ...additional compiler options...
+  gcc test.o -o test ...additional linker options...
+
+Alternatively, using the C pre-processor::
+
+  gcc -E -x c test.st >test.i
+  snc test.i
+  gcc -c test.c -o test.o ...additional compiler options...
+  gcc test.o -o test ...additional linker options...
+
+Using the C pre-processor allows you to include SNL files
+(``#include`` directive), to use ``#define`` directives, and to perform
+conditional compiling (e.g. ``#ifdef``).
+
+.. image:: Figure3-1.png
+
+Name of output file
+-------------------
+
+The output file name will that of the input file with the extension
+replaced with *.c* . The
+*-o* option can be used to override the output file name.
+
+Actually the rules are a little more complex that the above: *.st*
+and single-character extensions are replaced with *.c*; otherwise
+*.c* is appended to the full file name. In all cases, the *-o*
+compiler option overrides.
+
+.. _CompilerOptions:
+
+Compiler Options
+----------------
+
+SNC provides 8 compiler options. You specify the option by
+specifying a key character preceded by a plus or minus sign. A plus
+sign turns the option on, and a minus turns the option off. The
+options are:
+
+======  ===============================================================
+Option  Description
+======  ===============================================================
+  +a    Asynchronous ``pvGet``, i.e. the program will proceed before
+        the operation is completed.
+  -a    ``pvGet`` returns after the operation is completed. This is the
+        default if an option is not specified.
+  +c    Wait for all database connections before allowing the state
+        program to begin execution. This is the default.
+  -c    Allow the state program to begin execution before connections
+        are established to all channel.
+  +d    Turn on run-time debug messages.
+  -d    Turn off run-time debug messages. This is the default.
+  +e    Use the new event flag mode. This is the default.
+  -e    Use the old event flag mode (clear flags after executing a
+        when statement).
+  +l    Produce C compiler error messages with references to source
+        (.st) lines. This is the default.
+  -l    Produce C compiler error messages with references to .c file
+        lines.
+  +m    Generate a Unix C main program (a wrapper around a call to the
+        seq* function).
+  -m    Do not produce a Unix C main program. This is the default.
+  +r    Make the run-time code reentrant, thus allowing more than one
+        instance of the state program to run on an IOC.
+  -r    Run-time code is not reentrant, thus saving start-up time and
+        memory. This is the default.
+  +w    Display SNC warning messages. This is the default.
+  -w    Suppress SNC warnings.
+======  ===============================================================
+
+Options may also be included within the declaration section of a
+state program::
+
+  option +r;
+  option -c;
+
+Compiler Errors
+---------------
+
+The SNC detects most errors, displays an error message with the
+line number, and aborts further compilation. Some errors may not be
+detected until the C compilation phase. Such errors will display
+the line number of the SNL source file. If you wish to see the line
+number of the C file then you should use the *-l* ("ell") compiler
+option. However, this is not recommended unless you are familiar
+with the C file format and its relation to the SNL file.
+
+Compiler Warnings
+-----------------
+
+Certain inconsistencies detected by the SNC are flagged with error
+messages. An example would be a variable that is used in the SNL
+context, but declared in escaped C code. These warnings may be
+suppressed with the *-w* compiler option.
+
+Compiling and Linking a State Program under Unix
+------------------------------------------------
+
+Under Unix, either the *+m* compiler option should be used to
+create a C main program or else the programmer should write a main
+program (the main program plays the same role as the VxWorks
+startup script).
+
+Here is a full build of a simple state program from source under
+Solaris. Compiler and loader options will vary with other operating
+systems. It is assumed that the sequencer is in
+*/usr/local/epics/seq* and that EPICS is in */usr/local/epics*.
+
+::
+
+  gcc -E -x c demo.st >demo.i
+  snc +m demo.i
+
+  gcc -D_POSIX_C_SOURCE=199506L -D_POSIX_THREADS -D_REENTRANT\
+  -D__EXTENSIONS__ -DnoExceptionsFromCXX \
+  -DOSITHREAD_USE_DEFAULT_STACK \
+  -I. -I.. \
+  -I/usr/local/epics/seq/include \
+  -I/usr/local/epics/base/include/os/solaris \
+  -I/usr/local/epics/base/include -c demo.c
+  g++ -o demo \
+  -L/usr/local/epics/seq/lib/solaris-sparc \
+  -L/usr/local/epics/base/lib/solaris-sparc \
+  demo.o -lseq -lpv -lpvCa -lca -lCom \
+  -lposix4 -lpthread -lthread -lsocket -lnsl -lm
+
+The main program generated by the *+m* compiler option is very
+simple. Here it is::
+
+  /* Main program */
+  #include "osiThread.h"
+  #include "errlog.h"
+  #include "taskwd.h"
+
+  int main(int argc,char *argv[]) {
+    char *macro_def = (argc>1)?argv[1]:NULL;
+    threadInit();
+    errlogInit(0);
+    taskwdInit();
+    return seq((void *)&demo, macro_def, 0);
+  }
+
+The arguments are essentially the same as those taken by the ``seq``
+routine.
+
+.. _UsingmakeBaseApp:
+
+Using makeBaseApp
+-----------------
+
+The sequencer is distributed as an EPICS R3.14 *makeBaseApp*
+application. This section doesn't describe how to install and build
+the sequencer itself (for that, refer to :doc:`Installation`); instead, it describes
+how to build a sequencer application.
+
+Makefile
+^^^^^^^^
+
+Assume a sequencer in *demo.st* . This sequencer will use the CA
+message system. It is to be linked into a Unix program called
+*demo* and a VxWorks object file called *demo.o* . Also assume that
+the sequencer includes and libraries can be accessed via ``SEQ`` (and
+that ``SEQ_LIB`` is defined; see :ref:`using-the-installation`). The following
+*Makefile* does the job::
+
+  TOP = ../..
+  include $(TOP)/configure/CONFIG
+
+  SNCFLAGS = +m
+  SEQS = demo
+  PROD = $(SEQS)
+  OBJS_vxWorks = $(SEQS)
+
+  PROD_LIBS += seq pv pvCa ca Com
+  seq_DIR = $(SEQ_LIB)
+
+  include $(TOP)/configure/RULES
+
+Make output
+^^^^^^^^^^^
+
+When I build with the above *Makefile* on my Solaris machine with a
+Power PC IOC I get the following output::
+
+  % gmake
+  gnumake -C O.solaris-sparc -f ../Makefile TOP=../../.. \
+  T_A=solaris-sparc install
+  preprocessing demo.st
+  /usr/local/bin/gcc -x c -E -D_POSIX_C_SOURCE=199506L \
+  -D_POSIX_THREADS -D_REENTRANT -D__EXTENSIONS__ \
+  -DnoExceptionsFromCXX -DOSITHREAD_USE_DEFAULT_STACK \
+  -DUNIX -I. -I/home/wlupton/epics/seq/include \
+  -I../../../include/os/solaris -I../../../include \
+  -I/home/wlupton/epics/anl/base/include/os/solaris \
+  -I/home/wlupton/epics/anl/base/include \
+  -I/home/wlupton/epics/anl/base/include \
+  -I/home/wlupton/epics/seq/include -I.. ../demo.st > demo.i
+  converting demo.i
+  /home/wlupton/epics/seq/bin/solaris-sparc/snc +m demo.i
+  /usr/local/bin/gcc -ansi -pedantic -D_POSIX_C_SOURCE=199506L \
+  -D_POSIX_THREADS -D_REENTRANT -D__EXTENSIONS__ \
+  -DnoExceptionsFromCXX -DOSITHREAD_USE_DEFAULT_STACK \
+  -DUNIX -O3 -g -g -Wall -I. -I/home/wlupton/epics/seq/include \
+  -I../../../include/os/solaris -I../../../include \
+  -I/home/wlupton/epics/anl/base/include/os/solaris \
+  -I/home/wlupton/epics/anl/base/include \
+  -I/home/wlupton/epics/anl/base/include \
+  -I/home/wlupton/epics/seq/include -I.. -c demo.c
+  /usr/local/bin/g++ -ansi -pedantic -Wtraditional -o demo \
+  -L/home/wlupton/epics/anl/base/lib/solaris-sparc/ \
+  -L/home/wlupton/epics/seq/lib/solaris-sparc/ \
+  -R/home/wlupton/epics/anl/base/lib/solaris-sparc/ \
+  -R/home/wlupton/epics/seq/lib/solaris-sparc/ demo.o \
+  -lseq -lpv -lpvCa -lca -lCom -lposix4 -lpthread -lthread \
+  -lsocket -lnsl -lm
+  Installing binary ../../../bin/solaris-sparc/demo
+  gnumake -C O.vxWorks-ppc604 -f ../Makefile TOP=../../.. \
+  T_A=vxWorks-ppc604 install
+  preprocessing demo.st
+  GCC_EXEC_PREFIX=/usr/local/vw/t2/host/sun4-solaris2/lib/gcc-lib/ \
+  /usr/local/vw/t2/host/sun4-solaris2/bin/ccppc -nostdinc -x c \
+  -E -nostdinc -DnoExceptionsFromCXX -DCPU=PPC604 -DvxWorks -I. \
+  -I/home/wlupton/epics/seq/include \
+  -I../../../include/os/vxWorks -I../../../include \
+  -I/home/wlupton/epics/anl/base/include/os/vxWorks \
+  -I/home/wlupton/epics/anl/base/include \
+  -I/home/wlupton/epics/anl/base/include \
+  -I/home/wlupton/epics/seq/include -I.. \
+  -I/usr/local/vw/t2/target/h ../demo.st > demo.i
+  converting demo.i
+  /home/wlupton/epics/seq/bin/solaris-sparc/snc +m demo.i
+  GCC_EXEC_PREFIX=/usr/local/vw/t2/host/sun4-solaris2/lib/gcc-lib/ \
+  /usr/local/vw/t2/host/sun4-solaris2/bin/ccppc -nostdinc -ansi \
+  -pedantic -B/usr/local/vw/t2/host/sun4-solaris2/lib/gcc-lib/ \
+  -nostdinc -DnoExceptionsFromCXX -DCPU=PPC604 -DvxWorks -O2 -g \
+  -Wall -mcpu=604 -mlongcall -fno-builtin -I. \
+  -I/home/wlupton/epics/seq/include \
+  -I../../../include/os/vxWorks -I../../../include \
+  -I/home/wlupton/epics/anl/base/include/os/vxWorks \
+  -I/home/wlupton/epics/anl/base/include \
+  -I/home/wlupton/epics/anl/base/include \
+  -I/home/wlupton/epics/seq/include -I.. \
+  -I/usr/local/vw/t2/target/h -c demo.c
+  Installing binary ../../../bin/vxWorks-ppc604/demo.o

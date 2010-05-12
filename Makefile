@@ -10,4 +10,8 @@ src_DEPEND_DIRS  = configure
 DIRS += test
 test_DEPEND_DIRS = src
 
+ifdef docs
+DIRS += docs/manual/new
+endif
+
 include $(TOP)/configure/RULES_TOP
