@@ -63,3 +63,6 @@ $(COMMON_DIR)/snl.bnf: snl.lem
 	$(RM) $@
 	$(LEMON) o=. -g $< > $@.tmp
 	$(MV) $@.tmp $@
+
+$(INSTALL_DOC)/%: $(COMMON_DIR)/%
+	@$(INSTALL) -d -m 644 $< $(INSTALL_DOC)
