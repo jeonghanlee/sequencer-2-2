@@ -11,7 +11,7 @@ DIRS += test
 test_DEPEND_DIRS = src
 
 ifdef docs
-DIRS += docs/manual/new
+DIRS += documentation
 endif
 
 include $(TOP)/configure/RULES_TOP

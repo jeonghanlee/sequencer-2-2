@@ -6,7 +6,7 @@ SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
 PAPER         = a4
 BUILDDIR      = O.Common
-INSTALL_LOCATION = ../../..
+INSTALL_LOCATION = ..
 
 # Internal variables.
 PAPEROPT_a4     = -D latex_paper_size=a4
@@ -97,5 +97,5 @@ doctest:
 	@echo "Testing of doctests in the sources finished, look at the " \
 	      "results in $(BUILDDIR)/doctest/output.txt."
 
-bnf.inc: ../../snl.bnf bnf2txt.pl
+bnf.inc: snl.bnf bnf2txt.pl
 	perl -n bnf2txt.pl $< > $@

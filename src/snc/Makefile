@@ -33,7 +33,8 @@ TESTPROD_HOST = lexer
 USR_CFLAGS = -DTEST_LEXER
 endif
 
-INSTALL_DOC = $(INSTALL_LOCATION)/docs
+# locally overwrite default value for this variable
+INSTALL_DOC = $(INSTALL_LOCATION)/documentation
 DOCS += snl.bnf
 
 include $(TOP)/configure/RULES
