@@ -4,9 +4,6 @@ SNL Reference
 This chapter is supposed to give a detailed reference for the SNL
 syntax and semantics.
 
-Typographical conventions
--------------------------
-
 Formal syntax is given in BNF (Backus-Naur Form):
 
 -  the grammar consists of a set of rules of the form
@@ -21,6 +18,44 @@ Formal syntax is given in BNF (Backus-Naur Form):
    grammar and should be understood literally
 -  cross-linked words rendered bold in html
    denote non-terminals and refer to the rules that define them
+
+Lexical Syntax
+--------------
+
+Literals
+^^^^^^^^
+
+.. productionlist::
+   identifier: <same as in C>
+   integer_literal: <same as in C>
+   floating_point_literal: <same as in C>
+   string_literal: <same as in C>
+
+The syntax of numeric and string literals is exactly as in C, including
+automatic string concatenation. Note, however, that array and struct
+initializers are not supported.
+
+   embedded_c_code: "%{" <any ASCII character> "}%"
+   embedded_c_code: "%%" <any ASCII character> "\n"
+
+In addition, *snc* recognises 
+
+with the execption of embedded C
+code:
+
+except that anything enclosed
+between "%{" and "}%", or between "%%" and the end of the line,
+is copied verbatim to the output (and thus should better be valid C
+code). Code blocks
+
+Comments
+^^^^^^^^
+
+.. productionlist::
+   comment: "/*" <any ASCII character> "*/"
+
+C-style comments may be placed anywhere in the state program. They are
+treated as white space by *snc*. As in C, comments cannot be nested.
 
 .. _StateProgram:
 
@@ -328,28 +363,28 @@ A state option is specified as follows:
 
 option *state_option_name*;
 
-Currently there are three allowable options, *t*, *e* and *x*.
+Currently there are three allowable options, :option:`t`, :option:`e` and :option:`x`.
 The option string must be preceded by a "*+*" or "*-*", for
 instance *option -te*.
 
 The options are:
 
-*-t* Don't reset the time specifying when the state was entered if
+:option:`-t` Don't reset the time specifying when the state was entered if
 coming from the same state. When this option is used the *delay*
 function will return whether the given time delay has elapsed from
 the moment the current state was entered from a different state,
 rather than from when it was entered for the current iteration.
 
-*-e* Execute *entry* blocks even if the previous state was the same
+:option:`-e` Execute *entry* blocks even if the previous state was the same
 as the current state.
 
-*-x* Execute *exit* blocks even if the next state is the same as
+:option:`-x` Execute *exit* blocks even if the next state is the same as
 the current state.
 
-*+t*, *+e* and *+x* are also permitted, though "*+*" is
+:option:`+t`, :option:`+e` and :option:`+x` are also permitted, though "*+*" is
 interpreted as "perform the default action for this option". For
 instance *option +tx* would have the same effect as if no option
-specification were given for *t* and *x*, so its use is only
+specification were given for :option:`t` and :option:`x`, so its use is only
 documentary. Note that more than one option line is allowed, and
 that syntax must be used to specify both "*+*" and "*-*" options,
 for example::
@@ -402,7 +437,7 @@ exit {
 }
 
 *exit* blocks are executed when the state is left. See the options
-*-e* and *-x* above for more details about controlling this
+:option:`-e` and :option:`-x` above for more details about controlling this
 behavior. Note that the statements in all entry blocks of a state
 are executed before any of the expressions in *when* conditions are
 evaluated.
@@ -542,9 +577,9 @@ The delay function returns *TRUE* if the specified time has elapsed
 since entering the state. It should be used only within a *when*
 expression.
 
-The *-t* state option (see `state_option_stmt`_) controls whether
+The :option:`-t` state option (see `state_option_stmt`_) controls whether
 the delay is measured from when the current state was entered from
-a different state (*-t*) or from any state, including itself (*+t*
+a different state (:option:`-t`) or from any state, including itself (:option:`+t`
 , the default)
 
 .. _pvPut:
@@ -613,15 +648,15 @@ This function gets (or reads) the value of an SNL variable from the
 underlying control system variable. The function returns the status
 from the PV layer (*e.g.* *pvStatOK* for success). By default, the
 state set will block until the read operation is complete with a
-hard-coded timeout of 10s. The asynchronous (*+a*) compile option
+hard-coded timeout of 10s. The asynchronous (:option:`+a`) compile option
 can be used to prevent this, in which case completion can be
 checked via a subsequent call to *pvGetComplete* (typically in a
 *when* clause).
 
 The optional *SYNC* and *ASYNC* arguments override the compile
-option. *SYNC* blocks and so gives default behavior if *+a* was not
+option. *SYNC* blocks and so gives default behavior if :option:`+a` was not
 specified; *ASYNC* doesn't block and so gives default behavior if
-*+a* was specified.
+:option:`+a` was specified.
 
 pvGetComplete
 ^^^^^^^^^^^^^
@@ -631,7 +666,7 @@ pvGetComplete
 
 This function returns *TRUE* if the last get of this control system
 variable has completed, *i.e.* the value in the variable is
-current. This call is appropriate only if the asynchronous (*+a*)
+current. This call is appropriate only if the asynchronous (:option:`+a`)
 compile option is specified or *pvGet* 's optional *ASYNC* argument
 was used.
 
@@ -928,7 +963,7 @@ have a C language equivalent, which begin with the prefix ``seq_``
 parameter identifying the calling state program, and if a control
 system variable name is required, the index of that variable must
 be supplied. This index is obtained via the pvIndex function.
-Furthermore, if the code is complied with the *+r* option, the
+Furthermore, if the code is complied with the :option:`+r` option, the
 database variables must be referenced as a structure element as
 described in `Variable Modification for Reentrant Option`_
 (this isn't a problem if individual SNL variables are passed as
@@ -950,7 +985,7 @@ state program module.
 
 Local variables can be escaped and declared within *when* clauses
 (this will result in a "variable used but not declared" warning
-from the compiler; ignore it). However, when using the *+r* option,
+from the compiler; ignore it). However, when using the :option:`+r` option,
 the same name cannot be used for SNL and local variables (because
 the compiler is not clever enough to realize that use of the local
 variable is intended; see `Variable Modification for Reentrant Option`_.
@@ -967,7 +1002,7 @@ For example::
 Variable Modification for Reentrant Option
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If the reentrant option (*+r*) is specified to SNC then all
+If the reentrant option (:option:`+r`) is specified to SNC then all
 variables are made part of a structure. Suppose we have the
 following declarations in the SNL::
 
@@ -1000,24 +1035,3 @@ Syntax Summary
 --------------
 
 .. include:: bnf.inc
-
-Lexical Syntax
-^^^^^^^^^^^^^^
-
-.. productionlist::
-   identifier: <same as in C>
-   integer_literal: <same as in C>
-   floating_point_literal: <same as in C>
-   string_literal: <same as in C>
-   embedded_c_code: "%{" <any ASCII character> "}%"
-   embedded_c_code: "%%" <any ASCII character> "\n"
-
-Lexical syntax is exactly as in C, except that anything enclosed
-between "%{" and "}%", or between "%%" and the end of the line,
-is copied verbatim to the output (and thus should better be valid C
-code).
-
-Comments
-^^^^^^^^
-
-C-style comments may be placed anywhere in the state program.

@@ -459,7 +459,7 @@ Asynchronous Use of pvGet
 
 Normally the ``pvGet`` operation completes before the function
 returns, thus ensuring data integrity. However, it is possible to
-use these functions asynchronously by specifying the *+a* compiler
+use these functions asynchronously by specifying the :option:`+a` compiler
 flag (see :ref:`CompilerOptions`). The
 operation might not be initiated until the action statements in the
 current transition have been completed and it could complete at any
@@ -467,7 +467,7 @@ later time. To test for completion use the function ``pvGetComplete``,
 which is described in :ref:`BuiltinFunctions`.
 
 ``pvGet`` also accepts an optional ``SYNC`` or ``ASYNC`` argument, which
-overrides the *+a* compiler flag. For example::
+overrides the :option:`+a` compiler flag. For example::
 
   pvGet( initActive[i], ASYNC );
 
@@ -480,7 +480,7 @@ Normally the ``pvPut`` operation completes asynchronously. In the
 past it has been the responsibility of the programmer to ensure
 that the operation completed (typically by monitoring other
 variables). However, the function ``pvPutComplete`` can now be used
-for this. Also, while the *+a* compiler flag does not affect put
+for this. Also, while the :option:`+a` compiler flag does not affect put
 operations, ``pvPut`` , like ``pvGet`` , accepts an optional ``SYNC`` or
 ``ASYNC`` argument, which forces a synchronous or asynchronous put.
 For example::
@@ -538,7 +538,7 @@ Connection Management
 All control system variable connections are handled by the
 sequencer via the PV API. Normally the state programs are not run
 until all control system variables are connected. However, with the
-*-c* compiler flag, execution begins while the connections are
+:option:`-c` compiler flag, execution begins while the connections are
 being established. The program can test for each variable's
 connection status with the ``pvConnected`` routine, or it can test
 for all variables connected with the following comparison (if not
@@ -578,9 +578,9 @@ Occasionally you will create a state program that can be used in
 multiple instances. If these instances run in separate address
 spaces, there is no problem. However, if more than one instance
 must be executed simultaneously in a single address space, then the
-objects must be made reentrant using the *+r* compiler flag. With
+objects must be made reentrant using the :option:`+r` compiler flag. With
 this flag all variables are allocated dynamically at run time;
-otherwise they are declared static. With the *+r* flag all
+otherwise they are declared static. With the :option:`+r` flag all
 variables become elements of a common data structure, and therefore
 access to variables is slightly less efficient.
 

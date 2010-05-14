@@ -63,7 +63,7 @@ the standard disclaimer:
   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR
   A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.  THIS SOFTWARE IS
   PROVIDED ON AN "AS IS" BASIS, AND HZB HAS NO OBLIGATION TO
-  PROVIDE MAlNTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
+  PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
   MODIFICATIONS.
 
 Note on Versions
@@ -217,22 +217,15 @@ Minor Extensions/Improvements
 Download
 ^^^^^^^^
 
-Since I (benjamin.franksen@bessy.de) took over maintenance and further
-development, the project has been moved to 
-
-::
+The project has been moved to
 
    http://www-csr.bessy.de/control/SoftDist/sequencer/
 
 Releases can be downloaded from
 
-::
-
    http://www-csr.bessy.de/control/SoftDist/sequencer/releases/
 
 A darcs repository containing the latest changes is located at
-
-::
 
    http://www-csr.bessy.de/control/SoftDist/sequencer/repo/
 
@@ -293,11 +286,6 @@ Other internal changes include:
 * in order to implement the state change command, an additional
   argument is needed for the action callback
 
-Reporting Bugs
-^^^^^^^^^^^^^^
-
-I am glad to receive bug reports, questions, comments, whatever.  Send
-them to benjamin.franksen@bessy.de.
 
 .. include:: NOTESbyMRK
 
@@ -319,177 +307,149 @@ These changes allow state programs to run unchanged on hosts and
 IOCs.
 
 Replaced VxWorks dependencies with OSI routines
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-All VxWorks routines have been replaced with the appropriate OSI
-(Operating System Independent) routines. State programs can run in
-any environment for which there is an OSI implementation.
+   All VxWorks routines have been replaced with the appropriate OSI
+   (Operating System Independent) routines. State programs can run in
+   any environment for which there is an OSI implementation.
 
 Unused (and undocumented) ``VX_OPT`` option has been removed.
 
 Replaced direct channel access calls with new PV API
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-All CA calls have been replaced with equivalent calls to a new PV
-(process variable) API which can be layered on top of not just CA
-but also other message systems. See :doc:`PV-API`.
+   All CA calls have been replaced with equivalent calls to a new PV
+   (process variable) API which can be layered on top of not just CA
+   but also other message systems. See :doc:`PV-API`.
 
 Added optional generation of main program
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   The new :option:`+m` (main) option generates a C main program whose
+   single argument is a list of macro assignments.
 
-The new *+m* (main) option generates a C main program whose single
-argument is a list of macro assignments.
-
-When this option is enabled, the main thread reads from standard
-input and can execute ``seqShow``, ``seqChanShow`` etc. on demand.
-End of file causes the sequencer to exit.
+   When this option is enabled, the main thread reads from standard
+   input and can execute ``seqShow``, ``seqChanShow`` etc. on demand.
+   End of file causes the sequencer to exit.
 
 New Language Features
 ^^^^^^^^^^^^^^^^^^^^^
 
 Entry handler
-~~~~~~~~~~~~~
-
-A one-off ``entry`` handler can be supplied (c.f. the existing
-``exit`` handler). This is called once, at sequencer start-up, in the
-context of the first state set, before the remaining state set
-threads have been created. See :ref:`entry_handler`.
+   A one-off ``entry`` handler can be supplied (c.f. the
+   existing ``exit`` handler). This is called once, at sequencer
+   start-up, in the context of the first state set, before the
+   remaining state set threads have been created. See
+   :ref:`entry_handler`.
 
 Entry and exit actions
-~~~~~~~~~~~~~~~~~~~~~~
-
-The ``entry`` block of a state is executed each time the state is
-entered; the ``exit`` block is executed each time the state is left.
-Note that these blocks are aassociated with a state and are not the
-same as the one-off entry and exit handlers. See
-:ref:`entry_action` and :ref:`exit_action`.
+   The ``entry`` block of a state is executed each time the state is
+   entered; the ``exit`` block is executed each time the state is left.
+   Note that these blocks are aassociated with a state and are not the
+   same as the one-off entry and exit handlers. See
+   :ref:`entry_action` and :ref:`exit_action`.
 
 State options
-~~~~~~~~~~~~~
-
-*-t*, *-e* and *-x* are now recognized options within the scope of
-a state. *-t* inhibits the "timer reset" on re-entry to a state
-from itself; *-e* (for "entry") is used with the new ``entry`` block,
-and forces the ``entry`` statements to be executed on all entries to
-a state, even if from the same state; *-x* (for "exit") is
-complementary to *-e*, but for the new ``exit`` block. See
-:ref:`state_option_stmt`.
+   :option:`-t`, :option:`-e` and :option:`-x` are now recognized
+   options within the scope of a state. :option:`-t` inhibits the
+   "timer reset" on re-entry to a state from itself; :option:`-e` (for
+   "entry") is used with the new ``entry`` block, and forces the
+   ``entry`` statements to be executed on all entries to a state, even
+   if from the same state; :option:`-x` (for "exit") is complementary
+   to :option:`-e`, but for the new ``exit`` block. See
+   :ref:`state_option_stmt`.
 
 Queueable monitors
-~~~~~~~~~~~~~~~~~~
+   Monitor messages can be queued and then dequeued at leisure. This
+   means that monitor messages are not lost, even when posted rapidly
+   in succession. This feature is supported by new ``syncQ``,
+   ``pvGetQ`` and ``pvFreeQ`` language elements, and a new
+   ``seqQueueShow`` routine. When SNL arrays are used, a single queue
+   is shared by the control system variables associated with the
+   elements of the array, which can be useful for parallel control. See
+   :ref:`QueuingMonitors` and :ref:`syncq_stmt`.
 
-Monitor messages can be queued and then dequeued at leisure. This
-means that monitor messages are not lost, even when posted rapidly
-in succession. This feature is supported by new ``syncQ``, ``pvGetQ``
-and ``pvFreeQ`` language elements, and a new ``seqQueueShow`` routine.
-When SNL arrays are used, a single queue is shared by the control
-system variables associated with the elements of the array, which
-can be useful for parallel control. See :ref:`QueuingMonitors` and
-:ref:`syncq_stmt`.
+.. _Device support:
 
 Device support
-~~~~~~~~~~~~~~
+   An device support module has been added. This allows EPICS records
+   to refererence sequencer internals. At present this is very basic
+   and can only return state-set names. See
+   :ref:`Verifyingtheinstallation` for a well-hidden example (look for
+   ``caget ss0``).
 
-An device support module has been added. This allows EPICS records
-to refererence sequencer internals. At present this is very basic
-and can only return state-set names. See
-:ref:`Verifyingtheinstallation` for a
-well-hidden example (look for ``caget ss0``).
+.. _Local variables:
 
 Local variables
-~~~~~~~~~~~~~~~
-
-SNL does not support the declaration of local variables. However,
-the C code generated for a ``when`` clause is now placed within an
-extra level of braces and the C escape mechanism can be used to
-declare a local variable. See :ref:`Variable Scope`.
+   SNL does not support the declaration of local variables. However,
+   the C code generated for a ``when`` clause is now placed within an
+   extra level of braces and the C escape mechanism can be used to
+   declare a local variable. See :ref:`Variable Scope`.
 
 More functions are safe in action code
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-In previous versions, some functions, e.g. ``pvPut``, have
-acquired a resource lock and others, e.g. ``efTestAndClear``, have
-not. Those that didn't were intended for use in action code and
-those that did not were intended for use in ``when`` clauses. This
-was confusing and dangerous. All such functions now acquire a mutex
-(that can be taken recursively).
+   In previous versions, some functions, e.g. ``pvPut``, have acquired
+   a resource lock and others, e.g. ``efTestAndClear``, have not. Those
+   that didn't were intended for use in action code and those that did
+   not were intended for use in ``when`` clauses. This was confusing
+   and dangerous. All such functions now acquire a mutex (that can be
+   taken recursively).
 
 Asynchronous puts
-~~~~~~~~~~~~~~~~~
-
-``pvPut`` can now put process variables asynchronously by using an
-extra ``ASYNC`` argument. Completion can be tested using the new
-``pvPutComplete``. Arrays are supported (so ``pvPutComplete`` can be
-used to test whether a set of puts has completed). See
-:ref:`AsynchronousUseofpvPut` and :ref:`pvPutComplete`.
+   ``pvPut`` can now put process variables asynchronously by using an
+   extra ``ASYNC`` argument. Completion can be tested using the new
+   ``pvPutComplete``. Arrays are supported (so ``pvPutComplete`` can be
+   used to test whether a set of puts has completed). See
+   :ref:`AsynchronousUseofpvPut` and :ref:`pvPutComplete`.
 
 Synchronous/asynchronous override on gets and puts
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-``pvGet`` and ``pvPut`` both accept an optional ``SYNC`` or ``ASYNC``
-argument that, for ``pvGet``, overrides the default as set using the
-*-a* option and, for ``pvPut``, overrides the default synchronous
-behavior. See :ref:`pvPut` and :ref:`pvGet`.
+   ``pvGet`` and ``pvPut`` both accept an optional ``SYNC`` or
+   ``ASYNC`` argument that, for ``pvGet``, overrides the default as set
+   using the :option:`-a` option and, for ``pvPut``, overrides the
+   default synchronous behavior. See :ref:`pvPut` and :ref:`pvGet`.
 
 Sequencer deletion re-written
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Sequencer deletion has been completely re-written. You can no
-longer delete a sequencer by deleting one of its tasks. Instead you
-must use the new ``seqStop`` routine. See
-:ref:`StoppingtheStateProgramTasks`.
+   Sequencer deletion has been completely re-written. You can no longer
+   delete a sequencer by deleting one of its tasks. Instead you must
+   use the new ``seqStop`` routine. See
+   :ref:`StoppingtheStateProgramTasks`.
 
 efClear can wake up state sets
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Clearing an event flag can now wake up state sets that reference
-the event flag in ``when`` tests.
+   Clearing an event flag can now wake up state sets that reference
+   the event flag in ``when`` tests.
 
 More C syntax is supported
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+   The ``to`` in ``assign``, ``sync`` and ``syncQ`` statements is now
+   optional.
 
-The ``to`` in ``assign``, ``sync`` and ``syncQ`` statements is now
-optional.
+   Compound expressions such as ``i=1,j=2`` (often used in ``for``
+   loops) are now permitted.
 
-Compound expressions such as ``i=1,j=2`` (often used in ``for`` loops)
-are now permitted.
+   Variables can now be initialized in declarations such as ``int
+   i=2;``.
 
-Variables can now be initialized in declarations such as ``int i=2;``.
+   Pre-processor lines are now permitted between state sets and states
+   (relaxes restrictions on using ``#include`` to include code).
 
-Pre-processor lines are now permitted between state sets and
-states (relaxes restrictions on using ``#include`` to include code).
+   ``~`` (complement) and ``^`` (exclusive or) operators are permitted.
 
-``~`` (complement) and ``^`` (exclusive or) operators are
-permitted.
+   ANSI string concatenation, e.g. ``"xxx" "yyy"`` is the same as
+   ``"xxxyyy"``, is supported.
 
-ANSI string concatenation, e.g. ``"xxx" "yyy"`` is the same as
-``"xxxyyy"``, is supported.
-
-Full exponential representation is supported for numbers
-(previously couldn't use ``E`` format).
+   Full exponential representation is supported for numbers
+   (previously couldn't use ``E`` format).
 
 Bugs fixed
 ^^^^^^^^^^
 
 Avoidance of segmentation violations
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   SEGV no longer occurs if an undeclared variable or event flag is
+   referenced
 
-SEGV no longer occurs if an undeclared variable or event flag is
-referenced
+   SEGV no longer occurs if the last bit of an event mask is used
 
-SEGV no longer occurs if the last bit of an event mask is used
+   SEGV no longer occurs when doing ``seqShow`` and there was no
+   previous state
 
-SEGV no longer occurs when doing ``seqShow`` and there was no
-previous state
-
-Miscellaneous other problems found by purify were fixed.
+   Miscellaneous other problems found by purify were fixed.
 
 Avoidance of race condition which prevented monitors from being enabled
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-If a connection handler was called before ``seq_pvMonitor``, a race
-condition meant that the ``ca_add_array_event`` routine might
-never get called.
+   If a connection handler was called before ``seq_pvMonitor``, a race
+   condition meant that the ``ca_add_array_event`` routine might
+   never get called.
 
 Miscellaneous
 ^^^^^^^^^^^^^
@@ -511,20 +471,20 @@ are encouraged to provide feedback on this list or on other desired
 items.
 
 Device support
-  This is partially supported. See `Device support`_.
+   This is partially supported. See `Device support`_.
 
 Local variables
-  These are partially supported. See `Local variables`_.
+   These are partially supported. See `Local variables`_.
 
 pvNew dynamic loading
-  This would remove some undesirable library dependencies. See
-  :ref:`pvApiOverview`.
+   This would remove some undesirable library dependencies. See
+   :ref:`pvApiOverview`.
 
 Hierarchical states
-  This would be a major enhancement and would, incidentally, bring
-  the sequencer model into very close agreement with the Harel model
-  that is espoused by the UML. Events would be propagated up the
-  state hierarchy.
+   This would be a major enhancement and would, incidentally, bring
+   the sequencer model into very close agreement with the Harel model
+   that is espoused by the UML. Events would be propagated up the
+   state hierarchy.
 
 Notes on Release 1.9
 --------------------
@@ -534,74 +494,51 @@ the state notation language. Some of these changes offer
 significant advantages for programs and systems with a large number
 of control system variables.
 
-List of Changes
-^^^^^^^^^^^^^^^
-
 Number of control system variables
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The previous restriction on the number of control system variables
-that could be defined no longer applies. Only the amount of memory
-on the target processor limits the number of variables.
+   The previous restriction on the number of control system variables
+   that could be defined no longer applies. Only the amount of memory
+   on the target processor limits the number of variables.
 
 Array assignments
-~~~~~~~~~~~~~~~~~
-
-Individual elements of an array may be assigned to control system
-variables. This feature simplifies many codes that contain groups
-of similar variables. Furthermore, double-subscripted arrays allow
-arrays of array-valued variables.
+   Individual elements of an array may be assigned to control system
+   variables. This feature simplifies many codes that contain groups
+   of similar variables. Furthermore, double-subscripted arrays allow
+   arrays of array-valued variables.
 
 Dynamic assignments
-~~~~~~~~~~~~~~~~~~~
-
-Control system variables may now be dynamically assigned or
-re-assigned within the language at run time.
+   Control system variables may now be dynamically assigned or
+   re-assigned within the language at run time.
 
 Hex constants
-~~~~~~~~~~~~~
-
-Hexadecimal numbers are now permitted within the language syntax.
-Previously, these had to be defined in escaped C code.
+   Hexadecimal numbers are now permitted within the language syntax.
+   Previously, these had to be defined in escaped C code.
 
 Time stamp
-~~~~~~~~~~
-
-The programmer now has access to the time stamp associated with a
-control system variable.
+   The programmer now has access to the time stamp associated with a
+   control system variable.
 
 Pointers
-~~~~~~~~
-
-Variables may now be declared as pointers.
+   Variables may now be declared as pointers.
 
 seqShow
-~~~~~~~
-
-We enhanced the ``seqShow`` command to present more relevant
-information about the running state programs.
+   We enhanced the ``seqShow`` command to present more relevant
+   information about the running state programs.
 
 seqChanShow
-~~~~~~~~~~~
+   The ``seqChanShow`` command now allows specification of a search
+   string on the variable name, permits forward and backward stepping
+   or skipping through the variable list, and optionally displays only
+   variables that are or are not connected.
 
-The ``seqChanShow`` command now allows specification of a search
-string on the variable name, permits forward and backward stepping
-or skipping through the variable list, and optionally displays only
-variables that are or are not connected.
-
-The syntax for displaying only variables that are not connected is
-``seqChanShow "<seq_program_name>", "-"``
+   The syntax for displaying only variables that are not connected is
+   ``seqChanShow "<seq_program_name>", "-"``
 
 ANSI prototypes
-~~~~~~~~~~~~~~~
-
-SNC include files now use ANSI prototypes for all functions. To the
-programmer this means that an ANSI compiler must be used to compile
-the intermediate C code.
+   SNC include files now use ANSI prototypes for all functions. To the
+   programmer this means that an ANSI compiler must be used to compile
+   the intermediate C code.
 
 Fix for task deletion
-~~~~~~~~~~~~~~~~~~~~~
-
-Version 1.8 of the sequencer didn't handle the task deletion
-properly if a task tried to delete itself. We corrected this in
-version 1.9.
+   Version 1.8 of the sequencer didn't handle the task deletion
+   properly if a task tried to delete itself. We corrected this in
+   version 1.9.
