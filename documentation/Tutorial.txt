@@ -1,5 +1,7 @@
-State Notation Language Concepts
-================================
+Tutorial
+========
+
+This chapter gives a gentle introduction to State Notation Language.
 
 The State Transition Diagram
 ----------------------------

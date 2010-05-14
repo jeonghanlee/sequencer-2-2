@@ -1,38 +1,29 @@
 State Notation Language and Sequencer
 =====================================
 
+.. image:: epics-logo.png
+   :align: right
+
 :Maintainer: Ben Franksen <benjamin.franksen@bessy.de>
-:Download: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/
-:Repository: http://www-csr.bessy.de/control/SoftDist/sequencer/repo/
 :Bug Reports: tech-talk@aps.anl.gov
 
-Welcome to the new home of the EPICS Sequencer. This page contains
-links to the source code as well as the documentation.
+Welcome to the new home of the EPICS Sequencer.
 
-.. warning::
+This page contains the documentation, including instructions how to
+download, build, and install the software.
 
-  The documentation has not yet been completely updated to cover the
-  latest release. Also, the conversion to reStructuredText is not
-  yet complete in all places, some formatting may be odd, etc. I am
-  working on it. If in doubt, check the release notes. If still in
-  doubt, send me an email and I will try to answer your questions.
-
-.. image:: epics-logo.png
-  :align: right
-
-Contents:
+.. include:: about.inc
 
 .. toctree::
-  :maxdepth: 2
+   :hidden:
 
-  Introduction
-  Installation
-  Concepts
-  Compiling
-  Using
-  Reference
-  PV-API
-  Examples
-
-* :ref:`Index <genindex>`
-* :ref:`Search <search>`
+   Home <self>
+   Manual
+   Introduction
+   Installation
+   Tutorial
+   Compiling
+   Using
+   Reference
+   PV-API
+   Examples

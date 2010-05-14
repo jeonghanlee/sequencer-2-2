@@ -4,67 +4,20 @@ Introduction
 About
 -----
 
-This project is a component of the Experimental Physics and Industrial
-Controls System, short `EPICS`_. EPICS is a system of interactive
-applications, development tools, and a common run-time environment that
-allows users to build and execute real-time control and data
-acquisition systems for experimental facilities, such as particle
-accelerators and telescopes.
+.. include:: about.inc
 
-The state notation language *SNL* allows programming sequential
-operations that interact with EPICS process variables without the usual
-complexity involved with task scheduling, semaphores, event handling,
-and I/O programming. The language is a restricted subset if C, enhanced
-with extra syntax for descibing state sets, states, state transitions,
-and the binding of program variables to named process variables. See
-:doc:`Concepts` for a gentle introduction.
+Acknowledgements
+----------------
 
-From the SNL source code, the SNL compiler *snc* generates a number of
-C code procedures that are called by the run-time sequencer, a C
-library contained in this project. This library handles all low-level
-management of connecting, monitoring, and changing process variables,
-as well as task (thread) creation and communication. The sequencer
-interfaces to the underlying control system through a generic PV
-(process variable) API that supports, among other message systems, the
-`Channel Access`_ facility of `EPICS`_.
+This software was originally developed by Andy Kozubal at Los Alamos
+National Laboratory (LANL). It was subsequently modified by William
+Lupton, formerly at  the W. M. Keck Observatory (Keck), with
+contributions by Greg White of the Stanford Linear Accelerator Center
+National Accelerator Laboratory (SLAC-NAL).
 
-.. _EPICS: http://www.aps.anl.gov/epics/
-.. _Channel Access: http://www.aps.anl.gov/epics/base/R3-14/11-docs/CAref.html
-
-Note on Versions
-^^^^^^^^^^^^^^^^
-
-This text is supposed to describe version 2.1. Version 2.1 adds
-support for local definitions (including variable declarations) at
-all levels, a significantly improved compiler that employs new
-lexer and parser generators, and lots of bugfixes. See `Notes on
-Release 2.1`_ for details.
-
-Version 2.0 differs from version 1.9 mainly in that sequencer
-run-time code can run under any operating system for which an EPICS
-OSI (Operating System Independent) layer is available, and message
-systems other than channel access can be used. It depends on
-libraries which are available only with EPICS R3.14.
-
-An interim version 1.9.4 was made available to the EPICS community;
-all new developments apart from major bug fixes will be based on
-version 2.0.
-
-Version 1.9 was written by Andy Kozubal, the original author of this
-software. This version of the manual describes version 2.0, for
-which the changes have been implemented by William Lupton of W. M.
-Keck Observatory and Greg White of Stanford Linear Accelerator
-Center (SLAC).
-
-Versioning Policy
-^^^^^^^^^^^^^^^^^
-
-Starting with 2.0.0, the third digit is the patch level and will
-be incremented each time a new version is released, no matter how
-minor the changes. The second digit is the minor version number and
-will be incremented each time functional changes are made. The
-first digit is the major version number and will be incremented
-only when major changes are made.
+Eric Norum, Janet Anderson, and Marty Kraimer (APS) made the initial
+port to EPICS 3.14 that led to the 2.0.x series. Eric Norum and Andrew
+Johnson (APS) provided lots of patches up to release 2.0.12.
 
 Copyright
 ---------
@@ -112,6 +65,41 @@ the standard disclaimer:
   PROVIDED ON AN "AS IS" BASIS, AND HZB HAS NO OBLIGATION TO
   PROVIDE MAlNTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
   MODIFICATIONS.
+
+Note on Versions
+----------------
+
+This text is supposed to describe version 2.1. Version 2.1 adds
+support for local definitions (including variable declarations) at
+all levels, a significantly improved compiler that employs new
+lexer and parser generators, and lots of bugfixes. See `Notes on
+Release 2.1`_ for details.
+
+Version 2.0 differs from version 1.9 mainly in that sequencer
+run-time code can run under any operating system for which an EPICS
+OSI (Operating System Independent) layer is available, and message
+systems other than channel access can be used. It depends on
+libraries which are available only with EPICS R3.14.
+
+An interim version 1.9.4 was made available to the EPICS community;
+all new developments apart from major bug fixes will be based on
+version 2.0.
+
+Version 1.9 was written by Andy Kozubal, the original author of this
+software. This version of the manual describes version 2.0, for
+which the changes have been implemented by William Lupton of W. M.
+Keck Observatory and Greg White of Stanford Linear Accelerator
+Center (SLAC).
+
+Versioning Policy
+^^^^^^^^^^^^^^^^^
+
+Starting with 2.0.0, the third digit is the patch level and will
+be incremented each time a new version is released, no matter how
+minor the changes. The second digit is the minor version number and
+will be incremented each time functional changes are made. The
+first digit is the major version number and will be incremented
+only when major changes are made.
 
 Notes on Release 2.1
 --------------------
