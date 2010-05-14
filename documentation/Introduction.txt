@@ -311,6 +311,7 @@ Reporting Bugs
 I am glad to receive bug reports, questions, comments, whatever.  Send
 them to benjamin.franksen@bessy.de.
 
+.. include:: NOTESbyMRK
 
 Notes on Release 2.0
 --------------------
