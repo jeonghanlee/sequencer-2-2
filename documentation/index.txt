@@ -1,8 +1,13 @@
 State Notation Language and Sequencer
 =====================================
 
-:Authors: William Lupton, Ben Franksen
+:Author: Ben Franksen
 :Contact: benjamin.franksen@bessy.de
+:Download: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/
+:Repository: http://www-csr.bessy.de/control/SoftDist/sequencer/repo/
+
+Welcome to the new home of the EPICS Sequencer. This page contains
+links to the source code as well as the documentation.
 
 .. warning::
 

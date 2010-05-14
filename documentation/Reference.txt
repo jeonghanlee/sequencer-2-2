@@ -174,6 +174,18 @@ Variables may also be declared as arrays.
 
 Note that arrays of strings and event flags are not implemented.
 
+.. _foreign_decl:
+
+foreign declaration
+^^^^^^^^^^^^^^^^^^^
+
+.. productionlist::
+   foreign_decl: "declare" `identifier` ";"
+
+This declares the named C variable or CPP macro, so the SNL compiler
+knows about it. No warning will be issued if such a variable (or macro)
+is used in the program.
+
 assign
 ^^^^^^
 
@@ -248,15 +260,15 @@ be accommodated in the queue (if the variable is array-valued, only
 the first item will be saved). The *pvGetQ* function reads items
 from the queue.
 
-Note that the square brackets around "*to*" and *queue_size*
-indicate optional items rather than literal square brackets.
+.. _global_option:
 
 option
 ^^^^^^
 
-A compiler option is specified as follows:
-
-  ``option`` *compiler_option_name*;
+.. productionlist::
+   option: "option" `option_value` `identifier` ";"
+   option_value: "+"
+   option_value: "-"
 
 Possible compiler options are given in :ref:`CompilerOptions`,
 and must include the "*+*" or "*-*" sign. Example::

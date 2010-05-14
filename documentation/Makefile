@@ -1,12 +1,11 @@
-# Makefile for Sphinx documentation
-#
+TOP = ..
+include $(TOP)/configure/CONFIG
 
 # You can set these variables from the command line.
 SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
 PAPER         = a4
 BUILDDIR      = O.Common
-INSTALL_LOCATION = ..
 
 # Internal variables.
 PAPEROPT_a4     = -D latex_paper_size=a4
