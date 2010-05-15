@@ -18,8 +18,15 @@ ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 
 install all: build
 	cp -r $(BUILDDIR)/html $(INSTALL_LOCATION)
+ifdef pdf
+	cp $(BUILDDIR)/latex/Manual.pdf $(INSTALL_LOCATION)/html
+endif
 
 build: html
+
+ifdef pdf
+build: pdf
+endif
 
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
@@ -95,6 +102,10 @@ doctest:
 	$(SPHINXBUILD) -b doctest $(ALLSPHINXOPTS) $(BUILDDIR)/doctest
 	@echo "Testing of doctests in the sources finished, look at the " \
 	      "results in $(BUILDDIR)/doctest/output.txt."
+
+pdf: html
+	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTS) $(BUILDDIR)/latex
+	$(MAKE) -C $(BUILDDIR)/latex all-pdf
 
 bnf.inc: snl.bnf bnf2txt.pl
 	perl -n bnf2txt.pl $< > $@
