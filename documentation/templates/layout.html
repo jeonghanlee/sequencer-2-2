@@ -1,0 +1,19 @@
+{% extends "!layout.html" %}
+{%- block sidebartoc %}
+{%- if display_toc %}
+<h3><a href="{{ pathto('Manual.html', 1) }}">{{ _('Table Of Contents') }}</a></h3>
+{{ toc }}
+{%- else %}
+<h3>{{ 'Shortcuts' }}</h3>
+<ul class="topless">
+<li><a href="{{ pathto('Installation.html', 1) }}">{{ 'Download' }}</a></li>
+<li><a href="{{ pathto('Tutorial.html', 1) }}">{{ 'Tutorial' }}</a></li>
+<li><a href="{{ pathto('Manual.html', 1) }}">{{ "Users' Guide" }}</a></li>
+</ul>
+<h3>{{ _('Related') }}</h3>
+<ul class="topless">
+<li><a href="http://www.aps.anl.gov/epics/">{{ 'EPICS' }}</a></li>
+</ul>
+<hr>
+{%- endif %}
+{%- endblock %}
