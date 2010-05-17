@@ -8,6 +8,8 @@ The SNL to C compiler *snc* compiles the state notation
 language into C code. The resulting file can then be compiled
 with a C compiler.
 
+.. _CompilerOptions:
+
 Compiler Options
 ^^^^^^^^^^^^^^^^
 
@@ -49,23 +51,19 @@ see :ref:`pvGet`).
 
 Options may also be set from within the program (somewhere between the
 program name/parameter and the state set definitions), see
-:ref:`global_option` in the :doc:`Reference`.
+:ref:`OptionDefinition` in the :doc:`Reference`.
 
 Output File
 ^^^^^^^^^^^
 
 The output file name is that of the input file with the extension
 replaced with *.c*. The :option:`-o` option can be used to override the
-output
-file name.
+output file name.
 
 Actually the rules are a little more complex than stated above: *.st*
 and single-character extensions are replaced with *.c*; otherwise *.c*
 is appended to the full file name. In all cases, the :option:`-o`
-compiler
-option overrides.
-
-.. _CompilerOptions:
+compiler option overrides.
 
 Errors
 ^^^^^^

@@ -334,14 +334,14 @@ Entry handler
    existing ``exit`` handler). This is called once, at sequencer
    start-up, in the context of the first state set, before the
    remaining state set threads have been created. See
-   :ref:`entry_handler`.
+   :ref:`GlobalEntryExit`.
 
 Entry and exit actions
    The ``entry`` block of a state is executed each time the state is
    entered; the ``exit`` block is executed each time the state is left.
    Note that these blocks are aassociated with a state and are not the
    same as the one-off entry and exit handlers. See
-   :ref:`entry_action` and :ref:`exit_action`.
+   :ref:`StateEntryExit`.
 
 State options
    :option:`-t`, :option:`-e` and :option:`-x` are now recognized
@@ -351,7 +351,7 @@ State options
    ``entry`` statements to be executed on all entries to a state, even
    if from the same state; :option:`-x` (for "exit") is complementary
    to :option:`-e`, but for the new ``exit`` block. See
-   :ref:`state_option_stmt`.
+   :ref:`StateOption`.
 
 Queueable monitors
    Monitor messages can be queued and then dequeued at leisure. This

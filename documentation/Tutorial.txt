@@ -344,6 +344,8 @@ files are automatically included when compiling sequences (but the SNL
 compiler doesn't know about them, so you will get warnings when using
 constants like ``pvStatOK`` or tags like ``secPastEpoch`` ).
 
+.. _EventFlags:
+
 Synchronizing State Sets with Event Flags
 -----------------------------------------
 
