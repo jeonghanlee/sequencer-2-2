@@ -166,10 +166,6 @@ decl(p) ::= type(t) ASTERISK NAME(v) SEMICOLON.
 decl(p) ::= type(t) ASTERISK NAME(v) subscript(s) SEMICOLON.
 			{ p = decl(t, VC_ARRAYP,  v, s.str,  0,  0); }
 
-%type number {Token}
-number(p) ::= INTCON(x).			{ p = x; }
-number(p) ::= FPCON(x).				{ p = x; }
-
 %type type {int}
 type(p) ::= CHAR.				{ p = V_CHAR;	}
 type(p) ::= SHORT.				{ p = V_SHORT;	}
@@ -292,7 +288,8 @@ for_statement(p) ::=
 // Expressions
 
 // Atomic
-expr(p) ::= number(x).				{ p = expr(E_CONST, x); }
+expr(p) ::= INTCON(x).				{ p = expr(E_CONST, x); }
+expr(p) ::= FPCON(x).				{ p = expr(E_CONST, x); }
 expr(p) ::= string(x).				{ p = x; }
 expr(p) ::= NAME(v).				{ p = expr(E_VAR, v); }
 
