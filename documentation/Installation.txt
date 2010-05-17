@@ -26,7 +26,7 @@ Newer releases are available here:
 
    http://www-csr.bessy.de/control/SoftDist/sequencer/releases/
 
-The latest release is currently `2.0.98`_, which is an alpha release
+The latest release is currently `2.0.99`_, which is a beta release
 for the upcoming `2.1.0`_. Release notes are contained in the
 :doc:`Introduction`.
 
@@ -43,6 +43,7 @@ See `Contribute`_ for a short description how to record and send
 patches.
 
 .. _2.0.98: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2.0.98.tar.gz
+.. _2.0.99: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2.0.99.tar.gz
 .. _2.1.0: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2.1.0.tar.gz
 
 Unpack
