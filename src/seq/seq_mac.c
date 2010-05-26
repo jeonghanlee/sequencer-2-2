@@ -4,8 +4,6 @@
 		         Los Alamos National Laboratory
 
 
- 	seq_mac.c,v 1.2 1995/06/27 15:25:56 wright Exp
-
 	DESCRIPTION: Macro routines for Sequencer.
 	The macro table contains name & value pairs.  These are both pointers
 	to strings.

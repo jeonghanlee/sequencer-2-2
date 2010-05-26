@@ -2,7 +2,6 @@
 			GTA PROJECT   AT division
 	Copyright, 1990-1994, The Regents of the University of California.
 		         Los Alamos National Laboratory
-	seq_qry.c,v 1.2 1995/06/27 15:26:02 wright Exp
 
 	DESCRIPTION: Task querry & debug routines for run-time sequencer:
 	seqShow - prints state set info.

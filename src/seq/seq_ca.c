@@ -1,7 +1,4 @@
-/*
-	seq_ca.c,v 1.2 1995/06/27 15:25:54 wright Exp
-
- *   DESCRIPTION: Process Variable (was CA) interface for sequencer.
+/*   DESCRIPTION: Process Variable (was CA) interface for sequencer.
  *
  *	Author:  Andy Kozubal
  *	Date:    July, 1991

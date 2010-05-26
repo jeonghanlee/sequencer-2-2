@@ -1,6 +1,4 @@
-/*	
-	seq_if.c,v 1.3 1995/10/10 01:56:49 wright Exp
- *   DESCRIPTION: Interface functions from state program to run-time sequencer.
+/*   DESCRIPTION: Interface functions from state program to run-time sequencer.
  *	Note: To prevent global name conflicts "seq_" is added by the SNC, e.g.
  *	pvPut() becomes seq_pvPut().
  *

@@ -2,7 +2,6 @@
 			GTA PROJECT   AT division
 	Copyright, 1991, The Regents of the University of California.
 		         Los Alamos National Laboratory
-	seq_prog.c,v 1.2 1995/06/27 15:26:00 wright Exp
 
 
 	DESCRIPTION: Seq_prog.c: state program list management functions.

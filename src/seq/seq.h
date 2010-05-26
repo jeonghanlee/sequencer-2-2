@@ -1,6 +1,4 @@
-/*	/share/epicsH  %W%     %G%
- *
- *	DESCRIPTION: Definitions for the run-time sequencer.
+/*	DESCRIPTION: Definitions for the run-time sequencer.
  *
  *      Author:         Andy Kozubal
  *      Date:           
