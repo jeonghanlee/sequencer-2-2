@@ -56,7 +56,7 @@
 06jul99,wfl	Slightly improved Unix command-line interpreter.
 07sep99,wfl	Added "-" Unix command (==seqChanShow("-"));
 		Unconditionally create get/put completion semaphores.
-22sep99,grw     Supported entry and exit actions; supported state options.
+22sep99,grw	Supported entry and exit actions; supported state options.
 18feb00,wfl	Re-worked args (inc. run-time debug level) for seqAuxThread;
 		Called sprog_delete() on Unix thread exit
 29feb00,wfl	Supported new OSI (and errlogPrintf); got rid of remaining
@@ -70,30 +70,23 @@
 
 #include	<errno.h>
 #include	<fcntl.h>
-#include 	<string.h>
-#include 	<stddef.h>
-#include 	<stdarg.h>
-
-/* #include 	<unistd.h>*/
+#include	<string.h>
+#include	<stddef.h>
+#include	<stdarg.h>
 
 #define epicsExportSharedSymbols
 #include	"seq.h"
 
-#ifdef		DEBUG
-#undef		LOCAL
-#define		LOCAL
-#endif		/*DEBUG*/
-
 /* function prototypes for local routines */
-LOCAL	SPROG *seqInitTables(struct seqProgram *);
-LOCAL	void init_sprog(struct seqProgram *, SPROG *);
-LOCAL	void init_sscb(struct seqProgram *, SPROG *);
-LOCAL	void init_chan(struct seqProgram *, SPROG *);
-LOCAL	void init_mac(SPROG *);
+static SPROG *seqInitTables(struct seqProgram *);
+static void init_sprog(struct seqProgram *, SPROG *);
+static void init_sscb(struct seqProgram *, SPROG *);
+static void init_chan(struct seqProgram *, SPROG *);
+static void init_mac(SPROG *);
 
-LOCAL	void seq_logInit(SPROG *);
-LOCAL	void seqChanNameEval(SPROG *);
-LOCAL	void selectDBtype(char *, short *, short *, short *, short *);
+static void seq_logInit(SPROG *);
+static void seqChanNameEval(SPROG *);
+static void selectDBtype(char *, short *, short *, short *, short *);
 
 #define	SCRATCH_SIZE	(MAX_MACROS*(MAX_STRING_SIZE+1)*12)
 
@@ -112,8 +105,8 @@ epicsThreadId seqAuxThreadId = (epicsThreadId) 0;
  * Creates the initial state program thread and returns its thread id.
  * Most initialization is performed here.
  */
-epicsShareFunc epicsThreadId epicsShareAPI seq (
-    struct seqProgram *pSeqProg, char *macroDef, unsigned int stackSize)
+epicsThreadId seq (
+	struct seqProgram *pSeqProg, char *macroDef, unsigned int stackSize)
 {
 	epicsThreadId	tid;
 	extern char	*seqVersion;
@@ -199,13 +192,13 @@ epicsShareFunc epicsThreadId epicsShareAPI seq (
 		epicsThreadCreate("seqAux", THREAD_PRIORITY+1, auxStack,
 				(EPICSTHREADFUNC)seqAuxThread, &auxArgs);
 		while (seqAuxThreadId == (epicsThreadId) 0)
-		    /* wait for thread to init. message system */
-		    epicsThreadSleep(0.1);
+			/* wait for thread to init. message system */
+			epicsThreadSleep(0.1);
 
 		if (seqAuxThreadId == (epicsThreadId) -1)
 		{
-		    epicsThreadSleep( 1.0 );	/* let error messages get printed */
-		    return 0;
+			epicsThreadSleep( 1.0 );	/* let error messages get printed */
+			return 0;
 		}
 #ifdef	DEBUG
 	printf("thread seqAux spawned, tid=%p\n", (int) seqAuxThreadId);
@@ -228,18 +221,18 @@ epicsShareFunc epicsThreadId epicsShareAPI seq (
 		pSP->threadPriority = THREAD_PRIORITY;
 
 	tid = epicsThreadCreate(pThreadName, pSP->threadPriority, pSP->stackSize,
-			      (EPICSTHREADFUNC)sequencer, pSP);
+		(EPICSTHREADFUNC)sequencer, pSP);
 
 	printf("Spawning state program \"%s\", thread %p: \"%s\"\n",
-		     pSP->pProgName, tid, pThreadName);
+		pSP->pProgName, tid, pThreadName);
 
 	return tid;
 }
+
 /* seqInitTables - initialize sequencer tables */
-LOCAL SPROG *seqInitTables(pSeqProg)
-struct seqProgram	*pSeqProg;
+static SPROG *seqInitTables(struct seqProgram *pSeqProg)
 {
-	SPROG		*pSP;
+	SPROG	*pSP;
 
 	pSP = (SPROG *)calloc(1, sizeof (SPROG));
 
@@ -255,18 +248,16 @@ struct seqProgram	*pSeqProg;
 	/* Initialize the macro table */
 	init_mac(pSP);
 
-
 	return pSP;
 }
+
 /*
  * Copy data from seqCom.h structures into this thread's dynamic structures
  * as defined in seq.h.
  */
-LOCAL void init_sprog(pSeqProg, pSP)
-struct seqProgram	*pSeqProg;
-SPROG			*pSP;
+static void init_sprog(struct seqProgram *pSeqProg, SPROG *pSP)
 {
-	int		i, nWords;
+	int	i, nWords;
 
 	/* Copy information for state program */
 	pSP->numSS = pSeqProg->numSS;
@@ -312,15 +303,12 @@ SPROG			*pSP;
 		for (i = 0; i < pSP->numQueues; i++)
 			ellInit(&pSP->pQueues[i]);
 	}
-
-	return;
 }
+
 /*
  * Initialize the state set control blocks
  */
-LOCAL void init_sscb(pSeqProg, pSP)
-struct seqProgram	*pSeqProg;
-SPROG			*pSP;
+static void init_sscb(struct seqProgram *pSeqProg, SPROG *pSP)
 {
 	SSCB		*pSS;
 	STATE		*pState;
@@ -381,7 +369,7 @@ SPROG			*pSP;
 			pState->entryFunc = pSeqState->entryFunc;
 			pState->exitFunc = pSeqState->exitFunc;
 			pState->pEventMask = pSeqState->pEventMask;
-                        pState->options = pSeqState->options;
+			pState->options = pSeqState->options;
 #ifdef	DEBUG
 		printf("init_sscb: State Name=%s, Event Mask=%p\n",
 			pState->pStateName, *pState->pEventMask);
@@ -392,15 +380,12 @@ SPROG			*pSP;
 #ifdef	DEBUG
 	printf("init_sscb: numSS=%d\n", pSP->numSS);
 #endif	/*DEBUG*/
-	return;
 }
 
 /*
  * init_chan--Build the database channel structures.
  * Note:  Actual PV name is not filled in here. */
-LOCAL void init_chan(pSeqProg, pSP)
-struct seqProgram	*pSeqProg;
-SPROG			*pSP;
+static void init_chan(struct seqProgram *pSeqProg, SPROG *pSP)
 {
 	int		nchan;
 	CHAN		*pDB;
@@ -457,8 +442,7 @@ SPROG			*pSP;
 /* 
  * init_mac - initialize the macro table.
  */
-LOCAL void init_mac(pSP)
-SPROG		*pSP;
+static void init_mac(SPROG *pSP)
 {
 	int		i;
 	MACRO		*pMac;
@@ -473,13 +457,13 @@ SPROG		*pSP;
 		pMac->pName = NULL;
 		pMac->pValue = NULL;
 	}
-}	
+}
+
 /*
  * Evaluate channel names by macro substitution.
  */
 #define		MACRO_STR_LEN	(MAX_STRING_SIZE+1)
-LOCAL void seqChanNameEval(pSP)
-SPROG		*pSP;
+static void seqChanNameEval(SPROG *pSP)
 {
 	CHAN		*pDB;
 	int		i;
@@ -495,13 +479,14 @@ SPROG		*pSP;
 #endif	/*DEBUG*/
 	}
 }
+
 /*
  * selectDBtype -- returns types for DB put/get, element size, and db access
  * offset based on user variable type.
  * Mapping is determined by the following typeMap[] array.
  * pvTypeTIME_* types for gets/monitors return status and time stamp.
  */
-LOCAL	struct typeMap {
+static struct typeMap {
 	char	*pTypeStr;
 	short	putType;
 	short	getType;
@@ -568,9 +553,12 @@ LOCAL	struct typeMap {
 	}
 };
 
-LOCAL void selectDBtype(pUserType, pGetType, pPutType, pSize, pOffset)
-char		*pUserType;
-short		*pGetType, *pPutType, *pSize, *pOffset;
+static void selectDBtype(
+	char	*pUserType,
+	short	*pGetType,
+	short	*pPutType,
+	short	*pSize,
+	short	*pOffset)
 {
 	struct typeMap	*pMap;
 
@@ -586,18 +574,16 @@ short		*pGetType, *pPutType, *pSize, *pOffset;
 		}
 	}
 	*pGetType = *pPutType = *pSize = *pOffset = 0; /* this shouldn't happen */
-
-	return;
 }
+
 /*
  * seq_logInit() - Initialize logging.
  * If "logfile" is not specified, then we log to standard output.
  */
-LOCAL void seq_logInit(pSP)
-SPROG		*pSP;
+static void seq_logInit(SPROG *pSP)
 {
-	char		*pValue;
-	FILE		*fd;
+	char	*pValue;
+	FILE	*fd;
 
 	/* Create a logging resource locking semaphore */
 	pSP->logSemId = epicsMutexMustCreate();
@@ -622,6 +608,7 @@ SPROG		*pSP;
 		}
 	}
 }
+
 /*
  * seq_logv
  * Log a message to the console or a file with thread name, date, & time of day.
@@ -629,7 +616,7 @@ SPROG		*pSP;
  */
 #define	LOG_BFR_SIZE	200
 
-epicsStatus seq_logv(SPROG *pSP, const char *fmt, va_list args)
+long seq_logv(SPROG *pSP, const char *fmt, va_list args)
 {
 	int		count, status;
 	epicsTimeStamp	timeStamp;
@@ -678,19 +665,20 @@ epicsStatus seq_logv(SPROG *pSP, const char *fmt, va_list args)
 	}
 	return OK;
 }
+
 /*
  * seq_seqLog() - State program interface to seq_log().
  * Does not require ptr to state program block.
  */
-epicsShareFunc long epicsShareAPI seq_seqLog(SS_ID ssId, const char *fmt, ...)
+long seq_seqLog(SS_ID ssId, const char *fmt, ...)
 {
-    SPROG	*pSP;
-    va_list     args;
-    long rtn;
+	SPROG		*pSP;
+	va_list		args;
+	long		rtn;
 
-    va_start (args, fmt);
-    pSP = ((SSCB *)ssId)->sprog;
-    rtn = seq_logv(pSP, fmt, args);
-    va_end (args);
-    return(rtn);
+	va_start (args, fmt);
+	pSP = ((SSCB *)ssId)->sprog;
+	rtn = seq_logv(pSP, fmt, args);
+	va_end (args);
+	return(rtn);
 }
