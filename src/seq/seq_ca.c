@@ -139,8 +139,8 @@ epicsShareFunc long seq_connect(SPROG *pSP)
  * seq_get_handler() - Sequencer callback handler.
  * Called when a "get" completes.
  */
-epicsShareFunc void seq_get_handler(void *var, pvType type, int count, pvValue *pValue,
-		     void *arg)
+epicsShareFunc void seq_get_handler(
+	void *var, pvType type, int count, pvValue *pValue, void *arg)
 {
 	/* Process event handling in each state set */
 	proc_db_events(pValue, type, (CHAN *)arg, GET_COMPLETE);
@@ -150,8 +150,8 @@ epicsShareFunc void seq_get_handler(void *var, pvType type, int count, pvValue *
  * seq_put_handler() - Sequencer callback handler.
  * Called when a "put" completes.
  */
-epicsShareFunc void seq_put_handler(void *var, pvType type, int count, pvValue *pValue,
-		     void *arg)
+epicsShareFunc void seq_put_handler(
+	void *var, pvType type, int count, pvValue *pValue, void *arg)
 {
 	/* Process event handling in each state set */
 	proc_db_events(pValue, type, (CHAN *)arg, PUT_COMPLETE);
@@ -160,8 +160,8 @@ epicsShareFunc void seq_put_handler(void *var, pvType type, int count, pvValue *
 /*
  * seq_mon_handler() - PV events (monitors) come here.
  */
-epicsShareFunc void seq_mon_handler(void *var, pvType type, int count, pvValue *pValue,
-		     void *arg)
+epicsShareFunc void seq_mon_handler(
+	void *var, pvType type, int count, pvValue *pValue, void *arg)
 {
 	CHAN *pCHAN = (CHAN *)arg;
         SPROG *pSP = pCHAN->sprog;
@@ -183,8 +183,8 @@ epicsShareFunc void seq_mon_handler(void *var, pvType type, int count, pvValue *
 }
 
 /* Common code for completion and monitor handling */
-LOCAL void proc_db_events(pvValue *pValue, pvType type, CHAN *pDB,
-			  long complete_type)
+LOCAL void proc_db_events(
+	pvValue *pValue, pvType type, CHAN *pDB, long complete_type)
 {
 	SPROG			*pSP;
 	void			*pVal;
