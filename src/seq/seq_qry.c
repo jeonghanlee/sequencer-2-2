@@ -140,7 +140,7 @@ long epicsShareAPI seqShow(epicsThreadId tid)
 
 	return 0;
 }
-/*
+/*
  * seqChanShow() - Show channel information for a state program.
  */
 long epicsShareAPI seqChanShow(epicsThreadId tid, char *pStr)
@@ -249,7 +249,7 @@ long epicsShareAPI seqChanShow(epicsThreadId tid, char *pStr)
 
 	return 0;
 }
-/*
+/*
  * seqcar() - Sequencer Channel Access Report
  */
 
@@ -303,7 +303,7 @@ void epicsShareAPI seqcaStats(int *pchans, int *pdiscon) {
 	if (pchans)  *pchans  = stats.nChans;
 	if (pdiscon) *pdiscon = stats.nChans - stats.nConn;
 }
-/*
+/*
  * seqQueueShow() - Show syncQ queue information for a state program.
  */
 long epicsShareAPI seqQueueShow(epicsThreadId tid)

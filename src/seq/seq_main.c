@@ -235,7 +235,7 @@ epicsShareFunc epicsThreadId epicsShareAPI seq (
 
 	return tid;
 }
-/* seqInitTables - initialize sequencer tables */
+/* seqInitTables - initialize sequencer tables */
 LOCAL SPROG *seqInitTables(pSeqProg)
 struct seqProgram	*pSeqProg;
 {
@@ -258,7 +258,7 @@ struct seqProgram	*pSeqProg;
 
 	return pSP;
 }
-/*
+/*
  * Copy data from seqCom.h structures into this thread's dynamic structures
  * as defined in seq.h.
  */
@@ -394,7 +394,7 @@ SPROG			*pSP;
 #endif	/*DEBUG*/
 	return;
 }
-
+
 /*
  * init_chan--Build the database channel structures.
  * Note:  Actual PV name is not filled in here. */
@@ -474,7 +474,7 @@ SPROG		*pSP;
 		pMac->pValue = NULL;
 	}
 }	
-/*
+/*
  * Evaluate channel names by macro substitution.
  */
 #define		MACRO_STR_LEN	(MAX_STRING_SIZE+1)
@@ -495,7 +495,7 @@ SPROG		*pSP;
 #endif	/*DEBUG*/
 	}
 }
-/*
+/*
  * selectDBtype -- returns types for DB put/get, element size, and db access
  * offset based on user variable type.
  * Mapping is determined by the following typeMap[] array.
@@ -589,7 +589,7 @@ short		*pGetType, *pPutType, *pSize, *pOffset;
 
 	return;
 }
-/*
+/*
  * seq_logInit() - Initialize logging.
  * If "logfile" is not specified, then we log to standard output.
  */
@@ -622,7 +622,7 @@ SPROG		*pSP;
 		}
 	}
 }
-/*
+/*
  * seq_logv
  * Log a message to the console or a file with thread name, date, & time of day.
  * The format looks like "mythread 12/13/93 10:07:43: Hello world!".
@@ -678,7 +678,7 @@ epicsStatus seq_logv(SPROG *pSP, const char *fmt, va_list args)
 	}
 	return OK;
 }
-/*
+/*
  * seq_seqLog() - State program interface to seq_log().
  * Does not require ptr to state program block.
  */

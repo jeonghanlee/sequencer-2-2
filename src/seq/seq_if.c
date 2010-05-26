@@ -55,7 +55,7 @@
 
 /*#define		DEBUG*/
 
-/* The following "pv" functions are included here:
+/* The following "pv" functions are included here:
 	seq_pvGet()
 	seq_pvGetQ()
 	seq_pvFreeQ()
@@ -365,7 +365,7 @@ epicsShareFunc long epicsShareAPI seq_pvPutComplete(SS_ID ssId, long pvId, long 
 
 	return any?anyDone:allDone;
 }
-/*
+/*
  * seq_pvAssign() - Assign/Connect to a channel.
  * Assign to a zero-length string ("") disconnects/de-assigns.
  */
@@ -436,7 +436,7 @@ epicsShareFunc long epicsShareAPI seq_pvAssign(SS_ID ssId, long pvId, char *pvNa
 	
 	return pvStatOK;
 }
-/*
+/*
  * seq_pvMonitor() - Initiate a monitor on a channel.
  */
 epicsShareFunc long epicsShareAPI seq_pvMonitor(SS_ID ssId, long pvId)
@@ -652,7 +652,7 @@ epicsShareFunc epicsTimeStamp epicsShareAPI seq_pvTimeStamp(SS_ID ssId, long pvI
 	pDB = pSP->pChan + pvId;
 	return pDB->timeStamp;
 }
-/*
+/*
  * seq_efSet() - Set an event flag, then wake up each state
  * set that might be waiting on that event flag.
  */
@@ -763,7 +763,7 @@ epicsShareFunc long epicsShareAPI seq_efTestAndClear(SS_ID ssId, long ev_flag)
 
 	return isSet;
 }
-
+
 /*
  * seq_pvGetQ() - Get queued DB value (looks like pvGet() but really more
  *		  like efTestAndClear()).
@@ -890,7 +890,7 @@ epicsShareFunc int epicsShareAPI seq_pvFreeQ(SS_ID	ssId, int	pvId)
 	return 0;
 }
 
-
+
 /* seq_delay() - test for delay() time-out expired */
 epicsShareFunc long epicsShareAPI seq_delay(SS_ID ssId, long delayId)
 {
@@ -934,7 +934,7 @@ epicsShareFunc void epicsShareAPI seq_delayInit(SS_ID ssId, long delayId, double
 	if (ndelay > pSS->numDelays)
 		pSS->numDelays = ndelay;
 }
-/*
+/*
  * seq_optGet: return the value of an option (e.g. "a").
  * FALSE means "-" and TRUE means "+".
  */

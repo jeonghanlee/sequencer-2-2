@@ -101,7 +101,7 @@ typedef void EXIT_FUNC(SS_ID ssId, USER_VAR *pVar);
  * from the start of a structure */
 #define OFFSET(structure, member) ((long) &(((structure *) 0) -> member))
 
-/* Structure to hold information about database channels */
+/* Structure to hold information about database channels */
 struct	seqChan
 {
 	char		*dbAsName;	/* assigned channel name */

@@ -71,7 +71,7 @@ LOCAL void proc_db_events_queued(pvValue *, CHAN *);
 #undef		LOCAL
 #define		LOCAL
 #endif		/*DEBUG*/
-/*
+/*
  * seq_connect() - Connect to all database channels.
  */
 epicsShareFunc long seq_connect(SPROG *pSP)
@@ -127,7 +127,7 @@ epicsShareFunc long seq_connect(SPROG *pSP)
 	pvSysFlush(pvSys);
 	return 0;
 }
-
+
 /*
  * Event completion type (extra argument passed to proc_db_events().
  */
@@ -329,7 +329,7 @@ LOCAL void proc_db_events_queued(pvValue *pValue, CHAN *pDB)
 	return;
 }
 
-/*	Disconnect all database channels */
+/*	Disconnect all database channels */
 /*#define	DEBUG_DISCONNECT*/
 
 epicsShareFunc long seq_disconnect(SPROG *pSP)
@@ -386,7 +386,7 @@ epicsShareFunc long seq_disconnect(SPROG *pSP)
 	return 0;
 }
 
-/*
+/*
  * seq_conn_handler() - Sequencer connection handler.
  * Called each time a connection is established or broken.
  */

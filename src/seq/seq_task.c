@@ -124,7 +124,7 @@ SPROG		*pSP;	/* ptr to original (global) state program table */
 
 	return 0;
 }
-/*
+/*
  * ss_entry() - Thread entry point for all state-sets.
  * Provides the main loop for state-set processing.
  */
@@ -263,7 +263,7 @@ exit:
 	/* Pass control back and die (i.e. exit) */
 	epicsEventSignal(pSS->death4SemId);
 }
-/* Initialize a state-set thread */
+/* Initialize a state-set thread */
 LOCAL void ss_thread_init(pSP, pSS)
 SPROG	*pSP;
 SSCB	*pSS;
@@ -308,7 +308,7 @@ int	phase;
 
 	return;
 }
-/* Wait for all channels to connect */
+/* Wait for all channels to connect */
 LOCAL long seq_waitConnect(SPROG *pSP, SSCB *pSS)
 {
 	epicsStatus	status;
@@ -334,7 +334,7 @@ LOCAL long seq_waitConnect(SPROG *pSP, SSCB *pSS)
 	}
 	return OK;
 }
-/*
+/*
  * seq_clearDelay() - clear the time delay list.
  */
 LOCAL void seq_clearDelay(pSS,pST)
@@ -554,7 +554,7 @@ long epicsShareAPI seqStop(epicsThreadId tid)
 	DEBUG("   Done\n");
 	return 0;
 }
-/* seqFree()--free all allocated memory */
+/* seqFree()--free all allocated memory */
 void seqFree(pSP)
 SPROG		*pSP;
 {
@@ -598,7 +598,7 @@ SPROG		*pSP;
 	/* Free SPROG */
 	free(pSP);
 }
-
+
 /* 
  * Sequencer auxiliary thread -- loops on pvSysPend().
  */

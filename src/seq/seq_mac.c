@@ -32,7 +32,7 @@ LOCAL MACRO *seqMacTblGet(MACRO *, char *);
 
 /*#define	DEBUG*/
 
-/* 
+/* 
  *seqMacEval - substitute macro value into a string containing:
  * ....{mac_name}....
  */
@@ -99,7 +99,7 @@ MACRO	*pMac;
 	epicsThreadSleep(0.5);
 #endif	/*DEBUG*/
 }
-/* 
+/* 
  * seq_macValueGet - given macro name, return pointer to its value.
  */
 epicsShareFunc char	*epicsShareAPI seq_macValueGet(ssId, pName)
@@ -144,7 +144,7 @@ char		*pName;
 #endif	/*DEBUG*/
 	return NULL;
 }
-/*
+/*
  * seqMacParse - parse the macro definition string and build
  * the macro table (name/value pairs). Returns number of macros parsed.
  * Assumes the table may already contain entries (values may be changed).
@@ -289,7 +289,7 @@ char	*pChar;
 	return	pChar;
 }
 
-/*
+/*
  * seqMacTblGet - find a match for the specified name, otherwise
  * return an empty slot in macro table.
  */
