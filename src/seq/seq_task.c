@@ -59,11 +59,11 @@
 void nothing(const char *format,...) {}
 
 /* Function declarations */
-LOCAL	long seq_waitConnect(SPROG *pSP, SSCB *pSS);
-LOCAL	void ss_thread_init(SPROG *, SSCB *);
-LOCAL	void ss_thread_uninit(SPROG *, SSCB *,int);
-LOCAL	void seq_clearDelay(SSCB *,STATE *);
-LOCAL	double seq_getTimeout(SSCB *);
+static long seq_waitConnect(SPROG *pSP, SSCB *pSS);
+static void ss_thread_init(SPROG *, SSCB *);
+static void ss_thread_uninit(SPROG *, SSCB *,int);
+static void seq_clearDelay(SSCB *,STATE *);
+static double seq_getTimeout(SSCB *);
 epicsStatus seqAddProg(SPROG *pSP);
 long seq_connect(SPROG *pSP);
 long seq_disconnect(SPROG *pSP);
@@ -71,8 +71,7 @@ long seq_disconnect(SPROG *pSP);
 /*
  * sequencer() - Sequencer main thread entry point.
  */
-long sequencer (pSP)
-SPROG		*pSP;	/* ptr to original (global) state program table */
+long sequencer (SPROG *pSP)	/* ptr to original (global) state program table */
 {
 	SSCB		*pSS;
 	int		nss;
@@ -128,8 +127,7 @@ SPROG		*pSP;	/* ptr to original (global) state program table */
  * ss_entry() - Thread entry point for all state-sets.
  * Provides the main loop for state-set processing.
  */
-void ss_entry(pSS)
-SSCB	*pSS;
+void ss_entry(SSCB *pSS)
 {
 	SPROG		*pSP = pSS->sprog;
 	epicsBoolean	ev_trig;
@@ -141,7 +139,7 @@ SSCB	*pSS;
 
 	/* Initialize this state-set thread */
 	ss_thread_init(pSP, pSS);
-	
+
 	/* If "+c" option, wait for all channels to connect (a failure
 	 * return means that we have been asked to exit) */
 	if ((pSP->options & OPT_CONN) != 0)
@@ -261,10 +259,9 @@ exit:
 	/* Pass control back and die (i.e. exit) */
 	epicsEventSignal(pSS->death4SemId);
 }
+
 /* Initialize a state-set thread */
-LOCAL void ss_thread_init(pSP, pSS)
-SPROG	*pSP;
-SSCB	*pSS;
+static void ss_thread_init(SPROG *pSP, SSCB *pSS)
 {
 	/* Get this thread's id */
 	pSS->threadId = epicsThreadGetIdSelf();
@@ -281,10 +278,7 @@ SSCB	*pSS;
 }
 
 /* Uninitialize a state-set thread */
-LOCAL void ss_thread_uninit(pSP, pSS, phase)
-SPROG   *pSP;
-SSCB    *pSS;
-int	phase;
+static void ss_thread_uninit(SPROG *pSP, SSCB *pSS, int phase)
 {
 	/* Phase 1: if this is the first state-set, call user exit routine
 	   and disconnect all channels */
@@ -303,11 +297,10 @@ int	phase;
 	    DEBUG("   taskwdRemove(%p)\n", pSS->threadId);
 	    taskwdRemove(pSS->threadId);
 	}
-
-	return;
 }
+
 /* Wait for all channels to connect */
-LOCAL long seq_waitConnect(SPROG *pSP, SSCB *pSS)
+static long seq_waitConnect(SPROG *pSP, SSCB *pSS)
 {
 	epicsStatus	status;
 	double		delay;
@@ -332,15 +325,13 @@ LOCAL long seq_waitConnect(SPROG *pSP, SSCB *pSS)
 	}
 	return OK;
 }
+
 /*
  * seq_clearDelay() - clear the time delay list.
  */
-LOCAL void seq_clearDelay(pSS,pST)
-SSCB		*pSS;
-STATE           *pST;
+static void seq_clearDelay(SSCB *pSS, STATE *pST)
 {
-	int		ndelay;
-
+	int	ndelay;
 
         /* On state change set time we entered this state; or if transition from
          * same state if option to do so is on for this state. 
@@ -358,8 +349,6 @@ STATE           *pST;
 	}
 
 	pSS->numDelays = 0;
-
-	return;
 }
 
 /*
@@ -367,8 +356,7 @@ STATE           *pST;
  * Returns number of seconds to next expected timeout of a delay() call.
  * Returns (double) INT_MAX if no delays pending 
  */
-LOCAL double seq_getTimeout(pSS)
-SSCB		*pSS;
+static double seq_getTimeout(SSCB *pSS)
 {
 	int	ndelay, delayMinInit;
 	double	cur, delay, delayMin, delayN;
@@ -552,9 +540,9 @@ long epicsShareAPI seqStop(epicsThreadId tid)
 	DEBUG("   Done\n");
 	return 0;
 }
+
 /* seqFree()--free all allocated memory */
-void seqFree(pSP)
-SPROG		*pSP;
+void seqFree(SPROG *pSP)
 {
 	SSCB		*pSS;
 	CHAN		*pDB;
