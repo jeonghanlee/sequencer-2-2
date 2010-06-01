@@ -151,7 +151,7 @@ set thread creation, and exit code to run prior to thread deletion.
 Both are run in the context of the first state set thread, before the
 other threads are created, resp. after they have been deleted. The
 entry or exit code is a regular SNL code block an thus can contain
-local definitions. However, no control system variable access functions
+local definitions. However, no process variable access functions
 may be called within the entry code.
 
 .. todo: check if we can relax this restriction
@@ -335,9 +335,9 @@ sync
    sync: "sync" `identifier` `opt_subscript` `to` `identifier` ";"
 
 An event flag can be associated with an SNL variable (which may be
-an array, and thus associated with several control system
+an array, and thus associated with several process
 variables). When a monitor is posted on any of the associated
-control system variables, the corresponding event flag is set (even
+process variables, the corresponding event flag is set (even
 if it was already set).
 
 .. _syncq_stmt:
@@ -352,10 +352,10 @@ syncQ
 
 An event flag can be associated with a monitor queue which, in
 turn, is associated with an SNL variable (which may be an array,
-and thus associated with several control system variables). The
+and thus associated with several process variables). The
 queue size defaults to 100 but can be overridden on a per-queue
-basis. When a monitor is posted on any of the associated control
-system variables, the variable's value is written to the end of the
+basis. When a monitor is posted on any of the associated process
+variables, the variable's value is written to the end of the
 queue and the corresponding event flag is set. If the queue is
 already full, the last entry is overwritten. Only scalar items can
 be accommodated in the queue (if the variable is array-valued, only
@@ -707,10 +707,10 @@ some are either not available through escaped C code or their use
 in escaped C code is subject to special rules.
 
 The term *assigned_var* refers to any SNL variable that is
-assigned to a control system variable (or, if it's an array,
+assigned to a process variable (or, if it's an array,
 variables). When using such a variable as a function argument, the
 function is automatically given access to the details of the
-underlying control system variable.
+underlying process variable.
 
 Several of these functions are primarily intended to be called only
 from *when* clauses or only from action code. However, unlike in
@@ -746,7 +746,7 @@ pvPut
   int pvPut(assigned_var, ASYNC)
 
 This function puts (or writes) the value of an SNL variable to the
-underlying control system variable. The function returns the status
+underlying process variable. The function returns the status
 from the PV layer (*e.g.* *pvStatOK* for success).
 
 By default, *pvPut* does not wait for the put to be complete;
@@ -772,13 +772,13 @@ pvPutComplete
   int pvPutComplete(array_name, long any)
   int pvPutComplete(array_name, long any, long *pComplete)
 
-This function returns *TRUE* if the last put of this control system
+This function returns *TRUE* if the last put of this process
 variable has completed. This call is appropriate only if *pvPut* 's
 optional *ASYNC* argument was used.
 
 The first form is appropriate when the SNL variable is a scalar.
 However, it can also be an array (each of whose elements may be
-assigned to a different control system variable). In this case, the
+assigned to a different process variable). In this case, the
 single argument form returns *TRUE* if the last puts of all the
 elements of the array have completed (the missing arguments are
 implicitly *0* and *NULL* respectively). If *any* is *TRUE*, then
@@ -798,7 +798,7 @@ pvGet
   int pvGet(assigned_var, ASYNC)
 
 This function gets (or reads) the value of an SNL variable from the
-underlying control system variable. The function returns the status
+underlying process variable. The function returns the status
 from the PV layer (*e.g.* *pvStatOK* for success). By default, the
 state set will block until the read operation is complete with a
 hard-coded timeout of 10s. The asynchronous (:option:`+a`) compile option
@@ -817,7 +817,7 @@ pvGetComplete
 .. cfunction::
   int pvGetComplete(assigned_var)
 
-This function returns *TRUE* if the last get of this control system
+This function returns *TRUE* if the last get of this process
 variable has completed, *i.e.* the value in the variable is
 current. This call is appropriate only if the asynchronous (:option:`+a`)
 compile option is specified or *pvGet* 's optional *ASYNC* argument
@@ -865,7 +865,7 @@ pvMonitor
 .. cfunction::
   int pvMonitor(assigned_var)
 
-This function initiates a monitor on the underlying control system
+This function initiates a monitor on the underlying process
 variable.
 
 pvStopMonitor
@@ -874,7 +874,7 @@ pvStopMonitor
 .. cfunction::
   int pvStopMonitor(assigned_var)
 
-This function terminates a monitor on the underlying control system
+This function terminates a monitor on the underlying process
 variable.
 
 pvFlush
@@ -894,8 +894,8 @@ pvCount
 .. cfunction::
   int pvCount(assigned_var)
 
-This function returns the element count associated with the control
-system variable.
+This function returns the element count associated with the process
+variable.
 
 pvStatus
 ^^^^^^^^
@@ -903,8 +903,8 @@ pvStatus
 .. cfunction::
   pvStat pvStatus(assigned_var)
 
-This function returns the current alarm status for the control
-system variable (*e.g.* *pvStatHIHI*; defined in *pvAlarm.h*).
+This function returns the current alarm status for the process
+variable (*e.g.* *pvStatHIHI*; defined in *pvAlarm.h*).
 The status and severity are only valid after either a *pvGet* call
 has completed or a monitor has been delivered.
 
@@ -947,7 +947,7 @@ pvAssigned
   int pvAssigned(assigned_var)
 
 This function returns *TRUE* if the SNL variable is currently
-assigned to a control system variable.
+assigned to a process variable.
 
 pvConnected
 ^^^^^^^^^^^
@@ -955,7 +955,7 @@ pvConnected
 .. cfunction::
   int pvConnected(assigned_var)
 
-This function returns *TRUE* if the underlying control system
+This function returns *TRUE* if the underlying process
 variable is currently connected.
 
 pvIndex
@@ -964,7 +964,7 @@ pvIndex
 .. cfunction::
   int pvIndex(assigned_var)
 
-This function returns the index associated with a control system
+This function returns the index associated with a process
 variable. See `User Functions within the State Program`_.
 
 pvChannelCount
@@ -973,7 +973,7 @@ pvChannelCount
 .. cfunction::
   int pvChannelCount()
 
-This function returns the total number of control system variables
+This function returns the total number of process variables
 associated with the state program (the term "channel" is a
 carry-over from the days when the only support message system was
 channel access).
@@ -985,7 +985,7 @@ pvAssignCount
   int pvAssignCount()
 
 This function returns the total number of SNL variables in this
-program that are assigned to underlying control system variables.
+program that are assigned to underlying process variables.
 Note: if all SNL variables are assigned then the following
 expression is *TRUE*::
 
@@ -1000,7 +1000,7 @@ pvConnectCount
 .. cfunction::
   int pvConnectCount()
 
-This function returns the total number of underlying control system
+This function returns the total number of underlying process
 variables that are connected. Note: if all variables are connected
 then the following expression is *TRUE*::
 
@@ -1113,8 +1113,8 @@ The built-in SNL functions such as *pvGet* cannot be directly used
 in user-supplied functions. However, most of the built-in functions
 have a C language equivalent, which begin with the prefix ``seq_``
 (*e.g.* pvGet becomes seq_pvGet). These C functions must pass a
-parameter identifying the calling state program, and if a control
-system variable name is required, the index of that variable must
+parameter identifying the calling state program, and if a process
+variable name is required, the index of that variable must
 be supplied. This index is obtained via the pvIndex function.
 Furthermore, if the code is complied with the :option:`+r` option, the
 database variables must be referenced as a structure element as

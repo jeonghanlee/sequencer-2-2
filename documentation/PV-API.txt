@@ -297,8 +297,8 @@ function signature can be used for both C and C++. In C, it would
 be passed to one of the ``pvVarXxx`` routines; in C++ it would be
 cast to a ``pvVariable*`` .
 
-``pvConnFunc`` is used to notify the application that a control
-system variable has connected or disconnected
+``pvConnFunc`` is used to notify the application that a process
+variable has connected or disconnected
 
 -  ``connected`` is 0 for disconnect and 1 for connect
 
@@ -310,7 +310,7 @@ has completed, or that a monitor has been delivered
 -  it may be NULL on put completion (the application should check)
 -  it might also be NULL if ``status`` indicates failure (the
    application should check)
--  it is filled with zeroes if the control system variable has
+-  it is filled with zeroes if the process variable has
    fewer than ``count`` elements
 -  ``status`` comes from the underlying message system
 -  it is converted to a ``pvStat``
@@ -376,7 +376,7 @@ Class pvVariable
 ^^^^^^^^^^^^^^^^
 
 ``pvVariable`` is an abstract class that must be extended by specific
-message systems. It corresponds to a control system variable
+message systems. It corresponds to a process variable
 accessed via its message system. Each ``pvVariable`` object is
 associated with a ``pvSystem`` object that manages system-wide issues
 like locking and event handling.
@@ -393,7 +393,7 @@ an optional private pointer, and an optional debug flag (0 means to
 inherit it from the ``pvSystem``).
 
 The constructor should initiate connection to the underlying
-control system variable and should arrange to call the connection
+process variable and should arrange to call the connection
 function (if supplied) on each connect or disconnect.
 
 Reading
@@ -456,7 +456,7 @@ The PV API supports the following monitor methods::
   single variable (CA does); this is optional (the sequencer only
   ever calls it once per variable)
 - all message systems must permit several ``pvVariable`` objects to
-  be associated with the same underlying control system variable and,
+  be associated with the same underlying process variable and,
   when a monitor is posted, must guarantee to propagate it to all the
   associated ``pvVariable`` s
 

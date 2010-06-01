@@ -587,7 +587,7 @@ Queueable monitors
    in succession. This feature is supported by new ``syncQ``,
    ``pvGetQ`` and ``pvFreeQ`` language elements, and a new
    ``seqQueueShow`` routine. When SNL arrays are used, a single queue
-   is shared by the control system variables associated with the
+   is shared by the process variables associated with the
    elements of the array, which can be useful for parallel control. See
    :ref:`QueuingMonitors` and :ref:`syncq_stmt`.
 
@@ -722,21 +722,21 @@ Notes on Release 1.9
 With version 1.9, we have incorporated many extensions to
 the state notation language. Some of these changes offer
 significant advantages for programs and systems with a large number
-of control system variables.
+of process variables.
 
-Number of control system variables
-   The previous restriction on the number of control system variables
+Number of process variables
+   The previous restriction on the number of process variables
    that could be defined no longer applies. Only the amount of memory
    on the target processor limits the number of variables.
 
 Array assignments
-   Individual elements of an array may be assigned to control system
+   Individual elements of an array may be assigned to process
    variables. This feature simplifies many codes that contain groups
    of similar variables. Furthermore, double-subscripted arrays allow
    arrays of array-valued variables.
 
 Dynamic assignments
-   Control system variables may now be dynamically assigned or
+   Process variables may now be dynamically assigned or
    re-assigned within the language at run time.
 
 Hex constants
@@ -745,7 +745,7 @@ Hex constants
 
 Time stamp
    The programmer now has access to the time stamp associated with a
-   control system variable.
+   process variable.
 
 Pointers
    Variables may now be declared as pointers.

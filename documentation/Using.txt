@@ -55,7 +55,7 @@ You can examine the state program by typing::
 
 This will display information about each state set (e.g. state
 set names, current state, previous state). You can display
-information about the control system variables associated with this
+information about the process variables associated with this
 state program by typing either of::
 
   seqChanShow level_check
@@ -257,11 +257,11 @@ What Triggers an Event?
 
 There are five types of sequencer event:
 
--  a control system variable monitor is posted
+-  a process variable monitor is posted
 -  an asynchronous ``pvGet`` or ``pvPut`` completes
 -  a time delay elapses
 -  an event flag is set or cleared
--  a control system variable connects or disconnects
+-  a process variable connects or disconnects
 
 When one of these events occur, the sequencer executes the
 appropriate ``when`` statements based on the current states and the

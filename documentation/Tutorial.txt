@@ -52,11 +52,11 @@ these blocks are ``when`` statements that define the events
 (``v > 5.0`` and ``v < 3.0``). Following these statements are
 blocks containing actions (C statements). The ``pvPut`` function
 writes or puts the value in the variable ``light`` to the appropriate
-control system variables. Finally, the next states are specified
+process variables. Finally, the next states are specified
 following the action blocks.
 
 For the previous example to execute properly the variables ``v`` and
-``light`` must be declared and associated with control system
+``light`` must be declared and associated with process
 variables using the following declarations::
 
   float v;
@@ -65,7 +65,7 @@ variables using the following declarations::
   assign light to "Indicator_light";
 
 The above ``assign`` statements associate the variables ``v`` and
-``light`` with the control system variables "Input\_voltage" and
+``light`` with the process variables "Input\_voltage" and
 "Indicator\_light" respectively. We want the value of ``v`` to be
 updated automatically whenever it changes. This is accomplished
 with the following declaration::
@@ -176,7 +176,7 @@ point value (constant or expression).
 
 At this point, you may wish to try an example with the two state
 sets. You can jump ahead and read parts of Chapters 3-5. You
-probably want to pick unique names for your control system
+probably want to pick unique names for your process
 variables, rather than the ones used above. You may also wish to
 replace the ``pvPut`` statements with ``printf`` statements to display
 "High" and "Low" on your console.
@@ -185,7 +185,7 @@ Variable Names Using Macros
 ---------------------------
 
 One of the features of the SNL and run-time sequencer is the
-ability to specify the names of control system variables at
+ability to specify the names of process variables at
 run-time. This is done by using macro substitution. In our example
 we could replace the ``assign`` statements with the following::
 
@@ -194,8 +194,8 @@ we could replace the ``assign`` statements with the following::
 
 The string within the curly brackets is a macro which has a name
 ("unit" in this case). At run-time you give the macro a value,
-which is substituted in the above string to form a complete control
-system variable name. For example, if the macro "unit" is given
+which is substituted in the above string to form a complete process
+variable name. For example, if the macro "unit" is given
 a name "DTL\_6:CM\_2", then the run-time variable name is
 "DTL\_6:CM\_2:ai1". More than one macro may be specified within
 a string, and the entire string may be a macro. See
@@ -210,7 +210,7 @@ The allowable variable declaration types correspond to the C types:
 . In addition there is the type ``string`` , which is a fixed array
 size of type ``char`` (at the time of writing, a string can hold 40
 characters). Sequencer variables having any of these types may be
-assigned to a control system variable. The type declared does not
+assigned to a process variable. The type declared does not
 have to be the same as the native control system value type. The
 conversion between types is performed at run-time.
 
@@ -218,15 +218,15 @@ You may specify array variables as follows::
 
   long arc_wf[1000];
 
-When assigned to a control system variable, operations such as
+When assigned to a process variable, operations such as
 ``pvPut`` are performed for the entire array.
 
 Arrays of Variables
 -------------------
 
-Often it is necessary to have several associated control system
+Often it is necessary to have several associated process
 variables. The ability to assign each element of an SNL array to a
-separate control system variable can significantly reduce the code
+separate process variable can significantly reduce the code
 complexity. The following illustrates this point::
 
   float Vin[4];
@@ -275,19 +275,19 @@ elements of ``X`` are assigned to (array) "apple" , and the second
 
 It is important to understand the distinction between the first and
 second array indices here. The first index defines a 2-element
-array of which each element is associated with a control system
+array of which each element is associated with a process
 variable. The second index defines a 100-element double array to
-hold the value of each of the two control system variables. When
+hold the value of each of the two process variables. When
 used in a context where a number is expected, both indices must be
 specified, e.g. ``X[1][49]`` is the 50th element of the value of
-"orange" . When used in a context where a control system variable
+"orange" . When used in a context where a process variable
 is expected, e.g. with ``pvPut`` , then only the first index should
 be specified, e.g. ``X[1]`` for "orange" .
 
 Dynamic Assignment
 ------------------
 
-You may dynamically assign or re-assign variable to control system
+You may dynamically assign or re-assign variable to process
 variables during the program execution as follows::
 
   float Xmotor;
@@ -323,10 +323,10 @@ Having assigned a variable, you should wait for it to connect
 before using it (although it is OK to monitor it). See
 `Connection Management`_.
 
-Status of Control System Variables
-----------------------------------
+Status of Process Variables
+---------------------------
 
-Control system variables have an associated status, severity and
+Process variables have an associated status, severity and
 time stamp. You can obtain these with the ``pvStatus`` , ``pvSeverity``
 and ``pvTimeStamp`` functions. For example::
 
@@ -353,7 +353,7 @@ State sets within a state program may be synchronized through the
 use of event flags. Typically, one state set will set an event
 flag, and another state set will test that event flag within a
 ``when`` clause. The ``sync`` statement may also be used to associate
-an event flag with a control system variable that is being
+an event flag with a process variable that is being
 monitored. In that case, whenever a monitor is delivered, the
 corresponding event flag is set. Note that this provides an
 alternative to testing the value of the monitored channel and is
@@ -396,9 +396,9 @@ opposite situation occurs.
   }
 
 The event flag is actually associated with the SNL variable, not
-the underlying control system variable. If the SNL variable is an
+the underlying process variable. If the SNL variable is an
 array then the event flag is set whenever a monitor is posted on
-any of the control system variables that are associated with an
+any of the process variables that are associated with an
 element of that array.
 
 .. _QueuingMonitors:
@@ -537,9 +537,9 @@ yet complete and to 1 for puts that are complete.
 Connection Management
 ---------------------
 
-All control system variable connections are handled by the
+All process variable connections are handled by the
 sequencer via the PV API. Normally the state programs are not run
-until all control system variables are connected. However, with the
+until all process variables are connected. However, with the
 :option:`-c` compiler flag, execution begins while the connections are
 being established. The program can test for each variable's
 connection status with the ``pvConnected`` routine, or it can test
@@ -586,12 +586,12 @@ otherwise they are declared static. With the :option:`+r` flag all
 variables become elements of a common data structure, and therefore
 access to variables is slightly less efficient.
 
-Control System Variable Element Count
--------------------------------------
+Process Variable Element Count
+------------------------------
 
-All requests for control system variables that are arrays assume
-the array size for the element count. However, if the control
-system variable has a smaller count than the array size, the
+All requests for process variables that are arrays assume
+the array size for the element count. However, if the process
+variable has a smaller count than the array size, the
 smaller number is used for all requests. This count is available
 with the ``pvCount`` function. The following example illustrates
 this::
