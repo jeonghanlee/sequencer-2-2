@@ -286,7 +286,7 @@ assign
 
 This assigns program variables to named process variables.
 
-There are three variants of the "assign" statement. The first one
+There are three variants of the :token:`assign` statement. The first one
 assigns a (scalar or array) variable to a single process variable.
 The second one assigns a single element of an array variable to a
 single process variable. The third one assigns elements of an array
@@ -302,7 +302,9 @@ The process variable name may contain macro names enclosed in
 braces, as in ``"{sys}{sub}voltage"``. Macros are named following
 the same rules as C language variables. Macros are defined via
 command line argument, or program parameter (see `Program Name and
-Parameter`_).
+Parameter`_). If process variable name is an empty string, then no
+actual assignment is performed, but the variable is marked for
+potential (dynamic) assignment with :cfunc:`pvAssign`.
 
 An array variable assigned wholesale to one process variable (using
 the first syntactic variant above) or an element of a
@@ -940,6 +942,14 @@ This function assigns or re-assigned the SNL variable ``var`` to
 string then ``var`` is de-assigned (not associated with any process
 variable).
 
+As usual, ``var`` can also be an array element.
+
+Note: :cfunc:`pvAssign` can only be called on variables (or array elements) that have
+been statically marked as process variables using the :token:`assign` syntax. An
+empty string may be used for the initial assignment.
+
+A better name for this function would be ``pvReassign``.
+
 pvAssigned
 ^^^^^^^^^^
 
@@ -974,9 +984,7 @@ pvChannelCount
   int pvChannelCount()
 
 This function returns the total number of process variables
-associated with the state program (the term "channel" is a
-carry-over from the days when the only support message system was
-channel access).
+associated with the state program.
 
 pvAssignCount
 ^^^^^^^^^^^^^
@@ -1078,9 +1086,9 @@ allowed:
     extern LOGICAL accelerator_mode;
     }%
 
-If you are using the C pre-processor prior to compiling with *snc*
-, and you wish to defer interpretation of a preprocessor directive
-("*#*" statement), then you should use the form::
+If you are using the C pre-processor prior to compiling with *snc*,
+and you wish to defer interpretation of a preprocessor directive,
+then you should use the form::
 
   %%#include <ioLib.h>
   %%#include <abcLib.h>

@@ -296,8 +296,12 @@ variables during the program execution as follows::
   sprintf (pvName, "Motor_%s_%d", snum, mnum)
   pvAssign (Xmotor[i], pvName);
 
+Note that dynamic (re-)assignment fails (with a compiler error)
+if the variable has not been assigned statically.
+
 An empty string in the assign declaration implies no initial
-assignment::
+assignment and can be used to mark variables or array elements
+for later dynamic assignment::
 
   assign Xmotor to "";
 
