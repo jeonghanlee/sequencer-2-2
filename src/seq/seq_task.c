@@ -169,9 +169,12 @@ void ss_entry(SSCB *pSS)
 		/* If we've changed state, do any entry actions. Also do these
                  * even if it's the same state if option to do so is enabled. 
                  */
-		if (pSS->prevState != pSS->currentState ||
+		if ((pSS->prevState != pSS->currentState ||
                      pST->options & OPT_DOENTRYFROMSELF)
-	  	         if (pST->entryFunc) pST->entryFunc(ssId, pVar);
+		    && pST->entryFunc)
+		{
+			pST->entryFunc(ssId, pVar);
+		}
 
 		seq_clearDelay(pSS, pST); /* Clear delay list */
 		pST->delayFunc(ssId, pVar); /* Set up new delay list */
@@ -188,12 +191,15 @@ void ss_entry(SSCB *pSS)
 			/* Wake up on PV event, event flag, or expired delay */
 			delay = seq_getTimeout(pSS); /* min. delay from list */
 			if (delay > 0.0)
-				(void) epicsEventWaitWithTimeout(pSS->syncSemId,
-							    delay);
+			{
+				epicsEventWaitWithTimeout(pSS->syncSemId, delay);
+			}
 
 			/* Check whether we have been asked to exit */
-			if (epicsEventTryWait(pSS->death1SemId) ==
-							epicsEventWaitOK) goto exit;
+			if (epicsEventTryWait(pSS->death1SemId) == epicsEventWaitOK)
+			{
+				goto exit;
+			}
 
 			/* Call the event function to check for an event
 			 * trigger. The statement inside the when() statement
@@ -202,16 +208,16 @@ void ss_entry(SSCB *pSS)
 			epicsMutexMustLock(pSP->caSemId);
 
 			ev_trig = pST->eventFunc(ssId, pVar,
-			 &pSS->transNum, &pSS->nextState); /* check events */
+				&pSS->transNum, &pSS->nextState);
 
 		        /* Clear all event flags (old ef mode only) */
-			if (ev_trig && ((pSP->options & OPT_NEWEF) == 0))
+			if (ev_trig && !(pSP->options & OPT_NEWEF))
 			{
-			    register int i;
-
-			    for (i = 0; i < nWords; i++)
-			    	pSP->pEvents[i] =
-					pSP->pEvents[i] & !pSS->pMask[i];
+				int i;
+				for (i = 0; i < nWords; i++)
+				{
+					pSP->pEvents[i] = pSP->pEvents[i] & !pSS->pMask[i];
+				}
 			}
 
 			epicsMutexUnlock(pSP->caSemId);
@@ -219,7 +225,8 @@ void ss_entry(SSCB *pSS)
 		} while (!ev_trig);
 
 		/* An event triggered:
-		 * execute the action statements and enter the new state. */
+		 * execute the action statements and enter the new state.
+		 */
 
 		/* Execute the action for this event */
 		pST->actionFunc(ssId, pVar, pSS->transNum, &pSS->nextState);
@@ -229,9 +236,12 @@ void ss_entry(SSCB *pSS)
 		pSS->pMask = (pStNext->pEventMask);
 
 		/* If changing state, do any exit actions. */
-		if (pSS->currentState != pSS->nextState ||
+		if ((pSS->currentState != pSS->nextState ||
                      pST->options & OPT_DOEXITTOSELF)
-		         if (pST->exitFunc) pST->exitFunc(ssId, pVar);
+		    && pST->exitFunc)
+		{
+			pST->exitFunc(ssId, pVar);
+		}
 
 		/* Flush any outstanding DB requests */
 		pvSysFlush(pvSys);
@@ -269,12 +279,10 @@ static void ss_thread_init(SPROG *pSP, SSCB *pSS)
 	/* Attach to PV context of pvSys creator (auxiliary thread); was
 	   already done for the first state-set */
 	if (pSP->threadId != pSS->threadId)
-	    pvSysAttach(pvSys);
+		pvSysAttach(pvSys);
 
 	/* Register this thread with the EPICS watchdog (no callback func) */
 	taskwdInsert(pSS->threadId, 0, (void *)0);
-
-	return;
 }
 
 /* Uninitialize a state-set thread */
