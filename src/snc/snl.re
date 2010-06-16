@@ -81,6 +81,9 @@ static uchar *fill(Scanner *s, uchar *cursor) {
 
 		/* anything below s->tok is garbage, collect it */
 		if (garbage) {
+#ifdef DEBUG
+			report("fill: garbage=%u, need_alloc=%d\n", garbage, need_alloc);
+#endif
 			if (!need_alloc) {
 				/* shift valid buffer content down to bottom of buffer */
 				memcpy(s->bot, token, valid);
@@ -96,6 +99,9 @@ static uchar *fill(Scanner *s, uchar *cursor) {
 		   at least BSIZE bytes of free space to fill (after s->lim) */
 		if (need_alloc) {
 			uchar *buf = (uchar*) malloc((s->lim - s->bot + BSIZE)*sizeof(uchar));
+#ifdef DEBUG
+			report("fill: need_alloc, bot: before=%p after=%p\n", s->bot, buf);
+#endif
 			memcpy(buf, token, valid);
 			s->tok = buf;
 			s->ptr = &buf[s->ptr - s->bot];
@@ -145,10 +151,17 @@ char *strdupft(uchar *start, uchar *stop) {
 static int scan(Scanner *s, Token *t) {
 	uchar *cursor = s->cur;
 	uchar *end = cursor;
-	uchar *c_code_start = 0;
+	int in_c_code = 0;
+	/*
+	Note: Must use a temporary offset for (parts of) line_marker.
+	Normally we use s->tok to remember start positions. But line_markers
+	can appear nested inside c_code block tokens, so using s->tok for
+	line_markers would destroy them.
+	*/
+        int line_marker_part = 0;
 
 snl:
-	if (c_code_start)
+	if (in_c_code)
 		goto c_code;
 	t->line = s->line;
 	t->file = s->file;
@@ -166,11 +179,15 @@ snl:
 			}
 	"/*"		{ goto comment; }
 	"#" SPC*	{
-				s->tok = cursor;
+				line_marker_part = cursor - s->tok;
 				goto line_marker;
 			}
 	"%{"		{
-				s->tok = c_code_start = cursor;
+				s->tok = cursor;
+				in_c_code = 1;
+#ifdef DEBUG
+				report("in_c_code: cursor=%p, tok=%p\n", cursor, s->tok);
+#endif
 				goto c_code;
 			}
 	"%%" SPC*	{
@@ -303,8 +320,8 @@ string_cat:
 line_marker:
 /*!re2c
 	DEC+SPC*	{
-				s->line = atoi((char*)s->tok) - 1;
-				s->tok = cursor;
+				s->line = atoi((char*)(s->tok + line_marker_part)) - 1;
+				line_marker_part = cursor - s->tok;
 				goto line_marker_str;
 			}
 	ANY		{ goto line_marker_skip; }
@@ -315,12 +332,13 @@ line_marker_str:
 	(["] (ESC|ANY\[\n\\"])* ["])
 			{
 				uchar saved = cursor[-1];
+                                char *str = (char *)(s->tok + line_marker_part + 1);
 				cursor[-1] = 0;
 				if (!s->file) {
-					s->file = strdup((char *)(s->tok + 1));
-				} else if (s->file && strcmp((char*)s->tok, s->file) != 0) {
+					s->file = strdup(str);
+				} else if (s->file && strcmp(str, s->file) != 0) {
 					free(s->file);
-					s->file = strdup((char *)(s->tok + 1));
+					s->file = strdup(str);
 				}
 				cursor[-1] = saved;
 				goto line_marker_skip;
@@ -355,9 +373,17 @@ comment:
 
 c_code:
 /*!re2c
-	"}%"		{ RET(CCODE, strdupft(c_code_start, cursor - 2)); }
+	"}%"		{
+#ifdef DEBUG
+				report("c_code: tok=%p", s->tok);
+#endif
+				RET(CCODE, strdupft(s->tok, cursor - 2));
+			}
 	.		{ goto c_code; }
-	"#" SPC+	{ s->tok = cursor; goto line_marker; }
+	"#" SPC+	{
+				line_marker_part = cursor - s->tok;
+				goto line_marker;
+			}
 	"\n"		{
 				if (cursor == s->eof) {
 					scan_report(s, "at eof: unterminated literal c-code section\n");
