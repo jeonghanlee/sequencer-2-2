@@ -6,13 +6,11 @@ include $(TOP)/configure/CONFIG
 
 SNC = $(INSTALL_HOST_BIN)/snc
 
-SNCFLAGS = +m
+SNCFLAGS_DEFAULT += +m
+SNCFLAGS_vxWorks += -nil-
 
-PROD_LIBS += Com
-#seq_DIR = $(INSTALL_LIB)
-
-PROD_LIBS += seq pv ca
-seq_DIR = $(INSTALL_LIB)
+PROD_LIBS += seq pv
+PROD_LIBS += $(EPICS_BASE_IOC_LIBS)
 
 PROD += simple
 PROD += change
