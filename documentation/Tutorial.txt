@@ -260,9 +260,8 @@ Alternatively, we can do this for the entire array::
 
   monitor Vin;
 
-And the same goes when synchronizing with event flags (see
-`Synchronizing State Sets with Event Flags`_) and queuing monitors
-(see :ref:`QueuingMonitors`). SNL arrays are really quite powerful.
+And the same goes when `Synchronizing State Sets with Event Flags`_
+and :ref:`QueuingMonitors`.
 
 Double subscripts offer additional options::
 
