@@ -190,24 +190,45 @@ static void gen_user_var(Program *p)
 	foreach (ssp, p->prog->prog_statesets)
 	{
 		int level = opt_reent;
-		indent(level); printf("struct UV_%s {\n", ssp->value);
-		foreach (vp, ssp->extra.e_ss->var_list->first)
+		int ss_empty = !ssp->extra.e_ss->var_list->first;
+
+		if (ss_empty)
 		{
-			indent(level+1); gen_var_decl(vp); printf(";\n");
-		}
-		foreach (sp, ssp->ss_states)
-		{
-			indent(level+1);
-			printf("struct UV_%s_%s {\n",
-				ssp->value, sp->value);
-			foreach (vp, sp->extra.e_state->var_list->first)
+			foreach (sp, ssp->ss_states)
 			{
-				indent(level+2); gen_var_decl(vp); printf(";\n");
+				if (sp->extra.e_state->var_list->first)
+				{
+					ss_empty = 0;
+					break;
+				}
 			}
-			indent(level+1);
-			printf("} UV_%s;\n", sp->value);
 		}
-		indent(level); printf("} UV_%s;\n", ssp->value);
+
+		if (!ss_empty)
+		{
+			indent(level); printf("struct UV_%s {\n", ssp->value);
+			foreach (vp, ssp->extra.e_ss->var_list->first)
+			{
+				indent(level+1); gen_var_decl(vp); printf(";\n");
+			}
+			foreach (sp, ssp->ss_states)
+			{
+				int s_empty = !sp->extra.e_state->var_list->first;
+				if (!s_empty)
+				{
+					indent(level+1);
+					printf("struct UV_%s_%s {\n",
+						ssp->value, sp->value);
+					foreach (vp, sp->extra.e_state->var_list->first)
+					{
+						indent(level+2); gen_var_decl(vp); printf(";\n");
+					}
+					indent(level+1);
+					printf("} UV_%s;\n", sp->value);
+				}
+			}
+			indent(level); printf("} UV_%s;\n", ssp->value);
+		}
 	}
 	if (opt_reent) printf("};\n");
 }
