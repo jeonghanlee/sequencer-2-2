@@ -81,13 +81,13 @@ static void gen_var_name(Var *vp)
 	}
 	else if (vp->scope->type == D_SS)
 	{
-		printf("UV_%s.%s", vp->scope->value, vp->name);
+		printf("%s_%s.%s", VAR_PREFIX, vp->scope->value, vp->name);
 	}
 	else if (vp->scope->type == D_STATE)
 	{
-		printf("UV_%s.UV_%s.%s",
+		printf("%s_%s.%s_%s.%s", VAR_PREFIX,
 			vp->scope->extra.e_state->var_list->parent_scope->value,
-			vp->scope->value, vp->name);
+			VAR_PREFIX, vp->scope->value, vp->name);
 	}
 }
 
@@ -123,7 +123,7 @@ static void gen_channel(Chan *cp, int num_event_flags, int opt_reent)
 	printf("(void *)");
 	if (opt_reent)
 	{
-		printf("OFFSET(struct %s, ", SNL_PREFIX);
+		printf("OFFSET(struct %s, ", VAR_PREFIX);
 		gen_var_name(vp);
 		printf("%s%s), ", elem_str, suffix);
 	}
@@ -261,7 +261,7 @@ static void gen_prog_table(Program *p)
 	printf("\t/* state sets */        seqSS,\n");
 	printf("\t/* num. state sets */   %d,\n", p->num_ss);
 	if (p->options.reent)
-		printf("\t/* user var size */     sizeof(struct %s),\n", SNL_PREFIX);
+		printf("\t/* user var size */     sizeof(struct %s),\n", VAR_PREFIX);
 	else
 		printf("\t/* user var size */     0,\n");
 	printf("\t/* param */             \"%s\",\n", p->param);

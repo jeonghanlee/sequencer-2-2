@@ -175,7 +175,7 @@ static void gen_user_var(Program *p)
 
 	printf("\n/* Variable declarations */\n");
 
-	if (opt_reent) printf("struct %s {\n", SNL_PREFIX);
+	if (opt_reent) printf("struct %s {\n", VAR_PREFIX);
 	/* Convert internal type to `C' type */
 	foreach (vp, p->prog->extra.e_prog->first)
 	{
@@ -206,7 +206,7 @@ static void gen_user_var(Program *p)
 
 		if (!ss_empty)
 		{
-			indent(level); printf("struct UV_%s {\n", ssp->value);
+			indent(level); printf("struct %s_%s {\n", VAR_PREFIX, ssp->value);
 			foreach (vp, ssp->extra.e_ss->var_list->first)
 			{
 				indent(level+1); gen_var_decl(vp); printf(";\n");
@@ -217,17 +217,17 @@ static void gen_user_var(Program *p)
 				if (!s_empty)
 				{
 					indent(level+1);
-					printf("struct UV_%s_%s {\n",
-						ssp->value, sp->value);
+					printf("struct %s_%s_%s {\n",
+						VAR_PREFIX, ssp->value, sp->value);
 					foreach (vp, sp->extra.e_state->var_list->first)
 					{
 						indent(level+2); gen_var_decl(vp); printf(";\n");
 					}
 					indent(level+1);
-					printf("} UV_%s;\n", sp->value);
+					printf("} %s_%s;\n", VAR_PREFIX, sp->value);
 				}
 			}
-			indent(level); printf("} UV_%s;\n", ssp->value);
+			indent(level); printf("} %s_%s;\n", VAR_PREFIX, ssp->value);
 		}
 	}
 	if (opt_reent) printf("};\n");

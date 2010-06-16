@@ -20,6 +20,6 @@ void gen_var_decl(Var *vp);
 void gen_var_init(Var *vp, int level);
 void indent(int level);
 
-#define SNL_PREFIX  "UserVar"
+#define VAR_PREFIX "UserVar"
 
 #endif	/*INCLgencodeh*/

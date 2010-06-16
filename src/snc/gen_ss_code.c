@@ -229,7 +229,7 @@ static void gen_state_func(
 	printf("\n/* %s function for state \"%s\" in state set \"%s\" */\n",
  		title, state_name, ss_name);
 	printf("static %s %s_%s_%s(SS_ID ssId, struct %s *pVar%s)\n{\n",
-		rettype, prefix, ss_name, state_name, SNL_PREFIX, extra_args);
+		rettype, prefix, ss_name, state_name, VAR_PREFIX, extra_args);
 	gen_body(xp, 1);
 	printf("}\n");
 }
@@ -402,13 +402,13 @@ static void gen_var_access(Var *vp)
 	}
 	else if (vp->scope->type == D_SS)
 	{
-		printf("%sUV_%s.%s%s", pre, vp->scope->value, vp->name, post);
+		printf("%s%s_%s.%s%s", pre, VAR_PREFIX, vp->scope->value, vp->name, post);
 	}
 	else if (vp->scope->type == D_STATE)
 	{
-		printf("%sUV_%s.UV_%s.%s%s", pre,
+		printf("%s%s_%s.%s_%s.%s%s", pre, VAR_PREFIX,
 			vp->scope->extra.e_state->var_list->parent_scope->value,
-			vp->scope->value, vp->name, post);
+			VAR_PREFIX, vp->scope->value, vp->name, post);
 	}
 	else	/* compound or when stmt => generate a local C variable */
 	{
@@ -885,7 +885,7 @@ static void gen_entry_handler(Expr *prog)
 {
 	assert(prog->type = D_PROG);
 	printf("\n/* Entry handler */\n");
-	printf("static void entry_handler(SS_ID ssId, struct %s *pVar)\n{\n", SNL_PREFIX);
+	printf("static void entry_handler(SS_ID ssId, struct %s *pVar)\n{\n", VAR_PREFIX);
 	gen_user_var_init(prog);
 	if (prog->prog_entry)
 		gen_entry_body(prog->prog_entry, 1);
@@ -897,7 +897,7 @@ static void gen_exit_handler(Expr *prog)
 {
 	assert(prog->type = D_PROG);
 	printf("\n/* Exit handler */\n");
-	printf("static void exit_handler(SS_ID ssId, struct %s *pVar)\n{\n", SNL_PREFIX);
+	printf("static void exit_handler(SS_ID ssId, struct %s *pVar)\n{\n", VAR_PREFIX);
 	if (prog->prog_exit)
 		gen_exit_body(prog->prog_exit, 1);
 	printf("}\n");
