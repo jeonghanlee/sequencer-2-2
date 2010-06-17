@@ -160,13 +160,15 @@ struct	seqProgram
 
 /*
  * Function declarations for interface between state program & sequencer.
- * Notes:
- * "seq_" is added by SNC to guarantee global uniqueness.
- * These functions appear in the module seq_if.c.
- * The SNC must generate these modules--see gen_ss_code.c.
+ * Prefix "seq_" is added by SNC to reduce probability of name clashes.
+ * Implementations are in module seq_if.c.
  */
-#ifndef INCLseqh /* prefer more-specific seq.h prototype */
-#endif
+
+/* I/O completion type (extra argument passed to seq_pvGet() and seq_pvPut()) */
+#define HONOR_OPTION 0
+#define ASYNCHRONOUS 1
+#define SYNCHRONOUS  2
+
 epicsShareFunc void	epicsShareAPI seq_efSet(SS_ID, long);		/* set an event flag */
 epicsShareFunc long	epicsShareAPI seq_efTest(SS_ID, long);		/* test an event flag */
 epicsShareFunc long	epicsShareAPI seq_efClear(SS_ID, long);		/* clear an event flag */

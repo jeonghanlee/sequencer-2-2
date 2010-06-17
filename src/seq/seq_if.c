@@ -51,37 +51,6 @@
 #define epicsExportSharedSymbols
 #include	"seq.h"
 
-/*#define		DEBUG*/
-
-/* The following "pv" functions are included here:
-	seq_pvGet()
-	seq_pvGetQ()
-	seq_pvFreeQ()
-	seq_pvGetComplete()
-	seq_pvPut()
-	seq_pvPutComplete()
-	seq_pvFlush()
-	seq_pvMonitor()
-	seq_pvStopMonitor()
-	seq_pvName()
-	seq_pvStatus()
-	seq_pvSeverity()
-	seq_pvMessage()
-	seq_pvConnected()
-	seq_pvAssigned()
-	seq_pvChannelCount()
-	seq_pvAssignCount()
-	seq_pvConnectCount()
-	seq_pvCount()
-	seq_pvIndex()
-	seq_pvTimeStamp()
- */
-
-/* I/O completion type (extra argument passed to seq_pvGet() and seq_pvPut()) */
-#define	HONOR_OPTION 0
-#define ASYNCHRONOUS 1
-#define SYNCHRONOUS  2
-
 /* Macros for resource lock */
 #define LOCK   epicsMutexMustLock(pSP->caSemId)
 #define UNLOCK epicsMutexUnlock(pSP->caSemId)
