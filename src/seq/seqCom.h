@@ -105,7 +105,7 @@ typedef void EXIT_FUNC(SS_ID ssId, USER_VAR *pVar);
 struct	seqChan
 {
 	char		*dbAsName;	/* assigned channel name */
-	USER_VAR	*pVar;		/* ptr to variable (-r option)
+	void		*pVar;		/* ptr to variable (-r option)
 					 * or structure offset (+r option) */
 	char		*pVarName;	/* variable name, including subscripts*/
 	char		*pVarType;	/* variable type, e.g. "int" */
