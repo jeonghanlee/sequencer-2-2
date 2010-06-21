@@ -23,22 +23,16 @@
 #define epicsExportSharedSymbols
 #include	"seq.h"
 
-LOCAL int seqMacParseName(char *);
-LOCAL int seqMacParseValue(char *);
-LOCAL char *skipBlanks(char *);
-LOCAL MACRO *seqMacTblGet(MACRO *, char *);
-
-/*#define	DEBUG*/
+static int seqMacParseName(char *pStr);
+static int seqMacParseValue(char *pStr);
+static char *skipBlanks(char *pChar);
+static MACRO *seqMacTblGet(MACRO *pMac, char *pName);
 
 /* 
  *seqMacEval - substitute macro value into a string containing:
  * ....{mac_name}....
  */
-void seqMacEval(pInStr, pOutStr, maxChar, pMac)
-char	*pInStr;
-char	*pOutStr;
-long	maxChar;
-MACRO	*pMac;
+void seqMacEval(char *pInStr, char *pOutStr, long maxChar, MACRO *pMac)
 {
 	char		name[50], *pValue, *pTmp;
 	int		nameLth, valLth;
@@ -97,12 +91,11 @@ MACRO	*pMac;
 	epicsThreadSleep(0.5);
 #endif	/*DEBUG*/
 }
+
 /* 
  * seq_macValueGet - given macro name, return pointer to its value.
  */
-epicsShareFunc char	*epicsShareAPI seq_macValueGet(ssId, pName)
-SS_ID		ssId;
-char		*pName;
+epicsShareFunc char *epicsShareAPI seq_macValueGet(SS_ID ssId, char *pName)
 {
 	SPROG		*pSP;
 	MACRO		*pMac;
@@ -112,12 +105,11 @@ char		*pName;
 
 	return seqMacValGet(pMac, pName);
 }
+
 /*
  * seqMacValGet - internal routine to convert macro name to macro value.
  */
-char *seqMacValGet(pMac, pName)
-MACRO		*pMac;
-char		*pName;
+char *seqMacValGet(MACRO *pMac, char *pName)
 {
 	int		i;
 
@@ -142,15 +134,14 @@ char		*pName;
 #endif	/*DEBUG*/
 	return NULL;
 }
+
 /*
  * seqMacParse - parse the macro definition string and build
  * the macro table (name/value pairs). Returns number of macros parsed.
  * Assumes the table may already contain entries (values may be changed).
  * String for name and value are allocated dynamically from pool.
  */
-long seqMacParse(pMacStr, pSP)
-char		*pMacStr;	/* macro definition string */
-SPROG		*pSP;
+long seqMacParse(char *pMacStr, SPROG *pSP)
 {
 	int		nChar;
 	MACRO		*pMac;		/* macro table */
@@ -240,8 +231,7 @@ SPROG		*pSP;
 /*
  * seqMacParseName() - Parse a macro name from the input string.
  */
-LOCAL int seqMacParseName(pStr)
-char	*pStr;
+static int seqMacParseName(char *pStr)
 {
 	int	nChar;
 
@@ -263,8 +253,7 @@ char	*pStr;
 /*
  * seqMacParseValue() - Parse a macro value from the input string.
  */
-LOCAL int seqMacParseValue(pStr)
-char	*pStr;
+static int seqMacParseValue(char *pStr)
 {
 	int	nChar;
 
@@ -279,8 +268,7 @@ char	*pStr;
 }
 
 /* skipBlanks() - skip blank characters */
-LOCAL char *skipBlanks(pChar)
-char	*pChar;
+static char *skipBlanks(char *pChar)
 {
 	while (*pChar == ' ')
 		pChar++;
@@ -291,9 +279,7 @@ char	*pChar;
  * seqMacTblGet - find a match for the specified name, otherwise
  * return an empty slot in macro table.
  */
-LOCAL MACRO *seqMacTblGet(pMac, pName)
-MACRO	*pMac;
-char	*pName;	/* macro name */
+static MACRO *seqMacTblGet(MACRO *pMac, char *pName)
 {
 	int		i;
 	MACRO		*pMacTbl;
