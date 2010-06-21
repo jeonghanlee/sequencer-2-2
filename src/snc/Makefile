@@ -41,13 +41,6 @@ include $(TOP)/configure/RULES
 #----------------------------------------
 #  ADD RULES AFTER THIS LINE
 
-snc_main.o: snc_version.h
-
-#  How to generate the version file
-snc_version.h: ../sncVersion.pl $(TOP)/configure/CONFIG
-	$(PERL) $< $(SEQ_VERSION) > $@.tmp
-	$(MV) $@.tmp $@
-
 vpath %.lem ..
 vpath %.lt ..
 

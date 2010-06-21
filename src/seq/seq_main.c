@@ -109,7 +109,6 @@ epicsThreadId seq (
 	struct seqProgram *pSeqProg, char *macroDef, unsigned int stackSize)
 {
 	epicsThreadId	tid;
-	extern char	*seqVersion;
 	SPROG		*pSP;
 	char		*pValue, *pThreadName;
 	unsigned int	smallStack;
@@ -117,7 +116,7 @@ epicsThreadId seq (
 	extern		void *seqAuxThread(void *);
 
 	/* Print version & date of sequencer */
-	printf("%s\n", seqVersion);
+	printf(SEQ_VERSION "\n");
 
 	/* Exit if no parameters specified */
 	if (pSeqProg == 0)

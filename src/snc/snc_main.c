@@ -20,7 +20,8 @@
 #include	"gen_code.h"
 #include	"snc_main.h"
 
-#include	"snc_version.h"
+#include <seqVersion.h>
+
 
 static Options options = DEFAULT_OPTIONS;
 
@@ -65,7 +66,9 @@ int main(int argc, char *argv[])
 	setvbuf(stdout, NULL, _IOLBF, BUFSIZ);
 	setvbuf(stderr, NULL, _IOLBF, BUFSIZ);
 
-	printf("/* %s: %s */\n", snc_version, in_file);
+#if 0
+	printf("/* %s: %s */\n", SEQ_VERSION, in_file);
+#endif
 
 	exp = parse_program(in_file);
 
@@ -187,7 +190,7 @@ static void parse_option(char *s)
 
 static void print_usage(void)
 {
-	report("%s\n", snc_version);
+	report("%s\n", SEQ_VERSION);
 	report("usage: snc <options> <infile>\n");
 	report("options:\n");
 	report("  -o <outfile> - override name of output file\n");

@@ -49,11 +49,11 @@
 #include	"epicsThread.h"	/* time stamp defs */
 #include	"epicsTime.h"	/* time stamp defs */
 
+#include "seqVersion.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#define	MAGIC	20000315	/* current magic number for SPROG (yyyymmdd) */
 
 /* Bit encoding for run-time options */
 #define	OPT_DEBUG	(1<<0)	/* turn on debugging */

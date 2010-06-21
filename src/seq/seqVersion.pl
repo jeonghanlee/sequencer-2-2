@@ -1,10 +1,9 @@
 #!/usr/bin/perl
 #
-# seqVersion - create the seq version module
+# seqVersion.pl - create the seq version header file
 #
-
 $version = $ARGV[0];
 $now = localtime;
-print "/* seqVersion.c - version & date */\n";
-print "/* Created by seqVersion.pl */\n";
-print "char *seqVersion = \"SEQ Version ${version}: ${now}\";\n";
+print "#define SEQ_VERSION \"SEQ Version $version, compiled $now\"\n";
+($major,$minor,$patch) = split(/[.]/, $version);
+printf "#define MAGIC %d%03d%03d\n", $major,$minor,$patch;
