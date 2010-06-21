@@ -221,5 +221,6 @@ extern void seq_put_handler(
 extern void seq_mon_handler(
 	void *var, pvType type, int count, pvValue *pValue, void *arg, pvStat status);
 void seq_conn_handler(void *var,int connected);
+extern epicsStatus seqTraverseProg(void (*pFunc)(), void *param);
 
 #endif	/*INCLseqPvth*/

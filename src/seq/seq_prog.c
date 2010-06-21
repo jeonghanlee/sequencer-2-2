@@ -13,10 +13,10 @@
 #include <string.h>
 #include "seq.h"
 
-LOCAL	epicsMutexId seqProgListSemId;
-LOCAL	int	    seqProgListInited = FALSE;
-LOCAL	ELLLIST	    seqProgList;
-LOCAL	void	    seqProgListInit();
+static epicsMutexId seqProgListSemId;
+static int	    seqProgListInited = FALSE;
+static ELLLIST	    seqProgList;
+static void	    seqProgListInit(void);
 
 typedef struct prog_node
 {
@@ -100,9 +100,7 @@ epicsShareFunc SPROG *epicsShareAPI seqFindProgByName(char *pProgName)
  * call the specified routine or function.  Passes one parameter of
  * pointer size.
  */
-epicsShareFunc epicsStatus seqTraverseProg(pFunc, param)
-void		(*pFunc)();	/* function to call */
-void		*param;		/* any parameter */
+epicsStatus seqTraverseProg(void (*pFunc)(), void *param)
 {
 	PROG_NODE	*pNode;
 	SPROG		*pSP;
@@ -126,8 +124,7 @@ void		*param;		/* any parameter */
  * seqAddProg() - add a program to the state program list.
  * Returns ERROR if program is already in list, else TRUE.
  */
-epicsShareFunc epicsStatus seqAddProg(pSP)
-SPROG		*pSP;
+epicsShareFunc epicsStatus seqAddProg(SPROG *pSP)
 {
 	PROG_NODE	*pNode;
 
@@ -172,8 +169,7 @@ SPROG		*pSP;
  *seqDelProg() - delete a program from the program list.
  * Returns TRUE if deleted, else FALSE.
  */
-epicsShareFunc epicsStatus seqDelProg(pSP)
-SPROG		*pSP;
+epicsShareFunc epicsStatus seqDelProg(SPROG *pSP)
 {
 	PROG_NODE	*pNode;
 
@@ -205,7 +201,7 @@ SPROG		*pSP;
 /*
  * seqProgListInit() - initialize the state program list.
  */
-LOCAL void seqProgListInit()
+static void seqProgListInit(void)
 {
 	/* Init linked list */
 	ellInit(&seqProgList);
@@ -214,4 +210,3 @@ LOCAL void seqProgListInit()
 	seqProgListSemId = epicsMutexMustCreate();
 	seqProgListInited = TRUE;
 }
-
