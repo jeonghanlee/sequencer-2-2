@@ -26,6 +26,7 @@ void nothing(const char *format,...) {}
 
 /* Function declarations */
 static long seq_waitConnect(SPROG *pSP, SSCB *pSS);
+static void ss_entry(SSCB *pSS);
 static void ss_thread_init(SPROG *, SSCB *);
 static void ss_thread_uninit(SPROG *, SSCB *,int);
 static void seq_clearDelay(SSCB *,STATE *);
@@ -44,7 +45,6 @@ long sequencer (SPROG *pSP)	/* ptr to original (global) state program table */
 	epicsThreadId	tid;
 	size_t		threadLen;
 	char		threadName[THREAD_NAME_SIZE+10];
-	extern		void ss_entry();
 
 	/* Retrieve info about this thread */
 	pSP->threadId = epicsThreadGetIdSelf();
@@ -93,7 +93,7 @@ long sequencer (SPROG *pSP)	/* ptr to original (global) state program table */
  * ss_entry() - Thread entry point for all state-sets.
  * Provides the main loop for state-set processing.
  */
-void ss_entry(SSCB *pSS)
+static void ss_entry(SSCB *pSS)
 {
 	SPROG		*pSP = pSS->sprog;
 	epicsBoolean	ev_trig;
@@ -395,7 +395,6 @@ long epicsShareAPI seqStop(epicsThreadId tid)
 	SPROG		*pSP;
 	SSCB		*pSS;
 	int		nss;
-	extern epicsStatus seqDelProg(SPROG *pSP);
 
 	/* Check that this is indeed a state program thread */
 	pSP = seqFindProg(tid);
@@ -568,7 +567,6 @@ void *seqAuxThread(void *tArgs)
 	char		*pPvSysName = pArgs->pPvSysName;
 	long		debug = pArgs->debug;
 	int		status;
-	extern		epicsThreadId seqAuxThreadId;
 
 	/* Register this thread with the EPICS watchdog */
 	taskwdInsert(epicsThreadGetIdSelf(), 0, 0);

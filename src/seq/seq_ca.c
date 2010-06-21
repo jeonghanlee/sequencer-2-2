@@ -46,7 +46,6 @@ epicsShareFunc long seq_connect(SPROG *pSP)
 {
 	CHAN		*pDB;
 	int		status, i;
-	extern		void seq_conn_handler();
 
 	for (i = 0, pDB = pSP->pChan; i < pSP->numChans; i++, pDB++)
 	{
@@ -108,7 +107,7 @@ epicsShareFunc long seq_connect(SPROG *pSP)
  * Called when a "get" completes.
  */
 epicsShareFunc void seq_get_handler(
-	void *var, pvType type, int count, pvValue *pValue, void *arg)
+	void *var, pvType type, int count, pvValue *pValue, void *arg, pvStat status)
 {
 	/* Process event handling in each state set */
 	proc_db_events(pValue, type, (CHAN *)arg, GET_COMPLETE);
@@ -119,7 +118,7 @@ epicsShareFunc void seq_get_handler(
  * Called when a "put" completes.
  */
 epicsShareFunc void seq_put_handler(
-	void *var, pvType type, int count, pvValue *pValue, void *arg)
+	void *var, pvType type, int count, pvValue *pValue, void *arg, pvStat status)
 {
 	/* Process event handling in each state set */
 	proc_db_events(pValue, type, (CHAN *)arg, PUT_COMPLETE);
@@ -129,7 +128,7 @@ epicsShareFunc void seq_put_handler(
  * seq_mon_handler() - PV events (monitors) come here.
  */
 epicsShareFunc void seq_mon_handler(
-	void *var, pvType type, int count, pvValue *pValue, void *arg)
+	void *var, pvType type, int count, pvValue *pValue, void *arg, pvStat status)
 {
 	CHAN *pCHAN = (CHAN *)arg;
         SPROG *pSP = pCHAN->sprog;

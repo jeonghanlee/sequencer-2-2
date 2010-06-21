@@ -54,7 +54,6 @@ epicsShareFunc long epicsShareAPI seq_pvGet(SS_ID ssId, long pvId, long compType
 	int		sync;	/* whether synchronous get */
 	int		status;
 	epicsEventWaitStatus	sem_status;
-	extern		void seq_get_handler();
 
 	pSS = (SSCB *)ssId;
 	pSP = pSS->sprog;
@@ -156,7 +155,6 @@ epicsShareFunc long epicsShareAPI seq_pvPut(SS_ID ssId, long pvId, long compType
 	int		status;
 	int		count;
         epicsEventWaitStatus   sem_status;
-        extern          void seq_put_handler();
 
 	pSS = (SSCB *)ssId;
 	pSP = pSS->sprog;
@@ -323,7 +321,6 @@ epicsShareFunc long epicsShareAPI seq_pvAssign(SS_ID ssId, long pvId, char *pvNa
 	SPROG		*pSP;	/* ptr to state program */
 	CHAN		*pDB;	/* ptr to channel struct */
 	int		status, nchar;
-	extern		void seq_conn_handler();
 
 	pSP = ((SSCB *)ssId)->sprog;
 	pDB = pSP->pChan + pvId;
@@ -393,7 +390,6 @@ epicsShareFunc long epicsShareAPI seq_pvMonitor(SS_ID ssId, long pvId)
 	SPROG		*pSP;	/* ptr to state program */
 	CHAN		*pDB;	/* ptr to channel struct */
 	int		status;
-	extern		void seq_mon_handler();
 
 	pSP = ((SSCB *)ssId)->sprog;
 	pDB = pSP->pChan + pvId;

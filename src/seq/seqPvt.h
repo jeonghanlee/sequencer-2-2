@@ -203,16 +203,23 @@ typedef struct auxiliary_args AUXARGS;
 #define THREAD_STACK_SIZE	epicsThreadStackBig
 #define THREAD_PRIORITY		epicsThreadPriorityMedium
 
-/* Function declarations for internal sequencer funtions */
-void	seqWakeup (SPROG *, long);
-void	seqFree (SPROG *);
-long	sequencer (SPROG *);
-long	sprogDelete (long);
-long	seqMacParse (char *, SPROG *);
-char	*seqMacValGet (MACRO *, char *);
-void	seqMacEval (char *, char *, long, MACRO *);
-epicsStatus seq_log ();
-SPROG	*seqFindProg (epicsThreadId);
-SPROG	*seqFindProg(epicsThreadId tid);
+/* Internal declarations */
+extern void seqWakeup(SPROG *pSP, long eventNum);
+extern void seqFree(SPROG *pSP);
+extern long sequencer (SPROG *pSP);
+extern long seqMacParse(char *pMacStr, SPROG *pSP);
+extern char *seqMacValGet(MACRO *pMac, char *pName);
+extern void seqMacEval(char *pInStr, char *pOutStr, long maxChar, MACRO *pMac);
+extern SPROG *seqFindProg(epicsThreadId threadId);
+extern epicsStatus seqDelProg(SPROG *pSP);
+extern void *seqAuxThread(void *);
+extern epicsThreadId seqAuxThreadId;
+extern void seq_get_handler(
+	void *var, pvType type, int count, pvValue *pValue, void *arg, pvStat status);
+extern void seq_put_handler(
+	void *var, pvType type, int count, pvValue *pValue, void *arg, pvStat status);
+extern void seq_mon_handler(
+	void *var, pvType type, int count, pvValue *pValue, void *arg, pvStat status);
+void seq_conn_handler(void *var,int connected);
 
 #endif	/*INCLseqPvth*/

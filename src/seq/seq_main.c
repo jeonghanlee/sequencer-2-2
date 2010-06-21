@@ -63,7 +63,6 @@ epicsThreadId seq (
 	char		*pValue, *pThreadName;
 	unsigned int	smallStack;
 	AUXARGS		auxArgs;
-	extern		void *seqAuxThread(void *);
 
 	/* Print version & date of sequencer */
 	printf(SEQ_VERSION "\n");
