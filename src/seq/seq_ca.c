@@ -23,35 +23,6 @@
  *	  Accelerator Systems Division
  *	  Advanced Photon Source
  *	  Argonne National Laboratory
- *
- * Modification Log:
- * -----------------
- * 03jul91,ajk	.
- * 11dec91,ajk	Cosmetic changes (comments & names)
- * 13feb92,ajk	All seqLog() calls compile only if DEBUG is defined.
- * 28apr92,ajk	Implemented new event flag mode.
- * 21may92,ajk	Will periodically announce number of connected channels
- *		if waiting form some to connect.
- * 17feb93,ajk	Implemented code to allow sharing of a single CA task by
- *		all state programs.  Added seq_disconnect() and ca_import_
- *		cancel(). DB name resolution was moved to seq_main.c.
- * 19feb93,ajk	Added patched version of VxWorks 5.02b taskVarDelete().
- * 01mar94,ajk	Moved "seq_pv*()" functions to seq_if.c.
- * 28mar94,ajk	Restructured event& callback handlers to call proc_db_events().
- * 29mar94,ajk	Removed getPtrToValue().  Offset is now in db_channel structure.
- * 08apr94,ajk	Added support for time stamp.
- * 17jan96,ajk	Removed ca_import_cancel(), which is now in channel access lib.
- * 17jan96,ajk	Many routines changed to use ANSI-style function headers.
- * 09aug96,wfl	Added support for syncQ queued values.
- * 30apr99,wfl	Replaced VxWorks task dependencies with OSI.
- * 17may99,wfl	Fixed errors in debug output; checked for NULL mask pointer
- *		(NULL mask pointer bug had always been present).
- * 07sep99,wfl	Supported put completion (c.f. existing get completion);
- *		Copied message text (returned via seq_pvMessage());
- *		On completion, unconditionally give semaphore.
- * 18feb00,wfl	Supported simple types for putCallback (fixed bug...).
- * 29feb00,wfl	Converted to new OSI (and errlogPrintf).
- * 31mar00,wfl	Checked for NULL value returned on put completion.
  */
 
 #include	<string.h>

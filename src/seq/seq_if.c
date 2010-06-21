@@ -25,24 +25,6 @@
  *	  Accelerator Systems Division
  *	  Advanced Photon Source
  *	  Argonne National Laboratory
- *
- * Modification Log:
- * -----------------
- * 20jul95,ajk	Fixed seq_pvPut() so count <= NELM in db.
- * 09aug96,wfl	Added seq_pvGetQ() to support syncQ.
- * 13aug96,wfl	Added seq_pvFreeQ() to free entries on syncQ queue.
- * 23jun96,wfl  Added task wakeup code to seq_efClear() (like seq_efSet()).
- * 29apr99,wfl	Used SEQ_TIME_STAMP; removed unused vx_opt option.
- * 06jul99,wfl	Added freeing of queue entries; supported "+m" (main) option.
- * 07sep99,wfl	Supported per-call sync/async specification on get/put;
- *		Supported setting of message on get/put completion;
- *		Supported put completion (c.f. get completion);
- *		Added seq_pvName() and seq_pvMessage().
- * 22sep99,grw  Supported not re-starting timers on transition to curr. state.
- * 18feb00,wfl	Changed to use pvVarGetMess() everywhere
- * 29feb00,wfl	Converted to new OSI; new macros for resource lock / unlock
- *		(always lock if needed); completed "putComplete" logic
- * 31mar00,wfl	Used mutex for caSemId; fixed placement of flush calls
  */
 
 #include 	<stdlib.h>

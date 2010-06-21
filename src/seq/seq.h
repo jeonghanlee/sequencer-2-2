@@ -23,33 +23,6 @@
  *              Accelerator Systems Division
  *              Advanced Photon Source
  *              Argonne National Laboratory
- *
- * Modification Log:
- * -----------------
- * 07mar91,ajk	Changed SSCB semaphore id names.
- * 05jul91,ajk	Added function prototypes.
- * 16dec91,ajk	Setting up for VxWorks version 5.
- * 27apr92,ajk	Changed to new event flag mode (SSCB & PROG changed).
- * 27apr92,ajk	Removed getSemId from CHAN.
- * 28apr92,ajk	Implemented new event flag mode.
- * 17feb93,ajk	Fixed some functions prototypes.
- * 10jun93,ajk	Removed VxWorks V4/V5 conditional compile.
- * 20jul93,ajk	Removed non-ANSI function definitions.
- * 21mar94,ajk	Implemented new i/f with snc (see seqCom.h).
- * 21mar94,ajk	Implemented assignment of array elements to db.  Also,
- *		allow "unlimited" number of channels.
- * 28mar94,ajk	Added time stamp support.
- * 29mar94,ajk	Added dbOffset in db_channel structure; allows faster processing
- *		of values returned with monitors and pvGet().
- * 09aug96,wfl	Added syncQ queue support.
- * 30apr99,wfl	Replaced VxWorks dependencies with OSI.
- * 17may99,wfl	Changed FUNCPTR etc to SEQFUNCPTR; corrected sequencer() proto.
- * 07sep99,wfl	Added putComplete, message and putSemId to SSCB.
- * 22sep99,grw  Supported entry and exit actions; supported state options.
- * 18feb00,wfl	Added 'auxiliary_args' typedef (for seqAuxThread).
- * 29feb00,wfl	Converted to new OSI; defs for new thread death scheme etc.
- * 06mar00,wfl	Added function prototypes for global routines.
- * 31mar00,wfl	Made caSemId a mutex; added seqFindProgXxx() prototypes.
  */
 #ifndef	INCLseqh
 #define	INCLseqh

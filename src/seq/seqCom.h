@@ -22,21 +22,6 @@
  *              Ground Test Accelerator
  *              Accelerator Technology Division
  *              Los Alamos National Laboratory
- * Modification Log:
- * -----------------
- * 11jul96,ajk	Changed all int types to long.
- * 22jul96,ajk	Changed PFUNC to ACTION_FUNC, EVENT_FUNC, DELAY_FUNC, EXIT_FUNC.
- * 08aug96,wfl	Changed magic number; added syncQ queue support.
- * 13aug96,wfl	Added pvFreeQ() declaration.
- * 29apr99,wfl	Tidied, removed tsDefs.h, used SEQ_TIME_STAMP; removed vx_opt.
- * 17may99,wfl	Added stdlib.h and seq() prototype.
- * 06jul99,wfl	Replaced OPT_TIME with OPT_MAIN; made bitMask unsigned long.
- * 07sep99,wfl	Changed magic number (arg lists have changed);
- *		added SYNC/ASYNC arguments to seq_pvGet() and seq_pvPut();
- *		added seq_pvXxx() (Xxx=Name,Message,PutComplete).
- * 22sep99,grw  Supported entry and exit actions; supported state options.
- * 29feb00,wfl	Converted to new OSI; new magic number.
- * 31mar00,wfl	Included pvAlarm.h; added entry function; new magic number.
  */
 #ifndef	INCLseqComh
 #define	INCLseqComh

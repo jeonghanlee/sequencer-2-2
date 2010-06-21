@@ -12,56 +12,6 @@
 	tasks.  An optional string parameter specifies the values for
 	macros.  The PV context and auxiliary thread are shared by all state
 	programs.
-
-	HISTORY:
-23apr91,ajk	Fixed problem with state program invoking the sequencer.
-01jul91,ajk	Added ANSI functional prototypes.
-05jul91,ajk	Changed semCreate() in three places to semBCreate.
-		Modified semTake() second param. to WAIT_FOREVER.
-		These provide VX5.0 compatability.  
-16aug91,ajk	Improved "magic number" error message.
-25oct91,ajk	Code to create semaphores "pSS->getSemId" was left out.
-		Added this code to init_sscb().
-25nov91,ajk	Removed obsolete seqLog() code dealing with global locking.
-04dec91,ajk	Implemented state program linked list, eliminating need for
-		task variables.
-11dec91,ajk	Cleaned up comments.
-05feb92,ajk	Decreased minimum allowable stack size to SPAWN_STACK_SIZE/2.
-24feb92,ajk	Print error code for log file failure.
-28apr92,ajk	Implemented new event flag mode.
-29apr92,ajk	Now alocates private program structures, even when reentry option
-		is not specified.  This avoids problems with seqAddTask().
-29apr92,ajk	Implemented mutual exclusion lock in seq_log().
-16feb93,ajk	Converted to single channel access task for all state programs.
-16feb93,ajk	Removed VxWorks pre-v5 stuff.
-17feb93,ajk	Evaluation of channel names moved here from seq_ca.c.
-19feb93,ajk	Fixed time stamp format for seq_log().
-16jun93,ajk	Fixed taskSpawn() to have 15 args per vx5.1.
-20jul93,ajk	Replaced obsolete delete() with remove() per vx5.1 release notes.
-20jul93,ajk	Removed #define ANSI
-15mar94,ajk	Implemented i/f to snc through structures in seqCom.h.
-15mar94,ajk	Allowed assignment of array elements to db.
-15mar94,ajk	Rearranged code that builds program structures.
-02may94,ajk	Performed initialization when sequencer is evoked, even w/o
-		parameters.
-19jul95,ajk	Added unsigned types (unsigned char, short, int, long).
-20jul95,ajk	Added priority specification at run time. 
-03aug95,ajk	Fixed problem with +r option: user variable space (pSP->pVar)
-		was not being allocated.
-03jun96,ajk	Now compiles with -wall and -pedantic switches.
-09aug96,wfl	Added initialization of syncQ queues.
-30apr99,wfl	Replaced VxWorks dependencies with OSI.
-17may99,wfl	Under UNIX, call OSIthreadJoinAll() rather than exiting.
-17may99,wfl	Moved misplaced event array initialization.
-06jul99,wfl	Slightly improved Unix command-line interpreter.
-07sep99,wfl	Added "-" Unix command (==seqChanShow("-"));
-		Unconditionally create get/put completion semaphores.
-22sep99,grw	Supported entry and exit actions; supported state options.
-18feb00,wfl	Re-worked args (inc. run-time debug level) for seqAuxThread;
-		Called sprog_delete() on Unix thread exit
-29feb00,wfl	Supported new OSI (and errlogPrintf); got rid of remaining
-		OS-dependencies; improved command-line interpreter
-31mar00,wfl	Supported 'shell' macro to run shell; made caSemId a mutex
 ***************************************************************************/
 /*#define	DEBUG	1*/
 

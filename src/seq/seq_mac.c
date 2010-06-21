@@ -7,13 +7,6 @@
 	DESCRIPTION: Macro routines for Sequencer.
 	The macro table contains name & value pairs.  These are both pointers
 	to strings.
-
-	HISTORY:
-01mar94,ajk	Added seq_macValueGet() as state program interface routine.
-29apr99,wfl     Avoided compilation warnings.
-17may99,wfl	Replaced VxWorks dependencies with OSI calls; avoided step
-		beyond end of macro definition string.
-29feb00,wfl	Converted to new OSI (and errlogPrintf).
 ***************************************************************************/
 
 #include	<ctype.h>

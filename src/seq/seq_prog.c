@@ -7,14 +7,6 @@
 	DESCRIPTION: Seq_prog.c: state program list management functions.
 	All active state programs are inserted into the list when created
 	and removed from the list when deleted.
-
-	HISTORY:
-09dec91,ajk	original
-29apr92,ajk	Added mutual exclusion locks	
-17Jul92,rcz	Changed semBCreate call for V5 vxWorks; should be semMCreate?
-18feb00,wfl	Avoided memory leak.
-29feb00,wfl	Supported new OSI.
-31mar00,wfl	Added seqFindProgByName().
 ***************************************************************************/
 /*#define	DEBUG*/
 

@@ -10,40 +10,6 @@
 		(see file Copyright.HZB included in this distribution)
 
 	DESCRIPTION: Thread creation and control for sequencer state-sets.
-
-	HISTORY:
-
-04dec91,ajk	Implemented linked list of state programs, eliminating task
-		variables.
-11dec91,ajk	Made cosmetic changes and cleaned up comments.
-19dec91,ajk	Changed algoritm in seq_getTimeout().
-29apr92,ajk	Implemented new event flag mode.
-30apr92,ajk	Periodically call ca_pend_event() to detect connection failures.
-21may92,ajk	In sprog_delete() wait for logging semaphore before suspending
-		tasks. Some minor changes in the way semaphores are deleted.
-18feb92,ajk	Changed to allow sharing of single CA task by all state
-		programs. Added seqAuxTask() and removed ca_pend_event() from
-		ss_entry().
-09aug93,ajk	Added calls to taskwdInsert() & taskwdRemove().
-24nov93,ajk	Added support for assigning array elements to db channels.
-24nov93,ajk	Changed implementation of event bits to support unlimited
-		channels.
-20may94,ajk	Changed sprog_delete() to spawn a separate cleanup task.
-19oct95,ajk/rmw Fixed bug which kept events from being cleared in old eventflag
-		mode.
-20jul95,ajk	Add user-specified task priority to taskSpwan().
-02may99,wfl	Replaced VxWorks dependencies with OSI.
-17may99,wfl	Changed interface to ss_entry() for single argument; used new
-		SEQFUNCPTR etc.
-?????96,joh 	Fixed problem with delay calculations.
-07sep99,wfl	Added destroy of put completion semaphore.
-22sep99,grw     Supported entry and exit actions; supported state options.
-15feb00,wfl	Fixed problem (introduced by wfl) with sequencer deletion.
-18feb00,wfl	Used struct for cleanup thread args (so can use under Unix);
-		ditto for aux thread args (so can pass debug flag)
-29feb00,wfl	Supported new OSI (and errlogPrintf); new use of DEBUG macro;
-		implemented new sequencer deletion method.
-31mar00,wfl	Changed caSemId to be a mutex.
 ***************************************************************************/
 #define	DEBUG nothing /* "nothing", "printf", "errlogPrintf" etc. */
 

@@ -6,29 +6,6 @@
 	DESCRIPTION: Task querry & debug routines for run-time sequencer:
 	seqShow - prints state set info.
 	seqChanShow - printf channel (pv) info.
-
-	HISTORY:
-25nov91,ajk	Display task names(s) with id(s).
-		Display logfile name and file descriptor.
-		Moved wait_rtn() to top of loop.
-09dec91,ajk	Modified to used state program linked list.
-		Added option to display all programs when tid=0.
-19dec91,ajk	Allow task name as well as task id.
-25feb92,ajk	V5.0 accepts 0 as a valid task id: fixed it.
-26feb92,ajk	Fixed formatting of task/program listing.
-29apr92,ajk	Modified to interpret encoded options.
-21may92,ajk	Modified format for listing programs & tasks.
-21feb93,ajk	Some minor code cleanup.
-01mar94,ajk	Major changes to print more meaningful information.
-12aug96,wfl	Add syncQ queue reporting.
-22jan97,wfl	Fix seqChanShow() not to list unassigned channels with "-".
-17may99,wfl	Fixed missing declaration for debug output.
-06jul99,wfl	Supported "+m" (main) option.
-07sep99,wfl	Added put completion and message.
-18feb00,wfl	Tidied up, avoided prevState undefined crash, output time
-		stamp unconditionally.
-29feb00,wfl	Supported new OSI; removed remaining OS-dependencies.
-31mar00,wfl	Removed limitation on only printing 5 array elements.
 ***************************************************************************/
 
 /*#define	DEBUG	1*/
