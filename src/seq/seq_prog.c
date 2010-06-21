@@ -8,11 +8,10 @@
 	All active state programs are inserted into the list when created
 	and removed from the list when deleted.
 ***************************************************************************/
-/*#define	DEBUG*/
 
 #define epicsExportSharedSymbols
-#include	<string.h>
-#include	"seq.h"
+#include <string.h>
+#include "seq.h"
 
 LOCAL	epicsMutexId seqProgListSemId;
 LOCAL	int	    seqProgListInited = FALSE;

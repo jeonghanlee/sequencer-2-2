@@ -25,10 +25,10 @@
  *	  Argonne National Laboratory
  */
 
-#include	<string.h>
+#include <string.h>
 
 #define epicsExportSharedSymbols
-#include	"seq.h"
+#include "seq.h"
 
 LOCAL void proc_db_events(pvValue *, pvType, CHAN *, long);
 LOCAL void proc_db_events_queued(pvValue *, CHAN *);

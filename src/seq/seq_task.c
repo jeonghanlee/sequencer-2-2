@@ -11,15 +11,14 @@
 
 	DESCRIPTION: Thread creation and control for sequencer state-sets.
 ***************************************************************************/
-#define	DEBUG nothing /* "nothing", "printf", "errlogPrintf" etc. */
+#define DEBUG nothing /* "nothing", "printf", "errlogPrintf" etc. */
 
-#include	<limits.h>
-#include 	<string.h>
-/*#include 	<unistd.h> */
+#include <limits.h>
+#include <string.h>
 
-#define		DECLARE_PV_SYS
+#define DECLARE_PV_SYS
 #define epicsExportSharedSymbols
-#include	"seq.h"
+#include "seq.h"
 
 /* Used to disable debug output */
 void nothing(const char *format,...) {}

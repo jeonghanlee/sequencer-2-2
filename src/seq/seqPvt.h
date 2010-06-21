@@ -32,15 +32,15 @@
 #ifndef	INCLseqPvth
 #define	INCLseqPvth
 
-#define		OK 0
-#define		ERROR (-1)
-#define		LOCAL static
+#define OK 0
+#define ERROR (-1)
+#define LOCAL static
 
 /* global variable for PV system context */
-#ifdef		DECLARE_PV_SYS
-		void *pvSys;
+#ifdef DECLARE_PV_SYS
+void *pvSys;
 #else
-		extern void *pvSys;
+extern void *pvSys;
 #endif
 
 /* Structure to hold information about database channels */

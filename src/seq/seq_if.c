@@ -27,11 +27,11 @@
  *	  Argonne National Laboratory
  */
 
-#include 	<stdlib.h>
-#include 	<string.h>
+#include <stdlib.h>
+#include <string.h>
 
 #define epicsExportSharedSymbols
-#include	"seq.h"
+#include "seq.h"
 
 /* Macros for resource lock */
 #define LOCK   epicsMutexMustLock(pSP->caSemId)

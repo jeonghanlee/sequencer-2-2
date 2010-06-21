@@ -9,12 +9,12 @@
 	to strings.
 ***************************************************************************/
 
-#include	<ctype.h>
-#include	<stdlib.h>
-#include	<string.h>
+#include <ctype.h>
+#include <stdlib.h>
+#include <string.h>
 
 #define epicsExportSharedSymbols
-#include	"seq.h"
+#include "seq.h"
 
 static int seqMacParseName(char *pStr);
 static int seqMacParseValue(char *pStr);

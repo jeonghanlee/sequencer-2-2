@@ -26,13 +26,13 @@
 #ifndef	INCLseqComh
 #define	INCLseqComh
 
-#include	<stdio.h>	/* standard i/o defs */
-#include	<stdlib.h>	/* standard library defs */
+#include <stdio.h>
+#include <stdlib.h>
 
-#include	"shareLib.h"	/* reset share lib defines */
-#include	"pvAlarm.h"	/* status and severity defs */
-#include	"epicsThread.h"	/* time stamp defs */
-#include	"epicsTime.h"	/* time stamp defs */
+#include "shareLib.h"
+#include "pvAlarm.h"
+#include "epicsThread.h"
+#include "epicsTime.h"
 
 #include "seqVersion.h"
 
@@ -154,38 +154,38 @@ struct	seqProgram
 #define ASYNCHRONOUS 1
 #define SYNCHRONOUS  2
 
-epicsShareFunc void	epicsShareAPI seq_efSet(SS_ID, long);		/* set an event flag */
-epicsShareFunc long	epicsShareAPI seq_efTest(SS_ID, long);		/* test an event flag */
-epicsShareFunc long	epicsShareAPI seq_efClear(SS_ID, long);		/* clear an event flag */
-epicsShareFunc long	epicsShareAPI seq_efTestAndClear(SS_ID, long);	/* test & clear an event flag */
-epicsShareFunc long	epicsShareAPI seq_pvGet(SS_ID, long, long);	/* get pv value */
-epicsShareFunc int	epicsShareAPI seq_pvGetQ(SS_ID, int);		/* get queued pv value */
-epicsShareFunc int	epicsShareAPI seq_pvFreeQ(SS_ID, int);		/* free elements on pv queue */
-epicsShareFunc long	epicsShareAPI seq_pvPut(SS_ID, long, long);	/* put pv value */
-epicsShareFunc epicsTimeStamp epicsShareAPI seq_pvTimeStamp(SS_ID, long); /* get time stamp value */
-epicsShareFunc long	epicsShareAPI seq_pvAssign(SS_ID, long, char *);/* assign/connect to a pv */
-epicsShareFunc long	epicsShareAPI seq_pvMonitor(SS_ID, long);	/* enable monitoring on pv */
-epicsShareFunc long	epicsShareAPI seq_pvStopMonitor(SS_ID, long);	/* disable monitoring on pv */
-epicsShareFunc char	*epicsShareAPI seq_pvName(SS_ID, long);		/* returns pv name */
-epicsShareFunc long	epicsShareAPI seq_pvStatus(SS_ID, long);	/* returns pv alarm status code */
-epicsShareFunc long	epicsShareAPI seq_pvSeverity(SS_ID, long);	/* returns pv alarm severity */
-epicsShareFunc char	*epicsShareAPI seq_pvMessage(SS_ID, long);	/* returns pv error message */
-epicsShareFunc long	epicsShareAPI seq_pvAssigned(SS_ID, long);	/* returns TRUE if assigned */
-epicsShareFunc long	epicsShareAPI seq_pvConnected(SS_ID, long);	/* TRUE if connected */
-epicsShareFunc long	epicsShareAPI seq_pvGetComplete(SS_ID, long);	/* TRUE if last get completed */
-epicsShareFunc long	epicsShareAPI seq_pvPutComplete(SS_ID, long, long, long, long *);
+epicsShareFunc void epicsShareAPI seq_efSet(SS_ID, long);		/* set an event flag */
+epicsShareFunc long epicsShareAPI seq_efTest(SS_ID, long);		/* test an event flag */
+epicsShareFunc long epicsShareAPI seq_efClear(SS_ID, long);		/* clear an event flag */
+epicsShareFunc long epicsShareAPI seq_efTestAndClear(SS_ID, long);	/* test & clear an event flag */
+epicsShareFunc long epicsShareAPI seq_pvGet(SS_ID, long, long);		/* get pv value */
+epicsShareFunc int epicsShareAPI seq_pvGetQ(SS_ID, int);		/* get queued pv value */
+epicsShareFunc int epicsShareAPI seq_pvFreeQ(SS_ID, int);		/* free elements on pv queue */
+epicsShareFunc long epicsShareAPI seq_pvPut(SS_ID, long, long);		/* put pv value */
+epicsShareFunc epicsTimeStamp epicsShareAPI seq_pvTimeStamp(SS_ID, long);/* get time stamp value */
+epicsShareFunc long epicsShareAPI seq_pvAssign(SS_ID, long, char *);	/* assign/connect to a pv */
+epicsShareFunc long epicsShareAPI seq_pvMonitor(SS_ID, long);		/* enable monitoring on pv */
+epicsShareFunc long epicsShareAPI seq_pvStopMonitor(SS_ID, long);	/* disable monitoring on pv */
+epicsShareFunc char *epicsShareAPI seq_pvName(SS_ID, long);		/* returns pv name */
+epicsShareFunc long epicsShareAPI seq_pvStatus(SS_ID, long);		/* returns pv alarm status code */
+epicsShareFunc long epicsShareAPI seq_pvSeverity(SS_ID, long);		/* returns pv alarm severity */
+epicsShareFunc char *epicsShareAPI seq_pvMessage(SS_ID, long);		/* returns pv error message */
+epicsShareFunc long epicsShareAPI seq_pvAssigned(SS_ID, long);		/* returns TRUE if assigned */
+epicsShareFunc long epicsShareAPI seq_pvConnected(SS_ID, long);		/* TRUE if connected */
+epicsShareFunc long epicsShareAPI seq_pvGetComplete(SS_ID, long);	/* TRUE if last get completed */
+epicsShareFunc long epicsShareAPI seq_pvPutComplete(SS_ID, long, long, long, long *);
 									/* TRUE if last put completed */
-epicsShareFunc long	epicsShareAPI seq_pvChannelCount(SS_ID);	/* returns number of channels */
-epicsShareFunc long	epicsShareAPI seq_pvConnectCount(SS_ID);	/* returns number of channels conn'ed */
-epicsShareFunc long	epicsShareAPI seq_pvAssignCount(SS_ID);		/* returns number of channels ass'ned */
-epicsShareFunc long	epicsShareAPI seq_pvCount(SS_ID, long);		/* returns number of elements in arr */
-epicsShareFunc void	epicsShareAPI seq_pvFlush();			/* flush put/get requests */
-epicsShareFunc long	epicsShareAPI seq_pvIndex(SS_ID, long);		/* returns index of pv */
-epicsShareFunc long	epicsShareAPI seq_seqLog(SS_ID, const char *, ...); /* Logging */
-epicsShareFunc void	epicsShareAPI seq_delayInit(SS_ID, long, double);/* initialize a delay entry */
-epicsShareFunc long	epicsShareAPI seq_delay(SS_ID, long);		/* test a delay entry */
-epicsShareFunc char	*epicsShareAPI seq_macValueGet(SS_ID, char *);	/* Given macro name, return ptr to val*/
-epicsShareFunc long	epicsShareAPI seq_optGet (SS_ID ssId, char *opt); /* check an option for TRUE/FALSE */
+epicsShareFunc long epicsShareAPI seq_pvChannelCount(SS_ID);		/* returns number of channels */
+epicsShareFunc long epicsShareAPI seq_pvConnectCount(SS_ID);		/* returns number of channels conn'ed */
+epicsShareFunc long epicsShareAPI seq_pvAssignCount(SS_ID);		/* returns number of channels ass'ned */
+epicsShareFunc long epicsShareAPI seq_pvCount(SS_ID, long);		/* returns number of elements in arr */
+epicsShareFunc void epicsShareAPI seq_pvFlush();			/* flush put/get requests */
+epicsShareFunc long epicsShareAPI seq_pvIndex(SS_ID, long);		/* returns index of pv */
+epicsShareFunc long epicsShareAPI seq_seqLog(SS_ID, const char *, ...); /* Logging */
+epicsShareFunc void epicsShareAPI seq_delayInit(SS_ID, long, double);	/* initialize a delay entry */
+epicsShareFunc long epicsShareAPI seq_delay(SS_ID, long);		/* test a delay entry */
+epicsShareFunc char *epicsShareAPI seq_macValueGet(SS_ID, char *);	/* Given macro name, return ptr to val*/
+epicsShareFunc long epicsShareAPI seq_optGet (SS_ID ssId, char *opt);	/* check an option for TRUE/FALSE */
 
 epicsShareFunc long epicsShareAPI seqShow (epicsThreadId);
 epicsShareFunc long epicsShareAPI seqChanShow (epicsThreadId, char *);

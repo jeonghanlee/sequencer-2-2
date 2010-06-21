@@ -13,19 +13,18 @@
 	macros.  The PV context and auxiliary thread are shared by all state
 	programs.
 ***************************************************************************/
-/*#define	DEBUG	1*/
 
-#include	<sys/types.h>
-#include	<sys/stat.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
-#include	<errno.h>
-#include	<fcntl.h>
-#include	<string.h>
-#include	<stddef.h>
-#include	<stdarg.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <string.h>
+#include <stddef.h>
+#include <stdarg.h>
 
 #define epicsExportSharedSymbols
-#include	"seq.h"
+#include "seq.h"
 
 /* function prototypes for local routines */
 static SPROG *seqInitTables(struct seqProgram *);

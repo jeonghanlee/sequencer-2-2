@@ -23,7 +23,6 @@
 #define epicsExportSharedSymbols
 #include "seq.h"
 
-
 struct sequencerProgram {
     struct seqProgram *prog;
     struct sequencerProgram *next;

@@ -8,13 +8,10 @@
 	seqChanShow - printf channel (pv) info.
 ***************************************************************************/
 
-/*#define	DEBUG	1*/
-
-#include	<string.h>
-/* #include	<unistd.h> */
+#include <string.h>
 
 #define epicsExportSharedSymbols
-#include	"seq.h"
+#include "seq.h"
 
 /* User functions */
 LOCAL	int wait_rtn();
