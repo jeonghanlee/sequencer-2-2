@@ -37,8 +37,6 @@ static void seq_logInit(SPROG *);
 static void seqChanNameEval(SPROG *);
 static void selectDBtype(char *, short *, short *, short *, short *);
 
-#define	SCRATCH_SIZE	(MAX_MACROS*(MAX_STRING_SIZE+1)*12)
-
 /*	Globals */
 
 /*	Auxiliary sequencer thread id; used to share PV context. */
@@ -372,7 +370,7 @@ static void init_chan(struct seqProgram *pSeqProg, SPROG *pSP)
 
 		/* Fill in get/put db types, element size, & access offset */
 		selectDBtype(pSeqChan->pVarType, &pDB->getType,
-		 &pDB->putType, &pDB->size, &pDB->dbOffset);
+			&pDB->putType, &pDB->size, &pDB->dbOffset);
 
 		/* Reentrant option: Convert offset to addr of the user var. */
 		if ((pSP->options & OPT_REENT) != 0)

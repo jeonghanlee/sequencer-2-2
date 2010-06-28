@@ -43,6 +43,8 @@ void *pvSys;
 extern void *pvSys;
 #endif
 
+#define MAX_QUEUE_SIZE 100		/* default max_queue_size */
+
 /* Structure to hold information about database channels */
 struct	db_channel
 {
@@ -56,7 +58,6 @@ struct	db_channel
 	long		eventNum;	/* event number */
 	epicsBoolean	monFlag;	/* TRUE if channel is to be monitored */
 	int		queued;		/* TRUE if queued via syncQ */
-#define MAX_QUEUE_SIZE 100		/* default max_queue_size */
 	int		maxQueueSize;	/* max syncQ queue size (0 => def) */
 	int		queueIndex;	/* syncQ queue index */
 
@@ -183,7 +184,6 @@ struct	state_program
 	char		*pLogFile;	/* logfile name */
 	int		numQueues;	/* number of syncQ queues */
 	ELLLIST		*pQueues;	/* ptr to syncQ queues */
-
 };
 typedef	struct state_program SPROG;
 

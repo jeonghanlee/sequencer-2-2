@@ -803,7 +803,7 @@ epicsShareFunc int epicsShareAPI seq_pvGetQ(SS_ID ssId, int pvId)
  * seq_pvFreeQ() - Free elements on syncQ queue and clear event flag.
  *		   Intended to be called from action code.
  */
-epicsShareFunc int epicsShareAPI seq_pvFreeQ(SS_ID	ssId, int	pvId)
+epicsShareFunc int epicsShareAPI seq_pvFreeQ(SS_ID ssId, int pvId)
 {
 	SPROG		*pSP;
 	SSCB		*pSS;
@@ -884,6 +884,7 @@ epicsShareFunc void epicsShareAPI seq_delayInit(SS_ID ssId, long delayId, double
 	pSS->delay[delayId] = delay;
 	pSS->numDelays = max(pSS->numDelays, delayId + 1);
 }
+
 /*
  * seq_optGet: return the value of an option (e.g. "a").
  * FALSE means "-" and TRUE means "+".

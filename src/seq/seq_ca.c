@@ -30,15 +30,9 @@
 #define epicsExportSharedSymbols
 #include "seq.h"
 
-LOCAL void proc_db_events(pvValue *, pvType, CHAN *, long);
-LOCAL void proc_db_events_queued(pvValue *, CHAN *);
+static void proc_db_events(pvValue *, pvType, CHAN *, long);
+static void proc_db_events_queued(pvValue *, CHAN *);
 
-/*#define		DEBUG*/
-
-#ifdef		DEBUG
-#undef		LOCAL
-#define		LOCAL
-#endif		/*DEBUG*/
 /*
  * seq_connect() - Connect to all database channels.
  */
@@ -150,22 +144,22 @@ epicsShareFunc void seq_mon_handler(
 }
 
 /* Common code for completion and monitor handling */
-LOCAL void proc_db_events(
+static void proc_db_events(
 	pvValue *pValue, pvType type, CHAN *pDB, long complete_type)
 {
-	SPROG			*pSP;
-	void			*pVal;
+	SPROG	*pSP = pDB->sprog;
+	void	*pVal;
 
 #ifdef	DEBUG
 	errlogPrintf("proc_db_events: var=%s, pv=%s, type=%s\n", pDB->pVarName,
-	    pDB->dbName, complete_type==0?"get":complete_type==1?"put":"mon");
+		pDB->dbName, complete_type==0?"get":complete_type==1?"put":"mon");
 #endif	/*DEBUG*/
 
 	/* If monitor on var queued via syncQ, branch to alternative routine */
 	if (pDB->queued && complete_type == MON_COMPLETE)
 	{
-	    proc_db_events_queued(pValue, pDB);
-	    return;
+		proc_db_events_queued(pValue, pDB);
+		return;
 	}
 
 	/* Copy value returned into user variable (can get NULL value pointer
@@ -239,8 +233,9 @@ LOCAL void proc_db_events(
 
 	return;
 }
+
 /* Common code for event and callback handling (queuing version) */
-LOCAL void proc_db_events_queued(pvValue *pValue, CHAN *pDB)
+static void proc_db_events_queued(pvValue *pValue, CHAN *pDB)
 {
 	QENTRY			*pEntry;
 	SPROG			*pSP;
@@ -297,8 +292,6 @@ LOCAL void proc_db_events_queued(pvValue *pValue, CHAN *pDB)
 }
 
 /*	Disconnect all database channels */
-/*#define	DEBUG_DISCONNECT*/
-
 epicsShareFunc long seq_disconnect(SPROG *pSP)
 {
 	CHAN	*pDB;
@@ -417,8 +410,6 @@ void seq_conn_handler(void *var,int connected)
 
 	/* Wake up each state set that is waiting for event processing */
 	seqWakeup(pSP, 0);
-	
-	return;
 }
 
 /*
@@ -427,19 +418,17 @@ void seq_conn_handler(void *var,int connected)
  */
 void seqWakeup(SPROG *pSP, long eventNum)
 {
-	int		nss;
-	SSCB		*pSS;
+	int	nss;
+	SSCB	*pSS;
 
 	/* Check event number against mask for all state sets: */
 	for (nss = 0, pSS = pSP->pSS; nss < pSP->numSS; nss++, pSS++)
 	{
 		/* If event bit in mask is set, wake that state set */
-		if ( (eventNum == 0) || 
-		     ( pSS->pMask != NULL && bitTest(pSS->pMask, eventNum) ) )
+		if ((eventNum == 0) || 
+		    (pSS->pMask && bitTest(pSS->pMask, eventNum)))
 		{
 			epicsEventSignal(pSS->syncSemId); /* wake up ss thread */
 		}
-
 	}
-	return;
 }
