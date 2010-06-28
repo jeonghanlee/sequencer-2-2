@@ -20,6 +20,10 @@
 #define epicsExportSharedSymbols
 #include "seq.h"
 
+#ifndef max
+#define max(x, y) (((x) < (y)) ? (y) : (x))
+#endif
+
 /* Used to disable debug output */
 void nothing(const char *format,...) {}
 
@@ -29,7 +33,7 @@ static void ss_entry(SSCB *pSS);
 static void ss_thread_init(SPROG *, SSCB *);
 static void ss_thread_uninit(SPROG *, SSCB *,int);
 static void seq_clearDelay(SSCB *,STATE *);
-static double seq_getTimeout(SSCB *);
+static int seq_getTimeout(SSCB *, double *);
 epicsStatus seqAddProg(SPROG *pSP);
 long seq_connect(SPROG *pSP);
 long seq_disconnect(SPROG *pSP);
@@ -97,7 +101,6 @@ static void ss_entry(SSCB *pSS)
 	SPROG		*pSP = pSS->sprog;
 	epicsBoolean	ev_trig;
 	STATE		*pST, *pStNext;
-	double		delay;
 	USER_VAR	*pVar;
 	int		nWords;
 	SS_ID		ssId;
@@ -153,11 +156,16 @@ static void ss_entry(SSCB *pSS)
 		/* Loop until an event is triggered, i.e. when() returns TRUE
 		 */
 		do {
+			double delay = 0.0;
+
 			/* Wake up on PV event, event flag, or expired delay */
-			delay = seq_getTimeout(pSS); /* min. delay from list */
-			if (delay > 0.0)
+			if (seq_getTimeout(pSS, &delay) && delay > 0.0)
 			{
 				epicsEventWaitWithTimeout(pSS->syncSemId, delay);
+			}
+			else
+			{
+				epicsEventWait(pSS->syncSemId);
 			}
 
 			/* Check whether we have been asked to exit */
@@ -315,7 +323,7 @@ static void seq_clearDelay(SSCB *pSS, STATE *pST)
 		pvTimeGetCurrentDouble(&pSS->timeEntered);
 	}
 
-	for (ndelay = 0; ndelay < MAX_NDELAY; ndelay++)
+	for (ndelay = 0; ndelay < pSS->maxNumDelays; ndelay++)
 	{
 		pSS->delay[ndelay] = 0;
 	 	pSS->delayExpired[ndelay] = FALSE;
@@ -326,64 +334,49 @@ static void seq_clearDelay(SSCB *pSS, STATE *pST)
 
 /*
  * seq_getTimeout() - return time-out for pending on events.
- * Returns number of seconds to next expected timeout of a delay() call.
- * Returns (double) INT_MAX if no delays pending 
+ * Return whether to time out when waiting for events.
+ * If yes, set *pdelay to the timout (in seconds).
  */
-static double seq_getTimeout(SSCB *pSS)
+static int seq_getTimeout(SSCB *pSS, double *pdelay)
 {
-	int	ndelay, delayMinInit;
-	double	cur, delay, delayMin, delayN;
+	int	ndelay, do_timeout = FALSE;
+	double	cur, delay, delayMin;
 
 	if (pSS->numDelays == 0)
-		return (double) INT_MAX;
-
+		return do_timeout;
 	/*
-	 * calculate the delay since this state was entered
+	 * Calculate the delay since this state was entered.
 	 */
 	pvTimeGetCurrentDouble(&cur);
 	delay = cur - pSS->timeEntered;
-
-	delayMinInit = 0;
-	delayMin = (double) INT_MAX;
-
-	/* Find the minimum  delay among all non-expired timeouts */
+	/*
+	 * Find the minimum delay among all unexpired timeouts if
+	 * one exists, and set do_timeout in this case.
+	 */
 	for (ndelay = 0; ndelay < pSS->numDelays; ndelay++)
 	{
+		double delayN;
+
 		if (pSS->delayExpired[ndelay])
 			continue; /* skip if this delay entry already expired */
-
 		delayN = pSS->delay[ndelay];
 		if (delay >= delayN)
 		{	/* just expired */
 			pSS->delayExpired[ndelay] = TRUE; /* mark as expired */
-			return 0.0;
+			*pdelay = 0.0;
+			return TRUE;
 		}
-
-		if (delayN<=delayMin) {
-			delayMinInit=1;
+		if (!do_timeout || delayN<=delayMin)
+		{
+			do_timeout = TRUE;
 			delayMin = delayN;  /* this is the min. delay so far */
 		}
 	}
-
-	/*
-	 * If there is no unexpired delay in the list
-	 * then wait forever until there is a PV state
-	 * change
-	 */
-	if (!delayMinInit) {
-		return (double) INT_MAX;
+	if (do_timeout)
+	{
+		*pdelay = max(0.0, delayMin - delay);
 	}
-
-	/*
-	 * unexpired delay _is_ in the list
-	 */
-	if (delayMin>delay) {
-		delay = delayMin - delay;
-		return (double) delay;
-	}
-	else {
-		return 0.0;
-	}
+	return do_timeout;
 }
 
 /*

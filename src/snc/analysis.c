@@ -1201,6 +1201,10 @@ static uint connect_states(SymTable st, Expr *prog)
 				traverse_expr_tree(tp->when_cond, 1<<E_DELAY, 0, 0,
 					assign_next_delay_id, &delay_id);
 			}
+			if (delay_id > ssp->extra.e_ss->num_delays)
+			{
+				ssp->extra.e_ss->num_delays = delay_id;
+			}
 		}
 		num_ss++;
 	}

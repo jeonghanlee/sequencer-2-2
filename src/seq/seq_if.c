@@ -31,11 +31,16 @@
 #include <string.h>
 
 #define epicsExportSharedSymbols
+#define epicsAssertAuthor "benjamin.franksen@bessy.de"
 #include "seq.h"
 
 /* Macros for resource lock */
 #define LOCK   epicsMutexMustLock(pSP->caSemId)
 #define UNLOCK epicsMutexUnlock(pSP->caSemId)
+
+#ifndef max
+#define max(x, y) (((x) < (y)) ? (y) : (x))
+#endif
 
 /* Flush outstanding PV requests */
 epicsShareFunc void epicsShareAPI seq_pvFlush()
@@ -159,10 +164,10 @@ epicsShareFunc long epicsShareAPI seq_pvPut(SS_ID ssId, long pvId, long compType
 	pSS = (SSCB *)ssId;
 	pSP = pSS->sprog;
 	pDB = pSP->pChan + pvId;
-#ifdef	DEBUG
+#ifdef DEBUG
 	errlogPrintf("seq_pvPut: pv name=%s, pVar=%p\n", pDB->dbName,
 		pDB->pVar);
-#endif	/*DEBUG*/
+#endif
 
         /* Determine whether performing asynchronous or synchronous i/o
 	   ((+a) option was never honored for put, so HONOR_OPTION
@@ -867,17 +872,17 @@ epicsShareFunc long epicsShareAPI seq_delay(SS_ID ssId, long delayId)
  */
 epicsShareFunc void epicsShareAPI seq_delayInit(SS_ID ssId, long delayId, double delay)
 {
-	SSCB		*pSS;
-	int		ndelay;
+	SSCB	*pSS = ssId;
 
-	pSS = (SSCB *)ssId;
+#ifdef DEBUG
+	printf("seq_delayInit: delayId=%ld, numDelays=%ld, maxNumDelays=%ld\n",
+		delayId, pSS->numDelays, pSS->maxNumDelays);
+#endif
+	assert(delayId <= pSS->numDelays);
+	assert(pSS->numDelays < pSS->maxNumDelays);
 
-	/* Save delay time */
 	pSS->delay[delayId] = delay;
-
-	ndelay = delayId + 1;
-	if (ndelay > pSS->numDelays)
-		pSS->numDelays = ndelay;
+	pSS->numDelays = max(pSS->numDelays, delayId + 1);
 }
 /*
  * seq_optGet: return the value of an option (e.g. "a").

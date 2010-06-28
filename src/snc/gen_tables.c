@@ -311,6 +311,7 @@ static void gen_ss_table(SymTable st, Expr *ss_list)
 		printf("\t/* ss name */           \"%s\",\n", ssp->value);
 		printf("\t/* state struct */      state_%s,\n", ssp->value);
 		printf("\t/* number of states */  %d,\n", ssp->extra.e_ss->num_states);
+		printf("\t/* number of delays */  %d,\n", ssp->extra.e_ss->num_delays);
 		err_sp = sym_table_lookup(st, "error", ssp);
 		printf("\t/* error state */       %d},\n\n",
 			err_sp ? err_sp->extra.e_state->index : -1);

@@ -111,7 +111,6 @@ struct	state_info_block
 };
 typedef	struct	state_info_block STATE;
 
-#define	MAX_NDELAY	20	/* max # delays allowed in each SS */
 /* Structure to hold information about a State Set */
 struct	state_set_control_block
 {
@@ -135,9 +134,10 @@ struct	state_set_control_block
 	short		errorState;	/* error state index (-1 if none defd)*/
 	short		transNum;	/* highest prio trans. # triggered */
 	bitMask		*pMask;		/* current event mask */
+	long		maxNumDelays;	/* max. number of delays */
 	long		numDelays;	/* number of delays activated */
-	double		delay[MAX_NDELAY]; /* queued delay value in secs */
-	epicsBoolean	delayExpired[MAX_NDELAY]; /* TRUE if delay expired */
+	double		*delay;		/* queued delay value in secs (array) */
+	epicsBoolean	*delayExpired;	/* TRUE if delay expired (array) */
 	double		timeEntered;	/* time that a state was entered */
 	struct state_program *sprog;	/* ptr back to state program block */
 };

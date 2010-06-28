@@ -122,6 +122,7 @@ struct	seqSS
 	char		*pSSName;	/* state set name */
 	struct seqState	*pStates;	/* array of state blocks */
 	long		numStates;	/* number of states in this state set */
+	long		numDelays;	/* number of delays in this state set */
 	long		errorState;	/* error state index (-1 if none defd)*/
 };
 
