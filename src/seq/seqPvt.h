@@ -83,6 +83,7 @@ struct	db_channel
 	void		*evid;		/* event id (supplied by PV lib) */
 	struct state_program *sprog;	/* state program that owns this struct*/
 	struct state_set_control_block *sset; /* current state-set (temp.) */
+	epicsMutexId	varLock;	/* mutex to lock out access */
 };
 typedef	struct db_channel CHAN;
 

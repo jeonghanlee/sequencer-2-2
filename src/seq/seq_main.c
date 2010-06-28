@@ -382,6 +382,7 @@ static void init_chan(struct seqProgram *pSeqProg, SPROG *pSP)
 		printf("   efId=%d, monFlag=%d, eventNum=%d\n",
 			pDB->efId, pDB->monFlag, pDB->eventNum);
 #endif	/*DEBUG*/
+		pDB->varLock = epicsMutexMustCreate();
 	}
 }
 

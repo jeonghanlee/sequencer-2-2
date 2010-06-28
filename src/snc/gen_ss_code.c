@@ -36,7 +36,8 @@ enum {
 	F_PVSTATUS, F_PVSEVERITY, F_PVMESSAGE, F_PVFLUSH, F_PVERROR,
 	F_PVGETCOMPLETE, F_PVASSIGNED, F_PVCONNECTED, F_PVPUTCOMPLETE,
 	F_PVCHANNELCOUNT, F_PVCONNECTCOUNT, F_PVASSIGNCOUNT,
-	F_PVDISCONNECT, F_SEQLOG, F_MACVALUEGET, F_OPTGET, F_CODE_LAST
+	F_PVDISCONNECT, F_SEQLOG, F_MACVALUEGET, F_OPTGET,
+	F_PVLOCK, F_PVUNLOCK, F_PVCOPY, F_CODE_LAST
 };
 
 static char *fcode_str[] = {
@@ -46,7 +47,8 @@ static char *fcode_str[] = {
 	"pvStatus", "pvSeverity", "pvMessage", "pvFlush", "pvError",
 	"pvGetComplete", "pvAssigned", "pvConnected", "pvPutComplete",
 	"pvChannelCount", "pvConnectCount", "pvAssignCount",
-	"pvDisconnect", "seqLog", "macValueGet", "optGet", NULL
+	"pvDisconnect", "seqLog", "macValueGet", "optGet",
+	"pvLock", "pvUnlock", "pvCopy", NULL
 };
 
 static void gen_local_var_decls(Expr *scope, int level);
@@ -70,6 +72,7 @@ static void gen_expr(int stmt_type, Expr *ep, int level);
 static void gen_ef_func(int stmt_type, Expr *ep, char *fname, int func_code);
 static void gen_pv_func(int stmt_type, Expr *ep,
 	char *fname, int func_code, int add_length, int num_params);
+static void gen_pv_func_va(int stmt_type, Expr *ep, char *fname, int func_code);
 static void gen_entry_handler(Expr *prog);
 static void gen_exit_handler(Expr *prog);
 static int special_func(int stmt_type, Expr *ep);
@@ -661,6 +664,7 @@ static int special_func(int stmt_type,	Expr *ep)
 	    case F_PVINDEX:
 	    case F_PVDISCONNECT:
 	    case F_PVASSIGN:
+	    case F_PVCOPY:
 		/* PV functions requiring a channel id */
 		gen_pv_func(stmt_type, ep, fname, func_code, FALSE, 0);
 		return TRUE;
@@ -676,6 +680,12 @@ static int special_func(int stmt_type,	Expr *ep)
 		/* PV functions requiring a channel id, an array length and
 		   defaulted last 2 parameters */
 		gen_pv_func(stmt_type, ep, fname, func_code, TRUE, 2);
+		return TRUE;
+
+	    case F_PVLOCK:
+	    case F_PVUNLOCK:
+		/* PV functions requiring a variable number of channel ids */
+		gen_pv_func_va(stmt_type, ep, fname, func_code);
 		return TRUE;
 
 	    case F_PVFLUSH:
@@ -736,6 +746,66 @@ static void gen_ef_func(
 		return;
 	}
 	printf("seq_%s(ssId, %d)", fname, vp->chan.evflag->index);
+}
+
+static void gen_pv_func_va(
+	int	stmt_type,
+	Expr	*ep,		/* function call expression */
+	char	*fname,		/* function name */
+	int	func_code	/* function code */
+)
+{
+	Expr	*ap = 0;
+	int	nargs = 0;
+
+	foreach(ap, ep->func_args)
+	{
+		nargs++;
+	}
+	printf("seq_%s(ssId, %d", fname, nargs);
+	foreach(ap, ep->func_args)
+	{
+		Expr	*subscr = 0;
+		Var	*vp = 0;
+		char	*vn = "?";
+		int	id = -1;
+
+		if (ap->type == E_VAR)
+		{
+			/* plain <pv variable> */
+			vp = ap->extra.e_var;
+		}
+		else if (ap->type == E_SUBSCR)
+		{
+			/* <pv variable>[<expression>] */
+			Expr *ep2 = ap->subscr_operand;
+			subscr = ap->subscr_index;
+			if (ep2->type == E_VAR)
+			{
+				vp = ep2->extra.e_var;
+			}
+		}
+		assert(vp != 0);
+		vn = vp->name;
+		if (vp->assign == M_NONE)
+		{
+			error_at_expr(ep,
+				"parameter to '%s' was not assigned to a pv\n", fname);
+		}
+		else
+		{
+			id = vp->index;
+		}
+		printf(", %d /* %s */", id, vn);
+		if (ap->type == E_SUBSCR) /* subscripted variable? */
+		{	/* e.g. pvPut(xyz[i+2]); => seq_pvPut(ssId, 3 + (i+2)); */
+			printf(" + (");
+			/* evalute the subscript expression */
+			gen_expr(stmt_type, subscr, 0);
+			printf(")");
+		}
+	}
+	printf(")");
 }
 
 /* Generate code for pv functions requiring a database variable.

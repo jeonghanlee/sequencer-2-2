@@ -155,6 +155,7 @@ static void ss_entry(SSCB *pSS)
 		 */
 		do {
 			double delay = 0.0;
+			int e;
 
 			/* Wake up on PV event, event flag, or expired delay */
 			if (seq_getTimeout(pSS, &delay) && delay > 0.0)
@@ -177,6 +178,15 @@ static void ss_entry(SSCB *pSS)
 			 * is executed. Note, we lock out PV events while doing 
 			 * this. */
 			epicsMutexMustLock(pSP->caSemId);
+			for (e = 0; e < pSP->numChans; e++)
+			{
+				if (bitTest(pSS->pMask, e+pSP->numEvents+1))
+				{
+					CHAN *pDB = pSP->pChan + e;
+					epicsMutexMustLock(pDB->varLock);
+					DEBUG("%s: lock %d\n", pSS->pSSName, e);
+				}
+			}
 
 			ev_trig = pST->eventFunc(ssId, pVar,
 				&pSS->transNum, &pSS->nextState);
@@ -191,6 +201,15 @@ static void ss_entry(SSCB *pSS)
 				}
 			}
 
+			for (e = pSP->numChans-1; e >= 0; e--)
+			{
+				if (bitTest(pSS->pMask, e+pSP->numEvents+1))
+				{
+					CHAN *pDB = pSP->pChan + e;
+					DEBUG("%s: unlock %d\n", pSS->pSSName, e);
+					epicsMutexUnlock(pDB->varLock);
+				}
+			}
 			epicsMutexUnlock(pSP->caSemId);
 
 		} while (!ev_trig);

@@ -152,7 +152,6 @@ static void proc_db_events(
 	pvValue *pValue, pvType type, CHAN *pDB, long complete_type)
 {
 	SPROG	*pSP = pDB->sprog;
-	void	*pVal;
 
 #ifdef	DEBUG
 	errlogPrintf("proc_db_events: var=%s, pv=%s, type=%s\n", pDB->pVarName,
@@ -168,37 +167,37 @@ static void proc_db_events(
 
 	/* Copy value returned into user variable (can get NULL value pointer
 	   for put completion only) */
-	if (pValue == NULL)
-	    ;
-	else if (PV_SIMPLE(type))
+	if (pValue != NULL)
 	{
-	    pVal = (void *)pValue; /* ptr to data */
-	    memcpy(pDB->pVar, pVal, pDB->size * pDB->dbCount);
-	}
-	else
-	{
-	    pVal = (void *)((long)pValue + pDB->dbOffset); /* ptr to data */
-	    memcpy(pDB->pVar, pVal, pDB->size * pDB->dbCount);
-	}
+		size_t var_size = pDB->size * pDB->dbCount;
+		void *pVal;
 
-	/* Copy status, severity and time stamp (leave unchanged if absent) */
-	if (pValue != NULL && !PV_SIMPLE(type))
-	{
-	    pDB->status = (short) pValue->timeStringVal.status;
-	    pDB->severity = (short) pValue->timeStringVal.severity;
-	    pDB->timeStamp = pValue->timeStringVal.stamp;
+		epicsMutexLock(pDB->varLock);
+		if (PV_SIMPLE(type))
+		{
+			pVal = (void *)pValue;
+		}
+		else
+		{
+			pVal = (void *)((long)pValue + pDB->dbOffset);
+		}
+		memcpy(pDB->pVar, pVal, var_size);
+		/* Copy status, severity and time stamp (leave unchanged if absent) */
+		if (!PV_SIMPLE(type))
+		{
+			pDB->status = (short) pValue->timeStringVal.status;
+			pDB->severity = (short) pValue->timeStringVal.severity;
+			pDB->timeStamp = pValue->timeStringVal.stamp;
+		}
+		/* Copy error message (only when severity indicates error) */
+		if (pDB->severity != pvSevrNONE)
+		{
+			char *pmsg = pvVarGetMess(pDB->pvid);
+			if (!pmsg) pmsg = "unknown";
+			pDB->message = Strdcpy(pDB->message, pmsg);
+		}
+		epicsMutexUnlock(pDB->varLock);
 	}
-
-	/* Copy error message (only when severity indicates error) */
-	if (pDB->severity != pvSevrNONE)
-	{
-	    char *pmsg = pvVarGetMess(pDB->pvid);
-	    if (!pmsg) pmsg = "unknown";
-	    pDB->message = Strdcpy(pDB->message, pmsg);
-	}
-
-	/* Get ptr to the state program that owns this db entry */
-	pSP = pDB->sprog;
 
 	/* Indicate completed pvGet() or pvPut()  */
 	switch (complete_type)
