@@ -864,7 +864,7 @@ epicsShareFunc long epicsShareAPI seq_delay(SS_ID ssId, long delayId)
 		pSS->delayExpired[delayId] = TRUE; /* mark as expired */
 		expired = TRUE;
 	}
-#if defined(DEBUG)
+#ifdef DEBUG
 	errlogPrintf("Delay %ld : %ld ticks, %s\n",delayId,pSS->delay[delayId],
 		expired ? "expired": "unexpired");
 #endif
