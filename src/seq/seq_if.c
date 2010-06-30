@@ -1,4 +1,4 @@
-/*   DESCRIPTION: Interface functions from state program to run-time sequencer.
+/*	Interface functions from state program to run-time sequencer.
  *	Note: To prevent global name conflicts "seq_" is added by the SNC, e.g.
  *	pvPut() becomes seq_pvPut().
  *
@@ -9,6 +9,10 @@
  *
  *	Copyright 1991-1994, the Regents of the University of California,
  *	and the University of Chicago Board of Governors.
+ *
+ *	Copyright, 2010, Helmholtz-Zentrum Berlin f. Materialien
+ *		und Energie GmbH, Germany (HZB)
+ *		(see file Copyright.HZB included in this distribution)
  *
  *	This software was produced under  U.S. Government contracts:
  *	(W-7405-ENG-36) at the Los Alamos National Laboratory,

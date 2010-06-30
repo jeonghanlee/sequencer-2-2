@@ -3,8 +3,7 @@
 	Copyright, 1990, The Regents of the University of California.
 		         Los Alamos National Laboratory
 
-
-	DESCRIPTION: Macro routines for Sequencer.
+	Macro routines for Sequencer.
 	The macro table contains name & value pairs.  These are both pointers
 	to strings.
 ***************************************************************************/

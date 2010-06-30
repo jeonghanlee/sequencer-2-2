@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# seqVersion.pl - create the seq version header file
+# create the seq version header file
 #
 $version = $ARGV[0];
 $now = localtime;

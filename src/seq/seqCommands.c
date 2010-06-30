@@ -1,4 +1,4 @@
-/* DESCRIPTION: EPICS sequencer commands
+/* EPICS sequencer commands
  *
  * Author:  Eric Norum
  *

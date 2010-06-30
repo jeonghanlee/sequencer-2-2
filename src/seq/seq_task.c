@@ -1,6 +1,6 @@
 /**************************************************************************
 			GTA PROJECT   AT division
-		Copyright, 1990-1994
+	Copyright, 1990-1994
 		The Regents of the University of California and
 		the University of Chicago.
 		Los Alamos National Laboratory
@@ -9,7 +9,7 @@
 		und Energie GmbH, Germany (HZB)
 		(see file Copyright.HZB included in this distribution)
 
-	DESCRIPTION: Thread creation and control for sequencer state-sets.
+	Thread creation and control for sequencer state-sets.
 ***************************************************************************/
 #define DEBUG nothing /* "nothing", "printf", "errlogPrintf" etc. */
 

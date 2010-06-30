@@ -1,17 +1,16 @@
-/**************************************************************************
-	Copyright, 2010, Helmholtz-Zentrum Berlin f. Materialien
-		und Energie GmbH, Germany (HZB)
-		(see file Copyright.HZB included in this distribution)
-***************************************************************************
-		Common defs for state programs and run-time sequencer
-***************************************************************************/
-/*      Author:         Andy Kozubal
+/*	Common defs for state programs and run-time sequencer
+ *
+ *      Author:         Andy Kozubal
  *      Date:           01mar94
  *
  *      Experimental Physics and Industrial Control System (EPICS)
  *
  *      Copyright 1993 the Regents of the University of California,
  *      and the University of Chicago Board of Governors.
+ *
+ *	Copyright, 2010, Helmholtz-Zentrum Berlin f. Materialien
+ *		und Energie GmbH, Germany (HZB)
+ *		(see file Copyright.HZB included in this distribution)
  *
  *      This software was produced under  U.S. Government contracts:
  *      (W-7405-ENG-36) at the Los Alamos National Laboratory,

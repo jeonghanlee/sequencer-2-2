@@ -3,8 +3,11 @@
 	Copyright, 1991, The Regents of the University of California.
 		         Los Alamos National Laboratory
 
+	Copyright, 2010, Helmholtz-Zentrum Berlin f. Materialien
+		und Energie GmbH, Germany (HZB)
+		(see file Copyright.HZB included in this distribution)
 
-	DESCRIPTION: Seq_prog.c: state program list management functions.
+	State program list management functions.
 	All active state programs are inserted into the list when created
 	and removed from the list when deleted.
 ***************************************************************************/

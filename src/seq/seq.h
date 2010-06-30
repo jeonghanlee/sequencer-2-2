@@ -1,4 +1,4 @@
-/*	DESCRIPTION: Definitions for the run-time sequencer.
+/*	Definitions for the run-time sequencer
  *
  *      Author:         Andy Kozubal
  *      Date:           

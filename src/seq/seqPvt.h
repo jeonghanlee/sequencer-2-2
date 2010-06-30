@@ -1,17 +1,16 @@
-/**************************************************************************
-	Copyright, 2010, Helmholtz-Zentrum Berlin f. Materialien
-		und Energie GmbH, Germany (HZB)
-		(see file Copyright.HZB included in this distribution)
-***************************************************************************
-		Definitions for the run-time sequencer
-***************************************************************************/
-/*      Author:         Andy Kozubal
+/*	Definitions for the run-time sequencer
+ *
+ *      Author:         Andy Kozubal
  *      Date:           
  *
  *      Experimental Physics and Industrial Control System (EPICS)
  *
  *      Copyright 1991,2,3, the Regents of the University of California,
  *      and the University of Chicago Board of Governors.
+ *
+ *	Copyright, 2010, Helmholtz-Zentrum Berlin f. Materialien
+ *		und Energie GmbH, Germany (HZB)
+ *		(see file Copyright.HZB included in this distribution)
  *
  *      This software was produced under  U.S. Government contracts:
  *      (W-7405-ENG-36) at the Los Alamos National Laboratory,

@@ -3,7 +3,11 @@
 	Copyright, 1990-1994, The Regents of the University of California.
 		         Los Alamos National Laboratory
 
-	DESCRIPTION: Task querry & debug routines for run-time sequencer
+	Copyright, 2010, Helmholtz-Zentrum Berlin f. Materialien
+		und Energie GmbH, Germany (HZB)
+		(see file Copyright.HZB included in this distribution)
+
+	Task query & debug routines for run-time sequencer
 ***************************************************************************/
 
 #include <string.h>

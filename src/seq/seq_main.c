@@ -8,7 +8,7 @@
 		und Energie GmbH, Germany (HZB)
 		(see file Copyright.HZB included in this distribution)
 
-	DESCRIPTION: Seq() initiates a sequence as a group of cooperating
+	Seq() initiates a sequence as a group of cooperating
 	tasks.  An optional string parameter specifies the values for
 	macros.  The PV context and auxiliary thread are shared by all state
 	programs.
