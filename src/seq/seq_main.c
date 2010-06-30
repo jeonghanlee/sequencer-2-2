@@ -234,8 +234,6 @@ static void init_sprog(struct seqProgram *pSeqProg, SPROG *pSP)
 	if (nWords == 0)
 		nWords = 1;
 	pSP->pEvents = (bitMask *)calloc(nWords, sizeof(bitMask));
-	for (i = 0; i < nWords; i++)
-		pSP->pEvents[i] = 0;
 
 	/* Allocate and initialize syncQ queues */
 	pSP->numQueues = pSeqProg->numQueues;
