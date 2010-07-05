@@ -189,7 +189,7 @@ static void ss_entry(SSCB *pSS)
 				int i;
 				for (i = 0; i < nWords; i++)
 				{
-					pSP->pEvents[i] = pSP->pEvents[i] & !pSS->pMask[i];
+					pSP->pEvents[i] &= ~pSS->pMask[i];
 				}
 			}
 
