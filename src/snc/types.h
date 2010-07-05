@@ -210,7 +210,7 @@ struct expr_pair
 struct program
 {
 	/* result of parsing phase */
-	Expr		*prog;		/* prog of syntax tree */
+	Expr		*prog;		/* the whole syntax tree */
 
 	/* these point into children of the prog node, for convenience */
 	char		*name;		/* ptr to program name (string) */
@@ -231,8 +231,6 @@ struct program
 /* Generic iteration on lists */
 #define foreach(e,l)		for (e = l; e != 0; e = e->next)
 
-/* #define bits(et)		(1<<et) */
-
 /* Expression types that are scopes. By definition, a scope is an expression
    that allows variable declarations as (immediate) subexpressions. */
 #define scope_mask		( (1<<D_PROG) | (1<<D_SS) | (1<<D_STATE)\
@@ -250,8 +248,6 @@ struct program
 				| (1<<E_PRE) | (1<<E_SUBSCR) | (1<<E_TERNOP) | (1<<E_VAR)\
 				| (1<<S_CHANGE) | (1<<S_CMPND) | (1<<S_FOR) | (1<<S_IF)\
 				| (1<<S_STMT) | (1<<S_WHILE) )
-/* Expressions types that may have sub-scopes */
-#define	has_scope_mask		( scope_mask | (1<<S_FOR) | (1<<S_IF) | (1<<S_WHILE) )
 /* Expression types that are actually expressions i.e. no definitions or statements.
    These are the ones that start with E_. */
 #define	expr_mask		( (1<<E_BINOP) | (1<<E_CONST) | (1<<E_DELAY) | (1<<E_FUNC)\

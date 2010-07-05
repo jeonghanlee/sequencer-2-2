@@ -1004,8 +1004,8 @@ Var *find_var(SymTable st, char *name, Expr *scope)
 
 /* Connect a variable in an expression (E_VAR) to the Var structure.
    If there is no such structure, e.g. because the variable has not been
-   declared, then allocate one, assign type V_NONE, and assign the most
-   local scope for the variable. */
+   declared, then allocate one, assign type V_NONE, and assign the
+   top-level scope for the variable. */
 static int connect_variable(Expr *ep, Expr *scope, void *parg)
 {
 	SymTable	st = *(SymTable *)parg;

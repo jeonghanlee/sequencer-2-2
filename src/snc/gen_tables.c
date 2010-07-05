@@ -182,7 +182,8 @@ static void gen_state_table(Expr *ss_list, int num_event_flags, int num_channels
 	int	num_event_words = (num_event_flags + num_channels + NBITS)/NBITS;
 	bitMask	event_mask[num_event_words];
 
-	/* NOTE: bit zero of event mask is not used */
+	/* NOTE: Bit zero of event mask is not used. Bit 1 to num_event_flags
+	   are used for event flags, then come channels. */
 
 	/* For each state set... */
 	foreach (ssp, ss_list)
