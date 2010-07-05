@@ -62,7 +62,6 @@ struct	db_channel
 
 	/* These are filled in at run time */
 	char		*dbName;	/* channel name after macro expansion */
-	long		index;		/* index in array of db channels */
 	void		*pvid;		/* PV (process variable) id */
 	epicsBoolean	assigned;	/* TRUE only if channel is assigned */
 	epicsBoolean	connected;	/* TRUE only if channel is connected */
