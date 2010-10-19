@@ -59,7 +59,7 @@ or by following the links here:
 You can look at (or even use at your own risk ;-) my latest
 development version by checking out the `darcs`_ repository::
 
-   darcs get http://www-csr.bessy.de/control/SoftDist/sequencer/repo/
+   darcs get http://www-csr.bessy.de/control/SoftDist/sequencer/repo/ seq-head
 
 See `Contribute`_ for a short description how to record and send
 patches.
