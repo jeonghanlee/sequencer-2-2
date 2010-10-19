@@ -17,7 +17,6 @@
 
 #define	EOI		0
 
-typedef unsigned int uint;
 typedef unsigned char uchar;
 
 #define	BSIZE	8192
