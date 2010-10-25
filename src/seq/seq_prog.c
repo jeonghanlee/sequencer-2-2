@@ -103,7 +103,7 @@ epicsShareFunc SPROG *epicsShareAPI seqFindProgByName(char *pProgName)
  * call the specified routine or function.  Passes one parameter of
  * pointer size.
  */
-epicsStatus seqTraverseProg(void (*pFunc)(), void *param)
+epicsStatus seqTraverseProg(seqTraversee *pFunc, void *param)
 {
 	PROG_NODE	*pNode;
 	SPROG		*pSP;

@@ -271,8 +271,8 @@ static void init_sscb(struct seqProgram *pSeqProg, SPROG *pSP)
 		pSS->pSSName = pSeqSS->pSSName;
 		pSS->numStates = pSeqSS->numStates;
 		pSS->maxNumDelays = pSeqSS->numDelays;
-		pSS->delay = calloc(pSS->maxNumDelays, sizeof(double));
-		pSS->delayExpired = calloc(pSS->maxNumDelays, sizeof(epicsBoolean));
+		pSS->delay = (double *)calloc(pSS->maxNumDelays, sizeof(double));
+		pSS->delayExpired = (epicsBoolean *)calloc(pSS->maxNumDelays, sizeof(epicsBoolean));
 		pSS->errorState = pSeqSS->errorState;
 		pSS->currentState = 0; /* initial state */
 		pSS->nextState = 0;
@@ -417,7 +417,7 @@ static void seqChanNameEval(SPROG *pSP)
 	pDB = pSP->pChan;
 	for (i = 0; i < pSP->numChans; i++, pDB++)
 	{
-		pDB->dbName = calloc(1, MACRO_STR_LEN);
+		pDB->dbName = (char *)calloc(1, MACRO_STR_LEN);
 		seqMacEval(pDB->dbAsName, pDB->dbName, MACRO_STR_LEN, pSP->pMacros);
 #ifdef	DEBUG
 		printf("seqChanNameEval: \"%s\" evaluated to \"%s\"\n",
@@ -562,7 +562,7 @@ static void seq_logInit(SPROG *pSP)
  */
 #define	LOG_BFR_SIZE	200
 
-long seq_logv(SPROG *pSP, const char *fmt, va_list args)
+static long seq_logv(SPROG *pSP, const char *fmt, va_list args)
 {
 	int		count, status;
 	epicsTimeStamp	timeStamp;

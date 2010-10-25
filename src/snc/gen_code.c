@@ -27,7 +27,7 @@ static void gen_user_var(Program *p);
 static void gen_global_c_code(Expr *global_c_list);
 static void gen_init_reg(char *prog_name);
 
-int assert_var_declared(Expr *ep, Expr *scope, void *parg)
+static int assert_var_declared(Expr *ep, Expr *scope, void *parg)
 {
 #ifdef DEBUG
 	report("assert_var_declared: '%s' in scope (%s:%s)\n",
@@ -113,7 +113,7 @@ static void gen_preamble(char *prog_name, int opt_main)
 		printf("        --argc; ++argv;\n");
 		printf("    }\n");
 		printf("    macro_def = (argc>1)?argv[1]:NULL;\n");
-		printf("    threadId = seq((void *)&%s, macro_def, 0);\n", prog_name);
+		printf("    threadId = seq(&%s, macro_def, 0);\n", prog_name);
 		printf("    if(callIocsh) {\n");
 		printf("        seqRegisterSequencerCommands();\n");
 		printf("        iocsh(0);\n");

@@ -27,4 +27,6 @@ void snlParserFree(
 	void (*freeProc)(void*)	/* function used to reclaim memory */
 );
 
+void snlParserTrace(FILE *TraceFILE, char *zTracePrompt);
+
 #endif	/*INCLlexerh*/

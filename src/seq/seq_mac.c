@@ -27,7 +27,8 @@ static MACRO *seqMacTblGet(MACRO *pMac, char *pName);
 void seqMacEval(char *pInStr, char *pOutStr, long maxChar, MACRO *pMac)
 {
 	char		name[50], *pValue, *pTmp;
-	int		nameLth, valLth;
+	int		valLth;
+	size_t		nameLth;
 
 #ifdef	DEBUG
 	errlogPrintf("seqMacEval: InStr=%s\n", pInStr);

@@ -12,6 +12,7 @@
 
 #include "parse.h"
 #include "snc_main.h"
+#include "lexer.h"
 }
 
 %extra_argument { Expr **presult }

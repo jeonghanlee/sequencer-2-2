@@ -99,7 +99,7 @@ Expr *expr(
 	ep->value = tok.str;
 	ep->line_num = tok.line;
 	ep->src_file = tok.file;
-	ep->children = calloc(num_children, sizeof(Expr*));
+	ep->children = (Expr **)calloc(num_children, sizeof(Expr*));
 	/* allocate extra data */
 	switch (type)
 	{

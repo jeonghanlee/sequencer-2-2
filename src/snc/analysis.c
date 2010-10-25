@@ -79,7 +79,7 @@ Program *analyse_program(Expr *prog, Options options)
 	return p;
 }
 
-int analyse_defn(Expr *scope, Expr *parent_scope, void *parg)
+static int analyse_defn(Expr *scope, Expr *parent_scope, void *parg)
 {
 	Program	*p = (Program *)parg;
 

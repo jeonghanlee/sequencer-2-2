@@ -210,6 +210,7 @@ extern char *seqMacValGet(MACRO *pMac, char *pName);
 extern void seqMacEval(char *pInStr, char *pOutStr, long maxChar, MACRO *pMac);
 extern SPROG *seqFindProg(epicsThreadId threadId);
 extern epicsStatus seqDelProg(SPROG *pSP);
+extern epicsStatus seqAddProg(SPROG *pSP);
 extern void *seqAuxThread(void *);
 extern epicsThreadId seqAuxThreadId;
 extern void seq_get_handler(
@@ -218,7 +219,10 @@ extern void seq_put_handler(
 	void *var, pvType type, int count, pvValue *pValue, void *arg, pvStat status);
 extern void seq_mon_handler(
 	void *var, pvType type, int count, pvValue *pValue, void *arg, pvStat status);
-void seq_conn_handler(void *var,int connected);
-extern epicsStatus seqTraverseProg(void (*pFunc)(), void *param);
+extern void seq_conn_handler(void *var,int connected);
+typedef void seqTraversee(SPROG *prog, void *param);
+extern epicsStatus seqTraverseProg(seqTraversee *pFunc, void *param);
+extern long seq_connect(SPROG *pSP);
+extern long seq_disconnect(SPROG *pSP);
 
 #endif	/*INCLseqPvth*/

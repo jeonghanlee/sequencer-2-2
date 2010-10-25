@@ -179,7 +179,7 @@ epicsShareFunc long epicsShareAPI seq_pvChannelCount(SS_ID);		/* returns number 
 epicsShareFunc long epicsShareAPI seq_pvConnectCount(SS_ID);		/* returns number of channels conn'ed */
 epicsShareFunc long epicsShareAPI seq_pvAssignCount(SS_ID);		/* returns number of channels ass'ned */
 epicsShareFunc long epicsShareAPI seq_pvCount(SS_ID, long);		/* returns number of elements in arr */
-epicsShareFunc void epicsShareAPI seq_pvFlush();			/* flush put/get requests */
+epicsShareFunc void epicsShareAPI seq_pvFlush(void);			/* flush put/get requests */
 epicsShareFunc long epicsShareAPI seq_pvIndex(SS_ID, long);		/* returns index of pv */
 epicsShareFunc long epicsShareAPI seq_seqLog(SS_ID, const char *, ...); /* Logging */
 epicsShareFunc void epicsShareAPI seq_delayInit(SS_ID, long, double);	/* initialize a delay entry */

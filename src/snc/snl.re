@@ -123,7 +123,7 @@ static uchar *fill(Scanner *s, uchar *cursor) {
 }
 
 /* alias strdup_from_to: duplicate string from start to (exclusive) stop */
-char *strdupft(uchar *start, uchar *stop) {
+static char *strdupft(uchar *start, uchar *stop) {
 	char *result;
 	char c = *stop;
 	*stop = 0;

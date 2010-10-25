@@ -47,7 +47,7 @@
 #endif
 
 /* Flush outstanding PV requests */
-epicsShareFunc void epicsShareAPI seq_pvFlush()
+epicsShareFunc void epicsShareAPI seq_pvFlush(void)
 {
 	pvSysFlush(pvSys);
 }	

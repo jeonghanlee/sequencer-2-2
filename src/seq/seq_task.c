@@ -35,8 +35,6 @@ static void ss_thread_uninit(SPROG *, SSCB *,int);
 static void seq_clearDelay(SSCB *,STATE *);
 static int seq_getTimeout(SSCB *, double *);
 epicsStatus seqAddProg(SPROG *pSP);
-long seq_connect(SPROG *pSP);
-long seq_disconnect(SPROG *pSP);
 
 /*
  * sequencer() - Sequencer main thread entry point.

@@ -16,7 +16,7 @@
 #include "seq.h"
 
 static int wait_rtn(void);
-static void printValue(char *pVal, int count, int type);
+static void printValue(void *pVal, int count, int type);
 static SPROG *seqQryFind(epicsThreadId tid);
 static void seqShowAll(void);
 
@@ -361,7 +361,7 @@ static int wait_rtn(void)
 }
 
 /* Print the current internal value of a database channel */
-static void printValue(char *pVal, int count, int type)
+static void printValue(void *pVal, int count, int type)
 {
 	int	i;
 	char	*c;
@@ -453,7 +453,7 @@ static SPROG *seqQryFind(epicsThreadId tid)
 static int	seqProgCount;
 
 /* This routine is called by seqTraverseProg() for seqShowAll() */
-static void seqShowSP(SPROG *pSP)
+static void seqShowSP(SPROG *pSP, void *dummy)
 {
 	SSCB	*pSS;
 	int	nss;
