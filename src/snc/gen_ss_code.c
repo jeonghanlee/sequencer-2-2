@@ -36,8 +36,7 @@ enum {
 	F_PVSTATUS, F_PVSEVERITY, F_PVMESSAGE, F_PVFLUSH, F_PVERROR,
 	F_PVGETCOMPLETE, F_PVASSIGNED, F_PVCONNECTED, F_PVPUTCOMPLETE,
 	F_PVCHANNELCOUNT, F_PVCONNECTCOUNT, F_PVASSIGNCOUNT,
-	F_PVDISCONNECT, F_SEQLOG, F_MACVALUEGET, F_OPTGET,
-	F_PVLOCK, F_PVUNLOCK, F_PVCOPY, F_CODE_LAST
+	F_PVDISCONNECT, F_SEQLOG, F_MACVALUEGET, F_OPTGET, F_CODE_LAST
 };
 
 static char *fcode_str[] = {
@@ -47,8 +46,7 @@ static char *fcode_str[] = {
 	"pvStatus", "pvSeverity", "pvMessage", "pvFlush", "pvError",
 	"pvGetComplete", "pvAssigned", "pvConnected", "pvPutComplete",
 	"pvChannelCount", "pvConnectCount", "pvAssignCount",
-	"pvDisconnect", "seqLog", "macValueGet", "optGet",
-	"pvLock", "pvUnlock", "pvCopy", NULL
+	"pvDisconnect", "seqLog", "macValueGet", "optGet", NULL
 };
 
 static void gen_local_var_decls(Expr *scope, int level);
@@ -664,7 +662,6 @@ static int special_func(int stmt_type,	Expr *ep)
 	    case F_PVINDEX:
 	    case F_PVDISCONNECT:
 	    case F_PVASSIGN:
-	    case F_PVCOPY:
 		/* PV functions requiring a channel id */
 		gen_pv_func(stmt_type, ep, fname, func_code, FALSE, 0);
 		return TRUE;
@@ -680,12 +677,6 @@ static int special_func(int stmt_type,	Expr *ep)
 		/* PV functions requiring a channel id, an array length and
 		   defaulted last 2 parameters */
 		gen_pv_func(stmt_type, ep, fname, func_code, TRUE, 2);
-		return TRUE;
-
-	    case F_PVLOCK:
-	    case F_PVUNLOCK:
-		/* PV functions requiring a variable number of channel ids */
-		gen_pv_func_va(stmt_type, ep, fname, func_code);
 		return TRUE;
 
 	    case F_PVFLUSH:

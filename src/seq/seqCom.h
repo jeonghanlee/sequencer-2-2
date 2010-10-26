@@ -200,10 +200,6 @@ epicsShareFunc epicsThreadId epicsShareAPI
     seq(struct seqProgram *, char *, unsigned int);
 epicsShareFunc struct state_program *epicsShareAPI seqFindProgByName (char *);
 
-epicsShareFunc void seq_pvLock(SS_ID ssId, int npvs, ...);
-epicsShareFunc void seq_pvUnlock(SS_ID ssId, int npvs, ...);
-epicsShareFunc void epicsShareAPI seq_pvCopy(SS_ID ssId, long pvId, void *pVal);
-									/* atomic copy */
 
 #ifdef __cplusplus
 } /* extern "C" */
