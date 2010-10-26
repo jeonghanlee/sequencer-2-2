@@ -287,6 +287,8 @@ static void encode_options(Options options)
 		printf(" | OPT_NEWEF");
 	if (options.reent)
 		printf(" | OPT_REENT");
+	if (options.safe)
+		printf(" | OPT_SAFE");
 	if (options.main)
 		printf(" | OPT_MAIN");
 	printf("),\n");

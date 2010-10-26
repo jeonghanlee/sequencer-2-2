@@ -46,6 +46,7 @@ extern "C" {
 #define	OPT_REENT	(1<<3)	/* generate reentrant code */
 #define	OPT_NEWEF	(1<<4)	/* new event flag mode */
 #define OPT_MAIN	(1<<5)	/* generate main program */
+#define	OPT_SAFE	(1<<6)	/* safe mode */
 
 /* Bit encoding for State Specific Options */
 #define OPT_NORESETTIMERS	(1<<0)  /* If TRUE, don't reset timers on */

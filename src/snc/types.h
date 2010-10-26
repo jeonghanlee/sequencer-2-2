@@ -49,12 +49,13 @@ struct sym_table
 #endif
 };
 
-struct options				/* run-time options */
-{
+struct options
+{					/* run-time options */
 	uint	async:1;		/* do pvGet() asynchronously */
 	uint	conn:1;			/* wait for all conns to complete */
 	uint	debug:1;		/* run-time debug */
 	uint	reent:1;		/* reentrant at run-time */
+	uint	safe:1;			/* safe (no globals) */
 	uint	newef:1;		/* new event flag mode */
 	uint	main:1;			/* main program */
 
@@ -64,7 +65,7 @@ struct options				/* run-time options */
 	uint	warn:1;			/* compiler warnings */
 };
 
-#define DEFAULT_OPTIONS (Options){0,1,0,0,1,0,1,1,1}
+#define DEFAULT_OPTIONS (Options){0,1,0,0,0,1,0,1,1,1}
 
 struct state_options			/* run-time state options */
 {

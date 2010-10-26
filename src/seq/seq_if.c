@@ -909,6 +909,7 @@ epicsShareFunc long epicsShareAPI seq_optGet(SS_ID ssId, char *opt)
 	    case 'e': return ( (pSP->options & OPT_NEWEF) != 0);
 	    case 'm': return ( (pSP->options & OPT_MAIN)  != 0);
 	    case 'r': return ( (pSP->options & OPT_REENT) != 0);
+	    case 's': return ( (pSP->options & OPT_SAFE)  != 0);
 	    default:  return FALSE;
 	}
 }

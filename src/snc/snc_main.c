@@ -120,6 +120,9 @@ static void parse_args(int argc, char *argv[])
 			parse_option(s);
 		}
 	}
+	if (options.safe && !options.reent) {
+		options.reent = TRUE;
+	}
 
 	if (!in_file)
 	{
@@ -179,6 +182,9 @@ static void parse_option(char *s)
 	case 'm':
 		options.main = opt_val;
 		break;
+	case 's':
+		options.safe = opt_val;
+		break;
 	case 'w':
 		options.warn = opt_val;
 		break;
@@ -202,6 +208,7 @@ static void print_usage(void)
 	report("  +m           - generate main program\n");
 	report("  -i           - don't register commands/programs\n");
 	report("  +r           - make reentrant at run-time\n");
+	report("  +s           - safe mode (implies +r, overrides -r)\n");
 	report("  -w           - suppress compiler warnings\n");
 	report("example:\n snc +a -c vacuum.st\n");
 }
