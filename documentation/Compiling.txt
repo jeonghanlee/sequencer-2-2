@@ -157,7 +157,7 @@ What libraries to link against and where to find them depends
 on whether you want to create a stand-alone program (e.g. a Unix
 executable), or create a library for an IOC.
 
-.. todo: explain what libraries to link and where to find them
+.. todo:: explain what libraries to link and where to find them
 
 Building a Stand-alone Program for Unix
 ---------------------------------------

@@ -5,10 +5,12 @@ This chapter is supposed to give a detailed reference for the SNL
 syntax and semantics.
 
 Formal syntax is given in `BNF`_. Multiple rules for the same
-`nonterminal symbol` mean that any of the given rules may apply.
+`nonterminal symbol`_ mean that any of the given rules may apply. `Terminal
+symbol`_\s are enclosed in double quotes.
 
 .. _BNF: http://en.wikipedia.org/wiki/Backus-Naur_Form
 .. _nonterminal symbol: http://en.wikipedia.org/wiki/Terminal_and_nonterminal_symbols#Nonterminal_symbols
+.. _terminal symbol: http://en.wikipedia.org/wiki/Terminal_and_nonterminal_symbols#Terminal_symbols
 
 Lexical Syntax
 --------------
@@ -154,7 +156,7 @@ entry or exit code is a regular SNL code block an thus can contain
 local definitions. However, no process variable access functions
 may be called within the entry code.
 
-.. todo: check if we can relax this restriction
+.. todo:: check if we can relax this restriction
 
 Global entry and exit blocks should not be confused with the entry and
 exit blocks of a state, which have the same syntax, but are executed at
@@ -304,7 +306,7 @@ the same rules as C language variables. Macros are defined via
 command line argument, or program parameter (see `Program Name and
 Parameter`_). If process variable name is an empty string, then no
 actual assignment is performed, but the variable is marked for
-potential (dynamic) assignment with :cfunc:`pvAssign`.
+potential (dynamic) assignment with :c:func:`pvAssign`.
 
 An array variable assigned wholesale to one process variable (using
 the first syntactic variant above) or an element of a
@@ -361,7 +363,7 @@ variables, the variable's value is written to the end of the
 queue and the corresponding event flag is set. If the queue is
 already full, the last entry is overwritten. Only scalar items can
 be accommodated in the queue (if the variable is array-valued, only
-the first item will be saved). The ``pvGetQ`` function reads items
+the first item will be saved). The :c:func:`pvGetQ` function reads items
 from the queue.
 
 .. _OptionDefinition:
@@ -415,8 +417,9 @@ State Set Local Definition
    ss_defn: `syncq`
    ss_defn: `decl`
 
-Inside state sets are allowed variable declarations and process
-variable definitions (assign, monitor, sync, and syncQ).
+Inside state sets are allowed variable declarations and process variable
+definitions (:token:`assign`, :token:`monitor`, :token:`sync`, and
+:token:`syncq`).
 
 See `Variable Scope`_ for details on what local definitions mean.
 
@@ -466,25 +469,25 @@ The state options are:
 :option:`-t`
 
    Don't reset delay timers when entering from the same state. In other
-   words, the *delay* function will return whether the specified time
-   has elapsed from the moment the current state was entered from a
-   different state, rather than from when it was entered for the
-   current iteration.
+   words, the :c:func:`delay` function will return whether the specified
+   time has elapsed from the moment the current state was entered from a
+   different state, rather than from when it was entered for the current
+   iteration.
 
 :option:`+e`
-   Execute *entry* blocks only if the previous state was not the same
-   as the current state. This is the default.
+   Execute :token:`entry` blocks only if the previous state was
+   not the same as the current state. This is the default.
 
 :option:`-e`
-   Execute *entry* blocks even if the previous state was the same
+   Execute :token:`entry` blocks even if the previous state was the same
    as the current state.
 
 :option:`+x`
-   Execute *exit* blocks only if the next state is not the same as
+   Execute :token:`exit` blocks only if the next state is not the same as
    the current state. This is the default.
 
 :option:`-x`
-   Execute *exit* blocks even if the next state is the same as
+   Execute :token:`exit` blocks even if the next state is the same as
    the current state.
 
 For example::
@@ -575,6 +578,14 @@ Statements
 As can be seen, most C statements are supported. Not supported are
 the switch/case statement and the return statement.
 
+The *state change statement* is not borrowed from C; it is only available in a
+state transition action block (i.e. after a when) and has the effect of
+immediately jumping out of the action block, overriding the statically
+specified new state (given after the block) with its state argument.
+
+.. todo:: find out of the compiler guards against state changes in other
+   action blocks.
+
 Expressions
 ^^^^^^^^^^^
 
@@ -615,8 +626,8 @@ Primary Expression Operators
 These are: function call, array subscript, record selection, pointer to
 record selection, and postfix operators (increment and decrement).
 
-Note that ``exit`` and ``delay`` are listed explicitly because they are
-keywords, not identifiers, but can also be used as functions.
+Note that :token:`exit` and :token:`delay` are listed explicitly because
+they are keywords, not identifiers, but can also be used as functions.
 
 Note also that SNL makes no use of the semantics of structure member
 access (a side-effect that you may notice is that the state notation
@@ -708,138 +719,131 @@ interpretation of the parameters to these functions. Therefore,
 some are either not available through escaped C code or their use
 in escaped C code is subject to special rules.
 
-The term *assigned_var* refers to any SNL variable that is
-assigned to a process variable (or, if it's an array,
-variables). When using such a variable as a function argument, the
-function is automatically given access to the details of the
+An argument specified as *assigned_var* refers to any SNL variable that is
+assigned to a process variable. When using such a variable as a function
+argument, the function is automatically given access to the details of the
 underlying process variable.
 
-Several of these functions are primarily intended to be called only
-from *when* clauses or only from action code. However, unlike in
-previous versions, it is safe to call any function both in *when*
-clauses and in action code.
+Several of these functions are primarily intended to be called only from
+:token:`when` clauses or only from action code. It is safe to call them in
+action code, but the effect is probably not what you want. For instance,
+calling :c:func:`delay` in action code does *not* introduce a delay at this
+point. Later versions of *snc* may output a warning or even stop with an
+error.
 
-*int* function returns should be assumed to be a *pvStat* error
+Functions returning ``int`` actually return a :ref:`pvStat` error
 code unless otherwise spacified.
 
 delay
 ^^^^^
 
-.. cfunction::
+.. c:function::
   int delay(double delay_in_seconds)
 
-The delay function returns *TRUE* if the specified time has elapsed
-since entering the state. It should be used only within a *when*
-expression.
+Returns ``TRUE`` if the specified time has elapsed since entering the
+state. It should be used only within a :token:`when` expression.
 
-The :option:`-t` state option (see `State Option`_) controls whether
-the delay is measured from when the current state was entered from
-a different state (:option:`-t`) or from any state, including itself (:option:`+t`
-, the default)
-
-.. _pvPut:
+The :option:`-t` state option (see `State Option`_) controls whether the
+delay is measured from when the current state was entered from a different
+state (:option:`-t`) or from any state, including itself (:option:`+t` ,
+the default)
 
 pvPut
 ^^^^^
 
-.. cfunction::
+.. c:function::
   int pvPut(assigned_var)
   int pvPut(assigned_var, SYNC)
   int pvPut(assigned_var, ASYNC)
 
-This function puts (or writes) the value of an SNL variable to the
-underlying process variable. The function returns the status
-from the PV layer (*e.g.* *pvStatOK* for success).
+Puts (or writes) the value of an SNL variable to the
+underlying process variable. Returns the status
+from the PV layer (e.g. ``pvStatOK`` for success).
 
-By default, *pvPut* does not wait for the put to be complete;
-completion must be inferred by other means. The optional *SYNC*
+By default, :c:func:`pvPut` does not wait for the put to be complete;
+completion must be inferred by other means. The optional ``SYNC``
 argument causes it to block on completion with a hard-coded timeout
-of 10s. The optional *ASYNC* argument allows completion to be
-checked via a subsequent call to *pvPutComplete* (typically in a
-*when* clause).
+of 10s. The optional ``ASYNC`` argument allows completion to be
+checked via a subsequent call to :c:func:`pvPutComplete` (typically in a
+:token:`when` clause).
 
-Note that, when using channel access, the *SYNC* and *ASYNC*
-arguments result in use of *ca_put_callback*; if neither
-optional argument is specified, *ca_put* is called as with
+Note that, when using channel access, the ``SYNC`` and ``ASYNC``
+arguments result in use of ``ca_put_callback``; if neither
+optional argument is specified, ``ca_put`` is called as with
 previous versions.
-
-.. _pvPutComplete:
 
 pvPutComplete
 ^^^^^^^^^^^^^
 
-.. cfunction::
+.. c:function::
   int pvPutComplete(assigned_var)
   int pvPutComplete(array_name)
   int pvPutComplete(array_name, long any)
   int pvPutComplete(array_name, long any, long *pComplete)
 
-This function returns *TRUE* if the last put of this process
-variable has completed. This call is appropriate only if *pvPut* 's
-optional *ASYNC* argument was used.
+Returns ``TRUE`` if the last put of this process variable has completed.
+This call is appropriate only if :c:func:`pvPut` 's optional ``ASYNC``
+argument was used.
 
 The first form is appropriate when the SNL variable is a scalar.
 However, it can also be an array (each of whose elements may be
 assigned to a different process variable). In this case, the
-single argument form returns *TRUE* if the last puts of all the
+single argument form returns ``TRUE`` if the last puts of all the
 elements of the array have completed (the missing arguments are
-implicitly *0* and *NULL* respectively). If *any* is *TRUE*, then
-the function returns *TRUE* if any put has completed since the last
-call. If *pComplete* is non-NULL, it should be a *long* array of
+implicitly ``0`` and ``NULL`` respectively). If ``any`` is ``TRUE``, then
+the function returns ``TRUE`` if any put has completed since the last
+call. If ``pComplete`` is non-NULL, it should be a ``long`` array of
 the same length as the SNL variable and its elements will be set to
-*TRUE* if and only if the corresponding put has completed.
-
-.. _pvGet:
+``TRUE`` if and only if the corresponding put has completed.
 
 pvGet
 ^^^^^
 
-.. cfunction::
+.. c:function::
   int pvGet(assigned_var)
   int pvGet(assigned_var, SYNC)
   int pvGet(assigned_var, ASYNC)
 
-This function gets (or reads) the value of an SNL variable from the
-underlying process variable. The function returns the status
-from the PV layer (*e.g.* *pvStatOK* for success). By default, the
-state set will block until the read operation is complete with a
-hard-coded timeout of 10s. The asynchronous (:option:`+a`) compile option
-can be used to prevent this, in which case completion can be
-checked via a subsequent call to *pvGetComplete* (typically in a
-*when* clause).
+Gets (or reads) the value of an SNL variable from the underlying process
+variable. Returns the status from the PV layer (e.g.
+``pvStatOK`` for success). By default, the state set will block until the
+read operation is complete with a hard-coded timeout of 10s. The
+asynchronous (:option:`+a`) compile option can be used to prevent this, in
+which case completion can be checked via a subsequent call to
+:c:func:`pvGetComplete` (typically in a :token:`when` clause).
 
-The optional *SYNC* and *ASYNC* arguments override the compile
-option. *SYNC* blocks and so gives default behavior if :option:`+a` was not
-specified; *ASYNC* doesn't block and so gives default behavior if
+The optional ``SYNC`` and ``ASYNC`` arguments override the compile option.
+``SYNC`` blocks and so gives default behavior if :option:`+a` was not
+specified; ``ASYNC`` doesn't block and so gives default behavior if
 :option:`+a` was specified.
 
 pvGetComplete
 ^^^^^^^^^^^^^
 
-.. cfunction::
+.. c:function::
   int pvGetComplete(assigned_var)
 
-This function returns *TRUE* if the last get of this process
-variable has completed, *i.e.* the value in the variable is
-current. This call is appropriate only if the asynchronous (:option:`+a`)
-compile option is specified or *pvGet* 's optional *ASYNC* argument
-was used.
+Returns ``TRUE`` if the last get of this process variable has completed,
+i.e. the value in the variable is current. This call is appropriate only if
+the asynchronous (:option:`+a`) compile option is specified or
+:c:func:`pvGet` 's optional ``ASYNC`` argument was used.
 
-Unlike *pvPutComplete*, *pvGetComplete* doesn't support arrays.
+Unlike :c:func:`pvPutComplete`, :c:func:`pvGetComplete` doesn't support
+arrays.
 
 pvGetQ
 ^^^^^^
 
-.. cfunction::
+.. c:function::
   int pvGetQ(assigned_var)
   int pvGetQ(array_name)
 
-This function removes the oldest value from a SNL variable's
-monitor queue (the variable should have been associated with a
-queue and an event flag via the *syncQ* statement) and updates the
-corresponding SNL variable. Despite its name, this function is
-really closer to *efTestAndClear* than it is to *pvGet*. It
-returns *TRUE* if the queue was not empty.
+Removes the oldest value from a SNL variable's monitor queue (the variable
+should have been associated with a queue and an event flag via the
+:token:`syncq` statement) and updates the corresponding SNL variable.
+Despite its name, this function is really closer to
+:c:func:`efTestAndClear` than it is to :c:func:`pvGet`. It returns
+``TRUE`` if the queue was not empty.
 
 If the SNL variable is an array then the behavior is the same
 regardless of whether the array name or an array element name is
@@ -849,43 +853,43 @@ entire array.
 pvFreeQ
 ^^^^^^^
 
-.. cfunction::
+.. c:function::
   void pvFreeQ(assigned_var)
 
-This function deletes all entries from an SNL variable's queue and
+Deletes all entries from an SNL variable's queue and
 clears the associated event flag (the variable should have been
-associated with a queue and an event flag via the *syncQ*
+associated with a queue and an event flag via the :token:`syncq`
 statement).
 
-As with *pvGetQ*, if the SNL variable is an array then the
+As with :c:func:`pvGetQ`, if the SNL variable is an array then the
 behavior is the same regardless of whether the array name or an
 array element name is specified.
 
 pvMonitor
 ^^^^^^^^^
 
-.. cfunction::
+.. c:function::
   int pvMonitor(assigned_var)
 
-This function initiates a monitor on the underlying process
+Initiates a monitor on the underlying process
 variable.
 
 pvStopMonitor
 ^^^^^^^^^^^^^
 
-.. cfunction::
+.. c:function::
   int pvStopMonitor(assigned_var)
 
-This function terminates a monitor on the underlying process
+Terminates a monitor on the underlying process
 variable.
 
 pvFlush
 ^^^^^^^
 
-.. cfunction::
+.. c:function::
   void pvFlush()
 
-This function causes the PV layer to flush its input-output buffer.
+Causes the PV layer to flush its input-output buffer.
 It just might be needed if performing asynchronous operations
 *within* an action block (note that the buffer is always flushed on
 exit from an action block).
@@ -893,39 +897,38 @@ exit from an action block).
 pvCount
 ^^^^^^^
 
-.. cfunction::
+.. c:function::
   int pvCount(assigned_var)
 
-This function returns the element count associated with the process
-variable.
+Returns the element count associated with the process variable.
 
 pvStatus
 ^^^^^^^^
 
-.. cfunction::
+.. c:function::
   pvStat pvStatus(assigned_var)
 
-This function returns the current alarm status for the process
-variable (*e.g.* *pvStatHIHI*; defined in *pvAlarm.h*).
-The status and severity are only valid after either a *pvGet* call
-has completed or a monitor has been delivered.
+Returns the current alarm status for the process variable (e.g.
+``pvStatHIHI`` , see :ref:`pvStat`). The status and severity are only valid
+after either a :c:func:`pvGet` call has completed or a monitor has been
+delivered.
 
 pvSeverity
 ^^^^^^^^^^
 
-.. cfunction::
+.. c:function::
   pvSevr pvSeverity(assigned_var)
 
-This function returns the current alarm severity (*e.g.*
-*pvSevrMAJOR*). The notes above apply
+Returns the current alarm severity (e.g.
+e.g.pvSevrMAJORe.g.). The notes above apply
 
 pvTimeStamp
 ^^^^^^^^^^^
 
-.. cfunction::
+.. c:function::
   TS_STAMP pvTimeStamp(assigned_var)
 
-This function returns the time stamp for the last pvGet or monitor
+Returns the time stamp for the last :c:func`pvGet` or monitor
 of this variable. The compiler does recognize type TS_STAMP.
 Therefore, variable declarations for this type should be in escaped
 C code. This will generate a compiler warning, which can be
@@ -934,134 +937,133 @@ ignored.
 pvAssign
 ^^^^^^^^
 
-.. cfunction::
+.. c:function::
   int pvAssign(var, process_variable_name)
 
-This function assigns or re-assigned the SNL variable ``var`` to
+Assigns or re-assigned the SNL variable ``var`` to
 ``process_variable_name``. If ``process_variable_name`` is an empty
 string then ``var`` is de-assigned (not associated with any process
 variable).
 
 As usual, ``var`` can also be an array element.
 
-Note: :cfunc:`pvAssign` can only be called on variables (or array elements) that have
-been statically marked as process variables using the :token:`assign` syntax. An
-empty string may be used for the initial assignment.
+Note: :cfunc:`pvAssign` can only be called on variables (or array elements)
+that have been statically marked as process variables using the
+:token:`assign` syntax. An empty string may be used for the initial
+assignment.
 
 A better name for this function would be ``pvReassign``.
 
 pvAssigned
 ^^^^^^^^^^
 
-.. cfunction::
+.. c:function::
   int pvAssigned(assigned_var)
 
-This function returns *TRUE* if the SNL variable is currently
+Returns ``TRUE`` if the SNL variable is currently
 assigned to a process variable.
 
 pvConnected
 ^^^^^^^^^^^
 
-.. cfunction::
+.. c:function::
   int pvConnected(assigned_var)
 
-This function returns *TRUE* if the underlying process
+Returns ``TRUE`` if the underlying process
 variable is currently connected.
 
 pvIndex
 ^^^^^^^
 
-.. cfunction::
+.. c:function::
   int pvIndex(assigned_var)
 
-This function returns the index associated with a process
+Returns the index associated with a process
 variable. See `User Functions within the State Program`_.
 
 pvChannelCount
 ^^^^^^^^^^^^^^
 
-.. cfunction::
+.. c:function::
   int pvChannelCount()
 
-This function returns the total number of process variables
+Returns the total number of process variables
 associated with the state program.
 
 pvAssignCount
 ^^^^^^^^^^^^^
 
-.. cfunction::
+.. c:function::
   int pvAssignCount()
 
-This function returns the total number of SNL variables in this
+Returns the total number of SNL variables in this
 program that are assigned to underlying process variables.
 Note: if all SNL variables are assigned then the following
-expression is *TRUE*::
+expression is ``TRUE``::
 
   pvAssignCount() == pvChannelCount()
 
 Each element of an SNL array counts as variable for the purposes of
-*pvAssignCount*.
+:c:func:`pvAssignCount`.
 
 pvConnectCount
 ^^^^^^^^^^^^^^
 
-.. cfunction::
+.. c:function::
   int pvConnectCount()
 
-This function returns the total number of underlying process
+Returns the total number of underlying process
 variables that are connected. Note: if all variables are connected
-then the following expression is *TRUE*::
+then the following expression is ``TRUE``::
 
   pvConnectCount() == pvChannelCount()
 
 efSet
 ^^^^^
 
-.. cfunction::
+.. c:function::
   void efSet(event_flag)
 
-This function sets the event flag and causes the execution of the
-*when* statements for all state sets that are pending on this event
+Sets the event flag and causes the execution of the
+:token:`when` statements for all state sets that are pending on this event
 flag.
 
 efTest
 ^^^^^^
 
-.. cfunction::
+.. c:function::
   int efTest(event_flag)
 
-This function returns *TRUE* if the event flag was set.
+Returns ``TRUE`` if the event flag was set.
 
 efClear
 ^^^^^^^
 
-.. cfunction::
+.. c:function::
   int efClear(event_flag)
 
-This function clears the event flag and causes the execution of the
-*when* statements for all state sets that are pending on this event
+Clears the event flag and causes the execution of the
+:token:`when` statements for all state sets that are pending on this event
 flag.
 
 efTestAndClear
 ^^^^^^^^^^^^^^
 
-.. cfunction::
+.. c:function::
   int efTestAndClear(event_flag)
 
-This function clears the event flag and returns *TRUE* if the event
-flag was set. It is intended for use within a *when* clause.
-
-.. _macValueGet:
+Clears the event flag and returns ``TRUE`` if the event
+flag was set. It is intended for use within a :token:`when` clause.
 
 macValueGet
 ^^^^^^^^^^^
 
-.. cfunction::
+.. c:function::
   char* macValueGet(char *macro_name)
 
-This function returns a pointer to a string that is the value for
+Returns a pointer to a string that is the value for
 the specified macro name. If the macro does not exist, it returns
-*NULL*.
+``NULL``.
 
 C Compatibility Features
 ------------------------
@@ -1074,12 +1076,12 @@ escaped in the program. The escaped code is not compiled by SNC,
 but is passed the C compiler. There are two escape methods
 allowed:
 
-#. Any code between *%%* and the next newline character is escaped.
+#. Any code between ``%%`` and the next newline character is escaped.
    Example::
 
     %% for (i=0; i < NVAL; i++) {
 
-#. Any code between *%{* and *}%* is escaped. Example::
+#. Any code between ``%{`` and ``}%`` is escaped. Example::
 
     %{
     extern float smooth();
@@ -1117,13 +1119,13 @@ course be linked against C libraries.
 Calling pvGet etc. from C
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The built-in SNL functions such as *pvGet* cannot be directly used
+The built-in SNL functions such as :c:func:`pvGet` cannot be directly used
 in user-supplied functions. However, most of the built-in functions
 have a C language equivalent, which begin with the prefix ``seq_``
-(*e.g.* pvGet becomes seq_pvGet). These C functions must pass a
+(e.g. ``pvGet`` becomes ``seq_pvGet``). These C functions must pass a
 parameter identifying the calling state program, and if a process
 variable name is required, the index of that variable must
-be supplied. This index is obtained via the pvIndex function.
+be supplied. This index is obtained via the :c:func:`pvIndex` function.
 Furthermore, if the code is complied with the :option:`+r` option, the
 database variables must be referenced as a structure element as
 described in `Variable Modification for Reentrant Option`_
@@ -1158,7 +1160,7 @@ has the following type::
 
   struct UserVar *pVar;
 
-Reference to variable *sw1* is made as::
+Reference to variable ``sw1`` is made as::
 
   pVar->sw1
 

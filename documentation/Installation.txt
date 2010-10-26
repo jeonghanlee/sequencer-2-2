@@ -39,6 +39,7 @@ or by following the links here:
    ========= ===========================
    Version   Release Notes
    --------- ---------------------------
+   `2.0.99`_ :ref:`Release_Notes_2.0.99`
    `2.0.12`_ :ref:`Release_Notes_2.0.12`
    `2.0.11`_ :ref:`Release_Notes_2.0.11`
    `2.0.10`_ :ref:`Release_Notes_2.0.10`
@@ -133,7 +134,7 @@ your ``PATH``).
 
 Note: setting ``INSTALL_LOCATION_APP`` currently does not work.
 
-.. todo: fix build with INSTALL_LOCATION set
+.. todo:: fix build with INSTALL_LOCATION set
 
 Your environment should be configured for building EPICS applications.
 This means that ``EPICS_HOST_ARCH`` and (possibly) ``LD_LIBRARY_PATH``

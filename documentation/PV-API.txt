@@ -158,6 +158,8 @@ Type definitions
 *pv.h* and *pvAlarm.h* define various types, described in the
 following sections.
 
+.. _pvStat:
+
 Status
 ~~~~~~
 

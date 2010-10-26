@@ -70,10 +70,11 @@ Note on Versions
 ----------------
 
 This text is supposed to describe version 2.1. Version 2.1 adds
-support for local definitions (including variable declarations) at
-all levels, a significantly improved compiler that employs new
-lexer and parser generators, and lots of bugfixes. See `Notes on
-Release 2.1`_ for details.
+support for local definitions (including variable declarations) at all
+levels, a significantly improved compiler that employs new lexer and
+parser generators, lots of bugfixes, and a new *safe mode* to avoid
+variable corruption due to race conditions. See `Notes on
+Release 2.1.0`_ and `Notes on Release 2.0.99`_ for details.
 
 Version 2.0 differs from version 1.9 mainly in that sequencer
 run-time code can run under any operating system for which an EPICS
@@ -101,10 +102,64 @@ will be incremented each time functional changes are made. The
 first digit is the major version number and will be incremented
 only when major changes are made.
 
-.. _Release_Notes_2.1:
+.. _Release_Notes_2.1.0:
 
-Notes on Release 2.1
---------------------
+Notes on Release 2.1.0
+----------------------
+
+After releasing 2.0.99 for testing, I found a serious bug in the sequencer,
+see http://www.aps.anl.gov/epics/tech-talk/2010/msg00605.php for a
+detailed description of the problem. To summarise, variables that are
+
+* shared between separate state sets, or
+* assigned to a pv and monitored
+
+were **not** protected against concurrent access in any way. This
+means data corruption has been a real possibility, at least for variables
+that are not read/written atomically (i.e. at least all arrays and,
+depending on architecture and C compiler, some numeric types like
+``double`` as well).
+
+This version of the sequencer offers a clean and simple solution to the
+problem. However, this solution is not completely backwards compatible.
+You must therefore explicitly enable it with a command line option
+:option:`s`, for *safe mode*. In safe mode, program semantics deviates from
+the traditional one, in that state sets are completely isolated against
+each other and against updates from the CA layer. Assignment to a variable
+(even indirect, via pointers or C functions) never directly affect the
+values as seen by other state sets. The new value must instead be published
+explicitly by calling pvPut on the variable. For un-assigned variables,
+this directly writes to an internal buffer, by-passing the CA layer. Other
+state sets will see such an explicit update only if they themselves perform
+a pvGet on them, or else after a state change is initiated i.e. one of
+the when-conditions fires. In safe mode, the value of a program variable
+is completely under the control of the executing state set. This implies
+that all conditions given inside the transition rule that has fired are
+still valid when the action block runs and can only be destroyed by the
+actions themselves, not from the outside. Unassigned variables can also
+be monitored, causing state sets that wait for a change on them to be
+woken, just as with variables assigned to an external (named) PV. In fact
+un-assigned variables are exactly like assigned variables, only anonymous
+(unnamed) and therefore not accessible from outside the program.
+
+In safe mode it is no longer necessary to assign variables to a dummy
+empty string -- you can call pvAssign on all variables in scope that have
+global lifetime (i.e. state local, state set local, and global). In order
+to distinguish whether an array variable is to be understood as one
+PV of array type or an array of PVs, the keywords "single" and "multiple"
+have been added. A variable declaration preceded by the word "single"
+indicates that this variable is communicated wholesale (i.e. as single
+PV), whereas "multiple" (which only makes sense for an array variable)
+means that there is a PV for each element in the array.
+
+
+
+.. _Release_Notes_2.0.99:
+
+Notes on Release 2.0.99
+-----------------------
+
+This is a beta release for version 2.1.0.
 
 Most of the changes relative to 2.0.12 are to the SNL compiler, but a
 small number of changes have been made to the runtime library as well.
@@ -113,7 +168,7 @@ The extensions are mostly conservative: existing SNL programs should
 compile and work just as with 2.0.12 (with one exception, see next
 paragraph). This is not easy to guarantee, however, as there are many
 corner cases where the manual is imprecise and the code was convoluted
-(and possibly erroneous), especially with regard to the ``syncQ``
+(and possibly erroneous), especially with regard to the :token:`syncq`
 feature.
 
 There is one (mis-)feature I have removed: 2.0.x  allowed more than one
@@ -142,21 +197,23 @@ Local Definitions
 ~~~~~~~~~~~~~~~~~
 
 Here, "definitions" is to be understood as in the :ref:`SNL reference
-<Definitions>`, i.e. ``option``s, variable declarations, ``assign``,
-``monitor``, ``sync``, and ``syncQ`` constructs. These definitions have
-to appear (in any order) right after the opening brace and before any
-other content (code, states,transitions), similar as in C. However, not
-every definition is allowed everywhere:
+<Definitions>`, i.e. :token:`option`\s, :token:`variable declarations
+<decl>`, :token:`assign`, :token:`monitor`, :token:`sync`, and
+:token:`syncq` constructs. These definitions have to appear (in any order)
+right after the opening brace and before any other content (code,
+states,transitions), similar as in C. However, not every definition is
+allowed everywhere:
 
-- ``option`` definitions are restricted just as before, i.e. at the top
-  level (for program options) and inside a state (for state options)
-- ``assign``, ``monitor``, ``sync``, and ``syncQ`` can appear inside a
-  state set (``ss <state_set_name> {...}``) and inside a state (``state
-  <state_name> {...}``), in addition to the top level
+- :token:`option` definitions are restricted just as before, i.e. at the
+  top level (for program options) and inside a state (for state options)
+- :token:`assign`, :token:`monitor`, :token:`sync`, and :token:`syncq`
+  can appear inside a :token:`state_set` and
+  inside a :token:`state`, in addition to the  top level
 - foreign declarations (see below) and event flag declarations are
   restricted to the top-level
-- variable declarations can appear at the start of any block (state
-  set, state, transition, entry, exit, and compound statement blocks);
+- variable declarations can appear at the start of any block
+  (:token:`state_set`, :token:`state`, :token:`when`, :token:`entry`,
+  :token:`exit`, and compound statement :token:`block`\s);
   their scope is always limited (statically) to the smallest enclosing
   block
 
@@ -181,9 +238,7 @@ State Change Command
 ~~~~~~~~~~~~~~~~~~~~
 
 This is an experimental feature. It adds a new primitive action
-statement
-
-::
+statement ::
 
     state <state-name>;
 
@@ -558,15 +613,15 @@ New Language Features
 ^^^^^^^^^^^^^^^^^^^^^
 
 Entry handler
-   A one-off ``entry`` handler can be supplied (c.f. the
-   existing ``exit`` handler). This is called once, at sequencer
+   A one-off :token:`entry` handler can be supplied (c.f. the
+   existing :token:`exit` handler). This is called once, at sequencer
    start-up, in the context of the first state set, before the
    remaining state set threads have been created. See
    :ref:`GlobalEntryExit`.
 
 Entry and exit actions
-   The ``entry`` block of a state is executed each time the state is
-   entered; the ``exit`` block is executed each time the state is left.
+   The :token:`entry` block of a state is executed each time the state is
+   entered; the :token:`exit` block is executed each time the state is left.
    Note that these blocks are aassociated with a state and are not the
    same as the one-off entry and exit handlers. See
    :ref:`StateEntryExit`.
@@ -575,17 +630,17 @@ State options
    :option:`-t`, :option:`-e` and :option:`-x` are now recognized
    options within the scope of a state. :option:`-t` inhibits the
    "timer reset" on re-entry to a state from itself; :option:`-e` (for
-   "entry") is used with the new ``entry`` block, and forces the
-   ``entry`` statements to be executed on all entries to a state, even
+   "entry") is used with the new :token:`entry` block, and forces the
+   :token:`entry` statements to be executed on all entries to a state, even
    if from the same state; :option:`-x` (for "exit") is complementary
-   to :option:`-e`, but for the new ``exit`` block. See
+   to :option:`-e`, but for the new :token:`exit` block. See
    :ref:`StateOption`.
 
 Queueable monitors
    Monitor messages can be queued and then dequeued at leisure. This
    means that monitor messages are not lost, even when posted rapidly
-   in succession. This feature is supported by new ``syncQ``,
-   ``pvGetQ`` and ``pvFreeQ`` language elements, and a new
+   in succession. This feature is supported by new :token:`syncq`,
+   :c:func:`pvGetQ` and :c:func:`pvFreeQ` language elements, and a new
    ``seqQueueShow`` routine. When SNL arrays are used, a single queue
    is shared by the process variables associated with the
    elements of the array, which can be useful for parallel control. See
@@ -604,29 +659,29 @@ Device support
 
 Local variables
    SNL does not support the declaration of local variables. However,
-   the C code generated for a ``when`` clause is now placed within an
+   the C code generated for a :token:`when` clause is now placed within an
    extra level of braces and the C escape mechanism can be used to
    declare a local variable. See :ref:`Variable Scope`.
 
 More functions are safe in action code
-   In previous versions, some functions, e.g. ``pvPut``, have acquired
-   a resource lock and others, e.g. ``efTestAndClear``, have not. Those
+   In previous versions, some functions, e.g. :c:func:`pvPut`, have acquired
+   a resource lock and others, e.g. :c:func:`efTestAndClear`, have not. Those
    that didn't were intended for use in action code and those that did
-   not were intended for use in ``when`` clauses. This was confusing
+   not were intended for use in :token:`when` clauses. This was confusing
    and dangerous. All such functions now acquire a mutex (that can be
    taken recursively).
 
 Asynchronous puts
-   ``pvPut`` can now put process variables asynchronously by using an
+   :c:func:`pvPut` can now put process variables asynchronously by using an
    extra ``ASYNC`` argument. Completion can be tested using the new
-   ``pvPutComplete``. Arrays are supported (so ``pvPutComplete`` can be
+   :c:func:`pvPutComplete`. Arrays are supported (so :c:func:`pvPutComplete` can be
    used to test whether a set of puts has completed). See
    :ref:`AsynchronousUseofpvPut` and :ref:`pvPutComplete`.
 
 Synchronous/asynchronous override on gets and puts
-   ``pvGet`` and ``pvPut`` both accept an optional ``SYNC`` or
-   ``ASYNC`` argument that, for ``pvGet``, overrides the default as set
-   using the :option:`-a` option and, for ``pvPut``, overrides the
+   :c:func:`pvGet` and :c:func:`pvPut` both accept an optional ``SYNC`` or
+   ``ASYNC`` argument that, for :c:func:`pvGet`, overrides the default as set
+   using the :option:`-a` option and, for :c:func:`pvPut`, overrides the
    default synchronous behavior. See :ref:`pvPut` and :ref:`pvGet`.
 
 Sequencer deletion re-written
@@ -637,10 +692,10 @@ Sequencer deletion re-written
 
 efClear can wake up state sets
    Clearing an event flag can now wake up state sets that reference
-   the event flag in ``when`` tests.
+   the event flag in :token:`when` tests.
 
 More C syntax is supported
-   The ``to`` in ``assign``, ``sync`` and ``syncQ`` statements is now
+   The :token:`to` in :token:`assign`, :token:`sync` and :token:`syncq` statements is now
    optional.
 
    Compound expressions such as ``i=1,j=2`` (often used in ``for``
