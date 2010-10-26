@@ -67,7 +67,7 @@ Expr *decl(
 	vp->length2 = length2;
 	vp->value = init;
 
-        ep = expr(D_DECL, var, init);
+	ep = expr(D_DECL, var, init);
 	ep->extra.e_decl = vp;
 #ifdef	DEBUG
 	report_at_expr(ep, "decl: name=%s, type=%d, class=%d, "
@@ -86,7 +86,7 @@ Expr *expr(
 	...			/* variable number of child arguments */
 )
 {
-        va_list	argp;
+	va_list	argp;
 	int	i, num_children;
 	Expr	*ep;
 
@@ -119,7 +119,7 @@ Expr *expr(
 	report_at_expr(ep, "expr: ep=%p, type=%s, value=\"%s\", file=%s, line=%d",
 		ep, expr_type_name(ep), tok.str, tok.file, tok.line);
 #endif	/*DEBUG*/
-        va_start(argp, tok);
+	va_start(argp, tok);
 	for (i = 0; i < num_children; i++)
 	{
 		ep->children[i] = va_arg(argp, Expr*);
@@ -127,7 +127,7 @@ Expr *expr(
 		report(", child[%d]=%p", i, ep->children[i]);
 #endif	/*DEBUG*/
 	}
-        va_end(argp);
+	va_end(argp);
 #ifdef	DEBUG
 	report(")\n");
 #endif	/*DEBUG*/
