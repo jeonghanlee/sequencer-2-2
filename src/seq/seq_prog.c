@@ -12,7 +12,6 @@
 	and removed from the list when deleted.
 ***************************************************************************/
 
-#define epicsExportSharedSymbols
 #include <string.h>
 #include "seq.h"
 

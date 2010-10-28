@@ -16,11 +16,10 @@
 #include <string.h>
 #include <ctype.h>
 
-#include <epicsThread.h>
-#include <cantProceed.h>
+#include "epicsThread.h"
+#include "cantProceed.h"
+#include "iocsh.h"
 
-#include <iocsh.h>
-#define epicsExportSharedSymbols
 #include "seq.h"
 
 struct sequencerProgram {

@@ -12,7 +12,6 @@
 
 #include <string.h>
 
-#define epicsExportSharedSymbols
 #include "seq.h"
 
 static int wait_rtn(void);
@@ -167,11 +166,10 @@ long epicsShareAPI seqChanShow(epicsThreadId tid, char *pStr)
 		printf("Channel name: \"%s\"\n", pDB->dbName);
 		printf("  Unexpanded (assigned) name: \"%s\"\n", pDB->dbAsName);
 		printf("  Variable name: \"%s\"\n", pDB->pVarName);
-		printf("    address = %lu = 0x%lx\n", 
-			(unsigned long)pDB->pVar, (unsigned long)pDB->pVar);
+		printf("    offset = %ld = 0x%lx\n", (long)pDB->offset, (long)pDB->offset);
 		printf("    type = %s\n", pDB->pVarType);
 		printf("    count = %ld\n", pDB->count);
-		printValue(pDB->pVar, pDB->putType, pDB->count);
+		printValue(valPtr(pDB), pDB->putType, pDB->count);
 
 		printf("  Monitor flag = %d\n", pDB->monFlag);
 		if (pDB->monitored)
@@ -224,26 +222,31 @@ long epicsShareAPI seqChanShow(epicsThreadId tid, char *pStr)
  * seqcar() - Sequencer Channel Access Report
  */
 
-struct seqStats {
+struct seqStats
+{
 	int	level;
 	int	nProgs;
 	int	nChans;
 	int	nConn;
 };
 
-static void seqcarCollect(SPROG *pSP, void *param) {
+static void seqcarCollect(SPROG *pSP, void *param)
+{
 	struct seqStats *pstats = (struct seqStats *) param;
 	CHAN	*pDB = pSP->pChan;
 	int	nch;
 	int	level = pstats->level;
 	int 	printedProgName = 0;
 	pstats->nProgs++;
-	for (nch = 0; nch < pSP->numChans; nch++) {
+	for (nch = 0; nch < pSP->numChans; nch++)
+	{
 		if (pDB->assigned) pstats->nChans++;
 		if (pDB->connected) pstats->nConn++;
 		if (level > 1 ||
-		    (level == 1 && !pDB->connected)) {
-			if (!printedProgName) {
+		    (level == 1 && !pDB->connected))
+		    {
+			if (!printedProgName)
+			{
 				printf("  Program \"%s\"\n", pSP->pProgName);
 				printedProgName = 1;
 			}
@@ -268,7 +271,8 @@ long epicsShareAPI seqcar(int level)
 	return diss;
 }
 
-void epicsShareAPI seqcaStats(int *pchans, int *pdiscon) {
+void epicsShareAPI seqcaStats(int *pchans, int *pdiscon)
+{
 	struct seqStats stats = {0, 0, 0, 0};
 	seqTraverseProg(seqcarCollect, (void *) &stats);
 	if (pchans)  *pchans  = stats.nChans;

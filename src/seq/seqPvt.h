@@ -44,18 +44,21 @@ extern void *pvSys;
 
 #define MAX_QUEUE_SIZE 100		/* default max_queue_size */
 
+#define valPtr(ch)	(bufPtr(ch)+(ch)->offset)
+#define bufPtr(ch)	(((ch)->sprog->options&OPT_REENT)?(ch)->sprog->pVar:0)
+
 /* Structure to hold information about database channels */
-struct	db_channel
+struct db_channel
 {
 	/* These are supplied by SNC */
 	char		*dbAsName;	/* channel name from assign statement */
-	void		*pVar;		/* ptr to variable */
+	ptrdiff_t	offset;		/* offset to value */
 	char		*pVarName;	/* variable name string */
 	char		*pVarType;	/* variable type string (e.g. ("int") */
 	long		count;		/* number of elements in array */
 	long		efId;		/* event flag id if synced */
 	long		eventNum;	/* event number */
-	epicsBoolean	monFlag;	/* TRUE if channel is to be monitored */
+	unsigned	monFlag;	/* TRUE if channel is to be monitored */
 	int		queued;		/* TRUE if queued via syncQ */
 	int		maxQueueSize;	/* max syncQ queue size (0 => def) */
 	int		queueIndex;	/* syncQ queue index */
@@ -63,11 +66,11 @@ struct	db_channel
 	/* These are filled in at run time */
 	char		*dbName;	/* channel name after macro expansion */
 	void		*pvid;		/* PV (process variable) id */
-	epicsBoolean	assigned;	/* TRUE only if channel is assigned */
-	epicsBoolean	connected;	/* TRUE only if channel is connected */
-	epicsBoolean	getComplete;	/* TRUE if previous pvGet completed */
-	epicsBoolean	putComplete;	/* TRUE if previous pvPut completed */
-	epicsBoolean	putWasComplete;	/* previous value of putComplete */
+	unsigned	assigned;	/* TRUE only if channel is assigned */
+	unsigned	connected;	/* TRUE only if channel is connected */
+	unsigned	getComplete;	/* TRUE if previous pvGet completed */
+	unsigned	putComplete;	/* TRUE if previous pvPut completed */
+	unsigned	putWasComplete;	/* previous value of putComplete */
 	short		dbOffset;	/* offset to value in db access struct*/
 	short		status;		/* last db access status code */
 	epicsTimeStamp	timeStamp;	/* time stamp */
@@ -77,18 +80,18 @@ struct	db_channel
 	short		getType;	/* db get type (e.g. DBR_STS_INT) */
 	short		putType;	/* db put type (e.g. DBR_INT) */
 	char		*message;	/* last db access error message */
-	epicsBoolean	gotFirstMonitor;
-	epicsBoolean	gotFirstConnect;
-	epicsBoolean	monitored;	/* TRUE if channel IS monitored */
+	unsigned	gotFirstMonitor;
+	unsigned	gotFirstConnect;
+	unsigned	monitored;	/* TRUE if channel IS monitored */
 	void		*evid;		/* event id (supplied by PV lib) */
 	struct state_program *sprog;	/* state program that owns this struct*/
 	struct state_set_control_block *sset; /* current state-set (temp.) */
 	epicsMutexId	varLock;	/* mutex to lock out access */
 };
-typedef	struct db_channel CHAN;
+typedef struct db_channel CHAN;
 
 /* Structure for syncQ queue entry */
-struct	queue_entry
+struct queue_entry
 {
 	ELLNODE		node;		/* linked list node */
 	CHAN		*pDB;		/* ptr to db channel info */
@@ -96,9 +99,8 @@ struct	queue_entry
 };
 typedef struct queue_entry QENTRY;
 
-
 /* Structure to hold information about a state */
-struct	state_info_block
+struct state_info_block
 {
 	char		*pStateName;	/* state name */
 	ACTION_FUNC	*actionFunc;	/* ptr to action rout. for this state */
@@ -109,10 +111,10 @@ struct	state_info_block
 	bitMask		*pEventMask;	/* event mask for this state */
 	bitMask		options;	/* options mask for this state */
 };
-typedef	struct	state_info_block STATE;
+typedef struct state_info_block STATE;
 
 /* Structure to hold information about a State Set */
-struct	state_set_control_block
+struct state_set_control_block
 {
 	char		*pSSName;	/* state set name (for debugging) */
 	epicsThreadId	threadId;	/* thread id */
@@ -137,14 +139,15 @@ struct	state_set_control_block
 	long		maxNumDelays;	/* max. number of delays */
 	long		numDelays;	/* number of delays activated */
 	double		*delay;		/* queued delay value in secs (array) */
-	epicsBoolean	*delayExpired;	/* TRUE if delay expired (array) */
+	unsigned	*delayExpired;	/* TRUE if delay expired (array) */
 	double		timeEntered;	/* time that a state was entered */
 	struct state_program *sprog;	/* ptr back to state program block */
 };
-typedef	struct	state_set_control_block SSCB;
+typedef struct state_set_control_block SSCB;
 
 /* Macro table */
-typedef	struct	macro {
+typedef struct macro
+{
 	char	*pName;
 	char	*pValue;
 } MACRO;
@@ -152,7 +155,7 @@ typedef	struct	macro {
 /* All information about a state program.
 	The address of this structure is passed to the run-time sequencer:
  */
-struct	state_program
+struct state_program
 {
 	char		*pProgName;	/* program name (for debugging) */
 	epicsThreadId	threadId;	/* thread id (main thread) */
@@ -166,16 +169,16 @@ struct	state_program
 	long		firstConnectCount;
 	long		numMonitoredChans;
 	long		firstMonitorCount;
-	epicsBoolean	allFirstConnectAndMonitor;
+	unsigned	allFirstConnectAndMonitor;
 	SSCB		*pSS;		/* array of state set control blocks */
 	long		numSS;		/* number of state sets */
-	USER_VAR	*pVar;		/* ptr to user variable area */
+	void		*pVar;		/* user variable area (or CA buffer in safe mode) */
 	long		varSize;	/* # bytes in user variable area */
 	MACRO		*pMacros;	/* ptr to macro table */
 	char		*pParams;	/* program paramters */
 	bitMask		*pEvents;	/* event bits for event flags & db */
 	long		numEvents;	/* number of events */
-	long		options;	/* options (bit-encoded) */
+	unsigned	options;	/* options (bit-encoded) */
 	ENTRY_FUNC	*entryFunc;	/* entry function */
 	EXIT_FUNC	*exitFunc;	/* exit function */
 	epicsMutexId	logSemId;	/* logfile locking semaphore */
@@ -184,10 +187,10 @@ struct	state_program
 	int		numQueues;	/* number of syncQ queues */
 	ELLLIST		*pQueues;	/* ptr to syncQ queues */
 };
-typedef	struct state_program SPROG;
+typedef struct state_program SPROG;
 
 /* Auxiliary thread arguments */
-struct	auxiliary_args
+struct auxiliary_args
 {
 	char		*pPvSysName;	/* PV system ("ca", "ktl", ...) */
 	long		debug;		/* debug level */

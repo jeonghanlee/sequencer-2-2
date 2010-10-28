@@ -120,7 +120,6 @@ static void gen_channel(Chan *cp, int num_event_flags, int opt_reent)
 		pv_name = ""; /* not assigned */
 	printf("  {\"%s\", ", pv_name);/* unexpanded channel name */
 	/* Ptr or offset to user variable */
-	printf("(void *)");
 	if (opt_reent)
 	{
 		printf("OFFSET(struct %s, ", VAR_PREFIX);
@@ -129,9 +128,9 @@ static void gen_channel(Chan *cp, int num_event_flags, int opt_reent)
 	}
 	else
 	{
-		printf("&");
+		printf("(char*)&");
 		gen_var_name(vp);
-		printf("%s%s, ", elem_str, suffix);
+		printf("%s%s - (char*)0, ", elem_str, suffix);
 	}
  	/* variable name with optional elem num */
 	printf("\"%s%s\", ", vp->name, elem_str);

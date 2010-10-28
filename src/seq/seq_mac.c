@@ -12,7 +12,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define epicsExportSharedSymbols
 #include "seq.h"
 
 static int seqMacParseName(char *pStr);
@@ -93,7 +92,7 @@ epicsShareFunc char *epicsShareAPI seq_macValueGet(SS_ID ssId, char *pName)
 	SPROG		*pSP;
 	MACRO		*pMac;
 
-	pSP = ((SSCB *)ssId)->sprog;
+	pSP = ssId->sprog;
 	pMac = pSP->pMacros;
 
 	return seqMacValGet(pMac, pName);

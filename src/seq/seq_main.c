@@ -23,7 +23,6 @@
 #include <stddef.h>
 #include <stdarg.h>
 
-#define epicsExportSharedSymbols
 #include "seq.h"
 
 /* function prototypes for local routines */
@@ -43,7 +42,7 @@ static void selectDBtype(char *, short *, short *, short *, short *);
 epicsThreadId seqAuxThreadId = (epicsThreadId) 0;
 
 /*
- * seq: User-callable routine to initiate a state program.
+ * seq: User-callable routine to run a state program.
  * Usage:  seq(<pSP>, <macros string>, <stack size>)
  *	pSP is the ptr to the state program structure.
  *	Example:  seq(&myprog, "logfile=mylog", 0)
@@ -214,8 +213,10 @@ static void init_sprog(struct seqProgram *pSeqProg, SPROG *pSP)
 	pSP->exitFunc = pSeqProg->exitFunc;
 	pSP->varSize = pSeqProg->varSize;
 	/* Allocate user variable area if reentrant option (+r) is set */
-	if ((pSP->options & OPT_REENT) != 0)
+	if (pSP->options & OPT_REENT)
+	{
 		pSP->pVar = (USER_VAR *)calloc(pSP->varSize, 1);
+	}
 
 #ifdef	DEBUG
 	printf("init_sprog: num SS=%d, num Chans=%d, num Events=%d, "
@@ -272,7 +273,7 @@ static void init_sscb(struct seqProgram *pSeqProg, SPROG *pSP)
 		pSS->numStates = pSeqSS->numStates;
 		pSS->maxNumDelays = pSeqSS->numDelays;
 		pSS->delay = (double *)calloc(pSS->maxNumDelays, sizeof(double));
-		pSS->delayExpired = (epicsBoolean *)calloc(pSS->maxNumDelays, sizeof(epicsBoolean));
+		pSS->delayExpired = (unsigned *)calloc(pSS->maxNumDelays, sizeof(unsigned));
 		pSS->errorState = pSeqSS->errorState;
 		pSS->currentState = 0; /* initial state */
 		pSS->nextState = 0;
@@ -352,7 +353,7 @@ static void init_chan(struct seqProgram *pSeqProg, SPROG *pSP)
 		pDB->dbAsName = pSeqChan->dbAsName;
 		pDB->pVarName = pSeqChan->pVarName;
 		pDB->pVarType = pSeqChan->pVarType;
-		pDB->pVar = pSeqChan->pVar;	/* offset for +r option */
+		pDB->offset = pSeqChan->offset;
 		pDB->count = pSeqChan->count;
 		pDB->efId = pSeqChan->efId;
 		pDB->monFlag = pSeqChan->monFlag;
@@ -370,9 +371,6 @@ static void init_chan(struct seqProgram *pSeqProg, SPROG *pSP)
 		selectDBtype(pSeqChan->pVarType, &pDB->getType,
 			&pDB->putType, &pDB->size, &pDB->dbOffset);
 
-		/* Reentrant option: Convert offset to addr of the user var. */
-		if ((pSP->options & OPT_REENT) != 0)
-			pDB->pVar += (ptrdiff_t)pSP->pVar;
 #ifdef	DEBUG
 		printf(" Assigned Name=%s, VarName=%s, VarType=%s, "
 			"count=%d\n", pDB->dbAsName, pDB->pVarName,
@@ -433,13 +431,15 @@ static void seqChanNameEval(SPROG *pSP)
  * Mapping is determined by the following typeMap[] array.
  * pvTypeTIME_* types for gets/monitors return status and time stamp.
  */
-static struct typeMap {
+static struct typeMap
+{
 	char	*pTypeStr;
 	short	putType;
 	short	getType;
 	short	size;
 	short	offset;
-} typeMap[] = {
+} typeMap[] =
+{
 	{
 	"char",		 pvTypeCHAR,	pvTypeTIME_CHAR,
 	sizeof (char),   OFFSET(pvTimeChar, value[0])
@@ -617,14 +617,14 @@ static long seq_logv(SPROG *pSP, const char *fmt, va_list args)
  * seq_seqLog() - State program interface to seq_log().
  * Does not require ptr to state program block.
  */
-long seq_seqLog(SS_ID ssId, const char *fmt, ...)
+epicsShareFunc long seq_seqLog(SS_ID ssId, const char *fmt, ...)
 {
 	SPROG		*pSP;
 	va_list		args;
 	long		rtn;
 
 	va_start (args, fmt);
-	pSP = ((SSCB *)ssId)->sprog;
+	pSP = ssId->sprog;
 	rtn = seq_logv(pSP, fmt, args);
 	va_end (args);
 	return(rtn);

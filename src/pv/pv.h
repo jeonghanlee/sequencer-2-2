@@ -99,6 +99,14 @@ typedef union {
     ( ( PV_SIMPLE(_type) ? ( void * ) ( _value ) : \
 			   ( void * ) ( &_value->timeCharVal.value ) ) )
 
+/* warning: partial function, not defined for simple types */
+#define PV_STATUS(_value) \
+    ((_value)->timeCharVal.status)
+#define PV_SEVERITY(_value) \
+    ((_value)->timeCharVal.severity)
+#define PV_STAMP(_value) \
+    ((_value)->timeCharVal.stamp)
+
 /*
  * Connect (connect/disconnect and event (get, put and monitor) functions
  */

@@ -1,4 +1,4 @@
-/*	Definitions for the run-time sequencer
+/*      Definitions for the run-time sequencer
  *
  *      Author:         Andy Kozubal
  *      Date:           
@@ -24,25 +24,33 @@
  *              Advanced Photon Source
  *              Argonne National Laboratory
  */
-#ifndef	INCLseqh
-#define	INCLseqh
+#ifndef INCLseqh
+#define INCLseqh
 
-#include        <stdio.h>
-#include        <stdlib.h>
-#include	<ctype.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <ctype.h>
 
-#include        "shareLib.h" /* reset share lib defines */
-#include        "pvAlarm.h"     /* status and severity defs */
-#include        "epicsThread.h" /* time stamp defs */
-#include        "epicsTime.h"   /* time stamp defs */
-#include	"epicsMutex.h"
-#include	"epicsEvent.h"
-#include	"epicsThread.h"
-#include	"epicsTypes.h"
-#include	"ellLib.h"
-#include	"errlog.h"
-#include	"taskwd.h"
-#include	"pv.h"
-#include	"seqCom.h"
-#include	"seqPvt.h"
-#endif	/*INCLseqh*/
+#include "shareLib.h"		/* reset share lib defines */
+#include "pvAlarm.h"		/* status and severity defs */
+#include "epicsThread.h"	/* time stamp defs */
+#include "epicsTime.h"		/* time stamp defs */
+#include "epicsMutex.h"
+#include "epicsEvent.h"
+#include "epicsThread.h"
+#include "ellLib.h"
+#include "errlog.h"
+#include "taskwd.h"
+#include "freeList.h"
+
+#include "pv.h"
+
+#define epicsExportSharedSymbols
+#ifdef epicsAssertAuthor
+#undef epicsAssertAuthor
+#endif
+#define epicsAssertAuthor "benjamin.franksen@bessy.de"
+#include "seqCom.h"
+#include "seqPvt.h"
+
+#endif /*INCLseqh*/

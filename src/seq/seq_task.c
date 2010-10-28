@@ -17,7 +17,6 @@
 #include <string.h>
 
 #define DECLARE_PV_SYS
-#define epicsExportSharedSymbols
 #include "seq.h"
 
 #ifndef max
@@ -108,8 +107,10 @@ static void ss_entry(SSCB *pSS)
 
 	/* If "+c" option, wait for all channels to connect (a failure
 	 * return means that we have been asked to exit) */
-	if ((pSP->options & OPT_CONN) != 0)
+	if (pSP->options & OPT_CONN)
+	{
 		if (seq_waitConnect(pSP, pSS) < 0) goto exit;
+	}
 
 	/* Initialize state-set to enter the first state */
 	pST = pSS->pStates;
@@ -133,11 +134,10 @@ static void ss_entry(SSCB *pSS)
 	while (TRUE)
 	{
 		/* If we've changed state, do any entry actions. Also do these
-                 * even if it's the same state if option to do so is enabled. 
-                 */
-		if ((pSS->prevState != pSS->currentState ||
-                     pST->options & OPT_DOENTRYFROMSELF)
-		    && pST->entryFunc)
+		 * even if it's the same state if option to do so is enabled.
+		 */
+		if (pST->entryFunc && (pSS->prevState != pSS->currentState
+			|| (pST->options & OPT_DOENTRYFROMSELF)))
 		{
 			pST->entryFunc(ssId, pVar);
 		}
@@ -191,7 +191,7 @@ static void ss_entry(SSCB *pSS)
 			ev_trig = pST->eventFunc(ssId, pVar,
 				&pSS->transNum, &pSS->nextState);
 
-		        /* Clear all event flags (old ef mode only) */
+			/* Clear all event flags (old ef mode only) */
 			if (ev_trig && !(pSP->options & OPT_NEWEF))
 			{
 				int i;
@@ -225,10 +225,9 @@ static void ss_entry(SSCB *pSS)
 		pStNext = pSS->pStates + pSS->nextState;
 		pSS->pMask = (pStNext->pEventMask);
 
-		/* If changing state, do any exit actions. */
-		if ((pSS->currentState != pSS->nextState ||
-                     pST->options & OPT_DOEXITTOSELF)
-		    && pST->exitFunc)
+		/* If changing state, do exit actions */
+		if (pST->exitFunc && (pSS->currentState != pSS->nextState
+			|| (pST->options & OPT_DOEXITTOSELF)))
 		{
 			pST->exitFunc(ssId, pVar);
 		}
@@ -306,11 +305,13 @@ static long seq_waitConnect(SPROG *pSP, SSCB *pSS)
 	if (pSP->numChans == 0)
 		return OK;
 	delay = 10.0; /* 10, 20, 30, 40, 40,... sec */
-	while (1) {
+	while (1)
+	{
 		status = epicsEventWaitWithTimeout(
-                    pSS->allFirstConnectAndMonitorSemId, delay);
+			pSS->allFirstConnectAndMonitorSemId, delay);
 		if(status==OK) break;
-		if (delay < 40.0) {
+		if (delay < 40.0)
+		{
 			delay += 10.0;
 			errlogPrintf("numMonitoredChans %ld firstMonitorCount %ld",
 				pSP->numMonitoredChans,pSP->firstMonitorCount);
@@ -331,11 +332,11 @@ static void seq_clearDelay(SSCB *pSS, STATE *pST)
 {
 	int	ndelay;
 
-        /* On state change set time we entered this state; or if transition from
-         * same state if option to do so is on for this state. 
-         */
+	/* On state change set time we entered this state; or if transition from
+	 * same state if option to do so is on for this state.
+	 */
 	if ((pSS->currentState != pSS->prevState) ||
-             !(pST->options & OPT_NORESETTIMERS))
+		!(pST->options & OPT_NORESETTIMERS))
 	{
 		pvTimeGetCurrentDouble(&pSS->timeEntered);
 	}
@@ -583,13 +584,13 @@ void *seqAuxThread(void *tArgs)
 	/* All state program threads will use a common PV context (subtract
 	   1 from debug level for PV debugging) */
 	status = pvSysCreate(pPvSysName, debug>0?debug-1:0, &pvSys);
-        if (status != pvStatOK)
-        {
-                errlogPrintf("seqAuxThread: pvSysCreate() %s failure: %s\n",
-                            pPvSysName, pvSysGetMess(pvSys));
+	if (status != pvStatOK)
+	{
+		errlogPrintf("seqAuxThread: pvSysCreate() %s failure: %s\n",
+			pPvSysName, pvSysGetMess(pvSys));
 		seqAuxThreadId = (epicsThreadId) -1;
-                return NULL;
-        }
+		return NULL;
+	}
 	seqAuxThreadId = epicsThreadGetIdSelf(); /* AFTER pvSysCreate() */
 
 	/* This loop allows for check for connect/disconnect on PVs */

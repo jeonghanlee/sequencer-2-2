@@ -31,7 +31,6 @@
 
 #include <string.h>
 
-#define epicsExportSharedSymbols
 #include "seq.h"
 
 static void proc_db_events(pvValue *, pvType, CHAN *, long);
@@ -86,7 +85,7 @@ epicsShareFunc long seq_connect(SPROG *pSP)
 		 */
 		if (pDB->monFlag)
 		{
-			seq_pvMonitor((SS_ID)pSP->pSS, i);
+			seq_pvMonitor(pSP->pSS, i);
 		}
 	}
 	pvSysFlush(pvSys);
@@ -137,10 +136,12 @@ epicsShareFunc void seq_mon_handler(
 		pCHAN->gotFirstMonitor = 1;
 		pSP->firstMonitorCount++;
 		if((pSP->firstMonitorCount==pSP->numMonitoredChans)
-		&& (pSP->firstConnectCount==pSP->assignCount)) {
+			&& (pSP->firstConnectCount==pSP->assignCount))
+		{
 			SSCB *pSS;
 			int i;
-			for(i=0, pSS=pSP->pSS; i<pSP->numSS; i++,pSS++) {
+			for(i=0, pSS=pSP->pSS; i<pSP->numSS; i++,pSS++)
+			{
 				epicsEventSignal(pSS->allFirstConnectAndMonitorSemId);
 			}
 		}
@@ -181,13 +182,13 @@ static void proc_db_events(
 		{
 			pVal = (void *)((long)pValue + pDB->dbOffset);
 		}
-		memcpy(pDB->pVar, pVal, var_size);
+		memcpy(valPtr(pDB), pVal, var_size);
 		/* Copy status, severity and time stamp (leave unchanged if absent) */
 		if (!PV_SIMPLE(type))
 		{
-			pDB->status = (short) pValue->timeStringVal.status;
-			pDB->severity = (short) pValue->timeStringVal.severity;
-			pDB->timeStamp = pValue->timeStringVal.stamp;
+			pDB->status = PV_STATUS(pValue);
+			pDB->severity = PV_SEVERITY(pValue);
+			pDB->timeStamp = PV_STAMP(pValue);
 		}
 		/* Copy error message (only when severity indicates error) */
 		if (pDB->severity != pvSevrNONE)
@@ -233,16 +234,14 @@ static void proc_db_events(
 	    default:
 		break;
 	}
-
-	return;
 }
 
 /* Common code for event and callback handling (queuing version) */
 static void proc_db_events_queued(pvValue *pValue, CHAN *pDB)
 {
-	QENTRY			*pEntry;
-	SPROG			*pSP;
-	int			count;
+	QENTRY	*pEntry;
+	SPROG	*pSP;
+	int	count;
 
 	/* Get ptr to the state program that owns this db entry */
 	pSP = pDB->sprog;
@@ -252,8 +251,8 @@ static void proc_db_events_queued(pvValue *pValue, CHAN *pDB)
 
 #ifdef	DEBUG
 	errlogPrintf("proc_db_events_queued: var=%s, pv=%s, count(max)=%d(%d), "
-	       "index=%d\n", pDB->pVarName, pDB->dbName, count,
-	       pDB->maxQueueSize, pDB->queueIndex);
+		"index=%d\n", pDB->pVarName, pDB->dbName, count,
+		pDB->maxQueueSize, pDB->queueIndex);
 #endif	/*DEBUG*/
 
 	/* Allocate queue entry (re-use last one if queue has reached its
@@ -264,7 +263,7 @@ static void proc_db_events_queued(pvValue *pValue, CHAN *pDB)
 		if (pEntry == NULL)
 		{
 			errlogPrintf("proc_db_events_queued: %s queue memory "
-			       "allocation failure\n", pDB->pVarName);
+				"allocation failure\n", pDB->pVarName);
 			return;
 		}
 		ellAdd(&pSP->pQueues[pDB->queueIndex], (ELLNODE *) pEntry);
@@ -289,12 +288,10 @@ static void proc_db_events_queued(pvValue *pValue, CHAN *pDB)
 #ifdef DEBUG
 	errlogPrintf("setting event flag %d\n", pDB->efId);
 #endif /*DEBUG*/
-	seq_efSet((SS_ID)pSP->pSS, pDB->efId);
-
-	return;
+	seq_efSet(pSP->pSS, pDB->efId);
 }
 
-/*	Disconnect all database channels */
+/* Disconnect all database channels */
 epicsShareFunc long seq_disconnect(SPROG *pSP)
 {
 	CHAN	*pDB;
@@ -355,8 +352,8 @@ epicsShareFunc long seq_disconnect(SPROG *pSP)
  */
 void seq_conn_handler(void *var,int connected)
 {
-	CHAN		*pDB;
-	SPROG		*pSP;
+	CHAN	*pDB;
+	SPROG	*pSP;
 
 	/* Private data is db ptr (specified at pvVarCreate()) */
 	pDB = (CHAN *)pvVarGetPrivate(var);
@@ -371,11 +368,14 @@ void seq_conn_handler(void *var,int connected)
 		errlogPrintf("%s disconnected from %s\n", pDB->pVarName,
 			pDB->dbName);
 #endif	/*DEBUG*/
-		if(pDB->connected) {
+		if(pDB->connected)
+		{
 			pDB->connected = FALSE;
 			pSP->connCount--;
 			pDB->monitored = FALSE;
-		} else {
+		}
+		else
+		{
 			printf("%s disconnected but already disconnected %s\n",
 				pDB->pVarName,pDB->dbName);
 		}
@@ -385,7 +385,8 @@ void seq_conn_handler(void *var,int connected)
 #ifdef	DEBUG
 		errlogPrintf("%s connected to %s\n", pDB->pVarName,pDB->dbName);
 #endif	/*DEBUG*/
-                if(!pDB->connected) {
+		if(!pDB->connected)
+		{
 			pDB->connected = TRUE;
 			pSP->connCount++;
 			if (pDB->monFlag)
@@ -393,18 +394,23 @@ void seq_conn_handler(void *var,int connected)
 			pDB->dbCount = pvVarGetCount(var);
 			if (pDB->dbCount > pDB->count)
 				pDB->dbCount = pDB->count;
-		} else {
+		}
+		else
+		{
 			printf("%s connected but already connected %s\n",
 				pDB->pVarName,pDB->dbName);
 		}
-	        if(!pDB->gotFirstConnect) {
+		if(!pDB->gotFirstConnect)
+		{
 			pDB->gotFirstConnect = 1;
 			pSP->firstConnectCount++;
 			if((pSP->firstMonitorCount==pSP->numMonitoredChans)
-			&& (pSP->firstConnectCount==pSP->assignCount)) {
+				&& (pSP->firstConnectCount==pSP->assignCount))
+			{
 				SSCB *pSS;
 				int i;
-				for(i=0, pSS=pSP->pSS; i<pSP->numSS; i++,pSS++) {
+				for(i=0, pSS=pSP->pSS; i<pSP->numSS; i++,pSS++)
+				{
 					epicsEventSignal(pSS->allFirstConnectAndMonitorSemId);
 				}
 			}
@@ -429,7 +435,7 @@ void seqWakeup(SPROG *pSP, long eventNum)
 	{
 		/* If event bit in mask is set, wake that state set */
 		if ((eventNum == 0) || 
-		    (pSS->pMask && bitTest(pSS->pMask, eventNum)))
+			(pSS->pMask && bitTest(pSS->pMask, eventNum)))
 		{
 			epicsEventSignal(pSS->syncSemId); /* wake up ss thread */
 		}

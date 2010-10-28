@@ -1,32 +1,29 @@
 /*	Common defs for state programs and run-time sequencer
  *
- *      Author:         Andy Kozubal
- *      Date:           01mar94
+ *	Author:		Andy Kozubal
+ *	Date:		01mar94
  *
- *      Experimental Physics and Industrial Control System (EPICS)
+ *	Experimental Physics and Industrial Control System (EPICS)
  *
- *      Copyright 1993 the Regents of the University of California,
- *      and the University of Chicago Board of Governors.
+ *	Copyright 1993 the Regents of the University of California,
+ *	and the University of Chicago Board of Governors.
  *
  *	Copyright, 2010, Helmholtz-Zentrum Berlin f. Materialien
  *		und Energie GmbH, Germany (HZB)
  *		(see file Copyright.HZB included in this distribution)
  *
- *      This software was produced under  U.S. Government contracts:
- *      (W-7405-ENG-36) at the Los Alamos National Laboratory,
- *      and (W-31-109-ENG-38) at Argonne National Laboratory.
+ *	This software was produced under  U.S. Government contracts:
+ *	(W-7405-ENG-36) at the Los Alamos National Laboratory,
+ *	and (W-31-109-ENG-38) at Argonne National Laboratory.
  *
- *      Initial development by:
- *              The Controls and Automation Group (AT-8)
- *              Ground Test Accelerator
- *              Accelerator Technology Division
- *              Los Alamos National Laboratory
+ *	Initial development by:
+ *		The Controls and Automation Group (AT-8)
+ *		Ground Test Accelerator
+ *		Accelerator Technology Division
+ *		Los Alamos National Laboratory
  */
-#ifndef	INCLseqComh
-#define	INCLseqComh
-
-#include <stdio.h>
-#include <stdlib.h>
+#ifndef INCLseqComh
+#define INCLseqComh
 
 #include "shareLib.h"
 #include "pvAlarm.h"
@@ -40,58 +37,58 @@ extern "C" {
 #endif
 
 /* Bit encoding for run-time options */
-#define	OPT_DEBUG	(1<<0)	/* turn on debugging */
-#define	OPT_ASYNC	(1<<1)	/* use async. gets */
-#define	OPT_CONN	(1<<2)	/* wait for all connections */
-#define	OPT_REENT	(1<<3)	/* generate reentrant code */
-#define	OPT_NEWEF	(1<<4)	/* new event flag mode */
-#define OPT_MAIN	(1<<5)	/* generate main program */
-#define	OPT_SAFE	(1<<6)	/* safe mode */
+#define OPT_DEBUG	(1<<0)		/* turn on debugging */
+#define OPT_ASYNC	(1<<1)		/* use async. gets */
+#define OPT_CONN	(1<<2)		/* wait for all connections */
+#define OPT_REENT	(1<<3)		/* generate reentrant code */
+#define OPT_NEWEF	(1<<4)		/* new event flag mode */
+#define OPT_MAIN	(1<<5)		/* generate main program */
+#define OPT_SAFE	(1<<6)		/* safe mode */
 
 /* Bit encoding for State Specific Options */
-#define OPT_NORESETTIMERS	(1<<0)  /* If TRUE, don't reset timers on */
+#define OPT_NORESETTIMERS	(1<<0)	/* If TRUE, don't reset timers on */
 					/* entry to state from same state */
-#define OPT_DOENTRYFROMSELF     (1<<1)  /* Do entry{} even if from same state */
-#define OPT_DOEXITTOSELF        (1<<2)  /* Do exit{} even if to same state */
+#define OPT_DOENTRYFROMSELF	(1<<1)	/* Do entry{} even if from same state */
+#define OPT_DOEXITTOSELF	(1<<2)	/* Do exit{} even if to same state */
 
 /* Macros to handle set & clear event bits */
-typedef unsigned long   bitMask;
-#define NBITS           (8*sizeof(bitMask))
-				/* # bits in bitMask word */
+typedef unsigned long	bitMask;
+#define NBITS		(8*sizeof(bitMask))	/* # bits in bitMask word */
 
-#define bitSet(word, bitnum)   (word[(bitnum)/NBITS] |=  (1<<((bitnum)%NBITS)))
-#define bitClear(word, bitnum) (word[(bitnum)/NBITS] &= ~(1<<((bitnum)%NBITS)))
-#define bitTest(word, bitnum) ((word[(bitnum)/NBITS] &   (1<<((bitnum)%NBITS))) != 0)
+#define bitSet(word, bitnum)	(word[(bitnum)/NBITS] |=  (1<<((bitnum)%NBITS)))
+#define bitClear(word, bitnum)	(word[(bitnum)/NBITS] &= ~(1<<((bitnum)%NBITS)))
+#define bitTest(word, bitnum)	((word[(bitnum)/NBITS] &   (1<<((bitnum)%NBITS))) != 0)
 
-#ifndef	TRUE
-#define	TRUE		1
-#define	FALSE		0
-#endif	/*TRUE*/
+#ifndef TRUE
+#define TRUE	1
+#endif
+#ifndef FALSE
+#define FALSE	0
+#endif
 
 typedef	struct state_set_control_block *SS_ID;	/* state set id */
 
-typedef struct UserVar USER_VAR;		/* defined by program */
+typedef struct UserVar USER_VAR;	/* defined by program */
 
 /* Prototype for action, event, delay, and exit functions */
 typedef void ACTION_FUNC(SS_ID ssId, USER_VAR *pVar, short transNum, short *pNextState);
-typedef long EVENT_FUNC(SS_ID ssId, USER_VAR *pVar, short *pTransNum, short *pNextState);
+typedef unsigned EVENT_FUNC(SS_ID ssId, USER_VAR *pVar, short *pTransNum, short *pNextState);
 typedef void DELAY_FUNC(SS_ID ssId, USER_VAR *pVar);
 typedef void ENTRY_FUNC(SS_ID ssId, USER_VAR *pVar);
 typedef void EXIT_FUNC(SS_ID ssId, USER_VAR *pVar);
 
-#ifdef	OFFSET
-#undef	OFFSET
+#ifdef OFFSET
+#undef OFFSET
 #endif
 /* The OFFSET macro calculates the byte offset of a structure member
  * from the start of a structure */
 #define OFFSET(structure, member) ((long) &(((structure *) 0) -> member))
 
 /* Structure to hold information about database channels */
-struct	seqChan
+struct seqChan
 {
 	char		*dbAsName;	/* assigned channel name */
-	void		*pVar;		/* ptr to variable (-r option)
-					 * or structure offset (+r option) */
+	ptrdiff_t	offset;		/* offset to value */
 	char		*pVarName;	/* variable name, including subscripts*/
 	char		*pVarType;	/* variable type, e.g. "int" */
 	long		count;		/* element count for arrays */
@@ -104,7 +101,7 @@ struct	seqChan
 };
 
 /* Structure to hold information about a state */
-struct	seqState
+struct seqState
 {
 	char		*pStateName;	/* state name */
 	ACTION_FUNC	*actionFunc;	/* action routine for this state */
@@ -117,7 +114,7 @@ struct	seqState
 };
 
 /* Structure to hold information about a State Set */
-struct	seqSS
+struct seqSS
 {
 	char		*pSSName;	/* state set name */
 	struct seqState	*pStates;	/* array of state blocks */
@@ -127,7 +124,7 @@ struct	seqSS
 };
 
 /* All information about a state program */
-struct	seqProgram
+struct seqProgram
 {
 	long		magic;		/* magic number */
 	char		*pProgName;	/* program name (for debugging) */
@@ -138,7 +135,7 @@ struct	seqProgram
 	long		varSize;	/* # bytes in user variable area */
 	char		*pParams;	/* program paramters */
 	long		numEvents;	/* number of event flags */
-	long		options;	/* options (bit-encoded) */
+	unsigned	options;	/* options (bit-encoded) */
 	ENTRY_FUNC	*entryFunc;	/* entry function */
 	EXIT_FUNC	*exitFunc;	/* exit function */
 	int		numQueues;	/* number of syncQ queues */
@@ -182,11 +179,12 @@ epicsShareFunc long epicsShareAPI seq_pvAssignCount(SS_ID);		/* returns number o
 epicsShareFunc long epicsShareAPI seq_pvCount(SS_ID, long);		/* returns number of elements in arr */
 epicsShareFunc void epicsShareAPI seq_pvFlush(void);			/* flush put/get requests */
 epicsShareFunc long epicsShareAPI seq_pvIndex(SS_ID, long);		/* returns index of pv */
-epicsShareFunc long epicsShareAPI seq_seqLog(SS_ID, const char *, ...); /* Logging */
+epicsShareFunc long               seq_seqLog(SS_ID, const char *, ...);	/* Logging */
 epicsShareFunc void epicsShareAPI seq_delayInit(SS_ID, long, double);	/* initialize a delay entry */
 epicsShareFunc long epicsShareAPI seq_delay(SS_ID, long);		/* test a delay entry */
 epicsShareFunc char *epicsShareAPI seq_macValueGet(SS_ID, char *);	/* Given macro name, return ptr to val*/
-epicsShareFunc long epicsShareAPI seq_optGet (SS_ID ssId, char *opt);	/* check an option for TRUE/FALSE */
+epicsShareFunc unsigned epicsShareAPI seq_optGet (SS_ID ssId, char *opt);
+									/* check an option for TRUE/FALSE */
 
 epicsShareFunc long epicsShareAPI seqShow (epicsThreadId);
 epicsShareFunc long epicsShareAPI seqChanShow (epicsThreadId, char *);
@@ -194,11 +192,9 @@ epicsShareFunc long epicsShareAPI seqcar(int level);
 epicsShareFunc void epicsShareAPI seqcaStats(int *pchans, int *pdiscon);
 epicsShareFunc long epicsShareAPI seqQueueShow (epicsThreadId tid);
 epicsShareFunc long epicsShareAPI seqStop (epicsThreadId);
-epicsShareFunc void epicsShareAPI
-    seqRegisterSequencerProgram (struct seqProgram *p);
+epicsShareFunc void epicsShareAPI seqRegisterSequencerProgram (struct seqProgram *p);
 epicsShareFunc void epicsShareAPI seqRegisterSequencerCommands (void);
-epicsShareFunc epicsThreadId epicsShareAPI
-    seq(struct seqProgram *, char *, unsigned int);
+epicsShareFunc epicsThreadId epicsShareAPI seq(struct seqProgram *, char *, unsigned int);
 epicsShareFunc struct state_program *epicsShareAPI seqFindProgByName (char *);
 
 

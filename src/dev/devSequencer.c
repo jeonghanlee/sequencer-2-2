@@ -34,9 +34,8 @@
  */
 
 #include <string.h>
-
-#include "seq.h"
-#include "seqPvt.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 #include "alarm.h"
 #include "dbDefs.h"
@@ -47,6 +46,10 @@
 #include "stringinRecord.h"
 #include "epicsExport.h"
 
+#include "epicsEvent.h"
+#include "pv.h"
+#include "seqCom.h"
+#include "seqPvt.h"
 
 typedef struct {
     long	number;

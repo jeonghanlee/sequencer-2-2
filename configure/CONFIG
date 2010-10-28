@@ -25,7 +25,7 @@ ifdef T_A
   -include $(TOP)/configure/O.$(T_A)/CONFIG_APP_INCLUDE
 endif
 
-SEQ_VERSION = 2.0.99
+SEQ_VERSION = 2.1.0
 
 # USR_CFLAGS_Linux += -Wpointer-arith -Wbad-function-cast
 # USR_CFLAGS_Linux += -Wc++-compat -Wsign-compare -Waddress
