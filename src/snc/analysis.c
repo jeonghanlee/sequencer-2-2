@@ -274,7 +274,7 @@ static void analyse_declaration(SymTable st, Expr *scope, Expr *defn)
 
 	if (!sym_table_insert(st, vp->name, var_list, vp))
 	{
-		Var *vp2 = sym_table_lookup(st, vp->name, var_list);
+		Var *vp2 = (Var *)sym_table_lookup(st, vp->name, var_list);
 		if (vp2->decl)
 			error_at_expr(defn,
 			 "variable '%s' already declared at %s:%d\n",
@@ -368,7 +368,7 @@ static void assign_elem(
 		int n;
 
 		vp->assign = M_MULTI;
-		vp->chan.multi = calloc(vp->length1, sizeof(Chan *));
+		vp->chan.multi = (Chan **)calloc(vp->length1, sizeof(Chan *));
 		for (n = 0; n < vp->length1; n++)
 		{
 			vp->chan.multi[n] = new_channel(
@@ -987,7 +987,7 @@ Var *find_var(SymTable st, char *name, Expr *scope)
 	report("searching %s in %s:%s, ", name, scope->value,
 		expr_type_name(scope));
 #endif
-	vp = sym_table_lookup(st, name, var_list);
+	vp = (Var *)sym_table_lookup(st, name, var_list);
 	if (vp)
 	{
 #ifdef DEBUG
@@ -1153,7 +1153,7 @@ static uint connect_states(SymTable st, Expr *prog)
 #endif
 		if (!sym_table_insert(st, ssp->value, prog, ssp))
 		{
-			Expr *ssp2 = sym_table_lookup(st, ssp->value, prog);
+			Expr *ssp2 = (Expr *)sym_table_lookup(st, ssp->value, prog);
 			error_at_expr(ssp,
 				"a state set with name '%s' was already "
 				"declared at line %d\n", ssp->value, ssp2->line_num);
@@ -1162,7 +1162,7 @@ static uint connect_states(SymTable st, Expr *prog)
 		{
 			if (!sym_table_insert(st, sp->value, ssp, sp))
 			{
-				Expr *sp2 = sym_table_lookup(st, sp->value, ssp);
+				Expr *sp2 = (Expr *)sym_table_lookup(st, sp->value, ssp);
 				error_at_expr(sp,
 					"a state with name '%s' in state set '%s' "
 					"was already declared at line %d\n",
@@ -1187,7 +1187,7 @@ static uint connect_states(SymTable st, Expr *prog)
 
 			foreach (tp, sp->state_whens)
 			{
-				Expr *next_sp = sym_table_lookup(st, tp->value, ssp);
+				Expr *next_sp = (Expr *)sym_table_lookup(st, tp->value, ssp);
 
 				if (!next_sp)
 				{
@@ -1253,7 +1253,8 @@ static int iter_connect_state_change_stmts(Expr *ep, Expr *scope, void *parg)
 		}
 		else
 		{
-			Expr *sp = sym_table_lookup(pcsc_arg->st, ep->value, pcsc_arg->ssp);
+			Expr *sp = (Expr *)sym_table_lookup(
+				pcsc_arg->st, ep->value, pcsc_arg->ssp);
 			if (!sp)
 			{
 				error_at_expr(ep,

@@ -383,7 +383,7 @@ LOCAL long siInit( struct stringinRecord *pRec )
 
 LOCAL long siRead( struct stringinRecord *pRec )
 {
-    seqShowScanPvt    *pvtPt = pRec->dpvt;
+    seqShowScanPvt    *pvtPt = (seqShowScanPvt *)pRec->dpvt;
     seqShowVar        *varPt;
 
     if(!pvtPt || pvtPt->updateFlag == notFound || !pvtPt->pSP ) { 
@@ -420,7 +420,7 @@ LOCAL long siRead( struct stringinRecord *pRec )
 
 LOCAL long siGetIoInitInfo(int cmd, struct stringinRecord *pRec, IOSCANPVT *ppvt)
 {
-    seqShowScanPvt  *pvtPt = pRec->dpvt;
+    seqShowScanPvt  *pvtPt = (seqShowScanPvt *)pRec->dpvt;
 
     *ppvt = pvtPt->ioScanPvt;
 

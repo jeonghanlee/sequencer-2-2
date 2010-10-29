@@ -22,6 +22,7 @@
 #ifndef max
 #define max(x, y) (((x) < (y)) ? (y) : (x))
 #endif
+#define varPtr(sp,ss)	(((sp)->options & OPT_SAFE) ? (ss)->pVar : (sp)->pVar)
 
 /* Used to disable debug output */
 static void nothing(const char *format,...) {}
@@ -40,20 +41,17 @@ epicsStatus seqAddProg(SPROG *pSP);
  */
 long sequencer (SPROG *pSP)	/* ptr to original (global) state program table */
 {
-	SSCB		*pSS;
+	SSCB		*pSS = pSP->pSS;
 	int		nss;
 	epicsThreadId	tid;
 	size_t		threadLen;
 	char		threadName[THREAD_NAME_SIZE+10];
-	void		*pVar;	/* ptr to user variable area */
+	USER_VAR	*pVar = (USER_VAR *)varPtr(pSP,pSS);
 
 	/* Retrieve info about this thread */
 	pSP->threadId = epicsThreadGetIdSelf();
 	epicsThreadGetName(pSP->threadId, threadName, sizeof(threadName));
-	pSS = pSP->pSS;
 	pSS->threadId = pSP->threadId;
-
-	pVar = (pSP->options & OPT_SAFE) ? pSS->pVar : pSP->pVar;
 
 	/* Add the program to the state program list */
 	seqAddProg(pSP);
@@ -151,8 +149,8 @@ void ss_write_buffer(CHAN *pDB, void *pVal)
 static void ss_entry(SSCB *pSS)
 {
 	SPROG		*pSP = pSS->sprog;
-	USER_VAR	*pVar = (pSP->options & OPT_SAFE) ? pSS->pVar : pSP->pVar;
 	int		nWords = (pSP->numEvents + NBITS - 1) / NBITS;
+	USER_VAR	*pVar = (USER_VAR *)varPtr(pSP,pSS);
 
 	/* Initialize this state-set thread */
 	ss_thread_init(pSP, pSS);
@@ -302,7 +300,7 @@ static void ss_thread_uninit(SPROG *pSP, SSCB *pSS, int phase)
 	   and disconnect all channels */
 	if (phase == 1 && pSS->threadId == pSP->threadId)
 	{
-	    void *pVar = (pSP->options & OPT_SAFE) ? pSS->pVar : pSP->pVar;
+	    USER_VAR *pVar = (USER_VAR *)varPtr(pSP,pSS);
 	    DEBUG("   Call exit function\n");
 	    pSP->exitFunc(pSS, pVar);
 
@@ -380,7 +378,11 @@ static void seq_clearDelay(SSCB *pSS, STATE *pST)
 static int seq_getTimeout(SSCB *pSS, double *pdelay)
 {
 	int	ndelay, do_timeout = FALSE;
-	double	cur, delay, delayMin;
+	double	cur, delay;
+	double	delayMin = 0;
+	/* not really necessary to initialize delayMin,
+	   but tell that to the compiler...
+	 */
 
 	if (pSS->numDelays == 0)
 		return do_timeout;

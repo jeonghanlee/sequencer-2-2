@@ -70,7 +70,9 @@ static void gen_expr(int stmt_type, Expr *ep, int level);
 static void gen_ef_func(int stmt_type, Expr *ep, char *fname, int func_code);
 static void gen_pv_func(int stmt_type, Expr *ep,
 	char *fname, int func_code, int add_length, int num_params);
+#if 0
 static void gen_pv_func_va(int stmt_type, Expr *ep, char *fname, int func_code);
+#endif
 static void gen_entry_handler(Expr *prog);
 static void gen_exit_handler(Expr *prog);
 static int special_func(int stmt_type, Expr *ep);
@@ -739,6 +741,7 @@ static void gen_ef_func(
 	printf("seq_%s(ssId, %d)", fname, vp->chan.evflag->index);
 }
 
+#if 0
 static void gen_pv_func_va(
 	int	stmt_type,
 	Expr	*ep,		/* function call expression */
@@ -798,6 +801,7 @@ static void gen_pv_func_va(
 	}
 	printf(")");
 }
+#endif
 
 /* Generate code for pv functions requiring a database variable.
    The channel id (index into channel array) is substituted for the variable.
