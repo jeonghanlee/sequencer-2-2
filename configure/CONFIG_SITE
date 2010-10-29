@@ -2,8 +2,8 @@
 
 # Enable build of different process variable access methods
 PVCA   = TRUE
-PVFILE = FALSE
-PVTKL  = FALSE
+PVFILE = TRUE
+PVKTL  = FALSE
 
 # To restrict the architectures to cross-compile for, set this:
 #CROSS_COMPILER_TARGET_ARCHS = vxWorks-68040

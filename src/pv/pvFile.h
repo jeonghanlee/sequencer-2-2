@@ -5,10 +5,8 @@
 
 #ifndef INCLpvFileh
 #define INCLpvFileh
-#ifndef _WIN32
-#include <sys/time.h>
-#endif
-#include <sys/types.h>
+
+#include "osiSock.h"
 
 #include "pv.h"
 
