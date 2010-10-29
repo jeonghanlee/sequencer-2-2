@@ -24,7 +24,7 @@
 #endif
 
 /* Used to disable debug output */
-void nothing(const char *format,...) {}
+static void nothing(const char *format,...) {}
 
 /* Function declarations */
 static long seq_waitConnect(SPROG *pSP, SSCB *pSS);
@@ -45,12 +45,15 @@ long sequencer (SPROG *pSP)	/* ptr to original (global) state program table */
 	epicsThreadId	tid;
 	size_t		threadLen;
 	char		threadName[THREAD_NAME_SIZE+10];
+	void		*pVar;	/* ptr to user variable area */
 
 	/* Retrieve info about this thread */
 	pSP->threadId = epicsThreadGetIdSelf();
 	epicsThreadGetName(pSP->threadId, threadName, sizeof(threadName));
 	pSS = pSP->pSS;
 	pSS->threadId = pSP->threadId;
+
+	pVar = (pSP->options & OPT_SAFE) ? pSS->pVar : pSP->pVar;
 
 	/* Add the program to the state program list */
 	seqAddProg(pSP);
@@ -62,7 +65,7 @@ long sequencer (SPROG *pSP)	/* ptr to original (global) state program table */
 	seq_connect(pSP);
 
 	/* Call sequencer entry function */
-	pSP->entryFunc(pSS, pSP->pVar);
+	pSP->entryFunc(pSS, pVar);
 
 	/* Create each additional state-set task (additional state-set thread
 	   names are derived from the first ss) */
@@ -89,6 +92,58 @@ long sequencer (SPROG *pSP)	/* ptr to original (global) state program table */
 
 	return 0;
 }
+
+/*
+ * ss_read_buffer() - Only used in safe mode.
+ * Lock-free reading of variable buffer.
+ * See also ss_write_buffer().
+ */
+static void ss_read_buffer(SSCB *pSS)
+{
+	SPROG	*pSP = pSS->sprog;
+	int	ss_num = pSS - pSP->pSS;
+	int	var;
+
+	for (var = 0; var < pSP->numChans; var++)
+	{
+		CHAN	*pDB = pSP->pChan + var;
+		void	*pVal = pSS->pVar + pDB->offset;
+		void	*pBuf = pSP->pVar + pDB->offset;
+		unsigned *dirty = pDB->dirty;
+		size_t	var_size = pDB->size * pDB->dbCount;
+
+		if (!dirty[ss_num])
+			continue;
+		do {
+			dirty[ss_num] = FALSE;
+			memcpy(pVal, pBuf, var_size);
+		} while ((pDB->wr_active || dirty[ss_num])
+			&& (epicsThreadSleep(0),TRUE));
+	}
+}
+
+/*
+ * ss_write_buffer() - Only used in safe mode.
+ * Lock-free writing of variable buffer.
+ * See also ss_read_buffer().
+ */
+void ss_write_buffer(CHAN *pDB, void *pVal)
+{
+	SPROG	*pSP = pDB->sprog;
+	void	*pBuf = pSP->pVar + pDB->offset;
+	unsigned *dirty = pDB->dirty;
+	size_t	var_size = pDB->size * pDB->dbCount;
+	int	ss_num;
+
+	pDB->wr_active = TRUE;
+	memcpy(pBuf, pVal, var_size);
+	for (ss_num = 0; ss_num < pSP->numSS; ss_num++)
+	{
+		dirty[ss_num] = TRUE;
+	}
+	pDB->wr_active = FALSE;
+}
+
 /*
  * ss_entry() - Thread entry point for all state-sets.
  * Provides the main loop for state-set processing.
@@ -96,11 +151,8 @@ long sequencer (SPROG *pSP)	/* ptr to original (global) state program table */
 static void ss_entry(SSCB *pSS)
 {
 	SPROG		*pSP = pSS->sprog;
-	epicsBoolean	ev_trig;
-	STATE		*pST, *pStNext;
-	USER_VAR	*pVar;
-	int		nWords;
-	SS_ID		ssId;
+	USER_VAR	*pVar = (pSP->options & OPT_SAFE) ? pSS->pVar : pSP->pVar;
+	int		nWords = (pSP->numEvents + NBITS - 1) / NBITS;
 
 	/* Initialize this state-set thread */
 	ss_thread_init(pSP, pSS);
@@ -112,38 +164,35 @@ static void ss_entry(SSCB *pSS)
 		if (seq_waitConnect(pSP, pSS) < 0) goto exit;
 	}
 
-	/* Initialize state-set to enter the first state */
-	pST = pSS->pStates;
+	/* Initial state is the first one */
 	pSS->currentState = 0;
 	pSS->nextState = -1;
 	pSS->prevState = -1;
-
-	/* Use the event mask for this state */
-	pSS->pMask = (pST->pEventMask);
-	nWords = (pSP->numEvents + NBITS - 1) / NBITS;
-
-	/* Local ptr to user variables (for reentrant code only) */
-	pVar = pSP->pVar;
-
-	/* state-set id */
-	ssId = pSS;
 
 	/*
 	 * ============= Main loop ==============
 	 */
 	while (TRUE)
 	{
+		unsigned ev_trig;
+
+		/* Set state to current state */
+		STATE *pST = pSS->pStates + pSS->currentState;
+
+		/* Set state set event mask to this state's event mask */
+		pSS->pMask = pST->pEventMask;
+
 		/* If we've changed state, do any entry actions. Also do these
 		 * even if it's the same state if option to do so is enabled.
 		 */
 		if (pST->entryFunc && (pSS->prevState != pSS->currentState
 			|| (pST->options & OPT_DOENTRYFROMSELF)))
 		{
-			pST->entryFunc(ssId, pVar);
+			pST->entryFunc(pSS, pVar);
 		}
 
 		seq_clearDelay(pSS, pST); /* Clear delay list */
-		pST->delayFunc(ssId, pVar); /* Set up new delay list */
+		pST->delayFunc(pSS, pVar); /* Set up new delay list */
 
 		/* Setting this semaphore here guarantees that a when() is
 		 * always executed at least once when a state is first
@@ -155,7 +204,6 @@ static void ss_entry(SSCB *pSS)
 		 */
 		do {
 			double delay = 0.0;
-			int e;
 
 			/* Wake up on PV event, event flag, or expired delay */
 			if (seq_getTimeout(pSS, &delay) && delay > 0.0)
@@ -173,22 +221,16 @@ static void ss_entry(SSCB *pSS)
 				goto exit;
 			}
 
-			/* Call the event function to check for an event
-			 * trigger. The statement inside the when() statement
-			 * is executed. Note, we lock out PV events while doing 
-			 * this. */
-			epicsMutexMustLock(pSP->caSemId);
-			for (e = 0; e < pSP->numChans; e++)
+			/* Copy dirty variable values from CA buffer
+			 * to user (safe mode only).
+			 */
+			if (pSP->options & OPT_SAFE)
 			{
-				if (bitTest(pSS->pMask, e+pSP->numEvents+1))
-				{
-					CHAN *pDB = pSP->pChan + e;
-					epicsMutexMustLock(pDB->varLock);
-					DEBUG("%s: lock %d\n", pSS->pSSName, e);
-				}
+				ss_read_buffer(pSS);
 			}
 
-			ev_trig = pST->eventFunc(ssId, pVar,
+			/* Check state change conditions */
+			ev_trig = pST->eventFunc(pSS, pVar,
 				&pSS->transNum, &pSS->nextState);
 
 			/* Clear all event flags (old ef mode only) */
@@ -200,36 +242,16 @@ static void ss_entry(SSCB *pSS)
 					pSP->pEvents[i] &= ~pSS->pMask[i];
 				}
 			}
-
-			for (e = pSP->numChans-1; e >= 0; e--)
-			{
-				if (bitTest(pSS->pMask, e+pSP->numEvents+1))
-				{
-					CHAN *pDB = pSP->pChan + e;
-					DEBUG("%s: unlock %d\n", pSS->pSSName, e);
-					epicsMutexUnlock(pDB->varLock);
-				}
-			}
-			epicsMutexUnlock(pSP->caSemId);
-
 		} while (!ev_trig);
 
-		/* An event triggered:
-		 * execute the action statements and enter the new state.
-		 */
-
-		/* Execute the action for this event */
-		pST->actionFunc(ssId, pVar, pSS->transNum, &pSS->nextState);
-
-		/* Change event mask ptr for next state */
-		pStNext = pSS->pStates + pSS->nextState;
-		pSS->pMask = (pStNext->pEventMask);
+		/* Execute the state change action */
+		pST->actionFunc(pSS, pVar, pSS->transNum, &pSS->nextState);
 
 		/* If changing state, do exit actions */
 		if (pST->exitFunc && (pSS->currentState != pSS->nextState
 			|| (pST->options & OPT_DOEXITTOSELF)))
 		{
-			pST->exitFunc(ssId, pVar);
+			pST->exitFunc(pSS, pVar);
 		}
 
 		/* Flush any outstanding DB requests */
@@ -238,7 +260,6 @@ static void ss_entry(SSCB *pSS)
 		/* Change to next state */
 		pSS->prevState = pSS->currentState;
 		pSS->currentState = pSS->nextState;
-		pST = pSS->pStates + pSS->currentState;
 	}
 
 	/* Thread exit has been requested */
@@ -281,8 +302,9 @@ static void ss_thread_uninit(SPROG *pSP, SSCB *pSS, int phase)
 	   and disconnect all channels */
 	if (phase == 1 && pSS->threadId == pSP->threadId)
 	{
+	    void *pVar = (pSP->options & OPT_SAFE) ? pSS->pVar : pSP->pVar;
 	    DEBUG("   Call exit function\n");
-	    pSP->exitFunc(pSS, pSP->pVar);
+	    pSP->exitFunc(pSS, pVar);
 
 	    DEBUG("   Disconnect all channels\n");
 	    seq_disconnect(pSP);
@@ -501,8 +523,6 @@ long epicsShareAPI seqStop(epicsThreadId tid)
 			epicsEventDestroy(pSS->syncSemId);
 		if (pSS->getSemId != NULL)
 			epicsEventDestroy(pSS->getSemId);
-		if (pSS->putSemId != NULL)
-			epicsEventDestroy(pSS->putSemId);
 		if (pSS->death1SemId != NULL)
 			epicsEventDestroy(pSS->death1SemId);
 		if (pSS->death2SemId != NULL)
@@ -549,6 +569,8 @@ void seqFree(SPROG *pSP)
 	{
 		if (pDB->dbName != NULL)
 			free(pDB->dbName);
+		if (pDB->putSemId != NULL)
+			epicsEventDestroy(pDB->putSemId);
 	}
 
 	/* Free channel structures */

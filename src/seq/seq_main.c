@@ -247,6 +247,8 @@ static void init_sprog(struct seqProgram *pSeqProg, SPROG *pSP)
 		for (i = 0; i < pSP->numQueues; i++)
 			ellInit(&pSP->pQueues[i]);
 	}
+	/* initial pool for pv requests is 1kB on 32-bit systems */
+	freeListInitPvt(&pSP->pvReqPool, 128, sizeof(PVREQ));
 }
 
 /*
@@ -293,7 +295,6 @@ static void init_sscb(struct seqProgram *pSeqProg, SPROG *pSP)
 		/* Create binary semaphores for synchronous pvGet() and
 		   pvPut() */
 		pSS->getSemId = epicsEventMustCreate(epicsEventFull);
-		pSS->putSemId = epicsEventMustCreate(epicsEventFull);
 
 		/* Create binary semaphores for thread death */
 		pSS->death1SemId = epicsEventMustCreate(epicsEventEmpty);
@@ -322,6 +323,11 @@ static void init_sscb(struct seqProgram *pSeqProg, SPROG *pSP)
 			pState->pStateName, *pState->pEventMask);
 #endif	/*DEBUG*/
 		}
+		/* Allocate user variable area if safe mode option (+s) is set */
+		if (pSP->options & OPT_SAFE)
+		{
+			pSP->pVar = (USER_VAR *)calloc(pSP->varSize, 1);
+		}
 	}
 
 #ifdef	DEBUG
@@ -349,7 +355,6 @@ static void init_chan(struct seqProgram *pSeqProg, SPROG *pSP)
 		printf("init_chan: pDB=%p\n", pDB);
 #endif	/*DEBUG*/
 		pDB->sprog = pSP;
-		pDB->sset = NULL;	/* set temporarily during get/put */
 		pDB->dbAsName = pSeqChan->dbAsName;
 		pDB->pVarName = pSeqChan->pVarName;
 		pDB->pVarType = pSeqChan->pVarType;
@@ -381,6 +386,9 @@ static void init_chan(struct seqProgram *pSeqProg, SPROG *pSP)
 			pDB->efId, pDB->monFlag, pDB->eventNum);
 #endif	/*DEBUG*/
 		pDB->varLock = epicsMutexMustCreate();
+		pDB->dirty = (unsigned *)calloc(pSP->numSS,sizeof(unsigned));
+		pDB->getComplete = (unsigned *)calloc(pSP->numSS,sizeof(unsigned));
+		pDB->putSemId = epicsEventMustCreate(epicsEventFull);
 	}
 }
 

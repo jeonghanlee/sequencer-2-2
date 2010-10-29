@@ -40,6 +40,10 @@
 #define max(x, y) (((x) < (y)) ? (y) : (x))
 #endif
 
+#ifndef min
+#define min(x, y) (((x) < (y)) ? (x) : (y))
+#endif
+
 /* Flush outstanding PV requests */
 epicsShareFunc void epicsShareAPI seq_pvFlush(void)
 {
@@ -52,11 +56,11 @@ epicsShareFunc void epicsShareAPI seq_pvFlush(void)
  */
 epicsShareFunc long epicsShareAPI seq_pvGet(SS_ID pSS, long pvId, long compType)
 {
-	SPROG			*pSP = pSS->sprog;
-	CHAN			*pDB = pSP->pChan + pvId;
-	int			sync;	/* whether synchronous get */
-	int			status;
-	epicsEventWaitStatus	sem_status;
+	SPROG	*pSP = pSS->sprog;
+	CHAN	*pDB = pSP->pChan + pvId;
+	int	sync;	/* whether synchronous get */
+	int	status;
+	PVREQ	*req;
 
 	/* Determine whether performing asynchronous or synchronous i/o */
 	switch (compType)
@@ -87,14 +91,16 @@ epicsShareFunc long epicsShareAPI seq_pvGet(SS_ID pSS, long pvId, long compType)
 		return pDB->status;
 	}
 
-	/* Note the current state set (used in the completion callback) */
-	pDB->sset = pSS;
-
 	/* If synchronous pvGet then clear the pvGet pend semaphore */
 	if (sync)
 	{
 		epicsEventTryWait(pSS->getSemId);
 	}
+
+	/* Allocate and initialize a pv request */
+	req = (PVREQ *)freeListMalloc(pSP->pvReqPool);
+	req->pSS = pSS;
+	req->pDB = pDB;
 
 	/* Perform the PV get operation with a callback routine specified */
 	status = pvVarGetCallback(
@@ -102,18 +108,20 @@ epicsShareFunc long epicsShareAPI seq_pvGet(SS_ID pSS, long pvId, long compType)
 			pDB->getType,		/* request type */
 			pDB->count,		/* element count */
 			seq_get_handler,	/* callback handler */
-			pDB);			/* user arg */
+			req);			/* user arg */
 	if (status != pvStatOK)
 	{
 		errlogPrintf("seq_pvGet: pvVarGetCallback() %s failure: %s\n",
 			pDB->dbName, pvVarGetMess(pDB->pvid));
-		pDB->getComplete = TRUE;
+		pDB->getComplete[ssNum(pSS)] = TRUE;
 		return status;
 	}
 
 	/* Synchronous: wait for completion (10s timeout) */
 	if (sync)
 	{
+		epicsEventWaitStatus sem_status;
+
 		pvSysFlush(pvSys);
 		sem_status = epicsEventWaitWithTimeout(pSS->getSemId, 10.0);
 		if (sem_status != epicsEventWaitOK)
@@ -136,7 +144,7 @@ epicsShareFunc long epicsShareAPI seq_pvGetComplete(SS_ID pSS, long pvId)
 {
 	CHAN *pDB = pSS->sprog->pChan + pvId;
 
-	return pDB->getComplete;
+	return pDB->getComplete[ssNum(pSS)];
 }
 
 /*
@@ -150,8 +158,8 @@ epicsShareFunc long epicsShareAPI seq_pvPut(SS_ID pSS, long pvId, long compType)
 	int	sync;	/* whether to wait for completion */
 	int	status;
 	int	count;
-	void	*pVar = valPtr(pDB);	/* ptr to value */
-	epicsEventWaitStatus   sem_status;
+	void	*pVar = valPtr(pDB,pSS);	/* ptr to value */
+	PVREQ	*req;
 
 #ifdef DEBUG
 	errlogPrintf("seq_pvPut: pv name=%s, pVar=%p\n", pDB->dbName, pVar);
@@ -179,11 +187,14 @@ epicsShareFunc long epicsShareAPI seq_pvPut(SS_ID pSS, long pvId, long compType)
 		return pvStatERROR;
 	}
 
-	/* Flag this pvPut() as not completed */
-	pDB->putComplete = FALSE;
-	pDB->putWasComplete = FALSE;
+	if (!nonb)
+	{
+		/* Must wait for active put to complete first */
+		epicsEventWait(pDB->putSemId);
+	}
 
 	/* Check for channel connected */
+	/* TODO: is this needed? */
 	if (!pDB->connected)
 	{
 		pDB->status = pvStatDISCONN;
@@ -192,51 +203,50 @@ epicsShareFunc long epicsShareAPI seq_pvPut(SS_ID pSS, long pvId, long compType)
 		return pDB->status;
 	}
 
-        /* Note the current state set (used in the completion callback) */
-        pDB->sset = pSS;
-
-	/* If synchronous pvPut then clear the pvPut pend semaphore */
-	if (sync)
-	{
-		epicsEventTryWait(pSS->putSemId);
-	}
-
 	/* Determine number of elements to put (don't try to put more
 	   than db count) */
-	count  = pDB->count;
-	if (count > pDB->dbCount)
-		count = pDB->dbCount;
+	count = min(pDB->count, pDB->dbCount);
 
 	/* Perform the PV put operation (either non-blocking or with a
 	   callback routine specified) */
 	if (nonb)
+	{
 		status = pvVarPutNoBlock(
 				pDB->pvid,		/* PV id */
 				pDB->putType,		/* data type */
 				count,			/* element count */
 				(pvValue *)pVar);	/* data value */
+	}
 	else
+	{
+		/* Allocate and initialize a pv request */
+		req = (PVREQ *)freeListMalloc(pSP->pvReqPool);
+		req->pSS = pSS;
+		req->pDB = pDB;
+
 		status = pvVarPutCallback(
 				pDB->pvid,		/* PV id */
 				pDB->putType,		/* data type */
 				count,			/* element count */
 				(pvValue *)pVar,	/* data value */
 				seq_put_handler,	/* callback handler */
-				pDB);                   /* user arg */
+				req);			/* user arg */
+	}
 	if (status != pvStatOK)
 	{
 		errlogPrintf("seq_pvPut: pvVarPut%s() %s failure: %s\n",
 			nonb ? "NoBlock" : "Callback", pDB->dbName,
 			pvVarGetMess(pDB->pvid));
-		pDB->putComplete = TRUE;
 		return status;
 	}
 
 	/* Synchronous: wait for completion (10s timeout) */
-	if (sync)
+	if (sync) /* => !nonb */
 	{
+		epicsEventWaitStatus sem_status;
+
 		pvSysFlush(pvSys);
-		sem_status = epicsEventWaitWithTimeout(pSS->putSemId, 10.0);
+		sem_status = epicsEventWaitWithTimeout(pDB->putSemId, 10.0);
 		if (sem_status != epicsEventWaitOK)
 		{
 			pDB->status = pvStatTIMEOUT;
@@ -265,38 +275,40 @@ epicsShareFunc long epicsShareAPI seq_pvPut(SS_ID pSS, long pvId, long compType)
 /*
  * seq_pvPutComplete() - returns TRUE if the last put completed.
  */
-epicsShareFunc long epicsShareAPI seq_pvPutComplete(SS_ID pSS, long pvId, long length, long any,
-	long *pComplete)
+epicsShareFunc long epicsShareAPI seq_pvPutComplete(
+	SS_ID	pSS,
+	long	pvId,
+	long	length,
+	long	any,
+	long	*pComplete)
 {
 	SPROG	*pSP = pSS->sprog;
 	long	anyDone = FALSE, allDone = TRUE;
 	int	i;
 
-	epicsMutexMustLock(pSP->caSemId);
-
 	for (i=0; i<length; i++)
 	{
 		CHAN *pDB = pSP->pChan + pvId + i;
 
-		if (pDB->putComplete)
-		{
-			if (!pDB->putWasComplete) anyDone = TRUE;
-			pDB->putWasComplete = TRUE;
-		}
-		else
-		{
-			allDone = FALSE;
-		}
+		long done = epicsEventTryWait(pDB->putSemId);
+
+		anyDone = anyDone || done;
+		allDone = allDone && done;
+
 		if (pComplete != NULL)
-			pComplete[i] = pDB->putComplete;
+		{
+			pComplete[i] = done;
+		}
+		else if (any && done)
+		{
+			break;
+		}
 	}
 
 #ifdef DEBUG
 	errlogPrintf("pvPutComplete: pvId=%ld, length=%ld, anyDone=%ld, "
 		"allDone=%ld\n", pvId, length, anyDone, allDone);
 #endif
-
-	epicsMutexUnlock(pSP->caSemId);
 
 	return any?anyDone:allDone;
 }
@@ -648,6 +660,7 @@ epicsShareFunc int epicsShareAPI seq_pvGetQ(SS_ID pSS, int pvId)
 {
 	SPROG	*pSP = pSS->sprog;
 	CHAN	*pDB = pSP->pChan + pvId;
+	void	*pVar = valPtr(pDB,pSS);
 	int	ev_flag;
 	int	isSet;
 
@@ -692,7 +705,7 @@ epicsShareFunc int epicsShareAPI seq_pvGetQ(SS_ID pSS, int pvId)
 			pVal = (char *)pAccess + pDB->dbOffset;
 
 			epicsMutexLock(pDB->varLock);
-			memcpy(valPtr(pDB), pVal, pDB->size * 1 );
+			memcpy(pVar, pVal, pDB->size * 1 );
 							/* was pDB->dbCount */
 
 			/* Copy status & severity */

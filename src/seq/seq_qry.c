@@ -169,7 +169,7 @@ long epicsShareAPI seqChanShow(epicsThreadId tid, char *pStr)
 		printf("    offset = %ld = 0x%lx\n", (long)pDB->offset, (long)pDB->offset);
 		printf("    type = %s\n", pDB->pVarType);
 		printf("    count = %ld\n", pDB->count);
-		printValue(valPtr(pDB), pDB->putType, pDB->count);
+		printValue(bufPtr(pDB)+pDB->offset, pDB->putType, pDB->count);
 
 		printf("  Monitor flag = %d\n", pDB->monFlag);
 		if (pDB->monitored)
@@ -192,7 +192,7 @@ long epicsShareAPI seqChanShow(epicsThreadId tid, char *pStr)
 		else
 			printf("  Get not completed or no get issued\n");
 
-		if(pDB->putComplete)
+		if(epicsEventTryWait(pDB->putSemId))
 			printf("  Last put completed\n");
 		else
 			printf("  Put not completed or no put issued\n");

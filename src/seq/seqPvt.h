@@ -44,8 +44,11 @@ extern void *pvSys;
 
 #define MAX_QUEUE_SIZE 100		/* default max_queue_size */
 
-#define valPtr(ch)	(bufPtr(ch)+(ch)->offset)
+#define valPtr(ch,ss)	(basePtr(ch,ss)+(ch)->offset)
+#define basePtr(ch,ss)	(((ch)->sprog->options&OPT_SAFE)?(ss)->pVar:bufPtr(ch))
 #define bufPtr(ch)	(((ch)->sprog->options&OPT_REENT)?(ch)->sprog->pVar:0)
+
+#define ssNum(ss)	((ss)->sprog->pSS-(ss))
 
 /* Structure to hold information about database channels */
 struct db_channel
@@ -68,9 +71,8 @@ struct db_channel
 	void		*pvid;		/* PV (process variable) id */
 	unsigned	assigned;	/* TRUE only if channel is assigned */
 	unsigned	connected;	/* TRUE only if channel is connected */
-	unsigned	getComplete;	/* TRUE if previous pvGet completed */
-	unsigned	putComplete;	/* TRUE if previous pvPut completed */
-	unsigned	putWasComplete;	/* previous value of putComplete */
+	unsigned	*getComplete;	/* array of flags, one for each state set */
+	epicsEventId	putSemId;	/* semaphore id for async put */
 	short		dbOffset;	/* offset to value in db access struct*/
 	short		status;		/* last db access status code */
 	epicsTimeStamp	timeStamp;	/* time stamp */
@@ -85,8 +87,11 @@ struct db_channel
 	unsigned	monitored;	/* TRUE if channel IS monitored */
 	void		*evid;		/* event id (supplied by PV lib) */
 	struct state_program *sprog;	/* state program that owns this struct*/
-	struct state_set_control_block *sset; /* current state-set (temp.) */
-	epicsMutexId	varLock;	/* mutex to lock out access */
+
+	/* buffer access, only used in safe mode */
+	epicsMutexId	varLock;	/* mutex for un-assigned vars */
+	unsigned	*dirty;		/* array of dirty flags, one for each state set */
+	unsigned	wr_active;	/* buffer is currently being written */
 };
 typedef struct db_channel CHAN;
 
@@ -123,7 +128,6 @@ struct state_set_control_block
 	epicsEventId	allFirstConnectAndMonitorSemId;
 	epicsEventId	syncSemId;	/* semaphore for event sync */
 	epicsEventId	getSemId;	/* semaphore id for async get */
-	epicsEventId	putSemId;	/* semaphore id for async put */
 	epicsEventId	death1SemId;	/* semaphore id for death (#1) */
 	epicsEventId	death2SemId;	/* semaphore id for death (#2) */
 	epicsEventId	death3SemId;	/* semaphore id for death (#3) */
@@ -141,6 +145,7 @@ struct state_set_control_block
 	double		*delay;		/* queued delay value in secs (array) */
 	unsigned	*delayExpired;	/* TRUE if delay expired (array) */
 	double		timeEntered;	/* time that a state was entered */
+	void		*pVar;		/* variable value block (safe mode) */
 	struct state_program *sprog;	/* ptr back to state program block */
 };
 typedef struct state_set_control_block SSCB;
@@ -186,6 +191,7 @@ struct state_program
 	char		*pLogFile;	/* logfile name */
 	int		numQueues;	/* number of syncQ queues */
 	ELLLIST		*pQueues;	/* ptr to syncQ queues */
+	void		*pvReqPool;	/* freeList for pv requests */
 };
 typedef struct state_program SPROG;
 
@@ -196,6 +202,13 @@ struct auxiliary_args
 	long		debug;		/* debug level */
 };
 typedef struct auxiliary_args AUXARGS;
+
+struct pvreq
+{
+	CHAN		*pDB;		/* requested variable */
+	SSCB		*pSS;		/* state set that made the request */
+};
+typedef struct pvreq PVREQ;
 
 /* Macro parameters */
 #define	MAX_MACROS	50
@@ -228,5 +241,6 @@ typedef void seqTraversee(SPROG *prog, void *param);
 extern epicsStatus seqTraverseProg(seqTraversee *pFunc, void *param);
 extern long seq_connect(SPROG *pSP);
 extern long seq_disconnect(SPROG *pSP);
+extern void ss_write_buffer(CHAN *pDB, void *pVal);
 
 #endif	/*INCLseqPvth*/

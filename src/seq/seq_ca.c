@@ -33,8 +33,9 @@
 
 #include "seq.h"
 
-static void proc_db_events(pvValue *, pvType, CHAN *, long);
-static void proc_db_events_queued(pvValue *, CHAN *);
+static void proc_db_events(pvValue *pValue, pvType type,
+	CHAN *pDB, SSCB *pSS, long complete_type);
+static void proc_db_events_queued(pvValue *pValue, CHAN *pDB);
 
 /*
  * seq_connect() - Connect to all database channels.
@@ -106,8 +107,13 @@ epicsShareFunc long seq_connect(SPROG *pSP)
 epicsShareFunc void seq_get_handler(
 	void *var, pvType type, int count, pvValue *pValue, void *arg, pvStat status)
 {
+	PVREQ *pRQ = (PVREQ *)arg;
+	CHAN *pDB = pRQ->pDB;
+	SPROG *pSP = pDB->sprog;
+
+	freeListFree(pSP->pvReqPool, arg);
 	/* Process event handling in each state set */
-	proc_db_events(pValue, type, (CHAN *)arg, GET_COMPLETE);
+	proc_db_events(pValue, type, pDB, pRQ->pSS, GET_COMPLETE);
 }
 
 /*
@@ -117,8 +123,13 @@ epicsShareFunc void seq_get_handler(
 epicsShareFunc void seq_put_handler(
 	void *var, pvType type, int count, pvValue *pValue, void *arg, pvStat status)
 {
+	PVREQ *pRQ = (PVREQ *)arg;
+	CHAN *pDB = pRQ->pDB;
+	SPROG *pSP = pDB->sprog;
+
+	freeListFree(pSP->pvReqPool, arg);
 	/* Process event handling in each state set */
-	proc_db_events(pValue, type, (CHAN *)arg, PUT_COMPLETE);
+	proc_db_events(pValue, type, pDB, pRQ->pSS, PUT_COMPLETE);
 }
 
 /*
@@ -127,13 +138,14 @@ epicsShareFunc void seq_put_handler(
 epicsShareFunc void seq_mon_handler(
 	void *var, pvType type, int count, pvValue *pValue, void *arg, pvStat status)
 {
-	CHAN *pCHAN = (CHAN *)arg;
-        SPROG *pSP = pCHAN->sprog;
+	CHAN *pDB = (CHAN *)arg;
+	SPROG *pSP = pDB->sprog;
 
 	/* Process event handling in each state set */
-	proc_db_events(pValue, type, pCHAN, MON_COMPLETE);
-        if(!pCHAN->gotFirstMonitor) {
-		pCHAN->gotFirstMonitor = 1;
+	proc_db_events(pValue, type, pDB, pSP->pSS, MON_COMPLETE);
+	if(!pDB->gotFirstMonitor)
+	{
+		pDB->gotFirstMonitor = 1;
 		pSP->firstMonitorCount++;
 		if((pSP->firstMonitorCount==pSP->numMonitoredChans)
 			&& (pSP->firstConnectCount==pSP->assignCount))
@@ -150,7 +162,11 @@ epicsShareFunc void seq_mon_handler(
 
 /* Common code for completion and monitor handling */
 static void proc_db_events(
-	pvValue *pValue, pvType type, CHAN *pDB, long complete_type)
+	pvValue	*pValue,
+	pvType	type,
+	CHAN	*pDB,
+	SSCB	*pSS,		/* originator, for put and get */
+	long	complete_type)
 {
 	SPROG	*pSP = pDB->sprog;
 
@@ -170,10 +186,8 @@ static void proc_db_events(
 	   for put completion only) */
 	if (pValue != NULL)
 	{
-		size_t var_size = pDB->size * pDB->dbCount;
 		void *pVal;
 
-		epicsMutexLock(pDB->varLock);
 		if (PV_SIMPLE(type))
 		{
 			pVal = (void *)pValue;
@@ -182,7 +196,8 @@ static void proc_db_events(
 		{
 			pVal = (void *)((long)pValue + pDB->dbOffset);
 		}
-		memcpy(valPtr(pDB), pVal, var_size);
+		/* Write value to CA buffer (lock-free) */
+		ss_write_buffer(pDB, pVal);
 		/* Copy status, severity and time stamp (leave unchanged if absent) */
 		if (!PV_SIMPLE(type))
 		{
@@ -197,17 +212,15 @@ static void proc_db_events(
 			if (!pmsg) pmsg = "unknown";
 			pDB->message = Strdcpy(pDB->message, pmsg);
 		}
-		epicsMutexUnlock(pDB->varLock);
 	}
 
 	/* Indicate completed pvGet() or pvPut()  */
 	switch (complete_type)
 	{
 	    case GET_COMPLETE:
-		pDB->getComplete = TRUE;
+		pDB->getComplete[ssNum(pSS)] = TRUE;
 		break;
 	    case PUT_COMPLETE:
-		pDB->putComplete = TRUE;
 		break;
 	    default:
 		break;
@@ -217,19 +230,18 @@ static void proc_db_events(
 	seqWakeup(pSP, pDB->eventNum);
 
 	/* If there's an event flag associated with this channel, set it */
+	/* TODO: check if correct/documented to do this for non-monitor completions */
 	if (pDB->efId > 0)
-		seq_efSet((SS_ID)pSP->pSS, pDB->efId);
+		seq_efSet(pSS, pDB->efId);
 
 	/* Give semaphore for completed synchronous pvGet() and pvPut() */
 	switch (complete_type)
 	{
 	    case GET_COMPLETE:
-		if (pDB->sset != NULL)
-			epicsEventSignal(pDB->sset->getSemId);
+		epicsEventSignal(pSS->getSemId);
 		break;
 	    case PUT_COMPLETE:
-		if (pDB->sset != NULL)
-			epicsEventSignal(pDB->sset->putSemId);
+		epicsEventSignal(pDB->putSemId);
 		break;
 	    default:
 		break;
