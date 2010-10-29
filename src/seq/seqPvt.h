@@ -50,6 +50,14 @@ extern void *pvSys;
 
 #define ssNum(ss)	((ss)->sprog->pSS-(ss))
 
+#ifndef min
+#define min(x, y) (((x) < (y)) ? (x) : (y))
+#endif
+
+#ifndef max
+#define max(x, y) (((x) < (y)) ? (y) : (x))
+#endif
+
 /* Structure to hold information about database channels */
 struct db_channel
 {

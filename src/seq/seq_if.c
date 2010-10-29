@@ -36,14 +36,6 @@
 
 #include "seq.h"
 
-#ifndef max
-#define max(x, y) (((x) < (y)) ? (y) : (x))
-#endif
-
-#ifndef min
-#define min(x, y) (((x) < (y)) ? (x) : (y))
-#endif
-
 /* Flush outstanding PV requests */
 epicsShareFunc void epicsShareAPI seq_pvFlush(void)
 {

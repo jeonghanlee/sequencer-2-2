@@ -19,9 +19,6 @@
 #define DECLARE_PV_SYS
 #include "seq.h"
 
-#ifndef max
-#define max(x, y) (((x) < (y)) ? (y) : (x))
-#endif
 #define varPtr(sp,ss)	(((sp)->options & OPT_SAFE) ? (ss)->pVar : (sp)->pVar)
 
 /* Used to disable debug output */

@@ -37,13 +37,13 @@ extern "C" {
 #endif
 
 /* Bit encoding for run-time options */
-#define OPT_DEBUG	(1<<0)		/* turn on debugging */
-#define OPT_ASYNC	(1<<1)		/* use async. gets */
-#define OPT_CONN	(1<<2)		/* wait for all connections */
-#define OPT_REENT	(1<<3)		/* generate reentrant code */
-#define OPT_NEWEF	(1<<4)		/* new event flag mode */
-#define OPT_MAIN	(1<<5)		/* generate main program */
-#define OPT_SAFE	(1<<6)		/* safe mode */
+#define OPT_DEBUG		(1<<0)	/* turn on debugging */
+#define OPT_ASYNC		(1<<1)	/* use async. gets */
+#define OPT_CONN		(1<<2)	/* wait for all connections */
+#define OPT_REENT		(1<<3)	/* generate reentrant code */
+#define OPT_NEWEF		(1<<4)	/* new event flag mode */
+#define OPT_MAIN		(1<<5)	/* generate main program */
+#define OPT_SAFE		(1<<6)	/* safe mode */
 
 /* Bit encoding for State Specific Options */
 #define OPT_NORESETTIMERS	(1<<0)	/* If TRUE, don't reset timers on */
@@ -53,7 +53,7 @@ extern "C" {
 
 /* Macros to handle set & clear event bits */
 typedef unsigned long	bitMask;
-#define NBITS		(8*sizeof(bitMask))	/* # bits in bitMask word */
+#define NBITS	(8*sizeof(bitMask))	/* # bits in bitMask word */
 
 #define bitSet(word, bitnum)	(word[(bitnum)/NBITS] |=  (1<<((bitnum)%NBITS)))
 #define bitClear(word, bitnum)	(word[(bitnum)/NBITS] &= ~(1<<((bitnum)%NBITS)))
