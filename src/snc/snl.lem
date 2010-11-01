@@ -300,7 +300,6 @@ expr(p) ::= LPAREN(t) expr(x) RPAREN.		{ p = expr(E_PAREN, t, x); }
 // Primary Expression and Unary Postfix Operators
 expr(p) ::= NAME(t) LPAREN exprs(xs) RPAREN.	 [POST] { p = expr(E_FUNC,   t, xs); }
 expr(p) ::= EXIT(t) LPAREN exprs(xs) RPAREN.	 [POST] { p = expr(E_FUNC,   t, xs); }
-expr(p) ::= DELAY(t) LPAREN exprs(xs) RPAREN.	 [POST] { p = expr(E_DELAY,  t, xs); }
 expr(p) ::= expr(x) LBRACKET(t) expr(y) RBRACKET.[POST] { p = expr(E_SUBSCR, t, x, y); }
 expr(p) ::= expr(x) PERIOD(t)  expr(y).		 [POST] { p = expr(E_BINOP,  t, x, y); }
 expr(p) ::= expr(x) POINTER(t) expr(y).		 [POST] { p = expr(E_BINOP,  t, x, y); }

@@ -198,7 +198,6 @@ snl:
 	"char"		{ RET(CHAR,	"char"); }
 	"continue"	{ RET(CONTINUE,	"continue"); }
 	"declare"	{ RET(DECLARE,	"declare"); }
-	"delay"		{ RET(DELAY,	"delay"); }
 	"double"	{ RET(DOUBLE,	"double"); }
 	"else"		{ RET(ELSE,	"else"); }
 	"entry"		{ RET(ENTRY,	"entry"); }

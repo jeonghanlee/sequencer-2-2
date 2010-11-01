@@ -92,6 +92,10 @@ Expr *expr(
 
 	num_children = expr_type_info[type].num_children;
 
+	/* handle special case delay function */
+	if (type == E_FUNC && strcmp(tok.str,"delay")==0)
+		type = E_DELAY;
+
 	ep = new(Expr);
 	ep->next = 0;
 	ep->last = ep;

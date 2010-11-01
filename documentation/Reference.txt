@@ -616,7 +616,6 @@ Primary Expression Operators
 .. productionlist::
    expr: `identifier` "(" `exprs` ")"
    expr: "exit" "(" `exprs` ")"
-   expr: "delay" "(" `exprs` ")"
    expr: `expr` "[" `expr` "]"
    expr: `expr` "." `expr`
    expr: `expr` "->" `expr`
@@ -626,8 +625,8 @@ Primary Expression Operators
 These are: function call, array subscript, record selection, pointer to
 record selection, and postfix operators (increment and decrement).
 
-Note that :token:`exit` and :token:`delay` are listed explicitly because
-they are keywords, not identifiers, but can also be used as functions.
+Note that :token:`exit` is listed explicitly because
+it is a keyword, not an identifier, but can also be used as a function.
 
 Note also that SNL makes no use of the semantics of structure member
 access (a side-effect that you may notice is that the state notation

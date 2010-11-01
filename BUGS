@@ -1,4 +1,0 @@
-In 2.0.12 'delay' is not a reserved word, so can be used for a variable.
-This is not possible in 2.0.99. For compatibility this should be fixed in
-2.1.0.
-
