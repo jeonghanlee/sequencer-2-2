@@ -52,12 +52,12 @@ endif
 	@$(RM) $@
 	$(PREPROCESS.cpp)
 
-%.c: %.i
+%.c: %.i $(SNC)
 	@echo "converting $<"
 	$(SNC) $(TARGET_SNCFLAGS) $(SNCFLAGS) $(USR_SNCFLAGS) $< -o $(@F).tmp
 	$(MV) $(@F).tmp $@
 
-%.c: ../%.stt
+%.c: ../%.stt $(SNC)
 	@echo "converting $< "
 	$(SNC) $(TARGET_SNCFLAGS) $(SNCFLAGS) $(USR_SNCFLAGS) $< -o $(@F).tmp
 	$(MV) $(@F).tmp $@
