@@ -120,7 +120,6 @@ struct seqSS
 	struct seqState	*pStates;	/* array of state blocks */
 	long		numStates;	/* number of states in this state set */
 	long		numDelays;	/* number of delays in this state set */
-	long		errorState;	/* error state index (-1 if none defd)*/
 	ENTRY_FUNC	*entryFunc;	/* entry function */
 	EXIT_FUNC	*exitFunc;	/* exit function */
 };

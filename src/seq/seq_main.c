@@ -279,7 +279,6 @@ static void init_sscb(struct seqProgram *pSeqProg, SPROG *pSP)
 
 		pSS->delay = (double *)calloc(pSS->maxNumDelays, sizeof(double));
 		pSS->delayExpired = (unsigned *)calloc(pSS->maxNumDelays, sizeof(unsigned));
-		pSS->errorState = pSeqSS->errorState;
 		pSS->currentState = 0; /* initial state */
 		pSS->nextState = 0;
 		pSS->prevState = 0;

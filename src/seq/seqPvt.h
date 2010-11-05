@@ -147,7 +147,6 @@ struct state_set_control_block
 	short		currentState;	/* current state index */
 	short		nextState;	/* next state index */
 	short		prevState;	/* previous state index */
-	short		errorState;	/* error state index (-1 if none defd)*/
 	short		transNum;	/* highest prio trans. # triggered */
 	bitMask		*pMask;		/* current event mask */
 	long		maxNumDelays;	/* max. number of delays */
