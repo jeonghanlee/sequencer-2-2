@@ -58,6 +58,15 @@ extern void *pvSys;
 #define max(x, y) (((x) < (y)) ? (y) : (x))
 #endif
 
+typedef struct db_channel CHAN;
+typedef struct queue_entry QENTRY;
+typedef struct state_info_block STATE;
+typedef struct macro MACRO;
+typedef struct state_set_control_block SSCB;
+typedef struct state_program SPROG;
+typedef struct auxiliary_args AUXARGS;
+typedef struct pvreq PVREQ;
+
 /* Structure to hold information about database channels */
 struct db_channel
 {
@@ -101,7 +110,6 @@ struct db_channel
 	unsigned	*dirty;		/* array of dirty flags, one for each state set */
 	unsigned	wr_active;	/* buffer is currently being written */
 };
-typedef struct db_channel CHAN;
 
 /* Structure for syncQ queue entry */
 struct queue_entry
@@ -110,7 +118,6 @@ struct queue_entry
 	CHAN		*pDB;		/* ptr to db channel info */
 	pvValue		value;		/* value, time stamp etc */
 };
-typedef struct queue_entry QENTRY;
 
 /* Structure to hold information about a state */
 struct state_info_block
@@ -124,7 +131,6 @@ struct state_info_block
 	bitMask		*pEventMask;	/* event mask for this state */
 	bitMask		options;	/* options mask for this state */
 };
-typedef struct state_info_block STATE;
 
 /* Structure to hold information about a State Set */
 struct state_set_control_block
@@ -157,14 +163,13 @@ struct state_set_control_block
 	void		*pVar;		/* variable value block (safe mode) */
 	struct state_program *sprog;	/* ptr back to state program block */
 };
-typedef struct state_set_control_block SSCB;
 
 /* Macro table */
-typedef struct macro
+struct macro
 {
 	char	*pName;
 	char	*pValue;
-} MACRO;
+};
 
 /* All information about a state program.
 	The address of this structure is passed to the run-time sequencer:
@@ -202,7 +207,6 @@ struct state_program
 	ELLLIST		*pQueues;	/* ptr to syncQ queues */
 	void		*pvReqPool;	/* freeList for pv requests */
 };
-typedef struct state_program SPROG;
 
 /* Auxiliary thread arguments */
 struct auxiliary_args
@@ -210,14 +214,12 @@ struct auxiliary_args
 	char		*pPvSysName;	/* PV system ("ca", "ktl", ...) */
 	long		debug;		/* debug level */
 };
-typedef struct auxiliary_args AUXARGS;
 
 struct pvreq
 {
 	CHAN		*pDB;		/* requested variable */
 	SSCB		*pSS;		/* state set that made the request */
 };
-typedef struct pvreq PVREQ;
 
 /* Macro parameters */
 #define	MAX_MACROS	50
