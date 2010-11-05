@@ -73,6 +73,8 @@ static void gen_pv_func(int stmt_type, Expr *ep,
 #if 0
 static void gen_pv_func_va(int stmt_type, Expr *ep, char *fname, int func_code);
 #endif
+static void gen_ss_entry_handler(Expr *prog, Expr *ssp);
+static void gen_ss_exit_handler(Expr *prog, Expr *ssp);
 static void gen_entry_handler(Expr *prog);
 static void gen_exit_handler(Expr *prog);
 static int special_func(int stmt_type, Expr *ep);
@@ -147,6 +149,9 @@ void gen_ss_code(Program *program)
 	/* For each state set ... */
 	foreach (ssp, program->prog->prog_statesets)
 	{
+		/* Generate state set entry function */
+		gen_ss_entry_handler(program->prog, ssp);
+
 		/* For each state ... */
 		foreach (sp, ssp->ss_states)
 		{
@@ -177,6 +182,8 @@ void gen_ss_code(Program *program)
 				"Action", "A", "void",
                                 ", short transNum, short *pNextState");
 		}
+		/* Generate state set exit function */
+		gen_ss_exit_handler(program->prog, ssp);
 	}
 
 	/* Generate exit handler code */
@@ -943,6 +950,24 @@ static void gen_user_var_init(Expr *prog)
 	const int type_mask = (1<<D_DECL);
 	const int stop_mask = ~((1<<D_DECL)|(1<<D_PROG)|(1<<D_SS)|(1<<D_STATE));
 	traverse_expr_tree(prog, type_mask, stop_mask, 0, iter_user_var_init, 0);
+}
+
+/* Generate state set entry handler code */
+static void gen_ss_entry_handler(Expr *prog, Expr *ssp)
+{
+	assert(ssp->type = D_SS);
+	printf("\n/* Entry handler for state set %s */\n", ssp->value);
+	printf("static void ss_%s_entry_handler(SS_ID ssId, struct %s *pVar)\n{\n", ssp->value, VAR_PREFIX);
+	printf("}\n");
+}
+
+/* Generate state set exit handler code */
+static void gen_ss_exit_handler(Expr *prog, Expr *ssp)
+{
+	assert(ssp->type = D_SS);
+	printf("\n/* Exit handler for state set %s */\n", ssp->value);
+	printf("static void ss_%s_exit_handler(SS_ID ssId, struct %s *pVar)\n{\n", ssp->value, VAR_PREFIX);
+	printf("}\n");
 }
 
 /* Generate global entry handler code */

@@ -159,6 +159,9 @@ static void ss_entry(SSCB *pSS)
 		if (seq_waitConnect(pSP, pSS) < 0) goto exit;
 	}
 
+	/* Call state set entry function */
+	pSS->entryFunc(pSS, pVar);
+
 	/* Initial state is the first one */
 	pSS->currentState = 0;
 	pSS->nextState = -1;
@@ -259,6 +262,8 @@ static void ss_entry(SSCB *pSS)
 
 	/* Thread exit has been requested */
 exit:
+	/* Call state set exit function */
+	pSS->exitFunc(pSS, pVar);
 
 	/* Uninitialize this state-set thread (phase 1) */
 	ss_thread_uninit(pSP, pSS, 1);

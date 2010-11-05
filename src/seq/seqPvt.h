@@ -142,6 +142,8 @@ struct state_set_control_block
 	epicsEventId	death4SemId;	/* semaphore id for death (#4) */
 	long		numStates;	/* number of states */
 	STATE		*pStates;	/* ptr to array of state blocks */
+	ENTRY_FUNC	*entryFunc;	/* entry function */
+	EXIT_FUNC	*exitFunc;	/* exit function */
 	short		currentState;	/* current state index */
 	short		nextState;	/* next state index */
 	short		prevState;	/* previous state index */

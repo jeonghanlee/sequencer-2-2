@@ -315,8 +315,10 @@ static void gen_ss_table(SymTable st, Expr *ss_list)
 		printf("\t/* number of states */  %d,\n", ssp->extra.e_ss->num_states);
 		printf("\t/* number of delays */  %d,\n", ssp->extra.e_ss->num_delays);
 		err_sp = (Expr *)sym_table_lookup(st, "error", ssp);
-		printf("\t/* error state */       %d},\n\n",
+		printf("\t/* error state */       %d,\n",
 			err_sp ? err_sp->extra.e_state->index : -1);
+		printf("\t/* entry handler */     ss_%s_entry_handler,\n", ssp->value);
+		printf("\t/* exit handler */      ss_%s_exit_handler},\n", ssp->value);
 	}
 	printf("};\n");
 }
