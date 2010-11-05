@@ -33,11 +33,11 @@ static struct sequencerProgram *seqHead;
  * This routine is called before multitasking has started, so there's
  * no race condition in creating the linked list.
  */
-epicsShareFunc void epicsShareAPI seqRegisterSequencerProgram (struct seqProgram *p)
+epicsShareFunc void epicsShareAPI seqRegisterSequencerProgram(struct seqProgram *p)
 {
     struct sequencerProgram *sp;
 
-    sp = (struct sequencerProgram *)mallocMustSucceed (sizeof *sp, "seqRegisterSequencerProgram");
+    sp = (struct sequencerProgram *)mallocMustSucceed(sizeof *sp, "seqRegisterSequencerProgram");
     sp->prog = p;
     sp->next = seqHead;
     seqHead = sp;
@@ -46,19 +46,18 @@ epicsShareFunc void epicsShareAPI seqRegisterSequencerProgram (struct seqProgram
 /*
  * Find a thread by name or ID number
  */
-static epicsThreadId
-findThread (const char *name)
+static epicsThreadId findThread(const char *name)
 {
     epicsThreadId id;
     char *term;
 
-    id = (epicsThreadId)strtoul (name, &term, 16);
+    id = (epicsThreadId)strtoul(name, &term, 16);
     if ((term != name) && (*term == '\0'))
         return id;
-    id = epicsThreadGetId (name);
+    id = epicsThreadGetId(name);
     if (id)
         return id;
-    printf ("No such thread.\n");
+    printf("No such thread.\n");
     return NULL;
 }
 
@@ -76,18 +75,18 @@ static void seqCallFunc(const iocshArgBuf *args)
     struct sequencerProgram *sp;
 
     if (!table) {
-        printf ("No sequencer specified.\n");
+        printf("No sequencer specified.\n");
         return;
     }
     if (*table == '&')
         table++;
     for (sp = seqHead ; sp != NULL ; sp = sp->next) {
-        if (!strcmp (table, sp->prog->pProgName)) {
-            seq (sp->prog, macroDef, stackSize);
+        if (!strcmp(table, sp->prog->pProgName)) {
+            seq(sp->prog, macroDef, stackSize);
             return;
         }
     }
-    printf ("Can't find sequencer `%s'.\n", table);
+    printf("Can't find sequencer `%s'.\n", table);
 }
 
 /* seqShow */
@@ -100,9 +99,9 @@ static void seqShowCallFunc(const iocshArgBuf *args)
     char *name = args[0].sval;
 
     if (name == NULL)
-        seqShow (NULL);
-    else if ((id = findThread (name)) != NULL)
-        seqShow (id);
+        seqShow(NULL);
+    else if ((id = findThread(name)) != NULL)
+        seqShow(id);
 }
 
 /* seqQueueShow */
@@ -114,8 +113,8 @@ static void seqQueueShowCallFunc(const iocshArgBuf *args)
     epicsThreadId id;
     char *name = args[0].sval;
 
-    if ((name != NULL) && ((id = findThread (name)) != NULL))
-        seqQueueShow (id);
+    if ((name != NULL) && ((id = findThread(name)) != NULL))
+        seqQueueShow(id);
 }
 
 /* seqStop */
@@ -127,8 +126,8 @@ static void seqStopCallFunc(const iocshArgBuf *args)
     epicsThreadId id;
     char *name = args[0].sval;
 
-    if ((name != NULL) && ((id = findThread (name)) != NULL))
-        seqStop (id);
+    if ((name != NULL) && ((id = findThread(name)) != NULL))
+        seqStop(id);
 }
 
 /* seqChanShow */
@@ -142,8 +141,8 @@ static void seqChanShowCallFunc(const iocshArgBuf *args)
     char *name = args[0].sval;
     char *chan = args[1].sval;
 
-    if ((name != NULL) && ((id = findThread (name)) != NULL))
-        seqChanShow (id, chan);
+    if ((name != NULL) && ((id = findThread(name)) != NULL))
+        seqChanShow(id, chan);
 }
 
 /* seqcar */
@@ -152,14 +151,14 @@ static const iocshArg * const seqcarArgs[1] = {&seqcarArg0};
 static const iocshFuncDef seqcarFuncDef = {"seqcar",1,seqcarArgs};
 static void seqcarCallFunc(const iocshArgBuf *args)
 {
-    seqcar (args[0].ival);
+    seqcar(args[0].ival);
 }
 
 /*
  * This routine is called before multitasking has started, so there's
  * no race condition in the test/set of firstTime.
  */
-epicsShareFunc void epicsShareAPI seqRegisterSequencerCommands (void)
+epicsShareFunc void epicsShareAPI seqRegisterSequencerCommands(void)
 {
     static int firstTime = 1;
     if (firstTime) {
