@@ -70,27 +70,29 @@ typedef struct pvreq PVREQ;
 /* Structure to hold information about database channels */
 struct db_channel
 {
-	/* These are supplied by SNC */
-	char		*dbAsName;	/* channel name from assign statement */
+	/* static channel data (assigned once on startup) */
 	ptrdiff_t	offset;		/* offset to value */
-	char		*pVarName;	/* variable name string */
+	char		*pVarName;	/* variable name */
 	char		*pVarType;	/* variable type string (e.g. ("int") */
 	long		count;		/* number of elements in array */
-	long		efId;		/* event flag id if synced */
 	long		eventNum;	/* event number */
-	unsigned	monFlag;	/* TRUE if channel is to be monitored */
-	int		queued;		/* TRUE if queued via syncQ */
+	int		queued;		/* whether queued via syncQ */
 	int		maxQueueSize;	/* max syncQ queue size (0 => def) */
 	int		queueIndex;	/* syncQ queue index */
+	SPROG		*sprog;		/* state program that owns this struct*/
 
-	/* These are filled in at run time */
+	/* dynamic channel data (assigned at runtime) */
+	char		*dbAsName;	/* channel name from assign statement */
+	long		efId;		/* event flag id if synced */
+	unsigned	monFlag;	/* whether channel shall be monitored */
+
 	char		*dbName;	/* channel name after macro expansion */
 	void		*pvid;		/* PV (process variable) id */
-	unsigned	assigned;	/* TRUE only if channel is assigned */
-	unsigned	connected;	/* TRUE only if channel is connected */
+	unsigned	assigned;	/* whether channel is assigned */
+	unsigned	connected;	/* whether channel is connected */
 	unsigned	*getComplete;	/* array of flags, one for each state set */
 	epicsEventId	putSemId;	/* semaphore id for async put */
-	short		dbOffset;	/* offset to value in db access struct*/
+	short		dbOffset;	/* offset to value in db access struct */
 	short		status;		/* last db access status code */
 	epicsTimeStamp	timeStamp;	/* time stamp */
 	long		dbCount;	/* actual count for db access */
@@ -101,9 +103,8 @@ struct db_channel
 	char		*message;	/* last db access error message */
 	unsigned	gotFirstMonitor;
 	unsigned	gotFirstConnect;
-	unsigned	monitored;	/* TRUE if channel IS monitored */
+	unsigned	monitored;	/* whether channel is monitored */
 	void		*evid;		/* event id (supplied by PV lib) */
-	struct state_program *sprog;	/* state program that owns this struct*/
 
 	/* buffer access, only used in safe mode */
 	epicsMutexId	varLock;	/* mutex for un-assigned vars */
