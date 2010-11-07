@@ -20,8 +20,6 @@
 #include	"snc_main.h"
 #include	"gen_code.h"
 
-static const int impossible = 0;
-
 static void gen_preamble(char *prog_name, int opt_main);
 static void gen_user_var(Program *p);
 static void gen_global_c_code(Expr *global_c_list);
@@ -36,8 +34,7 @@ static int assert_var_declared(Expr *ep, Expr *scope, void *parg)
 	assert(ep->type == E_VAR);
 	assert(ep->extra.e_var != 0);
 	assert(ep->extra.e_var->decl != 0 ||
-		(ep->extra.e_var->type == V_NONE &&
-	 	ep->extra.e_var->class == VC_FOREIGN));
+		ep->extra.e_var->type->tag == V_NONE);
 	return TRUE;		/* there are no children anyway */
 }
 
@@ -89,11 +86,11 @@ static void gen_preamble(char *prog_name, int opt_main)
 
 	/* Includes */
 	printf("#include <string.h>\n");
+	printf("#include <stdio.h>\n");
 	printf("#include \"seqCom.h\"\n");
 
-	/* The following definition should be consistent with db_access.h */
-	printf("\n");
-	printf("#define MAX_STRING_SIZE 40\n");
+	/* The string typedef */
+	printf("\ntypedef char string[MAX_STRING_SIZE];\n");
 
 	/* Main program (if "main" option set) */
 	if (opt_main) {
@@ -125,13 +122,33 @@ static void gen_preamble(char *prog_name, int opt_main)
 	}
 }
 
+static void gen_array_pointer(Type *t, unsigned last_tag, char *name)
+{
+	switch (t->tag)
+	{
+	case V_POINTER:
+		if (last_tag == V_ARRAY)
+			printf("(");
+		printf("*");
+		gen_array_pointer(t->val.pointer.value_type, t->tag, name);
+		if (last_tag == V_ARRAY)
+			printf(")");
+		break;
+	case V_ARRAY:
+		gen_array_pointer(t->val.array.elem_type, t->tag, name);
+		printf("[%d]", t->val.array.num_elems);
+		break;
+	default:
+		printf("%s", name);
+	}
+}
+
 void gen_var_decl(Var *vp)
 {
 	char	*type_str;
+	Type	*t = vp->type;
 
-	assert(vp->type != V_NONE);
-
-	switch (vp->type)
+	switch (type_base_type(vp->type))
 	{
 	case V_CHAR:	type_str = "char";		break;
 	case V_INT:	type_str = "int";		break;
@@ -143,28 +160,18 @@ void gen_var_decl(Var *vp)
 	case V_USHORT:	type_str = "unsigned short";	break;
 	case V_FLOAT:	type_str = "float";		break;
 	case V_DOUBLE:	type_str = "double";		break;
-	case V_STRING:	type_str = "char";		break;
-	case V_NONE:
-	default:
-		assert(impossible);
+	case V_STRING:	type_str = "string";		break;
+	default:	type_str = 0;			break;
 	}
 	printf("%s\t", type_str);
-	if (vp->class == VC_POINTER || vp->class == VC_ARRAYP)
-		printf("*");
-	printf("%s", vp->name);
-	if (vp->class == VC_ARRAY1 || vp->class == VC_ARRAYP)
-		printf("[%d]", vp->length1);
-	else if (vp->class == VC_ARRAY2)
-		printf("[%d][%d]", vp->length1, vp->length2);
-	if (vp->type == V_STRING)
-		printf("[MAX_STRING_SIZE]");
+	gen_array_pointer(t, V_NONE, vp->name);
 }
 
 /* Generate the UserVar struct containing all program variables with
    'infinite' (global) lifetime. These are: variables declared at the
    top-level, inside a state set, and inside a state. Note that state
    set and state local variables are _visible_ only inside the block
-   where they are declared, but still have gobal lifetime. To avoid
+   where they are declared, but still have global lifetime. To avoid
    name collisions, generate a nested struct for each state set, and
    for each state in a state set. */
 static void gen_user_var(Program *p)
@@ -179,7 +186,7 @@ static void gen_user_var(Program *p)
 	/* Convert internal type to `C' type */
 	foreach (vp, p->prog->extra.e_prog->first)
 	{
-		if (vp->decl && vp->type != V_NONE)
+		if (vp->decl && vp->type->tag >= V_CHAR)
 		{
 			gen_line_marker(vp->decl);
 			if (!opt_reent) printf("static");

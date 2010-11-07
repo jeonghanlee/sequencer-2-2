@@ -20,6 +20,7 @@ Expr *expr(
 	...
 );
 
+#if 0
 Expr *decl(
 	int	type,		/* variable type (e.g. V_FLOAT) */
 	int	class,		/* variable class (e.g. VC_ARRAY) */
@@ -28,6 +29,7 @@ Expr *decl(
 	char	*s_length2,	/* array lth (2nd dim, [n]x[m] arrays only) */
 	Expr	*value		/* initial value or NULL */
 );
+#endif
 
 Expr *opt_defn(
 	Token	name,
@@ -44,5 +46,11 @@ boolean strtoui(
 	uint limit,		/* result should be < limit */
 	uint *pnumber		/* location for result if successful */
 );
+
+Expr *decl_add_base_type(Expr *ds, int tag);
+Expr *decl_add_init(Expr *d, Expr *init);
+Expr *decl_create(Token name);
+Expr *decl_postfix_array(Expr *d, char *s);
+Expr *decl_prefix_pointer(Expr *d);
 
 #endif	/*INCLparseh*/

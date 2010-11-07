@@ -100,15 +100,15 @@ static void gen_channel(Chan *cp, int num_event_flags, int opt_reent)
 
 	vp = cp->var;
 	/* Figure out text needed to handle subscripts */
-	if (vp->class == VC_ARRAY1 || vp->class == VC_ARRAYP)
+	if (vp->assign == M_MULTI)
 		sprintf(elem_str, "[%d]", cp->index);
-	else if (vp->class == VC_ARRAY2)
-		sprintf(elem_str, "[%d][0]", cp->index);
 	else
 		elem_str[0] = '\0';
-	if (vp->type == V_STRING)
+#if 0
+	if (vp->type->tag == V_STRING)
 		suffix = "[0]";
 	else
+#endif
 		suffix = "";
 	pv_name = cp->name;
 	mon_flag = cp->monitor;
@@ -135,7 +135,7 @@ static void gen_channel(Chan *cp, int num_event_flags, int opt_reent)
  	/* variable name with optional elem num */
 	printf("\"%s%s\", ", vp->name, elem_str);
  	/* variable type */
-	printf("\n    \"%s\", ", pv_type_str(vp->type));
+	printf("\n    \"%s\", ", pv_type_str(type_base_type(vp->type)));
 	/* count, for requests */
 	printf("%d, ", cp->count);
 	/* event number */
@@ -148,7 +148,7 @@ static void gen_channel(Chan *cp, int num_event_flags, int opt_reent)
 	if (!cp->syncq)
 		printf("0, 0, 0");
 	else
-		printf("%d, %d, %d", 1, cp->syncq->size, cp->syncq->index);
+		printf("1, %d, %d", cp->syncq->size, cp->syncq->index);
 	printf("}");
 }
 
@@ -304,10 +304,8 @@ static void gen_ss_table(SymTable st, Expr *ss_list)
 	num_ss = 0;
 	foreach (ssp, ss_list)
 	{
-		Expr *err_sp;
-
 		if (num_ss > 0)
-			printf("\n\n");
+			printf("\n");
 		num_ss++;
 		printf("\t/* State set \"%s\" */ {\n", ssp->value);
 		printf("\t/* ss name */           \"%s\",\n", ssp->value);
@@ -329,8 +327,8 @@ static void gen_ss_table(SymTable st, Expr *ss_list)
 static void gen_state_event_mask(Expr *sp, int num_event_flags,
 	bitMask *event_words, int num_event_words)
 {
-	int		n;
-	Expr		*tp;
+	int	n;
+	Expr	*tp;
 
 	for (n = 0; n < num_event_words; n++)
 		event_words[n] = 0;
@@ -374,11 +372,14 @@ static int iter_event_mask_scalar(Expr *ep, Expr *scope, void *parg)
 	assert(vp != 0);
 
 	/* this subroutine handles only the scalar variables and event flags */
+#if 0
 	if (vp->class != VC_SCALAR && vp->class != VC_EVFLAG)
+#endif
+	if (vp->type->tag < V_CHAR || vp->type->tag >= V_POINTER)
 		return FALSE;		/* no children anyway */
 
 	/* event flag? */
-	if (vp->class == VC_EVFLAG)
+	if (vp->type->tag == V_EVFLAG)
 	{
 #ifdef DEBUG
 		report("  iter_event_mask_scalar: evflag: %s, ef_num=%d\n",
@@ -408,8 +409,6 @@ static int iter_event_mask_scalar(Expr *ep, Expr *scope, void *parg)
 	}
 	else
 	{
-		/* otherwise would not be class VC_SCALAR */
-		assert(vp->length1 == 1);
 #ifdef DEBUG
 		report("  iter_event_mask_scalar: var: %s, event bit=%d\n",
 			vp->name, vp->index + cp->index + num_event_flags + 1);
@@ -450,7 +449,7 @@ static int iter_event_mask_array(Expr *ep, Expr *scope, void *parg)
 	assert(vp != 0);
 
 	/* this subroutine handles only the array variables */
-	if (vp->class != VC_ARRAY1 && vp->class != VC_ARRAY2 && vp->class != VC_ARRAYP)
+	if (vp->type->tag != V_ARRAY)
 		return TRUE;
 
 	if (vp->assign == M_NONE)
@@ -469,13 +468,15 @@ static int iter_event_mask_array(Expr *ep, Expr *scope, void *parg)
 	}
 	else
 	{
+		unsigned length1 = type_array_length1(vp->type);
+
 		assert(vp->assign == M_MULTI);
 		/* an array variable subscripted with a constant */
 		if (e_ix && e_ix->type == E_CONST)
 		{
 			uint ix;
 
-			if (!strtoui(e_ix->value, vp->length1, &ix))
+			if (!strtoui(e_ix->value, length1, &ix))
 			{
 				error_at_expr(e_ix,
 					"subscript in '%s[%s]' out of range\n",
@@ -495,7 +496,7 @@ static int iter_event_mask_array(Expr *ep, Expr *scope, void *parg)
 		else if (e_ix)	/* subscript is an expression */
 		{
 			/* must descend for the array variable (see below) and
-		   	   possible array vars inside subscript expression */
+			   possible array vars inside subscript expression */
 			return TRUE;
 		}
 		else /* no subscript */
@@ -505,9 +506,9 @@ static int iter_event_mask_array(Expr *ep, Expr *scope, void *parg)
 #ifdef DEBUG
 			report("  iter_event_mask_array: %s, event bits=%d..%d\n",
 				vp->name, vp->index + num_event_flags + 1,
-				vp->index + num_event_flags + vp->length1);
+				vp->index + num_event_flags + length1);
 #endif
-			for (ix = 0; ix < vp->length1; ix++)
+			for (ix = 0; ix < length1; ix++)
 			{
 				bitSet(event_words, vp->index + ix + num_event_flags + 1);
 			}

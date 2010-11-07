@@ -14,8 +14,12 @@
 
 #include <epicsVersion.h>
 
+#include "var_types.h"
+
 #ifndef	TRUE
 #define	TRUE 1
+#endif
+#ifndef	FALSE
 #define	FALSE 0
 #endif
 
@@ -140,12 +144,10 @@ struct variable				/* Variable or function definition */
 	Var	*next;			/* link to next variable in list */
 	char	*name;			/* variable name */
 	Expr	*value;			/* initial value or NULL */
-	uint	type:4;			/* var type, one of enum var_type */
-	uint	class:4;		/* var class, one of enum var_class */
-	uint	length1;		/* 1st dim. array lth (default=1) */
-	uint	length2;		/* 2nd dim. array lth (default=1) */
-	Expr	*decl;			/* declaration of this variable (or NULL) */
-	Expr	*scope;			/* declaration of this variable (or NULL) */
+	Expr	*decl;			/* declaration of this variable
+					   (or NULL if not declared) */
+	Expr	*scope;			/* scope of this variable */
+	Type	*type;			/* type of this variable */
 	/* channel stuff */
 	uint	assign:2;		/* assigned: one of enum multiplicity */
 	uint	monitor:2;		/* monitored: one of enum multiplicity */
@@ -161,7 +163,7 @@ struct variable				/* Variable or function definition */
 /* Laws (Invariants):
 L1: sync == M_MULTI || syncq == M_MULTI => monitor == M_MULTI => assign == M_MULTI
 L2: assign == M_NONE => monitor == M_NONE => sync == M_NONE && syncq == M_NONE
-L3: assign == M_MULTI => class == VC_ARRAY1 || class == VC_ARRAY2
+L3: assign == M_MULTI => type->tag == V_ARRAY
 L4: sync == M_SINGLE || syncq == M_SINGLE => monitor == M_SINGLE
 */
 
@@ -256,35 +258,6 @@ struct program
 				| (1<<E_SUBSCR) | (1<<E_TERNOP) | (1<<E_VAR) | (1<<T_TEXT) )
 
 #define expr_type_name(e)	expr_type_info[(e)->type].name
-
-/* Variable (element) types */
-enum var_type
-{
-	V_NONE,			/* no base type */
-	V_CHAR,			/* char */
-	V_SHORT,		/* short */
-	V_INT,			/* int */
-	V_LONG,			/* long */
-	V_FLOAT,		/* float */
-	V_DOUBLE,		/* double */
-	V_STRING,		/* string (array of 40 char) */
-	V_UCHAR,		/* unsigned char */
-	V_USHORT,		/* unsigned short */
-	V_UINT,			/* unsigned int */
-	V_ULONG			/* unsigned long */
-};
-
-/* Variable classes */
-enum var_class
-{
-	VC_SCALAR,		/* scalar variable */
-	VC_ARRAY1,		/* 1-dimensional array */
-	VC_ARRAY2,		/* 2-dimensional array */
-	VC_POINTER,		/* pointer */
-	VC_ARRAYP,		/* array of pointers */
-	VC_EVFLAG,		/* event flag */
-	VC_FOREIGN		/* C-code variable, unknown type */
-};
 
 /* for channel assign, monitor, sync, and syncq */
 enum multiplicity

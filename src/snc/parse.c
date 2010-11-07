@@ -23,62 +23,6 @@
 #include "parse.h"
 #include "snc_main.h"
 
-/* Parsing a variable declaration */
-Expr *decl(
-	int	type,		/* variable type (e.g. V_FLOAT) */
-	int	class,		/* variable class (e.g. VC_ARRAY) */
-	Token	var,		/* variable name token */
-	char	*s_length1,	/* array lth (1st dim, arrays only) */
-	char	*s_length2,	/* array lth (2nd dim, [n]x[m] arrays only) */
-	Expr	*init		/* initial value or NULL */
-)
-{
-	Expr	*ep;
-	Var	*vp;
-	int	length1 = 1, length2 = 1;
-
-	if (s_length1 != NULL)
-	{
-		length1 = atoi(s_length1);
-		if (length1 <= 0) {
-			error_at(var.file, var.line,
-				"invalid array size (must be >= 1)\n");
-			length1 = 1;
-		}
-	}
-	if (s_length2 != NULL)
-	{
-		length2 = atoi(s_length2);
-		if (length2 <= 0) {
-			error_at(var.file, var.line,
-				"invalid array size (must be >= 1)\n");
-			length2 = 1;
-		}
-	}
-	vp = new(Var);
-	vp->name = var.str;
-	vp->class = class;
-	if (class == VC_EVFLAG)
-	{
-		vp->chan.evflag = new(EvFlag);
-	}
-	vp->type = type;
-	vp->length1 = length1;
-	vp->length2 = length2;
-	vp->value = init;
-
-	ep = expr(D_DECL, var, init);
-	ep->extra.e_decl = vp;
-#ifdef	DEBUG
-	report_at_expr(ep, "decl: name=%s, type=%d, class=%d, "
-		"length1=%d, length2=%d, value=%s\n",
-		vp->name, vp->type, vp->class,
-		vp->length1, vp->length2, vp->value);
-#endif	/*DEBUG*/
-	vp->decl = ep;
-	return ep;
-}
-
 /* Expr is the generic syntax tree node */
 Expr *expr(
 	int	type,

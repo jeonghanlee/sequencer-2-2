@@ -259,7 +259,7 @@ static void gen_local_var_decls(Expr *scope, int level)
 	/* Convert internal type to `C' type */
 	foreach (vp, var_list->first)
 	{
-		if (vp->decl && vp->type != V_NONE)
+		if (vp->decl && vp->type->tag != V_NONE)
 		{
 			gen_line_marker(vp->decl);
 			indent(level);
@@ -268,12 +268,14 @@ static void gen_local_var_decls(Expr *scope, int level)
 			/* optional initialisation */
 			if (vp->value)
 			{
-				if (vp->type == V_STRING)
+#if 0
+				if (vp->type->tag == V_STRING)
 				{
 					error_at_expr(vp->decl,
 					  "initialisation not allowed for variables of this type");
 					return;
 				}
+#endif
 				printf(" = ");
 				gen_expr(OTHER_STMT, vp->value, 0);
 			}
@@ -455,11 +457,11 @@ static void gen_var_access(Var *vp)
 #endif
 	assert((1<<vp->scope->type) & scope_mask);
 
-	if (vp->class == VC_EVFLAG)
+	if (vp->type->tag == V_EVFLAG)
 	{
 		printf("%d", vp->chan.evflag->index);
 	}
-	else if (vp->type == V_NONE)
+	else if (vp->type->tag == V_NONE)
 	{
 		printf("%s", vp->name);
 	}
@@ -483,16 +485,28 @@ static void gen_var_access(Var *vp)
 	}
 }
 
+void gen_string_assign(int stmt_type, Expr *left, Expr *right, int level)
+{
+	printf("strncpy(");
+	gen_expr(stmt_type, left, level);
+	printf(", ");
+	gen_expr(stmt_type, right, level);
+	printf(", MAX_STRING_SIZE-1)");
+}
+
 int special_assign_op(int stmt_type, Expr *ep, int level)
 {
-	if (ep->binop_left->type == E_VAR
-		&& ep->binop_left->extra.e_var->type == V_STRING)
+	Expr *left = ep->binop_left;
+	Expr *right = ep->binop_right;
+	if (
+		(left->type == E_VAR &&
+		left->extra.e_var->type->tag == V_STRING)
+		|| (left->type == E_SUBSCR
+		&& left->subscr_operand->type == E_VAR
+		&& type_base_type(left->subscr_operand->extra.e_var->type) == V_STRING)
+	)
 	{
-		printf("strncpy(");
-		gen_var_access(ep->binop_left->extra.e_var);
-		printf(", ");
-		gen_expr(stmt_type, ep->binop_right, level);
-		printf(", MAX_STRING_SIZE-1)");
+		gen_string_assign(stmt_type, left, right, level);
 		return TRUE;
 	}
 	return FALSE;
@@ -590,6 +604,12 @@ static void gen_expr(
 	case E_VAR:
 		gen_var_access(ep->extra.e_var);
 		break;
+	case E_SUBSCR:
+		gen_expr(stmt_type, ep->subscr_operand, 0);
+		printf("[");
+		gen_expr(stmt_type, ep->subscr_index, 0);
+		printf("]");
+		break;
 	case E_CONST:
 		if (special_const(stmt_type, ep))
 			break;
@@ -639,12 +659,6 @@ static void gen_expr(
 	case E_POST:
 		gen_expr(stmt_type, ep->post_operand, 0);
 		printf("%s", ep->value);
-		break;
-	case E_SUBSCR:
-		gen_expr(stmt_type, ep->subscr_operand, 0);
-		printf("[");
-		gen_expr(stmt_type, ep->subscr_index, 0);
-		printf("]");
 		break;
 	/* C-code can be either definition, statement, or expression */
 	case T_TEXT:
@@ -798,7 +812,7 @@ static void gen_ef_func(
 		error_at_expr(ep, "%s cannot be used in a when condition\n", fname);
 		return;
 	}
-	if (vp->class != VC_EVFLAG)
+	if (vp->type->tag != V_EVFLAG)
 	{
 		error_at_expr(ep, "argument to '%s' must be an event flag\n", fname);
 		return;
@@ -944,7 +958,7 @@ static void gen_pv_func(
 	{
 		if (ap->type != E_SUBSCR)
 		{
-			printf(", %d", vp->length1);
+			printf(", %d", type_array_length1(vp->type));
 		}
 		else
 		{
@@ -986,18 +1000,29 @@ static int iter_user_var_init(Expr *dp, Expr *scope, void *parg)
 	assert(vp);
 	if (vp->value && vp->decl)
 	{
-		if (vp->type == V_NONE || vp->type == V_STRING)
+		if (vp->type->tag < V_CHAR)
 		{
 			error_at_expr(vp->decl,
 			  "initialisation not allowed for variables of this type");
-			return FALSE;
 		}
-		gen_line_marker(dp);
-		indent(1);
-		gen_var_access(vp);
-		printf(" = ");
-		gen_expr(OTHER_STMT, vp->value, 0);
-		printf(";\n");
+		else if (type_base_type(vp->type) == V_STRING)
+		{
+			Expr *ep = new(Expr);
+			ep->type = E_VAR;
+			ep->extra.e_var = vp;
+			indent(1);
+			gen_string_assign(OTHER_STMT, ep, vp->value, 0);
+			printf(";\n");
+		}
+		else
+		{
+			gen_line_marker(dp);
+			indent(1);
+			gen_var_access(vp);
+			printf(" = ");
+			gen_expr(OTHER_STMT, vp->value, 0);
+			printf(";\n");
+		}
 	}
 	return FALSE;		/* do not descend into children */
 }

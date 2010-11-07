@@ -270,6 +270,14 @@ static void analyse_declaration(SymTable st, Expr *scope, Expr *defn)
 	report("declaration: %s\n", vp->name);
 #endif
 
+	if (scope->type != D_PROG && vp->type->tag <= V_EVFLAG)
+	{
+		error_at_expr(defn,
+			"%s can only be declared at the top-level\n",
+			vp->type->tag == V_NONE ? "foreign variables"
+			: "event flags");
+	}
+
 	VarList *var_list = *pvar_list_from_scope(scope);
 
 	if (!sym_table_insert(st, vp->name, var_list, vp))
@@ -300,7 +308,8 @@ static void analyse_assign(SymTable st, ChanList *chan_list, Expr *scope, Expr *
 		error_at_expr(defn, "variable '%s' not declared\n", name);
 		return;
 	}
-	if (vp->type == V_NONE)
+	assert(vp->type);
+	if (!type_assignable(vp->type))
 	{
 		error_at_expr(defn, "this type of variable cannot be assigned to a pv\n", name);
 		return;
@@ -345,7 +354,7 @@ static void assign_single(
 	}
 	vp->assign = M_SINGLE;
 	vp->chan.single = new_channel(
-		chan_list, vp, vp->length1 * vp->length2, 0);
+		chan_list, vp, type_array_length1(vp->type) * type_array_length2(vp->type), 0);
 	vp->chan.single->name = pv_name->value;
 }
 
@@ -361,18 +370,18 @@ static void assign_elem(
 	assert(defn);
 	assert(vp);
 	assert(pv_name);
-	assert(n_subscr <= vp->length1);
+	assert(n_subscr <= type_array_length1(vp->type));
 
 	if (vp->assign == M_NONE)
 	{
 		int n;
 
 		vp->assign = M_MULTI;
-		vp->chan.multi = (Chan **)calloc(vp->length1, sizeof(Chan *));
-		for (n = 0; n < vp->length1; n++)
+		vp->chan.multi = (Chan **)calloc(type_array_length1(vp->type), sizeof(Chan *));
+		for (n = 0; n < type_array_length1(vp->type); n++)
 		{
 			vp->chan.multi[n] = new_channel(
-				chan_list, vp, vp->length2, n);
+				chan_list, vp, type_array_length2(vp->type), n);
 		}
 	}
 	assert(vp->assign == M_MULTI);
@@ -408,7 +417,7 @@ static void assign_subscript(
 	report("assign %s[%s] to '%s';\n", vp->name, subscr->value, pv_name);
 #endif
 
-	if (vp->class != VC_ARRAY1 && vp->class != VC_ARRAY2)
+	if (vp->type->tag != V_ARRAY)
 	{
 		error_at_expr(defn, "variable '%s' is not an array\n", vp->name);
 		return;
@@ -418,7 +427,7 @@ static void assign_subscript(
 		error_at_expr(defn, "variable '%s' already assigned\n", vp->name);
 		return;
 	}
-	if (!strtoui(subscr->value, vp->length1, &n_subscr))
+	if (!strtoui(subscr->value, type_array_length1(vp->type), &n_subscr))
 	{
 		error_at_expr(subscr, "subscript in '%s[%s]' out of range\n",
 			vp->name, subscr->value);
@@ -449,7 +458,7 @@ static void assign_list(
 	report("assign %s to {", vp->name);
 #endif
 
-	if (vp->class != VC_ARRAY1 && vp->class != VC_ARRAY2)
+	if (vp->type->tag != V_ARRAY)
 	{
 		error_at_expr(defn, "variable '%s' is not an array\n", vp->name);
 		return;
@@ -497,7 +506,7 @@ static void monitor_var(Expr *defn, Var *vp)
 	{
 		uint n;
 		assert(vp->assign == M_MULTI);
-		for (n = 0; n < vp->length1; n++)
+		for (n = 0; n < type_array_length1(vp->type); n++)
 		{
 			vp->chan.multi[n]->monitor = TRUE;
 		}
@@ -517,12 +526,12 @@ static void monitor_elem(Expr *defn, Var *vp, Expr *subscr)
 	report("monitor %s[%s];\n", vp->name, subscr->value);
 #endif
 
-	if (vp->class != VC_ARRAY1 && vp->class != VC_ARRAY2)
+	if (vp->type->tag != V_ARRAY)
 	{
 		error_at_expr(defn, "variable '%s' is not an array\n", vp->name);
 		return;
 	}
-	if (!strtoui(subscr->value, vp->length1, &n_subscr))
+	if (!strtoui(subscr->value, type_array_length1(vp->type), &n_subscr))
 	{
 		error_at_expr(subscr, "subscript in '%s[%s]' out of range\n",
 			vp->name, subscr->value);
@@ -632,7 +641,7 @@ static void sync_var(Expr *defn, Var *vp, Var *evp)
 		uint n;
 		assert(vp->assign == M_MULTI);	/* else */
 		vp->sync = M_SINGLE;
-		for (n = 0; n < vp->length1; n++)
+		for (n = 0; n < type_array_length1(vp->type); n++)
 		{
 			assert(vp->chan.multi[n]->monitor);
 			assert(!vp->chan.multi[n]->sync);
@@ -657,12 +666,12 @@ static void sync_elem(Expr *defn, Var *vp, Expr *subscr, Var *evp)
 	report("sync %s[%d] to %s;\n", vp->name, subscr->value, evp->name);
 #endif
 
-	if (vp->class != VC_ARRAY1 && vp->class != VC_ARRAY2)
+	if (vp->type->tag != V_ARRAY)
 	{
 		error_at_expr(defn, "variable '%s' is not an array\n", vp->name);
 		return;
 	}
-	if (!strtoui(subscr->value, vp->length1, &n_subscr))
+	if (!strtoui(subscr->value, type_array_length1(vp->type), &n_subscr))
 	{
 		error_at_expr(subscr, "subscript in '%s[%s]' out of range\n",
 			vp->name, subscr->value);
@@ -730,7 +739,7 @@ static void analyse_sync(SymTable st, Expr *scope, Expr *defn)
 		error_at_expr(defn, "event flag '%s' not declared\n", ef_name);
 		return;
 	}
-	if (evp->class != VC_EVFLAG)
+	if (evp->type->tag != V_EVFLAG)
 	{
 		error_at_expr(defn, "variable '%s' is not a event flag\n", ef_name);
 		return;
@@ -786,7 +795,7 @@ static void syncq_var(Expr *defn, Var *vp, SyncQ *qp)
 		uint n;
 		assert(vp->assign == M_MULTI);	/* else */
 		vp->syncq = M_SINGLE;
-		for (n = 0; n < vp->length1; n++)
+		for (n = 0; n < type_array_length1(vp->type); n++)
 		{
 			assert(vp->chan.multi[n]->monitor);
 			assert(!vp->chan.multi[n]->syncq);
@@ -811,12 +820,12 @@ static void syncq_elem(Expr *defn, Var *vp, Expr *subscr, SyncQ *qp)
 	report("syncq %s[%d] to %s;\n", vp->name, subscr->value, qp->ef_var->name);
 #endif
 
-	if (vp->class != VC_ARRAY1 && vp->class != VC_ARRAY2)
+	if (vp->type->tag != V_ARRAY)
 	{
 		error_at_expr(defn, "variable '%s' is not an array\n", vp->name);
 		return;
 	}
-	if (!strtoui(subscr->value, vp->length1, &n_subscr))
+	if (!strtoui(subscr->value, type_array_length1(vp->type), &n_subscr))
 	{
 		error_at_expr(subscr, "subscript in '%s[%s]' out of range\n",
 			vp->name, subscr->value);
@@ -886,7 +895,7 @@ static void analyse_syncq(SymTable st, SyncQList *syncq_list, Expr *scope, Expr 
 		error_at_expr(defn, "event flag '%s' not declared\n", ef_name);
 		return;
 	}
-	if (evp->class != VC_EVFLAG)
+	if (evp->type->tag != V_EVFLAG)
 	{
 		error_at_expr(defn, "variable '%s' is not a event flag\n", ef_name);
 		return;
@@ -1045,9 +1054,6 @@ static int connect_variable(Expr *ep, Expr *scope, void *parg)
 		vp = new(Var);
 		vp->name = ep->value;
 		vp->type = V_NONE;	/* undeclared type */
-		vp->class = VC_FOREIGN;
-		vp->length1 = 1;
-		vp->length2 = 1;
 		vp->value = 0;
 		/* add this variable to the top-level scope, NOT the current scope */
 		while (var_list->parent_scope) {
@@ -1291,7 +1297,7 @@ static uint assign_ef_bits(Expr *scope)
 	/* Assign event flag numbers (starting at 1) */
 	foreach (vp, var_list->first)
 	{
-		if (vp->class == VC_EVFLAG)
+		if (vp->type->tag == V_EVFLAG)
 		{
 			vp->chan.evflag->index = ++num_event_flags;
 		}

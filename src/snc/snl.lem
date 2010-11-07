@@ -101,9 +101,7 @@ global_defn(p) ::= assign(x).		{ p = x; }
 global_defn(p) ::= monitor(x).		{ p = x; }
 global_defn(p) ::= sync(x).		{ p = x; }
 global_defn(p) ::= syncq(x).		{ p = x; }
-global_defn(p) ::= decl(x).		{ p = x; }
-global_defn(p) ::= evflag_decl(x).	{ p = x; }
-global_defn(p) ::= foreign_decl(x).	{ p = x; }
+global_defn(p) ::= declaration(x).	{ p = x; }
 global_defn(p) ::= option(x).		{ p = x; }
 global_defn(p) ::= c_code(x).		{ p = x; }
 
@@ -148,24 +146,27 @@ opt_subscript(p) ::= .			{ p = 0; }
 %type subscript {Token}
 subscript(p) ::= LBRACKET INTCON(n) RBRACKET. { p = n; }
 
-foreign_decl(p) ::= DECLARE NAME(v) SEMICOLON.
-			{ p = decl(V_NONE,   VC_FOREIGN, v, 0, 0, 0); }
+// Declarations
 
-evflag_decl(p) ::= EVFLAG NAME(v) SEMICOLON.
-			{ p = decl(V_NONE, VC_EVFLAG, v, 0, 0, 0); }
+declaration(p) ::= type(t) init_declarators(ds) SEMICOLON.
+						{ p = decl_add_base_type(ds, t); }
 
-decl(p) ::= type(t) NAME(v) SEMICOLON.
-			{ p = decl(t, VC_SCALAR,  v, 0,  0,  0); }
-decl(p) ::= type(t) NAME(v) EQUAL expr(x) SEMICOLON.
-			{ p = decl(t, VC_SCALAR,  v, 0,  0, x); }
-decl(p) ::= type(t) NAME(v) subscript(s) SEMICOLON.
-			{ p = decl(t, VC_ARRAY1,  v, s.str,  0,  0); }
-decl(p) ::= type(t) NAME(v) subscript(s1) subscript(s2) SEMICOLON.
-			{ p = decl(t, VC_ARRAY2,  v, s1.str, s2.str, 0); }
-decl(p) ::= type(t) ASTERISK NAME(v) SEMICOLON.
-			{ p = decl(t, VC_POINTER, v, 0, 0, 0); }
-decl(p) ::= type(t) ASTERISK NAME(v) subscript(s) SEMICOLON.
-			{ p = decl(t, VC_ARRAYP,  v, s.str,  0,  0); }
+init_declarators(p) ::= init_declarator(x).	{ p = x; }
+init_declarators(p) ::= init_declarators(xs) COMMA init_declarator(x).
+						{ p = link_expr(xs, x); }
+
+init_declarator(p) ::= declarator(x).		{ p = decl_add_init(x, 0); }
+init_declarator(p) ::= declarator(x) EQUAL expr(i).
+						{ p = decl_add_init(x, i); }
+
+declarator(p) ::= ASTERISK declarator(x).	{ p = decl_prefix_pointer(x); }
+declarator(p) ::= direct_declarator(x).		{ p = x; }
+
+direct_declarator(p) ::= NAME(n).		{ p = decl_create(n); }
+direct_declarator(p) ::= LPAREN declarator(x) RPAREN.
+						{ p = x; }
+direct_declarator(p) ::= direct_declarator(x) subscript(s).
+						{ p = decl_postfix_array(x, s.str); }
 
 %type type {int}
 type(p) ::= CHAR.				{ p = V_CHAR;	}
@@ -179,6 +180,10 @@ type(p) ::= UNSIGNED LONG.			{ p = V_ULONG;	}
 type(p) ::= FLOAT.				{ p = V_FLOAT;	}
 type(p) ::= DOUBLE.				{ p = V_DOUBLE;	}
 type(p) ::= STRING.				{ p = V_STRING;	}
+type(p) ::= EVFLAG.				{ p = V_EVFLAG;	}
+type(p) ::= DECLARE.				{ p = V_NONE;	}
+
+// Option spec
 
 option(p) ::= OPTION option_value(v) NAME(n) SEMICOLON.
 						{ p = opt_defn(n, v); }
@@ -188,12 +193,6 @@ option_value(p) ::= ADD(t).			{ p = t; }
 option_value(p) ::= SUB(t).			{ p = t; }
 
 // State sets and states
-
-//global_entry_code(p) ::= ENTRY block(xs).	{ p = xs.right; }
-//global_entry_code(p) ::= .			{ p = 0; }
-
-//global_exit_code(p) ::= EXIT block(xs).		{ p = xs.right; }
-//global_exit_code(p) ::= .			{ p = 0; }
 
 state_sets(p) ::= state_sets(xs) state_set(x).	{ p = link_expr(xs, x); }
 state_sets(p) ::= state_set(x).			{ p = x; }
@@ -210,7 +209,7 @@ ss_defn(p) ::= assign(x).			{ p = x; }
 ss_defn(p) ::= monitor(x).			{ p = x; }
 ss_defn(p) ::= sync(x).				{ p = x; }
 ss_defn(p) ::= syncq(x).			{ p = x; }
-ss_defn(p) ::= decl(x).				{ p = x; }
+ss_defn(p) ::= declaration(x).			{ p = x; }
 
 states(p) ::= states(xs) state(x).		{ p = link_expr(xs, x); }
 states(p) ::= state(x).				{ p = x; }
@@ -231,7 +230,7 @@ state_defn(p) ::= assign(x).			{ p = x; }
 state_defn(p) ::= monitor(x).			{ p = x; }
 state_defn(p) ::= sync(x).			{ p = x; }
 state_defn(p) ::= syncq(x).			{ p = x; }
-state_defn(p) ::= decl(x).			{ p = x; }
+state_defn(p) ::= declaration(x).		{ p = x; }
 state_defn(p) ::= option(x).			{ p = x; }
 
 entry(p) ::= ENTRY(t) block(b).			{ p = expr(D_ENTRY, t, b.left, b.right); }
@@ -258,7 +257,7 @@ block_defns(p) ::= block_defns(ds) block_defn(d). {
 }
 block_defns(p) ::= .				{ p = 0; }
 
-block_defn(p) ::= decl(x).			{ p = x; }
+block_defn(p) ::= declaration(x).		{ p = x; }
 block_defn(p) ::= c_code(x).			{ p = x; }
 
 // Statements
