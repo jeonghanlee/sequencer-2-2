@@ -12,14 +12,18 @@ INC += seqVersion.h
 LIBRARY = seq
 seq_LIBS = pv Com
 
-LIBSRCS = seq_main.c seq_task.c seq_ca.c seq_if.c seq_mac.c seq_prog.c \
-	  seq_qry.c seqCommands.c
-
-LIBSRCS += $(seq_NAMS:%=%.c)
+seq_SRCS += seq_main.c
+seq_SRCS += seq_task.c
+seq_SRCS += seq_ca.c
+seq_SRCS += seq_if.c
+seq_SRCS += seq_mac.c
+seq_SRCS += seq_prog.c
+seq_SRCS += seq_qry.c
+seq_SRCS += seqCommands.c
 
 # For R3.13 compatibility only
 OBJLIB_vxWorks=seq
-OBJLIB_SRCS = $(LIBSRCS)
+OBJLIB_SRCS = $(seq_SRCS)
 
 include $(TOP)/configure/RULES
 #----------------------------------------
