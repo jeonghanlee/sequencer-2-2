@@ -30,6 +30,7 @@
  *	  Advanced Photon Source
  *	  Argonne National Laboratory
  */
+#define DEBUG nothing /* nothing, printf, errlogPrintf etc. */
 
 #include <stdlib.h>
 #include <string.h>
@@ -153,9 +154,7 @@ epicsShareFunc long epicsShareAPI seq_pvPut(SS_ID pSS, long pvId, long compType)
 	void	*pVar = valPtr(pDB,pSS);	/* ptr to value */
 	PVREQ	*req;
 
-#ifdef DEBUG
-	errlogPrintf("seq_pvPut: pv name=%s, pVar=%p\n", pDB->dbName, pVar);
-#endif
+	DEBUG("seq_pvPut: pv name=%s, pVar=%p\n", pDB->dbName, pVar);
 
 	/* Determine whether performing asynchronous or synchronous i/o
 	   ((+a) option was never honored for put, so HONOR_OPTION
@@ -249,17 +248,14 @@ epicsShareFunc long epicsShareAPI seq_pvPut(SS_ID pSS, long pvId, long compType)
 		}
 	}
 
-#ifdef	DEBUG
-	errlogPrintf("seq_pvPut: status=%d, mess=%s\n", status,
+	DEBUG("seq_pvPut: status=%d, mess=%s\n", status,
 		pvVarGetMess(pDB->pvid));
 	if (status != pvStatOK)
 	{
-		errlogPrintf("pvPut on \"%s\" failed (%d)\n", pDB->dbName,
-			     status);
-		errlogPrintf("  putType=%d\n", pDB->putType);
-		errlogPrintf("  size=%d, count=%d\n", pDB->size, count);
+		DEBUG("pvPut on \"%s\" failed (%d)\n", pDB->dbName, status);
+		DEBUG("  putType=%d\n", pDB->putType);
+		DEBUG("  size=%d, count=%d\n", pDB->size, count);
 	}
-#endif	/*DEBUG*/
 
 	return pvStatOK;
 }
@@ -297,10 +293,8 @@ epicsShareFunc long epicsShareAPI seq_pvPutComplete(
 		}
 	}
 
-#ifdef DEBUG
-	errlogPrintf("pvPutComplete: pvId=%ld, length=%ld, anyDone=%ld, "
+	DEBUG("pvPutComplete: pvId=%ld, length=%ld, anyDone=%ld, "
 		"allDone=%ld\n", pvId, length, anyDone, allDone);
-#endif
 
 	return any?anyDone:allDone;
 }
@@ -315,9 +309,8 @@ epicsShareFunc long epicsShareAPI seq_pvAssign(SS_ID pSS, long pvId, char *pvNam
 	CHAN	*pDB = pSP->pChan + pvId;
 	int	status, nchar;
 
-#ifdef	DEBUG
-	errlogPrintf("Assign %s to \"%s\"\n", pDB->pVarName, pvName);
-#endif	/*DEBUG*/
+	DEBUG("Assign %s to \"%s\"\n", pDB->pVarName, pvName);
+
 	if (pDB->assigned)
 	{	/* Disconnect this PV */
 		status = pvVarDestroy(pDB->pvid);
@@ -382,9 +375,7 @@ epicsShareFunc long epicsShareAPI seq_pvMonitor(SS_ID pSS, long pvId)
 	CHAN	*pDB = pSP->pChan + pvId;
 	int	status;
 
-#ifdef	DEBUG
-	errlogPrintf("monitor \"%s\"\n", pDB->dbName);
-#endif	/*DEBUG*/
+	DEBUG("seq_pvMonitor \"%s\"\n", pDB->dbName);
 
 /*	if (pDB->monitored || !pDB->assigned)	*/
 /*	WFL, 96/08/07, don't check monitored because it can get set TRUE */
@@ -575,10 +566,8 @@ epicsShareFunc void epicsShareAPI seq_efSet(SS_ID pSS, long ev_flag)
 
 	epicsMutexMustLock(pSP->caSemId);
 
-#ifdef	DEBUG
-	errlogPrintf("seq_efSet: pSP=%p, pSS=%p, ev_flag=%p\n", pSP, pSS,
+	DEBUG("seq_efSet: pSP=%p, pSS=%p, ev_flag=%ld\n", pSP, pSS,
 		ev_flag);
-#endif	/*DEBUG*/
 
 	/* Set this bit */
 	bitSet(pSP->pEvents, ev_flag);
@@ -602,10 +591,8 @@ epicsShareFunc long epicsShareAPI seq_efTest(SS_ID pSS, long ev_flag)
 
 	isSet = bitTest(pSP->pEvents, ev_flag);
 
-#ifdef	DEBUG
-	errlogPrintf("seq_efTest: ev_flag=%d, event=%p, isSet=%d\n",
+	DEBUG("seq_efTest: ev_flag=%ld, event=%#lx, isSet=%d\n",
 		ev_flag, pSP->pEvents[0], isSet);
-#endif	/*DEBUG*/
 
 	epicsMutexUnlock(pSP->caSemId);
 
@@ -672,9 +659,7 @@ epicsShareFunc int epicsShareAPI seq_pvGetQ(SS_ID pSS, int pvId)
 	ev_flag = pDB->efId;
 	isSet = bitTest(pSP->pEvents, ev_flag);
 
-#ifdef	DEBUG
-	errlogPrintf("seq_pvGetQ: pv name=%s, isSet=%d\n", pDB->dbName, isSet);
-#endif	/*DEBUG*/
+	DEBUG("seq_pvGetQ: pv name=%s, isSet=%d\n", pDB->dbName, isSet);
 
 	/* If set, queue should be non empty */
 	if (isSet)
@@ -748,10 +733,8 @@ epicsShareFunc int epicsShareAPI seq_pvFreeQ(SS_ID pSS, int pvId)
 
 	epicsMutexMustLock(pSP->caSemId);
 
-#ifdef	DEBUG
-	errlogPrintf("seq_pvFreeQ: pv name=%s, count=%d\n", pDB->dbName,
+	DEBUG("seq_pvFreeQ: pv name=%s, count=%d\n", pDB->dbName,
 		ellCount(&pSP->pQueues[pDB->queueIndex]));
-#endif	/*DEBUG*/
 
 	/* Determine event flag number */
 	ev_flag = pDB->efId;
@@ -785,10 +768,8 @@ epicsShareFunc long epicsShareAPI seq_delay(SS_ID pSS, long delayId)
 		pSS->delayExpired[delayId] = TRUE; /* mark as expired */
 		expired = TRUE;
 	}
-#ifdef DEBUG
-	errlogPrintf("Delay %ld : %ld ticks, %s\n",delayId,pSS->delay[delayId],
-		expired ? "expired": "unexpired");
-#endif
+	DEBUG("seq_delay(%s,%ld): %g seconds, %s\n", pSS->pSSName, delayId,
+		pSS->delay[delayId], expired ? "expired": "unexpired");
 	return expired;
 }
 
@@ -797,10 +778,8 @@ epicsShareFunc long epicsShareAPI seq_delay(SS_ID pSS, long delayId)
  */
 epicsShareFunc void epicsShareAPI seq_delayInit(SS_ID pSS, long delayId, double delay)
 {
-#ifdef DEBUG
-	printf("seq_delayInit: delayId=%ld, numDelays=%ld, maxNumDelays=%ld\n",
-		delayId, pSS->numDelays, pSS->maxNumDelays);
-#endif
+	DEBUG("seq_delayInit(%s,%ld,%g): numDelays=%d, maxNumDelays=%d\n",
+		pSS->pSSName, delayId, delay, pSS->numDelays, pSS->maxNumDelays);
 	assert(delayId <= pSS->numDelays);
 	assert(pSS->numDelays < pSS->maxNumDelays);
 

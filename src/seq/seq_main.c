@@ -13,6 +13,7 @@
 	macros.  The PV context and auxiliary thread are shared by all state
 	programs.
 ***************************************************************************/
+#define DEBUG errlogPrintf /* nothing, printf, errlogPrintf etc. */
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -143,16 +144,12 @@ epicsThreadId seq (
 			epicsThreadSleep( 1.0 );	/* let error messages get printed */
 			return 0;
 		}
-#ifdef	DEBUG
-	printf("thread seqAux spawned, tid=%p\n", (int) seqAuxThreadId);
-#endif	/*DEBUG*/
+		DEBUG("thread seqAux spawned, tid=%p\n", seqAuxThreadId);
 	}
 
 	/* Spawn the initial sequencer thread */
-#ifdef	DEBUG
-	printf("Spawning thread %s, stackSize=%d\n", pThreadName,
+	DEBUG("Spawning thread %s, stackSize=%d\n", pThreadName,
 		pSP->stackSize);
-#endif	/*DEBUG*/
 	/* Specify thread priority */
 	pSP->threadPriority = THREAD_PRIORITY;
 	pValue = seqMacValGet(pSP, "priority");
@@ -214,11 +211,9 @@ static void init_sprog(struct seqProgram *pSeqProg, SPROG *pSP)
 		pSP->pVar = (USER_VAR *)calloc(pSP->varSize, 1);
 	}
 
-#ifdef	DEBUG
-	printf("init_sprog: num SS=%d, num Chans=%d, num Events=%d, "
-		"Prog Name=%s, var Size=%d\n", pSP->numSS, pSP->numChans,
+	DEBUG("init_sprog: num SS=%ld, num Chans=%ld, num Events=%ld, "
+		"Prog Name=%s, var Size=%ld\n", pSP->numSS, pSP->numChans,
 		pSP->numEvents, pSP->pProgName, pSP->varSize);
-#endif	/*DEBUG*/
 
 	/* Create a semaphore for resource locking on PV events */
 	pSP->caSemId = epicsMutexMustCreate();
@@ -282,10 +277,9 @@ static void init_sscb(struct seqProgram *pSeqProg, SPROG *pSP)
 		/* Initialize to start time rather than zero time! */
 		pvTimeGetCurrentDouble(&pSS->timeEntered);
 		pSS->sprog = pSP;
-#ifdef	DEBUG
-		printf("init_sscb: SS Name=%s, num States=%d, pSS=%p\n",
+
+		DEBUG("init_sscb: SS Name=%s, num States=%ld, pSS=%p\n",
 			pSS->pSSName, pSS->numStates, pSS);
-#endif	/*DEBUG*/
 		pSS->allFirstConnectAndMonitorSemId = epicsEventMustCreate(epicsEventEmpty);
 		/* Create a binary semaphore for synchronizing events in a SS */
 		pSS->syncSemId = epicsEventMustCreate(epicsEventEmpty);
@@ -316,10 +310,9 @@ static void init_sscb(struct seqProgram *pSeqProg, SPROG *pSP)
 			pState->exitFunc = pSeqState->exitFunc;
 			pState->pEventMask = pSeqState->pEventMask;
 			pState->options = pSeqState->options;
-#ifdef	DEBUG
-		printf("init_sscb: State Name=%s, Event Mask=%p\n",
-			pState->pStateName, *pState->pEventMask);
-#endif	/*DEBUG*/
+
+			DEBUG("init_sscb: State Name=%s, Event Mask=0x%lx\n",
+				pState->pStateName, *pState->pEventMask);
 		}
 		/* Allocate user variable area if safe mode option (+s) is set */
 		if (pSP->options & OPT_SAFE)
@@ -328,9 +321,7 @@ static void init_sscb(struct seqProgram *pSeqProg, SPROG *pSP)
 		}
 	}
 
-#ifdef	DEBUG
-	printf("init_sscb: numSS=%d\n", pSP->numSS);
-#endif	/*DEBUG*/
+	DEBUG("init_sscb: numSS=%ld\n", pSP->numSS);
 }
 
 /*
@@ -349,9 +340,7 @@ static void init_chan(struct seqProgram *pSeqProg, SPROG *pSP)
 	pSeqChan = pSeqProg->pChan;
 	for (nchan = 0; nchan < pSP->numChans; nchan++, pDB++, pSeqChan++)
 	{
-#ifdef	DEBUG
-		printf("init_chan: pDB=%p\n", pDB);
-#endif	/*DEBUG*/
+		DEBUG("init_chan: pDB=%p\n", pDB);
 		pDB->sprog = pSP;
 		pDB->dbAsName = pSeqChan->dbAsName;
 		pDB->pVarName = pSeqChan->pVarName;
@@ -374,15 +363,14 @@ static void init_chan(struct seqProgram *pSeqProg, SPROG *pSP)
 		selectDBtype(pSeqChan->pVarType, &pDB->getType,
 			&pDB->putType, &pDB->size, &pDB->dbOffset);
 
-#ifdef	DEBUG
-		printf(" Assigned Name=%s, VarName=%s, VarType=%s, "
-			"count=%d\n", pDB->dbAsName, pDB->pVarName,
-			pDB->pVarType, pDB->count);
-		printf("   size=%d, dbOffset=%d\n", pDB->size,
-			pDB->dbOffset);
-		printf("   efId=%d, monFlag=%d, eventNum=%d\n",
+		DEBUG(" Assigned Name=%s, VarName=%s, VarType=%s, count=%ld\n"
+			"   size=%u, dbOffset=%u\n"
+			"   efId=%ld, monFlag=%u, eventNum=%ld\n",
+			pDB->dbAsName, pDB->pVarName,
+			pDB->pVarType, pDB->count,
+			pDB->size, pDB->dbOffset,
 			pDB->efId, pDB->monFlag, pDB->eventNum);
-#endif	/*DEBUG*/
+
 		pDB->varLock = epicsMutexMustCreate();
 		pDB->dirty = (unsigned *)calloc(pSP->numSS,sizeof(unsigned));
 		pDB->getComplete = (unsigned *)calloc(pSP->numSS,sizeof(unsigned));
@@ -404,10 +392,9 @@ static void seqChanNameEval(SPROG *pSP)
 	{
 		pDB->dbName = (char *)calloc(1, MACRO_STR_LEN);
 		seqMacEval(pSP, pDB->dbAsName, pDB->dbName, MACRO_STR_LEN);
-#ifdef	DEBUG
-		printf("seqChanNameEval: \"%s\" evaluated to \"%s\"\n",
+
+		DEBUG("seqChanNameEval: \"%s\" evaluated to \"%s\"\n",
 			pDB->dbAsName, pDB->dbName);
-#endif	/*DEBUG*/
 	}
 }
 

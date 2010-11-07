@@ -256,4 +256,6 @@ extern long seq_connect(SPROG *pSP);
 extern long seq_disconnect(SPROG *pSP);
 extern void ss_write_buffer(CHAN *pDB, void *pVal);
 
+static int nothing (const char *format,...) {return 0;}
+
 #endif	/*INCLseqPvth*/

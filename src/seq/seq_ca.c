@@ -28,6 +28,7 @@
  *	  Advanced Photon Source
  *	  Argonne National Laboratory
  */
+#define DEBUG errlogPrintf /* nothing, printf, errlogPrintf etc. */
 
 #include <string.h>
 
@@ -59,10 +60,8 @@ epicsShareFunc long seq_connect(SPROG *pSP)
 	{
 		if (pDB->dbName == NULL || pDB->dbName[0] == 0)
 			continue; /* skip records without pv names */
-#ifdef	DEBUG
-		errlogPrintf("seq_connect: connect %s to %s\n", pDB->pVarName,
+		DEBUG("seq_connect: connect %s to %s\n", pDB->pVarName,
 			pDB->dbName);
-#endif	/*DEBUG*/
 		/* Connect to it */
 		status = pvVarCreate(
 			pvSys,			/* PV system context */
@@ -170,10 +169,8 @@ static void proc_db_events(
 {
 	SPROG	*pSP = pDB->sprog;
 
-#ifdef	DEBUG
-	errlogPrintf("proc_db_events: var=%s, pv=%s, type=%s\n", pDB->pVarName,
+	DEBUG("proc_db_events: var=%s, pv=%s, type=%s\n", pDB->pVarName,
 		pDB->dbName, complete_type==0?"get":complete_type==1?"put":"mon");
-#endif	/*DEBUG*/
 
 	/* If monitor on var queued via syncQ, branch to alternative routine */
 	if (pDB->queued && complete_type == MON_COMPLETE)
@@ -261,11 +258,9 @@ static void proc_db_events_queued(pvValue *pValue, CHAN *pDB)
 	/* Determine number of items currently on the queue */
 	count = ellCount(&pSP->pQueues[pDB->queueIndex]);
 
-#ifdef	DEBUG
-	errlogPrintf("proc_db_events_queued: var=%s, pv=%s, count(max)=%d(%d), "
+	DEBUG("proc_db_events_queued: var=%s, pv=%s, count(max)=%d(%d), "
 		"index=%d\n", pDB->pVarName, pDB->dbName, count,
 		pDB->maxQueueSize, pDB->queueIndex);
-#endif	/*DEBUG*/
 
 	/* Allocate queue entry (re-use last one if queue has reached its
 	   maximum size) */
@@ -297,9 +292,7 @@ static void proc_db_events_queued(pvValue *pValue, CHAN *pDB)
 	memcpy((char *)&pEntry->value, (char *)pValue, sizeof(pEntry->value));
 
 	/* Set the event flag associated with this channel */
-#ifdef DEBUG
-	errlogPrintf("setting event flag %d\n", pDB->efId);
-#endif /*DEBUG*/
+	DEBUG("setting event flag %ld\n", pDB->efId);
 	seq_efSet(pSP->pSS, pDB->efId);
 }
 
@@ -313,6 +306,7 @@ epicsShareFunc long seq_disconnect(SPROG *pSP)
 	/* Did we already disconnect? */
 	if (pSP->connCount < 0)
 		return 0;
+	DEBUG("seq_disconnect: pSP = %p\n", pSP);
 
 	/* Attach to PV context of pvSys creator (auxiliary thread) */
 	pMySP = seqFindProg(epicsThreadGetIdSelf());
@@ -336,10 +330,8 @@ epicsShareFunc long seq_disconnect(SPROG *pSP)
 
 		if (!pDB->assigned)
 			continue;
-#ifdef	DEBUG_DISCONNECT
-		errlogPrintf("seq_disconnect: disconnect %s from %s\n",
+		DEBUG("seq_disconnect: disconnect %s from %s\n",
  			pDB->pVarName, pDB->dbName);
-#endif	/*DEBUG_DISCONNECT*/
 		/* Disconnect this PV */
 		status = pvVarDestroy(pDB->pvid);
 		if (status != pvStatOK)
@@ -376,11 +368,8 @@ void seq_conn_handler(void *var,int connected)
 	/* If PV not connected */
 	if (!connected)
 	{
-#ifdef	DEBUG
-		errlogPrintf("%s disconnected from %s\n", pDB->pVarName,
-			pDB->dbName);
-#endif	/*DEBUG*/
-		if(pDB->connected)
+		DEBUG("%s disconnected from %s\n", pDB->pVarName, pDB->dbName);
+		if (pDB->connected)
 		{
 			pDB->connected = FALSE;
 			pSP->connCount--;
@@ -388,16 +377,14 @@ void seq_conn_handler(void *var,int connected)
 		}
 		else
 		{
-			printf("%s disconnected but already disconnected %s\n",
-				pDB->pVarName,pDB->dbName);
+			errlogPrintf("%s disconnected but already disconnected %s\n",
+				pDB->pVarName, pDB->dbName);
 		}
 	}
 	else	/* PV connected */
 	{
-#ifdef	DEBUG
-		errlogPrintf("%s connected to %s\n", pDB->pVarName,pDB->dbName);
-#endif	/*DEBUG*/
-		if(!pDB->connected)
+		DEBUG("%s connected to %s\n", pDB->pVarName,pDB->dbName);
+		if (!pDB->connected)
 		{
 			pDB->connected = TRUE;
 			pSP->connCount++;

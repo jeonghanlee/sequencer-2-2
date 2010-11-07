@@ -8,9 +8,6 @@ include $(TOP)/configure/CONFIG
 INC += seqCom.h
 INC += seqVersion.h
 
-#  Internal debug control
-#USR_CPPFLAGS = -DDEBUG=TRUE
-
 #  seq library
 LIBRARY = seq
 seq_LIBS = pv Com

@@ -11,7 +11,7 @@
 
 	Thread creation and control for sequencer state-sets.
 ***************************************************************************/
-#define DEBUG nothing /* "nothing", "printf", "errlogPrintf" etc. */
+#define DEBUG errlogPrintf /* nothing, printf, errlogPrintf etc. */
 
 #include <limits.h>
 #include <string.h>
@@ -20,9 +20,6 @@
 #include "seq.h"
 
 #define varPtr(sp,ss)	(((sp)->options & OPT_SAFE) ? (ss)->pVar : (sp)->pVar)
-
-/* Used to disable debug output */
-static void nothing(const char *format,...) {}
 
 /* Function declarations */
 static long seq_waitConnect(SPROG *pSP, SSCB *pSS);
@@ -77,8 +74,7 @@ long sequencer (SPROG *pSP)	/* ptr to original (global) state program table */
 			(EPICSTHREADFUNC)ss_entry,	/* entry point */
 			pSS);				/* parameter */
 
-		errlogPrintf("Spawning thread %p: \"%s\"\n", tid,
-			    threadName);
+		DEBUG("Spawning additional state set thread %p: \"%s\"\n", tid, threadName);
 	}
 
 	/* First state-set jumps directly to entry point */

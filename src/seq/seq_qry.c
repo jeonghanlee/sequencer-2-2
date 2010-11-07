@@ -31,9 +31,6 @@ long epicsShareAPI seqShow(epicsThreadId tid)
 	STATE	*pST;
 	int	nss;
 	double	timeNow, timeElapsed;
-#ifdef	DEBUG
-	int n;
-#endif
 
 	pSP = seqQryFind(tid);
 	if (pSP == NULL)
@@ -69,6 +66,8 @@ long epicsShareAPI seqShow(epicsThreadId tid)
 	/* Print state set info */
 	for (nss = 0, pSS = pSP->pSS; nss < pSP->numSS; nss++, pSS++)
 	{
+		int n;
+
 		printf("  State Set: \"%s\"\n", pSS->pSSName);
 
 		if (pSS->threadId != (epicsThreadId)0)
@@ -95,7 +94,6 @@ long epicsShareAPI seqShow(epicsThreadId tid)
 		timeElapsed = timeNow - pSS->timeEntered;
 		printf("  Elapsed time since state was entered = %.1f "
 			"seconds\n", timeElapsed);
-#ifdef	DEBUG
 		printf("  Queued time delays:\n");
 		for (n = 0; n < pSS->numDelays; n++)
 		{
@@ -104,7 +102,6 @@ long epicsShareAPI seqShow(epicsThreadId tid)
 				printf(" - expired");
 			printf("\n");
 		}
-#endif	/*DEBUG*/
 		printf("\n");
 	}
 
