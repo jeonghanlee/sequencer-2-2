@@ -196,8 +196,8 @@ snl:
 	"assign"	{ RET(ASSIGN,	"assign"); }
 	"break"		{ RET(BREAK,	"break"); }
 	"char"		{ RET(CHAR,	"char"); }
+	"connect"	{ RET(CONNECT,	"connect"); }
 	"continue"	{ RET(CONTINUE,	"continue"); }
-	"declare"	{ RET(DECLARE,	"declare"); }
 	"double"	{ RET(DOUBLE,	"double"); }
 	"else"		{ RET(ELSE,	"else"); }
 	"entry"		{ RET(ENTRY,	"entry"); }
@@ -205,6 +205,7 @@ snl:
 	"exit"		{ RET(EXIT,	"exit"); }
 	"float"		{ RET(FLOAT,	"float"); }
 	"for"		{ RET(FOR,	"for"); }
+	"foreign"	{ RET(FOREIGN,	"foreign"); }
 	"if"		{ RET(IF,	"if"); }
 	"int"		{ RET(INT,	"int"); }
 	"long"		{ RET(LONG,	"long"); }

@@ -318,6 +318,10 @@ static void analyse_assign(SymTable st, ChanList *chan_list, Expr *scope, Expr *
 	{
 		assign_subscript(chan_list, defn, vp, defn->assign_subscr, defn->assign_pvs);
 	}
+	else if (!defn->assign_pvs)
+	{
+		assign_single(chan_list, defn, vp, 0);
+	}
 	else if (!defn->assign_pvs->next)
 	{
 		assign_single(chan_list, defn, vp, defn->assign_pvs);
@@ -338,13 +342,14 @@ static void assign_single(
 	Expr		*pv_name
 )
 {
+	char *name = pv_name ? pv_name->value : "";
+
 	assert(chan_list);
 	assert(defn);
 	assert(vp);
-	assert(pv_name);
 
 #ifdef DEBUG
-	report("assign %s to %s;\n", vp->name, pv_name->value);
+	report("assign %s to %s;\n", vp->name, name);
 #endif
 
 	if (vp->assign != M_NONE)
@@ -355,7 +360,7 @@ static void assign_single(
 	vp->assign = M_SINGLE;
 	vp->chan.single = new_channel(
 		chan_list, vp, type_array_length1(vp->type) * type_array_length2(vp->type), 0);
-	vp->chan.single->name = pv_name->value;
+	vp->chan.single->name = name;
 }
 
 static void assign_elem(
