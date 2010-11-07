@@ -196,8 +196,7 @@ epicsShareFunc long epicsShareAPI seqStop (epicsThreadId);
 epicsShareFunc void epicsShareAPI seqRegisterSequencerProgram (struct seqProgram *p);
 epicsShareFunc void epicsShareAPI seqRegisterSequencerCommands (void);
 epicsShareFunc epicsThreadId epicsShareAPI seq(struct seqProgram *, char *, unsigned int);
-epicsShareFunc struct state_program *epicsShareAPI seqFindProgByName (char *);
-
+epicsShareFunc struct state_program* epicsShareAPI seqFindProgByName (char *, int);
 
 #ifdef __cplusplus
 } /* extern "C" */

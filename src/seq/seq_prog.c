@@ -11,90 +11,59 @@
 	All active state programs are inserted into the list when created
 	and removed from the list when deleted.
 ***************************************************************************/
+#define DEBUG  errlogPrintf             /* nothing, printf, errlogPrintf etc. */
 
 #include <string.h>
 #include "seq.h"
 
-static epicsMutexId seqProgListSemId;
-static int	    seqProgListInited = FALSE;
-static ELLLIST	    seqProgList;
-static void	    seqProgListInit(void);
+static epicsMutexId progListLock;
+static SPROG *progList;
 
-typedef struct prog_node
+static void seqProgListInit(void)
 {
-	ELLNODE		node;
-	SPROG		*pSP;
-} PROG_NODE;
-
-#define	seqListFirst(pList)	(PROG_NODE *)ellFirst((ELLLIST *)pList)
-
-#define	seqListNext(pNode)	(PROG_NODE *)ellNext((ELLNODE *)pNode)
+    if (!progListLock)
+        progListLock = epicsMutexMustCreate();
+}
 
 /*
  * seqFindProg() - find a program in the state program list from thread id.
  */
 SPROG *seqFindProg(epicsThreadId threadId)
 {
-	PROG_NODE	*pNode;
-	SPROG		*pSP;
-	SSCB		*pSS;
-	int		n;
+    SPROG *pSP = NULL;
 
-	if (!seqProgListInited || threadId == 0)
-		return NULL;
+    seqProgListInit();
+    epicsMutexMustLock(progListLock);
+    foreach(pSP, progList) {
+        int n;
 
-	epicsMutexMustLock(seqProgListSemId);
-
-	for (pNode = seqListFirst(&seqProgList); pNode != NULL;
-	     pNode = seqListNext(pNode) )
-	{
-		pSP = pNode->pSP;
-		if (pSP->threadId == threadId)
-		{
-			epicsMutexUnlock(seqProgListSemId);
-			return pSP;
-		}
-		pSS = pSP->pSS;
-		for (n = 0; n < pSP->numSS; n++, pSS++)
-		{
-			if (pSS->threadId == threadId)
-			{
-				epicsMutexUnlock(seqProgListSemId);
-				return pSP;
-			}
-		}
-	}
-	epicsMutexUnlock(seqProgListSemId);
-
-	return NULL; /* not in list */
+        for (n = 0; n < pSP->numSS; n++) {
+            if (pSP->pSS[n].threadId == threadId) {
+                break;
+            }
+        }
+    }
+    epicsMutexUnlock(progListLock);
+    return pSP;
 }
 
 /*
- * seqFindProgByName() - find a program in the state program list by name.
+ * seqFindProgByName() - find a program in the state program list by name
+ * and instance number.
  */
-epicsShareFunc SPROG *epicsShareAPI seqFindProgByName(char *pProgName)
+epicsShareFunc SPROG *epicsShareAPI seqFindProgByName(char *pProgName, int instance)
 {
-	PROG_NODE	*pNode;
-	SPROG		*pSP;
+    SPROG *pSP = NULL;
 
-	if (!seqProgListInited || pProgName == 0)
-		return NULL;
-
-	epicsMutexMustLock(seqProgListSemId);
-
-	for (pNode = seqListFirst(&seqProgList); pNode != NULL;
-	     pNode = seqListNext(pNode) )
-	{
-		pSP = pNode->pSP;
-		if (strcmp(pSP->pProgName, pProgName) == 0)
-		{
-			epicsMutexUnlock(seqProgListSemId);
-			return pSP;
-		}
-	}
-	epicsMutexUnlock(seqProgListSemId);
-
-	return NULL; /* not in list */
+    seqProgListInit();
+    epicsMutexMustLock(progListLock);
+    foreach(pSP, progList) {
+        if (strcmp(pSP->pProgName, pProgName) == 0 && pSP->instance == instance) {
+            break;
+        }
+    }
+    epicsMutexUnlock(progListLock);
+    return pSP;
 }
 
 /*
@@ -102,113 +71,61 @@ epicsShareFunc SPROG *epicsShareAPI seqFindProgByName(char *pProgName)
  * call the specified routine or function.  Passes one parameter of
  * pointer size.
  */
-epicsStatus seqTraverseProg(seqTraversee *pFunc, void *param)
+void seqTraverseProg(seqTraversee * pFunc, void *param)
 {
-	PROG_NODE	*pNode;
-	SPROG		*pSP;
+    SPROG *pSP;
 
-	if (!seqProgListInited)
-		return ERROR;
-
-	epicsMutexMustLock(seqProgListSemId);
-	for (pNode = seqListFirst(&seqProgList); pNode != NULL;
-	     pNode = seqListNext(pNode) )
-	{
-		pSP = pNode->pSP;
-		pFunc(pSP, param);
-	}
-
-	epicsMutexUnlock(seqProgListSemId);
-	return OK;
+    seqProgListInit();
+    epicsMutexMustLock(progListLock);
+    foreach(pSP, progList) {
+        pFunc(pSP, param);
+    }
+    epicsMutexUnlock(progListLock);
 }
 
 /*
  * seqAddProg() - add a program to the state program list.
- * Returns ERROR if program is already in list, else TRUE.
+ * Precondition: must not be already in the list.
  */
-epicsShareFunc epicsStatus seqAddProg(SPROG *pSP)
+void seqAddProg(SPROG *pSP)
 {
-	PROG_NODE	*pNode;
+    SPROG *pCurSP, *pLastSP = NULL;
+    int instance = -1;
 
-	if (!seqProgListInited)
-		seqProgListInit(); /* Initialize list */
-
-	epicsMutexMustLock(seqProgListSemId);
-	for (pNode = seqListFirst(&seqProgList); pNode != NULL;
-	     pNode = seqListNext(pNode) )
-	{
-
-		if (pSP == pNode->pSP)
-		{
-			epicsMutexUnlock(seqProgListSemId);
-#ifdef DEBUG
-			errlogPrintf("Thread %d already in list\n",
-				     pSP->threadId);
-#endif /*DEBUG*/
-			return ERROR; /* already in list */
-		}
-	}
-
-	/* Insert at head of list */
-	pNode = (PROG_NODE *)malloc(sizeof(PROG_NODE) );
-	if (pNode == NULL)
-	{
-		epicsMutexUnlock(seqProgListSemId);
-		return ERROR;
-	}
-
-	pNode->pSP = pSP;
-	ellAdd((ELLLIST *)&seqProgList, (ELLNODE *)pNode);
-	epicsMutexUnlock(seqProgListSemId);
-#ifdef DEBUG
-	errlogPrintf("Added thread %d to list.\n", pSP->threadId);
-#endif /*DEBUG*/
-
-	return OK;
+    seqProgListInit();
+    epicsMutexMustLock(progListLock);
+    foreach(pCurSP, progList) {
+        pLastSP = pCurSP;
+        /* check precondition */
+        assert(pCurSP != pSP);
+        if (strcmp(pCurSP->pProgName, pSP->pProgName) == 0) {
+            instance = max(pCurSP->instance, instance);
+        }
+    }
+    pSP->instance = instance + 1;
+    if (pLastSP != NULL) {
+        pLastSP->next = pSP;
+    } else {
+        progList = pSP;
+    }
+    epicsMutexUnlock(progListLock);
+    DEBUG("Added program %p, instance %d to list.\n", pSP, pSP->instance);
 }
 
 /* 
- *seqDelProg() - delete a program from the program list.
+ * seqDelProg() - delete a program from the program list.
  * Returns TRUE if deleted, else FALSE.
  */
-epicsShareFunc epicsStatus seqDelProg(SPROG *pSP)
+void seqDelProg(SPROG *pSP)
 {
-	PROG_NODE	*pNode;
+    SPROG *pCurSP;
 
-	if (!seqProgListInited)
-		return ERROR;
-
-	epicsMutexMustLock(seqProgListSemId);
-	for (pNode = seqListFirst(&seqProgList); pNode != NULL;
-	     pNode = seqListNext(pNode) )
-	{
-		if (pNode->pSP == pSP)
-		{
-			ellDelete((ELLLIST *)&seqProgList, (ELLNODE *)pNode);
-			free(pNode);
-			epicsMutexUnlock(seqProgListSemId);
-
-#ifdef DEBUG
-			errlogPrintf("Deleted thread %d from list.\n",
-				     pSP->threadId);
-#endif /*DEBUG*/
-			return OK;
-		}
-	}	
-
-	epicsMutexUnlock(seqProgListSemId);
-	return ERROR; /* not in list */
-}
-
-/*
- * seqProgListInit() - initialize the state program list.
- */
-static void seqProgListInit(void)
-{
-	/* Init linked list */
-	ellInit(&seqProgList);
-
-	/* Create a semaphore for mutual exclusion */
-	seqProgListSemId = epicsMutexMustCreate();
-	seqProgListInited = TRUE;
+    seqProgListInit();
+    epicsMutexMustLock(progListLock);
+    foreach(pCurSP, progList) {
+        if (pCurSP->next == pSP) {
+            pCurSP->next = pSP->next;
+        }
+    }
+    epicsMutexUnlock(progListLock);
 }

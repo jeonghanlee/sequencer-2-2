@@ -207,6 +207,9 @@ struct state_program
 	int		numQueues;	/* number of syncQ queues */
 	ELLLIST		*pQueues;	/* ptr to syncQ queues */
 	void		*pvReqPool;	/* freeList for pv requests */
+
+	int		instance;	/* program instance number */
+	SPROG		*next;		/* next element in program list */
 };
 
 /* Auxiliary thread arguments */
@@ -230,16 +233,17 @@ struct pvreq
 #define THREAD_STACK_SIZE	epicsThreadStackBig
 #define THREAD_PRIORITY		epicsThreadPriorityMedium
 
-/* Internal declarations */
+/* Internal procedures */
+
+/* Generic iteration on lists */
+#define foreach(e,l)		for (e = l; e != 0; e = e->next)
+
 extern void seqWakeup(SPROG *pSP, long eventNum);
 extern void seqFree(SPROG *pSP);
 extern long sequencer (SPROG *pSP);
 extern long seqMacParse(char *pMacStr, SPROG *pSP);
 extern char *seqMacValGet(MACRO *pMac, char *pName);
 extern void seqMacEval(char *pInStr, char *pOutStr, long maxChar, MACRO *pMac);
-extern SPROG *seqFindProg(epicsThreadId threadId);
-extern epicsStatus seqDelProg(SPROG *pSP);
-extern epicsStatus seqAddProg(SPROG *pSP);
 extern void *seqAuxThread(void *);
 extern epicsThreadId seqAuxThreadId;
 extern void seq_get_handler(
@@ -249,8 +253,13 @@ extern void seq_put_handler(
 extern void seq_mon_handler(
 	void *var, pvType type, int count, pvValue *pValue, void *arg, pvStat status);
 extern void seq_conn_handler(void *var,int connected);
+/* seq_prog.c */
 typedef void seqTraversee(SPROG *prog, void *param);
-extern epicsStatus seqTraverseProg(seqTraversee *pFunc, void *param);
+extern void seqTraverseProg(seqTraversee *pFunc, void *param);
+extern SPROG *seqFindProg(epicsThreadId threadId);
+extern void seqDelProg(SPROG *pSP);
+extern void seqAddProg(SPROG *pSP);
+
 extern long seq_connect(SPROG *pSP);
 extern long seq_disconnect(SPROG *pSP);
 extern void ss_write_buffer(CHAN *pDB, void *pVal);

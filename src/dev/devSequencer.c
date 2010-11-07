@@ -44,9 +44,9 @@
 #include "link.h"
 #include "dbScan.h"
 #include "stringinRecord.h"
+#include "epicsEvent.h"
 #include "epicsExport.h"
 
-#include "epicsEvent.h"
 #include "pv.h"
 #include "seqCom.h"
 #include "seqPvt.h"
@@ -264,7 +264,7 @@ LOCAL void devSeqScanThread(void)
     while(TRUE) {
         pvtPt = (seqShowScanPvt*) ellFirst(pdevSeqScanList);
         do {
-            pvtPt->pSP = seqFindProgByName(pvtPt->progName);
+            pvtPt->pSP = seqFindProgByName(pvtPt->progName, 0);
 
             if(!pvtPt->pSP) continue;
             varPt = &(pvtPt->var);
