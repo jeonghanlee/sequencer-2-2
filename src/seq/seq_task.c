@@ -552,24 +552,13 @@ void seqFree(SPROG *pSP)
 {
 	SSCB		*pSS;
 	CHAN		*pDB;
-	MACRO		*pMac;
 	int		n;
 
-	/* Free macro table entries */
-	for (pMac = pSP->pMacros, n = 0; n < MAX_MACROS; pMac++, n++)
+	seqMacFree(pSP);
+	for (n = 0; n < pSP->numChans; n++)
 	{
-		if (pMac->pName != NULL)
-			free(pMac->pName);
-		if (pMac->pValue != NULL)
-			free(pMac->pValue);
-	}
+		pDB = pSP->pChan + n;
 
-	/* Free MACRO table */
-	free(pSP->pMacros);
-
-	/* Free channel names */
-	for (pDB = pSP->pChan, n = 0; n < pSP->numChans; pDB++, n++)
-	{
 		if (pDB->dbName != NULL)
 			free(pDB->dbName);
 		if (pDB->putSemId != NULL)

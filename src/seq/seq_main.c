@@ -30,7 +30,6 @@ static SPROG *seqInitTables(struct seqProgram *);
 static void init_sprog(struct seqProgram *, SPROG *);
 static void init_sscb(struct seqProgram *, SPROG *);
 static void init_chan(struct seqProgram *, SPROG *);
-static void init_mac(SPROG *);
 
 static void seq_logInit(SPROG *);
 static void seqChanNameEval(SPROG *);
@@ -84,10 +83,10 @@ epicsThreadId seq (
 	pSP = seqInitTables(pSeqProg);
 
 	/* Parse the macro definitions from the "program" statement */
-	seqMacParse(pSeqProg->pParams, pSP);
+	seqMacParse(pSP, pSeqProg->pParams);
 
 	/* Parse the macro definitions from the command line */
-	seqMacParse(macroDef, pSP);
+	seqMacParse(pSP, macroDef);
 
 	/* Do macro substitution on channel names */
 	seqChanNameEval(pSP);
@@ -98,7 +97,7 @@ epicsThreadId seq (
 	/* Specify stack size */
 	if (stackSize == 0)
 		stackSize = epicsThreadGetStackSize(THREAD_STACK_SIZE);
-	pValue = seqMacValGet(pSP->pMacros, "stack");
+	pValue = seqMacValGet(pSP, "stack");
 	if (pValue != NULL && strlen(pValue) > 0)
 	{
 		sscanf(pValue, "%ud", &stackSize);
@@ -109,21 +108,21 @@ epicsThreadId seq (
 	pSP->stackSize = stackSize;
 
 	/* Specify thread name */
-	pValue = seqMacValGet(pSP->pMacros, "name");
+	pValue = seqMacValGet(pSP, "name");
 	if (pValue != NULL && strlen(pValue) > 0)
 		pThreadName = pValue;
 	else
 		pThreadName = pSP->pProgName;
 
 	/* Specify PV system name (defaults to CA) */
-	pValue = seqMacValGet(pSP->pMacros, "pvsys");
+	pValue = seqMacValGet(pSP, "pvsys");
 	if (pValue != NULL && strlen(pValue) > 0)
 		auxArgs.pPvSysName = pValue;
 	else
 		auxArgs.pPvSysName = "ca";
 
 	/* Determine debug level (currently only used for PV-level debugging) */
-	pValue = seqMacValGet(pSP->pMacros, "debug");
+	pValue = seqMacValGet(pSP, "debug");
 	if (pValue != NULL && strlen(pValue) > 0)
 		auxArgs.debug = atol(pValue);
 	else
@@ -156,7 +155,7 @@ epicsThreadId seq (
 #endif	/*DEBUG*/
 	/* Specify thread priority */
 	pSP->threadPriority = THREAD_PRIORITY;
-	pValue = seqMacValGet(pSP->pMacros, "priority");
+	pValue = seqMacValGet(pSP, "priority");
 	if (pValue != NULL && strlen(pValue) > 0)
 	{
 		sscanf(pValue, "%ud", &(pSP->threadPriority));
@@ -188,9 +187,6 @@ static SPROG *seqInitTables(struct seqProgram *pSeqProg)
 
 	/* Initialize database channel blocks */
 	init_chan(pSeqProg, pSP);
-
-	/* Initialize the macro table */
-	init_mac(pSP);
 
 	return pSP;
 }
@@ -394,26 +390,6 @@ static void init_chan(struct seqProgram *pSeqProg, SPROG *pSP)
 	}
 }
 
-/* 
- * init_mac - initialize the macro table.
- */
-static void init_mac(SPROG *pSP)
-{
-	int		i;
-	MACRO		*pMac;
-
-	pSP->pMacros = pMac = (MACRO *)calloc(MAX_MACROS, sizeof (MACRO));
-#ifdef	DEBUG
-	printf("init_mac: pMac=%p\n", pMac);
-#endif	/*DEBUG*/
-
-	for (i = 0 ; i < MAX_MACROS; i++, pMac++)
-	{
-		pMac->pName = NULL;
-		pMac->pValue = NULL;
-	}
-}
-
 /*
  * Evaluate channel names by macro substitution.
  */
@@ -427,7 +403,7 @@ static void seqChanNameEval(SPROG *pSP)
 	for (i = 0; i < pSP->numChans; i++, pDB++)
 	{
 		pDB->dbName = (char *)calloc(1, MACRO_STR_LEN);
-		seqMacEval(pDB->dbAsName, pDB->dbName, MACRO_STR_LEN, pSP->pMacros);
+		seqMacEval(pSP, pDB->dbAsName, pDB->dbName, MACRO_STR_LEN);
 #ifdef	DEBUG
 		printf("seqChanNameEval: \"%s\" evaluated to \"%s\"\n",
 			pDB->dbAsName, pDB->dbName);
@@ -547,7 +523,7 @@ static void seq_logInit(SPROG *pSP)
 	pSP->pLogFile = "";
 
 	/* Check for logfile spec. */
-	pValue = seqMacValGet(pSP->pMacros, "logfile");
+	pValue = seqMacValGet(pSP, "logfile");
 	if (pValue != NULL && strlen(pValue) > 0)
 	{	/* Create & open a new log file for write only */
 		fd = fopen(pValue, "w");

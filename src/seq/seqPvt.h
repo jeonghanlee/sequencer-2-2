@@ -165,13 +165,6 @@ struct state_set_control_block
 	struct state_program *sprog;	/* ptr back to state program block */
 };
 
-/* Macro table */
-struct macro
-{
-	char	*pName;
-	char	*pValue;
-};
-
 /* All information about a state program.
 	The address of this structure is passed to the run-time sequencer:
  */
@@ -225,9 +218,6 @@ struct pvreq
 	SSCB		*pSS;		/* state set that made the request */
 };
 
-/* Macro parameters */
-#define	MAX_MACROS	50
-
 /* Thread parameters */
 #define THREAD_NAME_SIZE	32
 #define THREAD_STACK_SIZE	epicsThreadStackBig
@@ -241,11 +231,13 @@ struct pvreq
 extern void seqWakeup(SPROG *pSP, long eventNum);
 extern void seqFree(SPROG *pSP);
 extern long sequencer (SPROG *pSP);
-extern long seqMacParse(char *pMacStr, SPROG *pSP);
-extern char *seqMacValGet(MACRO *pMac, char *pName);
-extern void seqMacEval(char *pInStr, char *pOutStr, long maxChar, MACRO *pMac);
 extern void *seqAuxThread(void *);
 extern epicsThreadId seqAuxThreadId;
+/* seq_mac.c */
+extern void seqMacParse(SPROG *pSP, char *pMacStr);
+extern char *seqMacValGet(SPROG *pSP, char *pName);
+extern void seqMacEval(SPROG *pSP, char *pInStr, char *pOutStr, size_t maxChar);
+extern void seqMacFree(SPROG *pSP);
 extern void seq_get_handler(
 	void *var, pvType type, int count, pvValue *pValue, void *arg, pvStat status);
 extern void seq_put_handler(
