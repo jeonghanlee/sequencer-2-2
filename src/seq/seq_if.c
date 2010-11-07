@@ -438,6 +438,16 @@ epicsShareFunc long epicsShareAPI seq_pvStopMonitor(SS_ID pSS, long pvId)
 }
 
 /*
+ * seq_pvSync() - Synchronize pv with an event flag.
+ * ev_flag == 0 means unSync.
+ */
+epicsShareFunc void epicsShareAPI seq_pvSync(SS_ID pSS, long pvId, long ev_flag)
+{
+	assert(ev_flag >= 0 && ev_flag <= pSS->sprog->numEvents);
+	pSS->sprog->pChan[pvId].efId = ev_flag;
+}
+
+/*
  * seq_pvChannelCount() - returns total number of database channels.
  */
 epicsShareFunc long epicsShareAPI seq_pvChannelCount(SS_ID pSS)

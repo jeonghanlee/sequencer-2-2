@@ -59,6 +59,8 @@ typedef unsigned long	bitMask;
 #define bitClear(word, bitnum)	(word[(bitnum)/NBITS] &= ~(1<<((bitnum)%NBITS)))
 #define bitTest(word, bitnum)	((word[(bitnum)/NBITS] &   (1<<((bitnum)%NBITS))) != 0)
 
+#define NO_EVENT_FLAG		0	/* argument to pvSync to remove sync */
+
 #ifndef TRUE
 #define TRUE	1
 #endif
@@ -164,6 +166,7 @@ epicsShareFunc long epicsShareAPI seq_pvPut(SS_ID, long, long);		/* put pv value
 epicsShareFunc epicsTimeStamp epicsShareAPI seq_pvTimeStamp(SS_ID, long);/* get time stamp value */
 epicsShareFunc long epicsShareAPI seq_pvAssign(SS_ID, long, char *);	/* assign/connect to a pv */
 epicsShareFunc long epicsShareAPI seq_pvMonitor(SS_ID, long);		/* enable monitoring on pv */
+epicsShareFunc void epicsShareAPI seq_pvSync(SS_ID, long, long);	/* sync pv with event flag */
 epicsShareFunc long epicsShareAPI seq_pvStopMonitor(SS_ID, long);	/* disable monitoring on pv */
 epicsShareFunc char *epicsShareAPI seq_pvName(SS_ID, long);		/* pv name */
 epicsShareFunc long epicsShareAPI seq_pvStatus(SS_ID, long);		/* pv alarm status code */

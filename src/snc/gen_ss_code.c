@@ -29,24 +29,81 @@ static char *const_code_str[] = {
 	NULL, "TRUE", "FALSE", "SYNC", "ASYNC", NULL
 };
 
-enum {
-	F_NONE, F_DELAY, F_EFSET, F_EFTEST, F_EFCLEAR, F_EFTESTANDCLEAR,
-	F_PVGET, F_PVGETQ, F_PVFREEQ, F_PVPUT, F_PVTIMESTAMP, F_PVASSIGN,
-	F_PVMONITOR, F_PVSTOPMONITOR, F_PVCOUNT, F_PVINDEX, F_PVNAME,
-	F_PVSTATUS, F_PVSEVERITY, F_PVMESSAGE, F_PVFLUSH, F_PVERROR,
-	F_PVGETCOMPLETE, F_PVASSIGNED, F_PVCONNECTED, F_PVPUTCOMPLETE,
-	F_PVCHANNELCOUNT, F_PVCONNECTCOUNT, F_PVASSIGNCOUNT,
-	F_PVDISCONNECT, F_SEQLOG, F_MACVALUEGET, F_OPTGET, F_CODE_LAST
+enum
+{
+	F_NONE,
+	F_DELAY,
+	F_EFCLEAR,
+	F_EFSET,
+	F_EFTEST,
+	F_EFTESTANDCLEAR,
+	F_MACVALUEGET,
+	F_OPTGET,
+	F_PVASSIGN,
+	F_PVASSIGNCOUNT,
+	F_PVASSIGNED,
+	F_PVCHANNELCOUNT,
+	F_PVCONNECTCOUNT,
+	F_PVCONNECTED,
+	F_PVCOUNT,
+	F_PVDISCONNECT,
+	F_PVERROR,
+	F_PVFLUSH,
+	F_PVFREEQ,
+	F_PVGET,
+	F_PVGETCOMPLETE,
+	F_PVGETQ,
+	F_PVINDEX,
+	F_PVMESSAGE,
+	F_PVMONITOR,
+	F_PVNAME,
+	F_PVPUT,
+	F_PVPUTCOMPLETE,
+	F_PVSEVERITY,
+	F_PVSTATUS,
+	F_PVSTOPMONITOR,
+	F_PVSYNC,
+	F_PVTIMESTAMP,
+	F_SEQLOG,
+	F_CODE_LAST
 };
 
 static char *fcode_str[] = {
-	NULL, "delay", "efSet", "efTest", "efClear", "efTestAndClear",
-	"pvGet", "pvGetQ", "pvFreeQ", "pvPut", "pvTimeStamp", "pvAssign",
-	"pvMonitor", "pvStopMonitor", "pvCount", "pvIndex", "pvName",
-	"pvStatus", "pvSeverity", "pvMessage", "pvFlush", "pvError",
-	"pvGetComplete", "pvAssigned", "pvConnected", "pvPutComplete",
-	"pvChannelCount", "pvConnectCount", "pvAssignCount",
-	"pvDisconnect", "seqLog", "macValueGet", "optGet", NULL
+	NULL,
+	"delay",
+	"efClear",
+	"efSet",
+	"efTest",
+	"efTestAndClear",
+	"macValueGet",
+	"optGet",
+	"pvAssign",
+	"pvAssignCount",
+	"pvAssigned",
+	"pvChannelCount",
+	"pvConnectCount",
+	"pvConnected",
+	"pvCount",
+	"pvDisconnect",
+	"pvError",
+	"pvFlush",
+	"pvFreeQ",
+	"pvGet",
+	"pvGetComplete",
+	"pvGetQ",
+	"pvIndex",
+	"pvMessage",
+	"pvMonitor",
+	"pvName",
+	"pvPut",
+	"pvPutComplete",
+	"pvSeverity",
+	"pvStatus",
+	"pvStopMonitor",
+	"pvSync",
+	"pvTimeStamp",
+	"seqLog",
+	NULL
 };
 
 static void gen_local_var_decls(Expr *scope, int level);
@@ -671,6 +728,7 @@ static int special_func(int stmt_type,	Expr *ep)
 	    case F_PVINDEX:
 	    case F_PVDISCONNECT:
 	    case F_PVASSIGN:
+	    case F_PVSYNC:
 		/* PV functions requiring a channel id */
 		gen_pv_func(stmt_type, ep, fname, func_code, FALSE, 0);
 		return TRUE;
