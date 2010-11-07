@@ -426,25 +426,3 @@ LOCAL long siGetIoInitInfo(int cmd, struct stringinRecord *pRec, IOSCANPVT *ppvt
 
     return 0;
 }
-
-/*
- * devSequencer.c,v
- * Revision 1.4  2003/08/07 14:34:37  mrk
- * version obtained from Kukhee Kim,
- *
- *
- * Revision 1.2  2003/05/23 18:44:22 KHKIM
- * change to support I/O interrupt mode
- * and to monitor more state variables
- *
- * Revision 1.1  2001/03/19 20:59:36  mrk
- * changes for base 3.14
- *
- * Revision 1.1.1.1  2000/04/04 03:22:41  wlupton
- * first commit of seq-2-0-0
- *
- * Revision 1.1  2000/03/29 01:57:50  wlupton
- * initial insertion
- *
- */
-
