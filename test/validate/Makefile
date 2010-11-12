@@ -20,9 +20,12 @@ PROD += sncOptt
 PROD += sncOpttVar
 PROD += assign
 PROD += declarations
+PROD += local
 PROD += syncq
 PROD += pvSync
 PROD += pvPutAsync
+
+#PROD += ctest
 
 #  Libraries
 PROD_LIBS += seq

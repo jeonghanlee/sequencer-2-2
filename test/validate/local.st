@@ -1,6 +1,5 @@
-/* Sequence to illustrate / test local variable declarations */
-
-program local( "pvsys=ktl" )
+/* illustrate / test local variable declarations */
+program local
 
 /* options */
 #if 0
@@ -31,4 +30,3 @@ ss start {
 exit {
     printf( "exit: i = %d\n", i );
 }
-
