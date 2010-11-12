@@ -246,11 +246,15 @@ extern void seq_mon_handler(
 	void *var, pvType type, int count, pvValue *pValue, void *arg, pvStat status);
 extern void seq_conn_handler(void *var,int connected);
 /* seq_prog.c */
-typedef void seqTraversee(SPROG *prog, void *param);
-extern void seqTraverseProg(seqTraversee *pFunc, void *param);
-extern SPROG *seqFindProg(epicsThreadId threadId);
-extern void seqDelProg(SPROG *pSP);
-extern void seqAddProg(SPROG *pSP);
+typedef int seqTraversee(SPROG *prog, void *param);
+void seqTraverseProg(seqTraversee *pFunc, void *param);
+SSCB *seqFindStateSet(epicsThreadId threadId);
+SPROG *seqFindProg(epicsThreadId threadId);
+void seqDelProg(SPROG *pSP);
+void seqAddProg(SPROG *pSP);
+/* seqCommands.c */
+typedef int sequencerProgramTraversee(SPROG **sprog, struct seqProgram *pseq, void *param);
+void traverseSequencerPrograms(sequencerProgramTraversee *traversee, void *param);
 
 extern long seq_connect(SPROG *pSP);
 extern long seq_disconnect(SPROG *pSP);

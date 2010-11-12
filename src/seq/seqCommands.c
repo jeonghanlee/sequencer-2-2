@@ -24,14 +24,15 @@
 
 struct sequencerProgram {
     struct seqProgram *prog;
+    epicsMutexId lock;
+    struct state_program *instances;
     struct sequencerProgram *next;
-
 };
 static struct sequencerProgram *seqHead;
 
 /*
  * This routine is called before multitasking has started, so there's
- * no race condition in creating the linked list.
+ * no race condition in creating the linked list or the instance lock.
  */
 epicsShareFunc void epicsShareAPI seqRegisterSequencerProgram(struct seqProgram *p)
 {
@@ -40,7 +41,22 @@ epicsShareFunc void epicsShareAPI seqRegisterSequencerProgram(struct seqProgram 
     sp = (struct sequencerProgram *)mallocMustSucceed(sizeof *sp, "seqRegisterSequencerProgram");
     sp->prog = p;
     sp->next = seqHead;
+    sp->lock = epicsMutexMustCreate();
+    sp->instances = NULL;
     seqHead = sp;
+}
+
+void traverseSequencerPrograms(sequencerProgramTraversee *traversee, void *param)
+{
+    struct sequencerProgram *sp;
+
+    foreach(sp, seqHead) {
+        int stop;
+        epicsMutexMustLock(sp->lock);
+        stop = traversee(&sp->instances, sp->prog, param);
+        epicsMutexUnlock(sp->lock);
+        if (!stop) break;
+    }
 }
 
 /*
@@ -80,7 +96,7 @@ static void seqCallFunc(const iocshArgBuf *args)
     }
     if (*table == '&')
         table++;
-    for (sp = seqHead ; sp != NULL ; sp = sp->next) {
+    foreach(sp, seqHead) {
         if (!strcmp(table, sp->prog->pProgName)) {
             seq(sp->prog, macroDef, stackSize);
             return;
@@ -115,6 +131,10 @@ static void seqQueueShowCallFunc(const iocshArgBuf *args)
 
     if ((name != NULL) && ((id = findThread(name)) != NULL))
         seqQueueShow(id);
+    else {
+        printf("No sequencer task specified.\n");
+        seqShow(NULL);
+    }
 }
 
 /* seqStop */
@@ -128,6 +148,10 @@ static void seqStopCallFunc(const iocshArgBuf *args)
 
     if ((name != NULL) && ((id = findThread(name)) != NULL))
         seqStop(id);
+    else {
+        printf("No sequencer task specified.\n");
+        seqShow(NULL);
+    }
 }
 
 /* seqChanShow */
@@ -143,6 +167,10 @@ static void seqChanShowCallFunc(const iocshArgBuf *args)
 
     if ((name != NULL) && ((id = findThread(name)) != NULL))
         seqChanShow(id, chan);
+    else {
+        printf("No sequencer task specified.\n");
+        seqShow(NULL);
+    }
 }
 
 /* seqcar */

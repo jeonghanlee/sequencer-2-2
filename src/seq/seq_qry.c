@@ -227,7 +227,7 @@ struct seqStats
 	int	nConn;
 };
 
-static void seqcarCollect(SPROG *pSP, void *param)
+static int seqcarCollect(SPROG *pSP, void *param)
 {
 	struct seqStats *pstats = (struct seqStats *) param;
 	CHAN	*pDB = pSP->pChan;
@@ -254,6 +254,7 @@ static void seqcarCollect(SPROG *pSP, void *param)
 		}
 		pDB++;
 	}
+	return FALSE;	/* continue traversal */
 }
 
 long epicsShareAPI seqcar(int level)
@@ -454,7 +455,7 @@ static SPROG *seqQryFind(epicsThreadId tid)
 static int	seqProgCount;
 
 /* This routine is called by seqTraverseProg() for seqShowAll() */
-static void seqShowSP(SPROG *pSP, void *dummy)
+static int seqShowSP(SPROG *pSP, void *parg)
 {
 	SSCB	*pSS;
 	int	nss;
@@ -477,6 +478,7 @@ static void seqShowSP(SPROG *pSP, void *dummy)
 		progName = "";
 	}
 	printf("\n");
+	return FALSE;	/* continue traversal */
 }
 
 /* Print a brief summary of all state programs */
