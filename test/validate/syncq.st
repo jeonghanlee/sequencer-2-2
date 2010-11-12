@@ -6,7 +6,7 @@ string s[2];
 assign s;
 monitor s;
 evflag ef_s;
-syncQ s to ef_s 5;
+syncq s to ef_s 5;
 
 ss get {
     state get {

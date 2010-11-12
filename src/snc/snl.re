@@ -217,6 +217,7 @@ snl:
 	"state"		{ RET(STATE,	"state"); }
 	"string"	{ RET(STRING,	"string"); }
 	"syncQ"		{ RET(SYNCQ,	"syncQ"); }
+	"syncq"		{ RET(SYNCQ,	"syncq"); }
 	"sync"		{ RET(SYNC,	"sync"); }
 	"to"		{ RET(TO,	"to"); }
 	"unsigned"	{ RET(UNSIGNED,	"unsigned"); }
