@@ -3,9 +3,9 @@ TOP = ..
 include $(TOP)/configure/CONFIG
 
 #directories in which to build
-DIRS += simple 
+DIRS += simple
+DIRS += johng
 DIRS += validate
 DIRS += demo
 
 include $(TOP)/configure/RULES_DIRS
-

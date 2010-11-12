@@ -1,7 +1,7 @@
 /* Demo Unix/KTL EPICS sequencer for John G (doesn't do anything useful) */
 
 /* select KTL message system */
-program johng( "pvsys=ktl" )
+program johng/* ( "pvsys=ktl" ) */
 
 /* associate "utc" variable with keyword and monitor it */
 double  utc;

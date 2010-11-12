@@ -4,23 +4,26 @@ include $(TOP)/configure/CONFIG
 #----------------------------------------
 #  ADD MACRO DEFINITIONS AFTER THIS LINE
 
+SNC = $(INSTALL_HOST_BIN)/snc
+
 # purify support (uncomment to enable)
 #CXX := purify $(CXX)
 
 #  Select KTL sequencer
-USR_CPPFLAGS += -DKTL
+#USR_CPPFLAGS += -DKTL
 
-#  Generate snc main programs
-SNCFLAGS = +m
+#  Generate snc main programs (not needed under VxWorks)
+SNCFLAGS_DEFAULT += +m
+SNCFLAGS_vxWorks += -nil-
 
 #  Products
-PROD_HOST = johng
+PROD = johng
 
 #  Libraries
 PROD_LIBS += seq
-seq_DIR    = $(INSTALL_LIB)
+PROD_LIBS += pv
+PROD_LIBS += $(EPICS_BASE_IOC_LIBS)
 
 include $(TOP)/configure/RULES
 #----------------------------------------
 #  ADD RULES AFTER THIS LINE
-
