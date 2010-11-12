@@ -494,6 +494,7 @@ void gen_string_assign(int stmt_type, Expr *left, Expr *right, int level)
 	printf(", MAX_STRING_SIZE-1)");
 }
 
+#if 0
 int special_assign_op(int stmt_type, Expr *ep, int level)
 {
 	Expr *left = ep->binop_left;
@@ -511,6 +512,7 @@ int special_assign_op(int stmt_type, Expr *ep, int level)
 	}
 	return FALSE;
 }
+#endif
 
 /* Recursively generate code for an expression (tree) */
 static void gen_expr(
@@ -641,8 +643,10 @@ static void gen_expr(
 		gen_expr(stmt_type, ep->ternop_else, 0);
 		break;
 	case E_BINOP:
+#if 0
 		if (special_assign_op(stmt_type, ep, 0))
 			break;
+#endif
 		gen_expr(stmt_type, ep->binop_left, 0);
 		printf(" %s ", ep->value);
 		gen_expr(stmt_type, ep->binop_right, 0);
