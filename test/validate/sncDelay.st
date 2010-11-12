@@ -1,41 +1,70 @@
-program sncdelay
-/* snc test program to demonstrate taskDelay and state transition without
+program sncDelay
+/* snc test program to demonstrate delay and state transition without
    using external events.
 */
+option +s;
 
-%%#include "epicsThread.h"
- 
-float v;
-/* assign v to "{user}:xxxExample"; 
-monitor v; 
-*/
-ss ss1
-{
-	state low
-	{
-	    when(v>5.0)
-	    {
-		printf("low, v = %g, now changing to high\n",v);
-		epicsThreadSleep(2.0);
-	    } state high
-	    when( v<5.0 )
-	    {
-		printf("low, v = %g, now transition to low again\n",v);
-		epicsThreadSleep(0.1);
-		v = 5.1;
-	    } state low
-	}
-	state high
-	{
-	    when(v<=5.0)
-	    {
-		printf("high, v = %g, now changing to low\n",v);
-	    } state low
-	    when(v>5.0)
-	    {
-		epicsThreadSleep(1.0);
-		printf("high, v = %g, now changing to low\n",v);
-		v = 4.9;
-	    } state low
-	}
+%%#include "errlog.h"
+
+float v = 0;
+assign v;
+
+string msg;
+assign msg;
+
+ss test {
+    float thr = 5.0;
+    float hyst = 0.45;
+    state low {
+        entry {
+            errlogPrintf("state low: v = %g\n",v);
+            errlogPrintf("state low: thr = %g, hyst = %g\n",thr,hyst);
+        }
+        when (v >= thr+hyst) {
+            errlogPrintf("low, v = %g, transition to high\n",v);
+        } state high
+    }
+    state high {
+        entry {
+            errlogPrintf("state high: v = %g\n",v);
+            errlogPrintf("state high: thr = %g, hyst = %g\n",thr,hyst);
+        }
+        when (v <= thr-hyst) {
+            errlogPrintf("high, v = %g, transition to low\n",v);
+        } state low
+    }
+}
+
+ss ramp {
+    float lo = 4.0;
+    float hi = 6.0;
+    float step = 0.1;
+    float dt = 0.1;
+    float t = 0.0;
+    state up {
+        when (v >= hi) {
+            v = hi;
+            errlogPrintf("go down, v = %g, t = %g\n",v,t);
+            pvPut(v);
+        } state down
+        when (delay(dt)) {
+            t += dt;
+            v += step;
+            errlogPrintf("up, v = %g, t = %g\n",v,t);
+            pvPut(v);
+        } state up
+    }
+    state down {
+        when (v <= lo) {
+            v = lo;
+            errlogPrintf("go up, v = %g, t = %g\n",v,t);
+            pvPut(v);
+        } state up
+        when (delay(dt)) {
+            v -= step;
+            t += dt;
+            errlogPrintf("down, v = %g, t = %g\n",v,t);
+            pvPut(v);
+        } state down
+    }
 }

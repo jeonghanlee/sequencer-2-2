@@ -11,16 +11,18 @@ SNCFLAGS_DEFAULT += +m
 SNCFLAGS_vxWorks += -nil-
 
 #  Sequence programs and/or object files to create
-SEQS = sncDelay sncEntry sncEntryOpte sncEntryVar sncExitOptx sncOptt sncOpttVar
-PROD_HOST = $(SEQS)
-
-sncDelay_SRCS = sncDelay.st
-sncEntry_SRCS = sncEntry.st
-sncEntryOpte_SRCS = sncEntryOpte.st
-sncEntryVar_SRCS = sncEntryVar.st
-sncExitOptx_SRCS = sncExitOptx.st
-sncOptt_SRCS = sncOptt.st
-sncOpttVar_SRCS = sncOpttVar.st
+PROD += sncDelay
+PROD += sncEntry
+PROD += sncEntryOpte
+PROD += sncEntryVar
+PROD += sncExitOptx
+PROD += sncOptt
+PROD += sncOpttVar
+PROD += assign
+PROD += declarations
+PROD += syncq
+PROD += pvSync
+PROD += pvPutAsync
 
 #  Libraries
 PROD_LIBS += seq
@@ -30,4 +32,3 @@ PROD_LIBS += $(EPICS_BASE_IOC_LIBS)
 include $(TOP)/configure/RULES
 #----------------------------------------
 #  ADD RULES AFTER THIS LINE
-
