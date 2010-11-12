@@ -382,7 +382,7 @@ static void assign_elem(
 		int n;
 
 		vp->assign = M_MULTI;
-		vp->chan.multi = (Chan **)calloc(type_array_length1(vp->type), sizeof(Chan *));
+		vp->chan.multi = newArray(Chan*, type_array_length1(vp->type));
 		for (n = 0; n < type_array_length1(vp->type); n++)
 		{
 			vp->chan.multi[n] = new_channel(

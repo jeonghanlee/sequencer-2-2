@@ -228,8 +228,9 @@ struct program
 	uint		num_event_flags;/* number of event flags */
 };
 
-/* Structure allocation */
-#define new(type)		(type *)calloc(1, sizeof(type))
+/* Allocation */
+#define newArray(type,count)	(type *)calloc(count, sizeof(type))
+#define new(type)		newArray(type,1)
 
 /* Generic iteration on lists */
 #define foreach(e,l)		for (e = l; e != 0; e = e->next)
