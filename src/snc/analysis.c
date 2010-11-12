@@ -874,7 +874,7 @@ static void analyse_syncq(SymTable st, SyncQList *syncq_list, Expr *scope, Expr 
 
 	assert(scope);
 	assert(defn);
-	assert(defn->type == D_SYNC);
+	assert(defn->type == D_SYNCQ);
 
 	var_name = defn->value;
 	assert(var_name);
@@ -1058,7 +1058,8 @@ static int connect_variable(Expr *ep, Expr *scope, void *parg)
 		/* create a pseudo declaration so we can finish the analysis phase */
 		vp = new(Var);
 		vp->name = ep->value;
-		vp->type = V_NONE;	/* undeclared type */
+                vp->type = new(Type);
+		vp->type->tag = V_NONE;	/* undeclared type */
 		vp->value = 0;
 		/* add this variable to the top-level scope, NOT the current scope */
 		while (var_list->parent_scope) {
