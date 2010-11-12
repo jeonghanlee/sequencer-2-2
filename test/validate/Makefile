@@ -19,6 +19,7 @@ PROD += sncExitOptx
 PROD += sncOptt
 PROD += sncOpttVar
 PROD += assign
+PROD += change
 PROD += declarations
 PROD += local
 PROD += syncq
