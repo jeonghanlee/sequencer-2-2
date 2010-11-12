@@ -221,8 +221,7 @@ static void gen_user_var(Program *p)
 				if (!s_empty)
 				{
 					indent(level+1);
-					printf("struct %s_%s_%s {\n",
-						VAR_PREFIX, ssp->value, sp->value);
+					printf("struct {\n");
 					foreach (vp, sp->extra.e_state->var_list->first)
 					{
 						indent(level+2); gen_var_decl(vp); printf(";\n");
