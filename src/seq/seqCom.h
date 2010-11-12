@@ -69,6 +69,7 @@ typedef unsigned long	bitMask;
 #endif
 
 typedef	struct state_set_control_block *SS_ID;	/* state set id */
+typedef char string[MAX_STRING_SIZE];		/* the string typedef */
 
 typedef struct UserVar USER_VAR;	/* defined by program */
 

@@ -89,9 +89,6 @@ static void gen_preamble(char *prog_name, int opt_main)
 	printf("#include <stdio.h>\n");
 	printf("#include \"seqCom.h\"\n");
 
-	/* The string typedef */
-	printf("\ntypedef char string[MAX_STRING_SIZE];\n");
-
 	/* Main program (if "main" option set) */
 	if (opt_main) {
 		printf("\n/* Main program */\n");
