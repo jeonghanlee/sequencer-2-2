@@ -14,9 +14,9 @@
 #include "shareLib.h" /* reset share lib defines */
 #include "epicsThread.h"	/* for thread ids */
 #include "epicsMutex.h"		/* for locks */
-#include "epicsTime.h"		/* for time stamps */
 
 #include "pvAlarm.h"		/* status and severity definitions */
+#include "pvType.h"		/* pv type definitions */
 
 /*
  * Standard FALSE and TRUE macros
@@ -33,79 +33,6 @@
  * Magic number for validating structures / versions
  */
 #define PV_MAGIC 0xfeddead	/* ...a sad tale of food poisoning? */
-
-/*
- * Enum for data types (very restricted set of types)
- */
-typedef enum {
-    pvTypeERROR       = -1,
-    pvTypeCHAR        = 0,
-    pvTypeSHORT       = 1,
-    pvTypeLONG        = 2,
-    pvTypeFLOAT       = 3,
-    pvTypeDOUBLE      = 4,
-    pvTypeSTRING      = 5,
-    pvTypeTIME_CHAR   = 6,
-    pvTypeTIME_SHORT  = 7,
-    pvTypeTIME_LONG   = 8,
-    pvTypeTIME_FLOAT  = 9,
-    pvTypeTIME_DOUBLE = 10,
-    pvTypeTIME_STRING = 11
-} pvType;
-
-#define PV_SIMPLE(_type) ( (_type) <= pvTypeSTRING )
-
-/*
- * Value-related types (c.f. db_access.h)
- */
-typedef char   pvChar;
-typedef short  pvShort;
-typedef long   pvLong;
-typedef float  pvFloat;
-typedef double pvDouble;
-typedef char   pvString[256]; /* use sizeof( pvString ) */
-
-#define PV_TIME_XXX(_type) \
-    typedef struct { \
-	pvStat	  status; \
-	pvSevr    severity; \
-	epicsTimeStamp  stamp; \
-	pv##_type value[1]; \
-    } pvTime##_type
-
-PV_TIME_XXX( Char   );
-PV_TIME_XXX( Short  );
-PV_TIME_XXX( Long   );
-PV_TIME_XXX( Float  );
-PV_TIME_XXX( Double );
-PV_TIME_XXX( String );
-
-typedef union {
-    pvChar       charVal[1];
-    pvShort      shortVal[1];
-    pvLong       longVal[1];
-    pvFloat      floatVal[1];
-    pvDouble     doubleVal[1];
-    pvString     stringVal[1];
-    pvTimeChar   timeCharVal;
-    pvTimeShort  timeShortVal;
-    pvTimeLong   timeLongVal;
-    pvTimeFloat  timeFloatVal;
-    pvTimeDouble timeDoubleVal;
-    pvTimeString timeStringVal;
-} pvValue;
-
-#define PV_VALPTR(_type,_value) \
-    ( ( PV_SIMPLE(_type) ? ( void * ) ( _value ) : \
-			   ( void * ) ( &_value->timeCharVal.value ) ) )
-
-/* warning: partial function, not defined for simple types */
-#define PV_STATUS(_value) \
-    ((_value)->timeCharVal.status)
-#define PV_SEVERITY(_value) \
-    ((_value)->timeCharVal.severity)
-#define PV_STAMP(_value) \
-    ((_value)->timeCharVal.stamp)
 
 /*
  * Connect (connect/disconnect and event (get, put and monitor) functions

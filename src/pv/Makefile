@@ -7,7 +7,7 @@ include $(TOP)/configure/CONFIG
 #----------------------------------------
 #  Message system-independent support
 
-INC     += pv.h pvAlarm.h
+INC     += pv.h pvAlarm.h pvType.h
 
 LIBRARY += pv
 pv_SRCS += pvNew.cc pv.cc

@@ -435,6 +435,51 @@ epicsShareFunc char * epicsShareAPI Strdcpy( char *dst, const char *src ) {
     return dst;
 }
 
+epicsShareDef const size_t pv_sizes[] = {
+    sizeof(pvChar      ),
+    sizeof(pvShort     ),
+    sizeof(pvLong      ),
+    sizeof(pvFloat     ),
+    sizeof(pvDouble    ),
+    sizeof(pvString    ),
+    sizeof(pvTimeChar  ),
+    sizeof(pvTimeShort ),
+    sizeof(pvTimeLong  ),
+    sizeof(pvTimeFloat ),
+    sizeof(pvTimeDouble),
+    sizeof(pvTimeString),
+};
+
+epicsShareDef const size_t pv_value_sizes[] = {
+    sizeof(pvChar  ),
+    sizeof(pvShort ),
+    sizeof(pvLong  ),
+    sizeof(pvFloat ),
+    sizeof(pvDouble),
+    sizeof(pvString),
+    sizeof(pvChar  ),
+    sizeof(pvShort ),
+    sizeof(pvLong  ),
+    sizeof(pvFloat ),
+    sizeof(pvDouble),
+    sizeof(pvString),
+};
+
+epicsShareDef const size_t pv_value_offsets[] = {
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    offsetof(pvTimeChar  , value),
+    offsetof(pvTimeShort , value),
+    offsetof(pvTimeLong  , value),
+    offsetof(pvTimeFloat , value),
+    offsetof(pvTimeDouble, value),
+    offsetof(pvTimeString, value),
+};
+
 /*
  * pv.cc,v
  * Revision 1.4  2001/02/16 21:45:16  norume
