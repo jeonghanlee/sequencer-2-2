@@ -197,15 +197,14 @@ epicsShareFunc pvStat caVariable::get( pvType type, int count, pvValue *value )
         printf( "%8p: caVariable::get( %d, %d )\n", this, type, count );
 
     int caType = typeToCA( type );
-    char *caValue = new char[dbr_size_n( caType, count )];
+    char caValue[dbr_size_n( caType, count )];
     INVOKE( ca_array_get( caType, count, chid_, caValue ) );
     // ### must block so can convert value; should use ca_get_callback()
     if ( getStat() == pvStatOK )
 	INVOKE( ca_pend_io( 5.0 ) );
     if ( getStat() == pvStatOK )
 	copyFromCA( caType, count, ( union db_access_val * ) caValue, value );
-    delete [] caValue;
-	
+
     return getStat();
 }
 
@@ -262,12 +261,11 @@ epicsShareFunc pvStat caVariable::put( pvType type, int count, pvValue *value )
         printf( "%8p: caVariable::put( %d, %d )\n", this, type, count );
 
     int caType = typeToCA( type );
-    char *caValue = new char[dbr_size_n( caType, count )];
+    char caValue[dbr_size_n( caType, count )];
     copyToCA( type, count, value, ( union db_access_val * ) caValue );
     INVOKE( ca_array_put( caType, count, chid_, caValue ) );
     if ( getStat() == pvStatOK )
 	INVOKE( ca_pend_io( 5.0 ) );
-    delete [] caValue;
     return getStat();
 }
 
@@ -285,10 +283,9 @@ epicsShareFunc pvStat caVariable::putNoBlock( pvType type, int count, pvValue *v
 		type, count );
 
     int caType = typeToCA( type );
-    char *caValue = new char[dbr_size_n( caType, count )];
+    char caValue[dbr_size_n( caType, count )];
     copyToCA( type, count, value, ( union db_access_val * ) caValue );
     INVOKE( ca_array_put( caType, count, chid_, caValue ) );
-    delete [] caValue;
     return getStat();
 }
 
@@ -461,13 +458,12 @@ void pvCaMonitorHandler( struct event_handler_args args )
 	( *func ) ( ( void * ) variable, type, count, NULL, arg,
 		    statFromCA( args.status ) );
     } else {
-	pvValue *value = new pvValue[count]; // ### larger than needed
+	char value[pv_size_n(typeFromCA(args.type), count)];
 	copyFromCA( args.type, args.count, ( union db_access_val * ) args.dbr,
-		    value );
+		    (pvValue *) value );
 	// ### should assert args.type is equiv to type and args.count is count
-	( *func ) ( ( void * ) variable, type, count, value, arg,
+	( *func ) ( ( void * ) variable, type, count, (pvValue *) value, arg,
 		    statFromCA( args.status ) );
-	delete [] value;
     }
 }
 
