@@ -684,6 +684,8 @@ epicsShareFunc int epicsShareAPI seq_pvGetQ(SS_ID pSS, int pvId)
 		   was posted) */
 		else
 		{
+		        pvType	type = pDB->getType;
+
 			pDB = pEntry->pDB;
 			pAccess = &pEntry->value;
 
@@ -695,12 +697,42 @@ epicsShareFunc int epicsShareAPI seq_pvGetQ(SS_ID pSS, int pvId)
 			memcpy(pVar, pVal, pDB->size * 1 );
 							/* was pDB->dbCount */
 
-			/* Copy status & severity */
-			pDB->status = pAccess->timeStringVal.status;
-			pDB->severity = pAccess->timeStringVal.severity;
-
-			/* Copy time stamp */
-			pDB->timeStamp = pAccess->timeStringVal.stamp;
+				/* Copy status, severity, timestamp */
+				switch (type)
+				{
+				case pvTypeTIME_CHAR:
+					pDB->status = pAccess->timeCharVal.status;
+					pDB->severity = pAccess->timeCharVal.severity;
+					pDB->timeStamp = pAccess->timeCharVal.stamp;
+					break;
+				case pvTypeTIME_SHORT:
+					pDB->status = pAccess->timeShortVal.status;
+					pDB->severity = pAccess->timeShortVal.severity;
+					pDB->timeStamp = pAccess->timeShortVal.stamp;
+					break;
+				case pvTypeTIME_LONG:
+					pDB->status = pAccess->timeLongVal.status;
+					pDB->severity = pAccess->timeLongVal.severity;
+					pDB->timeStamp = pAccess->timeLongVal.stamp;
+					break;
+				case pvTypeTIME_FLOAT:
+					pDB->status = pAccess->timeFloatVal.status;
+					pDB->severity = pAccess->timeFloatVal.severity;
+					pDB->timeStamp = pAccess->timeFloatVal.stamp;
+					break;
+				case pvTypeTIME_DOUBLE:
+					pDB->status = pAccess->timeDoubleVal.status;
+					pDB->severity = pAccess->timeDoubleVal.severity;
+					pDB->timeStamp = pAccess->timeDoubleVal.stamp;
+					break;
+				case pvTypeTIME_STRING:
+					pDB->status = pAccess->timeStringVal.status;
+					pDB->severity = pAccess->timeStringVal.severity;
+					pDB->timeStamp = pAccess->timeStringVal.stamp;
+					break;
+				default:
+					break;
+				}
 			epicsMutexUnlock(pDB->varLock);
 
 			/* Free queue entry */

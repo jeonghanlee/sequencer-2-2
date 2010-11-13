@@ -196,11 +196,40 @@ static void proc_db_events(
 		/* Write value to CA buffer (lock-free) */
 		ss_write_buffer(pDB, pVal);
 		/* Copy status, severity and time stamp (leave unchanged if absent) */
-		if (!PV_SIMPLE(type))
+		switch (type)
 		{
-			pDB->status = PV_STATUS(pValue);
-			pDB->severity = PV_SEVERITY(pValue);
-			pDB->timeStamp = PV_STAMP(pValue);
+		case pvTypeTIME_CHAR:
+			pDB->status = pValue->timeCharVal.status;
+			pDB->severity = pValue->timeCharVal.severity;
+			pDB->timeStamp = pValue->timeCharVal.stamp;
+			break;
+		case pvTypeTIME_SHORT:
+			pDB->status = pValue->timeShortVal.status;
+			pDB->severity = pValue->timeShortVal.severity;
+			pDB->timeStamp = pValue->timeShortVal.stamp;
+			break;
+		case pvTypeTIME_LONG:
+			pDB->status = pValue->timeLongVal.status;
+			pDB->severity = pValue->timeLongVal.severity;
+			pDB->timeStamp = pValue->timeLongVal.stamp;
+			break;
+		case pvTypeTIME_FLOAT:
+			pDB->status = pValue->timeFloatVal.status;
+			pDB->severity = pValue->timeFloatVal.severity;
+			pDB->timeStamp = pValue->timeFloatVal.stamp;
+			break;
+		case pvTypeTIME_DOUBLE:
+			pDB->status = pValue->timeDoubleVal.status;
+			pDB->severity = pValue->timeDoubleVal.severity;
+			pDB->timeStamp = pValue->timeDoubleVal.stamp;
+			break;
+		case pvTypeTIME_STRING:
+			pDB->status = pValue->timeStringVal.status;
+			pDB->severity = pValue->timeStringVal.severity;
+			pDB->timeStamp = pValue->timeStringVal.stamp;
+			break;
+		default:
+			break;
 		}
 		/* Copy error message (only when severity indicates error) */
 		if (pDB->severity != pvSevrNONE)
