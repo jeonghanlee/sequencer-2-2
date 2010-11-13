@@ -149,8 +149,7 @@ struct state_set_control_block
 	epicsEventId	death4SemId;	/* semaphore id for death (#4) */
 	long		numStates;	/* number of states */
 	STATE		*pStates;	/* ptr to array of state blocks */
-	ENTRY_FUNC	*entryFunc;	/* entry function */
-	EXIT_FUNC	*exitFunc;	/* exit function */
+	INIT_FUNC	*initFunc;	/* init function */
 	short		currentState;	/* current state index */
 	short		nextState;	/* next state index */
 	short		prevState;	/* previous state index */
@@ -192,6 +191,7 @@ struct state_program
 	bitMask		*pEvents;	/* event bits for event flags & db */
 	long		numEvents;	/* number of events */
 	unsigned	options;	/* options (bit-encoded) */
+	INIT_FUNC	*initFunc;	/* init function */
 	ENTRY_FUNC	*entryFunc;	/* entry function */
 	EXIT_FUNC	*exitFunc;	/* exit function */
 	epicsMutexId	logSemId;	/* logfile locking semaphore */

@@ -79,6 +79,7 @@ typedef unsigned EVENT_FUNC(SS_ID ssId, USER_VAR *pVar, short *pTransNum, short 
 typedef void DELAY_FUNC(SS_ID ssId, USER_VAR *pVar);
 typedef void ENTRY_FUNC(SS_ID ssId, USER_VAR *pVar);
 typedef void EXIT_FUNC(SS_ID ssId, USER_VAR *pVar);
+typedef void INIT_FUNC(USER_VAR *pVar);
 
 #ifdef OFFSET
 #undef OFFSET
@@ -123,8 +124,7 @@ struct seqSS
 	struct seqState	*pStates;	/* array of state blocks */
 	long		numStates;	/* number of states in this state set */
 	long		numDelays;	/* number of delays in this state set */
-	ENTRY_FUNC	*entryFunc;	/* entry function */
-	EXIT_FUNC	*exitFunc;	/* exit function */
+	INIT_FUNC	*initFunc;	/* init function */
 };
 
 /* All information about a state program */
@@ -140,6 +140,7 @@ struct seqProgram
 	char		*pParams;	/* program paramters */
 	long		numEvents;	/* number of event flags */
 	unsigned	options;	/* options (bit-encoded) */
+	INIT_FUNC	*initFunc;	/* init function */
 	ENTRY_FUNC	*entryFunc;	/* entry function */
 	EXIT_FUNC	*exitFunc;	/* exit function */
 	int		numQueues;	/* number of syncQ queues */

@@ -39,7 +39,6 @@ long sequencer (SPROG *pSP)	/* ptr to original (global) state program table */
 	epicsThreadId	tid;
 	size_t		threadLen;
 	char		threadName[THREAD_NAME_SIZE+10];
-	USER_VAR	*pVar = (USER_VAR *)varPtr(pSP,pSS);
 
 	/* Retrieve info about this thread */
 	pSP->threadId = epicsThreadGetIdSelf();
@@ -49,14 +48,41 @@ long sequencer (SPROG *pSP)	/* ptr to original (global) state program table */
 	/* Add the program to the state program list */
 	seqAddProg(pSP);
 
+	/* Note that the program init, entry, and exit functions
+	   get the global var buffer pSP->pVar passed,
+	   not the state set local one, even in safe mode. */
+	/* TODO: document this */
+
+	/* Call sequencer init function to initialize global variables. */
+	pSP->initFunc(pSP->pVar);
+
+	/* Initialize state set variables. In safe mode, copy variable
+	   block to state set buffers before calling pSS->initFunc.
+	   Must do all this before connecting. */
+	for (nss = 0; nss < pSP->numSS; nss++)
+	{
+		SSCB	*pSS = pSP->pSS + nss;
+
+		if (pSP->options & OPT_SAFE)
+			memcpy(pSS->pVar, pSP->pVar, pSP->varSize);
+		pSS->initFunc(pSS->pVar);
+	}
+
 	/* Attach to PV context of pvSys creator (auxiliary thread) */
 	pvSysAttach(pvSys);
 
 	/* Initiate connect & monitor requests to database channels */
 	seq_connect(pSP);
 
-	/* Call sequencer entry function */
-	pSP->entryFunc(pSS, pVar);
+	/* If "+c" option, wait for all channels to connect (a failure
+	 * return means that we have been asked to exit) */
+	if (pSP->options & OPT_CONN)
+	{
+		if (seq_waitConnect(pSP, pSS) < 0) goto exit;
+	}
+
+	/* Call program entry function if defined. */
+	if (pSP->entryFunc) pSP->entryFunc(pSS, pSP->pVar);
 
 	/* Create each additional state-set task (additional state-set thread
 	   names are derived from the first ss) */
@@ -80,6 +106,10 @@ long sequencer (SPROG *pSP)	/* ptr to original (global) state program table */
 	/* First state-set jumps directly to entry point */
 	ss_entry(pSP->pSS);
 
+	/* Call program exit function if defined */
+	if (pSP->exitFunc) pSP->exitFunc(pSS, pSP->pVar);
+
+exit:
 	return 0;
 }
 
@@ -147,15 +177,14 @@ static void ss_entry(SSCB *pSS)
 	/* Initialize this state-set thread */
 	ss_thread_init(pSP, pSS);
 
-	/* If "+c" option, wait for all channels to connect (a failure
-	 * return means that we have been asked to exit) */
-	if (pSP->options & OPT_CONN)
+	/* Attach to PV context of pvSys creator (auxiliary thread); was
+	   already done for the first state set */
+	if (pSS != pSP->pSS)
 	{
-		if (seq_waitConnect(pSP, pSS) < 0) goto exit;
+		pSS->threadId = epicsThreadGetIdSelf();
+		pvSysAttach(pvSys);
 	}
 
-	/* Call state set entry function */
-	pSS->entryFunc(pSS, pVar);
 
 	/* Initial state is the first one */
 	pSS->currentState = 0;
@@ -257,8 +286,6 @@ static void ss_entry(SSCB *pSS)
 
 	/* Thread exit has been requested */
 exit:
-	/* Call state set exit function */
-	pSS->exitFunc(pSS, pVar);
 
 	/* Uninitialize this state-set thread (phase 1) */
 	ss_thread_uninit(pSP, pSS, 1);

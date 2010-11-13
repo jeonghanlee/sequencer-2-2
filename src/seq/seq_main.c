@@ -202,6 +202,7 @@ static void init_sprog(struct seqProgram *pSeqProg, SPROG *pSP)
 	pSP->numEvents = pSeqProg->numEvents;
 	pSP->options = pSeqProg->options;
 	pSP->pProgName = pSeqProg->pProgName;
+	pSP->initFunc = pSeqProg->initFunc;
 	pSP->entryFunc = pSeqProg->entryFunc;
 	pSP->exitFunc = pSeqProg->exitFunc;
 	pSP->varSize = pSeqProg->varSize;
@@ -265,8 +266,7 @@ static void init_sscb(struct seqProgram *pSeqProg, SPROG *pSP)
 		pSS->pSSName = pSeqSS->pSSName;
 		pSS->numStates = pSeqSS->numStates;
 		pSS->maxNumDelays = pSeqSS->numDelays;
-		pSS->entryFunc = pSeqSS->entryFunc;
-		pSS->exitFunc = pSeqSS->exitFunc;
+		pSS->initFunc = pSeqSS->initFunc;
 
 		pSS->delay = (double *)calloc(pSS->maxNumDelays, sizeof(double));
 		pSS->delayExpired = (unsigned *)calloc(pSS->maxNumDelays, sizeof(unsigned));

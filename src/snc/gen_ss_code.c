@@ -111,17 +111,17 @@ static void gen_state_func(
 	const char *ss_name,
 	const char *state_name,
 	Expr *xp,
-	void (*gen_body)(Expr *sp, int level),
+	void (*gen_body)(Expr *xp),
 	const char *title,
 	const char *prefix,
 	const char *rettype,
 	const char *extra_args
 );
-static void gen_entry_body(Expr *xp, int level);
-static void gen_exit_body(Expr *xp, int level);
-static void gen_delay_body(Expr *xp, int level);
-static void gen_event_body(Expr *xp, int level);
-static void gen_action_body(Expr *xp, int level);
+static void gen_entry_body(Expr *xp);
+static void gen_exit_body(Expr *xp);
+static void gen_delay_body(Expr *xp);
+static void gen_event_body(Expr *xp);
+static void gen_action_body(Expr *xp);
 static int gen_delay(Expr *ep, Expr *scope, void *parg);
 static void gen_expr(int stmt_type, Expr *ep, int level);
 static void gen_ef_func(int stmt_type, Expr *ep, char *fname, int func_code);
@@ -130,12 +130,16 @@ static void gen_pv_func(int stmt_type, Expr *ep,
 #if 0
 static void gen_pv_func_va(int stmt_type, Expr *ep, char *fname, int func_code);
 #endif
-static void gen_ss_entry_handler(Expr *prog, Expr *ssp);
-static void gen_ss_exit_handler(Expr *prog, Expr *ssp);
-static void gen_entry_handler(Expr *prog);
-static void gen_exit_handler(Expr *prog);
 static int special_func(int stmt_type, Expr *ep);
 static int special_const(int stmt_type,	Expr *ep);
+
+static void gen_prog_func(
+	Expr *prog,
+	const char *name,
+	Expr *xp,
+	void (*gen_body)(Expr *xp));
+static void gen_prog_init_func(Expr *prog);
+static void gen_ss_init_func(Expr *ssp, int opt_safe);
 
 #define	EVENT_STMT	1
 #define	ACTION_STMT	2
@@ -189,6 +193,7 @@ static int const_name_to_code(char *const_name)
 /* Generate state set C code from analysed syntax tree */
 void gen_ss_code(Program *program)
 {
+	Expr	*prog = program->prog;
 	Expr	*ssp;
 	Expr	*sp;
 
@@ -200,14 +205,18 @@ void gen_ss_code(Program *program)
 	register_special_funcs();
 	register_special_consts();
 
-	/* Generate entry handler code */
-	gen_entry_handler(program->prog);
+	/* Generate program init func */
+	gen_prog_init_func(prog);
+
+	/* Generate program entry func */
+	if (prog->prog_entry)
+		gen_prog_func(prog, "entry", prog->prog_entry, gen_entry_body);
 
 	/* For each state set ... */
-	foreach (ssp, program->prog->prog_statesets)
+	foreach (ssp, prog->prog_statesets)
 	{
-		/* Generate state set entry function */
-		gen_ss_entry_handler(program->prog, ssp);
+		/* Generate state set init function */
+		gen_ss_init_func(ssp, program->options.safe);
 
 		/* For each state ... */
 		foreach (sp, ssp->ss_states)
@@ -239,12 +248,11 @@ void gen_ss_code(Program *program)
 				"Action", "A", "void",
                                 ", short transNum, short *pNextState");
 		}
-		/* Generate state set exit function */
-		gen_ss_exit_handler(program->prog, ssp);
 	}
 
-	/* Generate exit handler code */
-	gen_exit_handler(program->prog);
+	/* Generate exit func code */
+	if (prog->prog_exit)
+		gen_prog_func(prog, "exit", prog->prog_exit, gen_exit_body);
 }
 
 /* Generate a local C variable declaration for each variable declared
@@ -288,7 +296,7 @@ static void gen_state_func(
 	const char *ss_name,
 	const char *state_name,
 	Expr *xp,
-	void (*gen_body)(Expr *sp, int level),
+	void (*gen_body)(Expr *xp),
 	const char *title,
 	const char *prefix,
 	const char *rettype,
@@ -299,30 +307,30 @@ static void gen_state_func(
  		title, state_name, ss_name);
 	printf("static %s %s_%s_%s(SS_ID ssId, struct %s *pVar%s)\n{\n",
 		rettype, prefix, ss_name, state_name, VAR_PREFIX, extra_args);
-	gen_body(xp, 1);
+	gen_body(xp);
 	printf("}\n");
 }
 
-static void gen_entry_body(Expr *xp, int level)
+static void gen_entry_body(Expr *xp)
 {
 	Expr	*ep;
 
 	assert(xp->type = D_ENTRY);
-	gen_local_var_decls(xp, level);
-	gen_defn_c_code(xp, level);
+	gen_local_var_decls(xp, 1);
+	gen_defn_c_code(xp, 1);
 	foreach (ep, xp->entry_stmts)
 	{
 		gen_expr(OTHER_STMT, ep, 1);
 	}
 }
 
-static void gen_exit_body(Expr *xp, int level)
+static void gen_exit_body(Expr *xp)
 {
 	Expr	*ep;
 
 	assert(xp->type = D_EXIT);
-	gen_local_var_decls(xp, level);
-	gen_defn_c_code(xp, level);
+	gen_local_var_decls(xp, 1);
+	gen_defn_c_code(xp, 1);
 	foreach (ep, xp->exit_stmts)
 	{
 		gen_expr(OTHER_STMT, ep, 1);
@@ -334,7 +342,7 @@ static void gen_exit_body(Expr *xp, int level)
    that the initial delay value specified in delay() calls are used.
    Each delay() call is assigned a (per state) unique id.  The maximum
    number of delays is recorded in the state set structure. */
-static void gen_delay_body(Expr *xp, int level)
+static void gen_delay_body(Expr *xp)
 {
 	Expr	*tp;
 
@@ -365,10 +373,11 @@ static int gen_delay(Expr *ep, Expr *scope, void *parg)
 /* Generate action processing functions:
    Each state has one action routine.  It's name is derived from the
    state set name and the state name. */
-static void gen_action_body(Expr *xp, int level)
+static void gen_action_body(Expr *xp)
 {
-	Expr	*tp;
-	int	trans_num;
+	Expr		*tp;
+	int		trans_num;
+	const int	level = 1;
 
 	/* "switch" statment based on the transition number */
 	indent(level); printf("switch(transNum)\n");
@@ -408,10 +417,11 @@ static void gen_action_body(Expr *xp, int level)
 }
 
 /* Generate a C function that checks events for a particular state */
-static void gen_event_body(Expr *xp, int level)
+static void gen_event_body(Expr *xp)
 {
-	Expr	*tp;
-	int	trans_num;
+	Expr		*tp;
+	int		trans_num;
+	const int	level = 1;
 
 	trans_num = 0;
 	/* For each transition generate an "if" statement ... */
@@ -1032,50 +1042,47 @@ static int iter_user_var_init(Expr *dp, Expr *scope, void *parg)
 }
 
 /* Generate initialisation for variables with global lifetime. */
-static void gen_user_var_init(Expr *prog)
+static void gen_user_var_init(Expr *ep, int stop_mask)
 {
 	const int type_mask = (1<<D_DECL);
-	const int stop_mask = ~((1<<D_DECL)|(1<<D_PROG)|(1<<D_SS)|(1<<D_STATE));
-	traverse_expr_tree(prog, type_mask, stop_mask, 0, iter_user_var_init, 0);
+	traverse_expr_tree(ep, type_mask, stop_mask, 0, iter_user_var_init, 0);
 }
 
-/* Generate state set entry handler code */
-static void gen_ss_entry_handler(Expr *prog, Expr *ssp)
+static void gen_prog_init_func(Expr *prog)
 {
-	assert(ssp->type = D_SS);
-	printf("\n/* Entry handler for state set %s */\n", ssp->value);
-	printf("static void ss_%s_entry_handler(SS_ID ssId, struct %s *pVar)\n{\n", ssp->value, VAR_PREFIX);
+	const int global_stop_mask = ~((1<<D_DECL)|(1<<D_PROG));
+
+	assert(prog->type = D_PROG);
+	printf("\n/* Program init func */\n");
+	printf("static void global_prog_init(struct %s *pVar)\n{\n", VAR_PREFIX);
+	/* initialize global variables */
+	gen_user_var_init(prog, global_stop_mask);
 	printf("}\n");
 }
 
-/* Generate state set exit handler code */
-static void gen_ss_exit_handler(Expr *prog, Expr *ssp)
+static void gen_ss_init_func(Expr *ssp, int opt_safe)
 {
+	const int ss_stop_mask = ~((1<<D_DECL)|(1<<D_SS)|(1<<D_STATE));
+
 	assert(ssp->type = D_SS);
-	printf("\n/* Exit handler for state set %s */\n", ssp->value);
-	printf("static void ss_%s_exit_handler(SS_ID ssId, struct %s *pVar)\n{\n", ssp->value, VAR_PREFIX);
+	printf("\n/* Init func for state set %s */\n", ssp->value);
+	printf("static void ss_%s_init(struct %s *pVar)\n{\n",
+		ssp->value, VAR_PREFIX);
+	/* initialize state set and state variables */
+	gen_user_var_init(ssp, ss_stop_mask);
 	printf("}\n");
 }
 
-/* Generate global entry handler code */
-static void gen_entry_handler(Expr *prog)
+static void gen_prog_func(
+	Expr *prog,
+	const char *name,
+	Expr *xp,
+	void (*gen_body)(Expr *xp))
 {
 	assert(prog->type = D_PROG);
-	printf("\n/* Entry handler */\n");
-	printf("static void entry_handler(SS_ID ssId, struct %s *pVar)\n{\n", VAR_PREFIX);
-	gen_user_var_init(prog);
-	if (prog->prog_entry)
-		gen_entry_body(prog->prog_entry, 1);
-	printf("}\n");
-}
-
-/* Generate global exit handler code */
-static void gen_exit_handler(Expr *prog)
-{
-	assert(prog->type = D_PROG);
-	printf("\n/* Exit handler */\n");
-	printf("static void exit_handler(SS_ID ssId, struct %s *pVar)\n{\n", VAR_PREFIX);
-	if (prog->prog_exit)
-		gen_exit_body(prog->prog_exit, 1);
+	printf("\n/* Program %s func */\n", name);
+	printf("static void global_prog_%s(SS_ID ssId, struct %s *pVar)\n{\n",
+		name, VAR_PREFIX);
+	if (xp && gen_body) gen_body(xp);
 	printf("}\n");
 }

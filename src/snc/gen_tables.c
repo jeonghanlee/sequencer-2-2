@@ -267,8 +267,9 @@ static void gen_prog_table(Program *p)
 	printf("\t/* param */             \"%s\",\n", p->param);
 	printf("\t/* num. event flags */  %d,\n", p->num_event_flags);
 	printf("\t/* encoded options */   "); encode_options(p->options);
-	printf("\t/* entry handler */     entry_handler,\n");
-	printf("\t/* exit handler */      exit_handler,\n");
+	printf("\t/* init func */         global_prog_init,\n");
+	printf("\t/* entry func */        %s,\n", p->prog->prog_entry?"global_prog_entry":"NULL");
+	printf("\t/* exit func */         %s,\n", p->prog->prog_exit?"global_prog_exit":"NULL");
 	printf("\t/* num. queues */       %d\n", p->syncq_list->num_elems);
 	printf("};\n");
 }
@@ -312,8 +313,7 @@ static void gen_ss_table(SymTable st, Expr *ss_list)
 		printf("\t/* state struct */      state_%s,\n", ssp->value);
 		printf("\t/* number of states */  %d,\n", ssp->extra.e_ss->num_states);
 		printf("\t/* number of delays */  %d,\n", ssp->extra.e_ss->num_delays);
-		printf("\t/* entry handler */     ss_%s_entry_handler,\n", ssp->value);
-		printf("\t/* exit handler */      ss_%s_exit_handler},\n", ssp->value);
+		printf("\t/* init func */         ss_%s_init},\n", ssp->value);
 	}
 	printf("};\n");
 }
