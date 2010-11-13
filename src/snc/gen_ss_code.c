@@ -497,11 +497,13 @@ static void gen_var_access(Var *vp)
 
 void gen_string_assign(int stmt_type, Expr *left, Expr *right, int level)
 {
-	printf("strncpy(");
+	printf("(strncpy(");
 	gen_expr(stmt_type, left, level);
 	printf(", ");
 	gen_expr(stmt_type, right, level);
-	printf(", MAX_STRING_SIZE-1)");
+	printf(", sizeof(string)), ");
+	gen_expr(stmt_type, left, level);
+	printf("[sizeof(string)-1] = '\\0')");
 }
 
 #if 0
@@ -1025,7 +1027,7 @@ static int iter_user_var_init(Expr *dp, Expr *scope, void *parg)
 			ep->type = E_VAR;
 			ep->extra.e_var = vp;
 			indent(1);
-			gen_string_assign(OTHER_STMT, ep, vp->value, 0);
+			gen_string_assign(OTHER_STMT, ep, vp->value, 1);
 			printf(";\n");
 		}
 		else
