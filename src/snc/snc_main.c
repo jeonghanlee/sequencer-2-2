@@ -69,6 +69,7 @@ int main(int argc, char *argv[])
 #if 0
 	printf("/* %s: %s */\n", SEQ_VERSION, in_file);
 #endif
+	printf("/* Generated with snc from %s */\n", in_file);
 
 	exp = parse_program(in_file);
 

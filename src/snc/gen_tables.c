@@ -60,6 +60,8 @@ static void gen_channel_table(ChanList *chan_list, int num_event_flags, int opt_
 	{
 		printf("\n/* Channel Definitions */\n");
 		printf("static struct seqChan seqChan[] = {\n");
+		printf("  /* dbAsName, offset, pVarName, */\n");
+		printf("  /* pVarType, count, eventNum, efId, monitored, queued, queueSize, queueIndex */\n");
 		foreach (cp, chan_list->first)
 		{
 			gen_channel(cp, num_event_flags, opt_reent);
@@ -94,43 +96,36 @@ static void gen_var_name(Var *vp)
 /* Generate a seqChan structure */
 static void gen_channel(Chan *cp, int num_event_flags, int opt_reent)
 {
-	Var	*vp;
-	char	*suffix, elem_str[20], *pv_name;
-	uint	ef_num, mon_flag;
+	Var	*vp = cp->var;
+	char	elem_str[20] = "";
+	uint	ef_num = 0;
 
-	vp = cp->var;
 	/* Figure out text needed to handle subscripts */
 	if (vp->assign == M_MULTI)
 		sprintf(elem_str, "[%d]", cp->index);
-	else
-		elem_str[0] = '\0';
-#if 0
-	if (vp->type->tag == V_STRING)
-		suffix = "[0]";
-	else
-#endif
-		suffix = "";
-	pv_name = cp->name;
-	mon_flag = cp->monitor;
+
 	if (cp->sync)
 		ef_num = cp->sync->chan.evflag->index;
+	else if (cp->syncq)
+		ef_num = cp->syncq->ef_var->chan.evflag->index;
+
+	if (cp->name == NULL)
+		printf("  {NULL, ");
 	else
-		ef_num = 0;
-	if (pv_name == NULL)
-		pv_name = ""; /* not assigned */
-	printf("  {\"%s\", ", pv_name);/* unexpanded channel name */
+		printf("  {\"%s\", ", cp->name);
+
 	/* Ptr or offset to user variable */
 	if (opt_reent)
 	{
 		printf("OFFSET(struct %s, ", VAR_PREFIX);
 		gen_var_name(vp);
-		printf("%s%s), ", elem_str, suffix);
+		printf("%s), ", elem_str);
 	}
 	else
 	{
 		printf("(char*)&");
 		gen_var_name(vp);
-		printf("%s%s - (char*)0, ", elem_str, suffix);
+		printf("%s - (char*)0, ", elem_str);
 	}
  	/* variable name with optional elem num */
 	printf("\"%s%s\", ", vp->name, elem_str);
@@ -143,10 +138,12 @@ static void gen_channel(Chan *cp, int num_event_flags, int opt_reent)
 	/* event flag number (or 0) */
 	printf("%d, ", ef_num);
 	/* monitor flag */
-	printf("%d, ", mon_flag);
+	printf("%d, ", cp->monitor);
 	/* syncQ queue */
 	if (!cp->syncq)
 		printf("0, 0, 0");
+	else if (!cp->syncq->size)
+		printf("1, MAX_QUEUE_SIZE, %d", cp->syncq->index);
 	else
 		printf("1, %d, %d", cp->syncq->size, cp->syncq->index);
 	printf("}");
@@ -192,7 +189,7 @@ static void gen_state_table(Expr *ss_list, int num_event_flags, int num_channels
 		foreach (sp, ssp->ss_states)
 		{
 			gen_state_event_mask(sp, num_event_flags, event_mask, num_event_words);
-			printf("\t/* Event mask for state %s: */\n", sp->value);
+			printf("/* state %s: */\n", sp->value);
 			printf("static bitMask\tEM_%s_%s[] = {\n",
 				ssp->value, sp->value);
 			for (n = 0; n < num_event_words; n++)
@@ -202,7 +199,7 @@ static void gen_state_table(Expr *ss_list, int num_event_flags, int num_channels
 
 		/* For each state, generate state structure */
 		printf("\n/* State Table */\n");
-		printf("\nstatic struct seqState state_%s[] = {\n", ssp->value);
+		printf("static struct seqState state_%s[] = {\n", ssp->value);
 		foreach (sp, ssp->ss_states)
 		{
 			fill_state_struct(sp, ssp->value);
