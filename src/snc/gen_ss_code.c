@@ -200,13 +200,8 @@ static int const_name_to_code(char *const_name)
 	return const_code;
 }
 
-/* Generate state set C code from analysed syntax tree */
-void gen_ss_code(Program *program)
+void init_gen_ss_code(Program *program)
 {
-	Expr	*prog = program->prog;
-	Expr	*ssp;
-	Expr	*sp;
-
 	/* HACK: intialise globals */
 	global_opt_reent = program->options.reent;
 	global_sym_table = program->sym_table;
@@ -214,6 +209,14 @@ void gen_ss_code(Program *program)
 	/* Insert special names into symbol table */
 	register_special_funcs();
 	register_special_consts();
+}
+
+/* Generate state set C code from analysed syntax tree */
+void gen_ss_code(Program *program)
+{
+	Expr	*prog = program->prog;
+	Expr	*ssp;
+	Expr	*sp;
 
 	/* Generate program init func */
 	gen_prog_init_func(prog);

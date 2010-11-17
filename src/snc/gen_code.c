@@ -58,7 +58,11 @@ void generate_code(Program *p)
 	/* Generate preamble code */
 	gen_preamble(p->name);
 
-	/* Generate global variable declarations */
+	/* Initialize tables in gen_ss_code module */
+	/* TODO: find a better way to do this */
+	init_gen_ss_code(p);
+
+	/* Generate global, state set, and state variable declarations */
 	gen_user_var(p);
 
 	/* Generate literal C code intermixed with global definitions */
