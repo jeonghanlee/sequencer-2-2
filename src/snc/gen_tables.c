@@ -310,8 +310,7 @@ static void gen_ss_table(SymTable st, Expr *ss_list)
 		printf("\t/* ss name */           \"%s\",\n", ssp->value);
 		printf("\t/* state struct */      state_%s,\n", ssp->value);
 		printf("\t/* number of states */  %d,\n", ssp->extra.e_ss->num_states);
-		printf("\t/* number of delays */  %d,\n", ssp->extra.e_ss->num_delays);
-		printf("\t/* init func */         ss_%s_init},\n", ssp->value);
+		printf("\t/* number of delays */  %d},\n", ssp->extra.e_ss->num_delays);
 	}
 	printf("};\n");
 }

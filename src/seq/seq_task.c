@@ -53,11 +53,11 @@ long sequencer (SPROG *pSP)	/* ptr to original (global) state program table */
 	   not the state set local one, even in safe mode. */
 	/* TODO: document this */
 
-	/* Call sequencer init function to initialize global variables. */
+	/* Call sequencer init function to initialize variables. */
 	pSP->initFunc(pSP->pVar);
 
 	/* Initialize state set variables. In safe mode, copy variable
-	   block to state set buffers before calling pSS->initFunc.
+	   block to state set buffers.
 	   Must do all this before connecting. */
 	for (nss = 0; nss < pSP->numSS; nss++)
 	{
@@ -65,7 +65,6 @@ long sequencer (SPROG *pSP)	/* ptr to original (global) state program table */
 
 		if (pSP->options & OPT_SAFE)
 			memcpy(pSS->pVar, pSP->pVar, pSP->varSize);
-		pSS->initFunc(pSS->pVar);
 	}
 
 	/* Attach to PV context of pvSys creator (auxiliary thread) */

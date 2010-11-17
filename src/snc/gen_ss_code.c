@@ -140,7 +140,6 @@ static void gen_prog_func(
 	Expr *xp,
 	void (*gen_body)(Expr *xp));
 static void gen_prog_init_func(Expr *prog);
-static void gen_ss_init_func(Expr *ssp, int opt_safe);
 
 /*
  * Expression context. Certain nodes of the syntax tree are
@@ -226,9 +225,6 @@ void gen_ss_code(Program *program)
 	/* For each state set ... */
 	foreach (ssp, prog->prog_statesets)
 	{
-		/* Generate state set init function */
-		gen_ss_init_func(ssp, program->options.safe);
-
 		/* For each state ... */
 		foreach (sp, ssp->ss_states)
 		{
@@ -1070,19 +1066,6 @@ static void gen_prog_init_func(Expr *prog)
 	printf("static void global_prog_init(struct %s *pVar)\n{\n", VAR_PREFIX);
 	/* initialize global variables */
 	gen_user_var_init(prog, global_stop_mask);
-	printf("}\n");
-}
-
-static void gen_ss_init_func(Expr *ssp, int opt_safe)
-{
-	const int ss_stop_mask = ~((1<<D_DECL)|(1<<D_SS)|(1<<D_STATE));
-
-	assert(ssp->type = D_SS);
-	printf("\n/* Init func for state set %s */\n", ssp->value);
-	printf("static void ss_%s_init(struct %s *pVar)\n{\n",
-		ssp->value, VAR_PREFIX);
-	/* initialize state set and state variables */
-	gen_user_var_init(ssp, ss_stop_mask);
 	printf("}\n");
 }
 
