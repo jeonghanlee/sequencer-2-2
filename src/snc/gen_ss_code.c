@@ -816,6 +816,34 @@ static int special_func(int context,	Expr *ep)
 	}
 }
 
+/* Check an event flag argument */
+static void gen_ef_arg(
+	char	*fname,		/* function name */
+	Expr	*ap,		/* argument expression */
+	int	index		/* argument index */
+)
+{
+	Var	*vp;
+
+	assert(ap);
+	if (ap->type != E_VAR)
+	{
+		error_at_expr(ap,
+		  "argument %d to built-in function %s must be an event flag\n",
+		  index, fname);
+		return;
+	}
+	vp = ap->extra.e_var;
+	assert(vp->type);
+	if (vp->type->tag != V_EVFLAG)
+	{
+		error_at_expr(ap,
+		  "argument to built-in function %s must be an event flag\n", fname);
+		return;
+	}
+	gen_var_access(vp);
+}
+
 /* Generate code for all event flag functions */
 static void gen_ef_func(
 	int	context,
@@ -825,25 +853,24 @@ static void gen_ef_func(
 )
 {
 	Expr	*ap;
-	Var	*vp = 0;
 
 	ap = ep->func_args;
 
-	if (ap != 0 && ap->type == E_VAR)
-	{
-		vp = ap->extra.e_var;
-	}
 	if ((func_code == F_EFSET || func_code == F_EFCLEAR) && context == C_COND)
 	{
-		error_at_expr(ep, "%s cannot be used in a when condition\n", fname);
+		error_at_expr(ep,
+		  "calling %s is not allowed inside a when condition\n", fname);
 		return;
 	}
-	if (vp->type->tag != V_EVFLAG)
+	if (!ap)
 	{
-		error_at_expr(ep, "argument to '%s' must be an event flag\n", fname);
+		error_at_expr(ep,
+		  "built-in function %s requires an argument\n", fname);
 		return;
 	}
-	printf("seq_%s(ssId, %d)", fname, vp->chan.evflag->index);
+	printf("seq_%s(ssId, ", fname);
+	gen_ef_arg(fname, ap, 1);
+	printf(")");
 }
 
 #if 0
@@ -925,7 +952,7 @@ static void gen_pv_func(
 	Var	*vp;
 	char	*vn;
 	int	id;
-	int	num;
+	int	num_extra_parms = 0;
 
 	ap = ep->func_args; /* ptr to 1-st parameter in the function */
 	if (ap == 0)
@@ -993,19 +1020,26 @@ static void gen_pv_func(
 	}
 
 	/* Add any additional parameter(s) */
-	num = 0;
 	foreach (ap, ap->next)
 	{
+		num_extra_parms++;
 		printf(", ");
-		gen_expr(context, ap, 0);
-		num++;
+		if (func_code == F_PVSYNC)
+		{
+			gen_ef_arg(fname, ap, num_extra_parms+1);
+		}
+		else
+		{
+			gen_expr(context, ap, 0);
+		}
 	}
 
 	/* If not enough additional parameter(s) were specified, add
 	   extra zero parameters */
-	for (; num < num_params; num++)
+	while (num_extra_parms < num_params)
 	{
 		printf(", 0");
+		num_extra_parms++;
 	}
 
 	/* Close the parameter list */
