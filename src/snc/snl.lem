@@ -164,7 +164,7 @@ init_declarators(p) ::= init_declarators(xs) COMMA init_declarator(x).
 						{ p = link_expr(xs, x); }
 
 init_declarator(p) ::= declarator(x).		{ p = decl_add_init(x, 0); }
-init_declarator(p) ::= declarator(x) EQUAL expr(i).
+init_declarator(p) ::= declarator(x) EQUAL init_expr(i).
 						{ p = decl_add_init(x, i); }
 
 declarator(p) ::= ASTERISK declarator(x).	{ p = decl_prefix_pointer(x); }
@@ -175,6 +175,14 @@ direct_declarator(p) ::= LPAREN declarator(x) RPAREN.
 						{ p = x; }
 direct_declarator(p) ::= direct_declarator(x) subscript(s).
 						{ p = decl_postfix_array(x, s.str); }
+
+// Initializer
+init_expr(p) ::= LBRACE(t) init_exprs(x) RBRACE.{ p = expr(E_INIT, t, x); }
+init_expr(p) ::= expr(x).			{ p = x; }
+
+init_exprs(p) ::= init_exprs(xs) COMMA init_expr(x).	{ p = link_expr(xs, x); }
+init_exprs(p) ::= init_expr(x).				{ p = x; }
+init_exprs(p) ::= .					{ p = 0; }
 
 %type type {int}
 type(p) ::= CHAR.				{ p = V_CHAR;	}

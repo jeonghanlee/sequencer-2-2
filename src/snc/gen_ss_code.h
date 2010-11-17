@@ -16,5 +16,7 @@
 
 void init_gen_ss_code(Program *program);
 void gen_ss_code(Program *program);
+void gen_ss_user_var_init(Expr *ssp, int level);
+void gen_var_init(Var *vp, int level);
 
 #endif	/*INCLgensscodeh*/

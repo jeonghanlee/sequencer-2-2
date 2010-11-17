@@ -158,7 +158,13 @@ static void gen_user_var(Program *p)
 			gen_line_marker(vp->decl);
 			if (!opt_reent) printf("static");
 			indent(1);
-			gen_var_decl(vp); printf(";\n");
+			gen_var_decl(vp);
+			if (!opt_reent)
+			{
+				printf(" = ");
+				gen_var_init(vp, 0);
+			}
+			printf(";\n");
 		}
 	}
 	foreach (ssp, p->prog->prog_statesets)
@@ -200,10 +206,17 @@ static void gen_user_var(Program *p)
 					printf("} %s_%s;\n", VAR_PREFIX, sp->value);
 				}
 			}
-			indent(level); printf("} %s_%s;\n", VAR_PREFIX, ssp->value);
+			indent(level); printf("} %s_%s", VAR_PREFIX, ssp->value);
+			if (!opt_reent)
+			{
+				printf(" = ");
+				gen_ss_user_var_init(ssp, level);
+			}
+			printf(";\n");
 		}
 	}
 	if (opt_reent) printf("};\n");
+	printf("\n");
 }
 
 /* Generate C code in definition section */
