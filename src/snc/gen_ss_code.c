@@ -124,15 +124,15 @@ static void gen_delay_body(Expr *xp);
 static void gen_event_body(Expr *xp);
 static void gen_action_body(Expr *xp);
 static int gen_delay(Expr *ep, Expr *scope, void *parg);
-static void gen_expr(int stmt_type, Expr *ep, int level);
-static void gen_ef_func(int stmt_type, Expr *ep, char *fname, int func_code);
-static void gen_pv_func(int stmt_type, Expr *ep,
+static void gen_expr(int context, Expr *ep, int level);
+static void gen_ef_func(int context, Expr *ep, char *fname, int func_code);
+static void gen_pv_func(int context, Expr *ep,
 	char *fname, int func_code, int add_length, int num_params);
 #if 0
-static void gen_pv_func_va(int stmt_type, Expr *ep, char *fname, int func_code);
+static void gen_pv_func_va(int context, Expr *ep, char *fname, int func_code);
 #endif
-static int special_func(int stmt_type, Expr *ep);
-static int special_const(int stmt_type,	Expr *ep);
+static int special_func(int context, Expr *ep);
+static int special_const(int context,	Expr *ep);
 
 static void gen_prog_func(
 	Expr *prog,
@@ -496,19 +496,19 @@ static void gen_var_access(Var *vp)
 	}
 }
 
-void gen_string_assign(int stmt_type, Expr *left, Expr *right, int level)
+void gen_string_assign(int context, Expr *left, Expr *right, int level)
 {
 	printf("(strncpy(");
-	gen_expr(stmt_type, left, level);
+	gen_expr(context, left, level);
 	printf(", ");
-	gen_expr(stmt_type, right, level);
+	gen_expr(context, right, level);
 	printf(", sizeof(string)), ");
-	gen_expr(stmt_type, left, level);
+	gen_expr(context, left, level);
 	printf("[sizeof(string)-1] = '\\0')");
 }
 
 #if 0
-int special_assign_op(int stmt_type, Expr *ep, int level)
+int special_assign_op(int context, Expr *ep, int level)
 {
 	Expr *left = ep->binop_left;
 	Expr *right = ep->binop_right;
@@ -520,7 +520,7 @@ int special_assign_op(int stmt_type, Expr *ep, int level)
 		&& type_base_type(left->subscr_operand->extra.e_var->type) == V_STRING)
 	)
 	{
-		gen_string_assign(stmt_type, left, right, level);
+		gen_string_assign(context, left, right, level);
 		return TRUE;
 	}
 	return FALSE;
@@ -529,7 +529,7 @@ int special_assign_op(int stmt_type, Expr *ep, int level)
 
 /* Recursively generate code for an expression (tree) */
 static void gen_expr(
-	int stmt_type,
+	int context,
 	Expr *ep,		/* expression to generate code for */
 	int level		/* indentation level */
 )
@@ -553,7 +553,7 @@ static void gen_expr(
 		gen_defn_c_code(ep, level+1);
 		foreach (cep, ep->cmpnd_stmts)
 		{
-			gen_expr(stmt_type, cep, level+1);
+			gen_expr(context, cep, level+1);
 		}
 		indent(level);
 		printf("}\n");
@@ -561,53 +561,53 @@ static void gen_expr(
 	case S_STMT:
 		gen_line_marker(ep);
 		indent(level);
-		gen_expr(stmt_type, ep->stmt_expr, 0);
+		gen_expr(context, ep->stmt_expr, 0);
 		printf(";\n");
 		break;
 	case S_IF:
 		gen_line_marker(ep);
 		indent(level);
 		printf("if (");
-		gen_expr(stmt_type, ep->if_cond, 0);
+		gen_expr(context, ep->if_cond, 0);
 		printf(")\n");
 		cep = ep->if_then;
-		gen_expr(stmt_type, cep, cep->type == S_CMPND ? level : level+1);
+		gen_expr(context, cep, cep->type == S_CMPND ? level : level+1);
 		if (ep->if_else != 0)
 		{
 			indent(level);
 			printf("else\n");
 			cep = ep->if_else;
-			gen_expr(stmt_type, cep, cep->type == S_CMPND ? level : level+1);
+			gen_expr(context, cep, cep->type == S_CMPND ? level : level+1);
 		}
 		break;
 	case S_WHILE:
 		gen_line_marker(ep);
 		indent(level);
 		printf("while (");
-		gen_expr(stmt_type, ep->while_cond, 0);
+		gen_expr(context, ep->while_cond, 0);
 		printf(")\n");
 		cep = ep->while_stmt;
-		gen_expr(stmt_type, cep, cep->type == S_CMPND ? level : level+1);
+		gen_expr(context, cep, cep->type == S_CMPND ? level : level+1);
 		break;
 	case S_FOR:
 		gen_line_marker(ep);
 		indent(level);
 		printf("for (");
-		gen_expr(stmt_type, ep->for_init, 0);
+		gen_expr(context, ep->for_init, 0);
 		printf("; ");
-		gen_expr(stmt_type, ep->for_cond, 0);
+		gen_expr(context, ep->for_cond, 0);
 		printf("; ");
-		gen_expr(stmt_type, ep->for_iter, 0);
+		gen_expr(context, ep->for_iter, 0);
 		printf(")\n");
 		cep = ep->for_stmt;
-		gen_expr(stmt_type, cep, cep->type == S_CMPND ? level : level+1);
+		gen_expr(context, cep, cep->type == S_CMPND ? level : level+1);
 		break;
 	case S_JUMP:
 		indent(level);
 		printf("%s;\n", ep->value);
 		break;
 	case S_CHANGE:
-		if (stmt_type != ACTION_STMT)
+		if (context != ACTION_STMT)
 		{
 			error_at_expr(ep, "state change statement not allowed here\n");
 			break;
@@ -620,13 +620,13 @@ static void gen_expr(
 		gen_var_access(ep->extra.e_var);
 		break;
 	case E_SUBSCR:
-		gen_expr(stmt_type, ep->subscr_operand, 0);
+		gen_expr(context, ep->subscr_operand, 0);
 		printf("[");
-		gen_expr(stmt_type, ep->subscr_index, 0);
+		gen_expr(context, ep->subscr_index, 0);
 		printf("]");
 		break;
 	case E_CONST:
-		if (special_const(stmt_type, ep))
+		if (special_const(context, ep))
 			break;
 		printf("%s", ep->value);
 		break;
@@ -637,44 +637,44 @@ static void gen_expr(
 		printf("seq_delay(ssId, %d)", ep->extra.e_delay);
 		break;
 	case E_FUNC:
-		if (special_func(stmt_type, ep))
+		if (special_func(context, ep))
 			break;
 		printf("%s(", ep->value);
 		foreach (cep, ep->func_args)
 		{
-			gen_expr(stmt_type, cep, 0);
+			gen_expr(context, cep, 0);
 			if (cep->next)
 				printf(", ");
 		}
 		printf(")");
 		break;
 	case E_TERNOP:
-		gen_expr(stmt_type, ep->ternop_cond, 0);
+		gen_expr(context, ep->ternop_cond, 0);
 		printf(" ? ");
-		gen_expr(stmt_type, ep->ternop_then, 0);
+		gen_expr(context, ep->ternop_then, 0);
 		printf(" : ");
-		gen_expr(stmt_type, ep->ternop_else, 0);
+		gen_expr(context, ep->ternop_else, 0);
 		break;
 	case E_BINOP:
 #if 0
-		if (special_assign_op(stmt_type, ep, 0))
+		if (special_assign_op(context, ep, 0))
 			break;
 #endif
-		gen_expr(stmt_type, ep->binop_left, 0);
+		gen_expr(context, ep->binop_left, 0);
 		printf(" %s ", ep->value);
-		gen_expr(stmt_type, ep->binop_right, 0);
+		gen_expr(context, ep->binop_right, 0);
 		break;
 	case E_PAREN:
 		printf("(");
-		gen_expr(stmt_type, ep->paren_expr, 0);
+		gen_expr(context, ep->paren_expr, 0);
 		printf(")");
 		break;
 	case E_PRE:
 		printf("%s", ep->value);
-		gen_expr(stmt_type, ep->pre_operand, 0);
+		gen_expr(context, ep->pre_operand, 0);
 		break;
 	case E_POST:
-		gen_expr(stmt_type, ep->post_operand, 0);
+		gen_expr(context, ep->post_operand, 0);
 		printf("%s", ep->value);
 		break;
 	/* C-code can be either definition, statement, or expression */
@@ -691,7 +691,7 @@ static void gen_expr(
 	}
 }
 
-static int special_const(int stmt_type,	Expr *ep)
+static int special_const(int context,	Expr *ep)
 {
 	int n_const;
 	char *const_name = ep->value;
@@ -716,7 +716,7 @@ static int special_const(int stmt_type,	Expr *ep)
 	 - macValueGet()
 	 - seqLog()
 */
-static int special_func(int stmt_type,	Expr *ep)
+static int special_func(int context,	Expr *ep)
 {
 	char	*fname;		/* function name */
 	Expr	*ap;		/* arguments */
@@ -740,7 +740,7 @@ static int special_func(int stmt_type,	Expr *ep)
 	    case F_EFCLEAR:
 	    case F_EFTESTANDCLEAR:
 		/* Event flag functions */
-		gen_ef_func(stmt_type, ep, fname, func_code);
+		gen_ef_func(context, ep, fname, func_code);
 		return TRUE;
 
 	    case F_PVGETQ:
@@ -761,20 +761,20 @@ static int special_func(int stmt_type,	Expr *ep)
 	    case F_PVASSIGN:
 	    case F_PVSYNC:
 		/* PV functions requiring a channel id */
-		gen_pv_func(stmt_type, ep, fname, func_code, FALSE, 0);
+		gen_pv_func(context, ep, fname, func_code, FALSE, 0);
 		return TRUE;
 
 	    case F_PVPUT:
 	    case F_PVGET:
 		/* PV functions requiring a channel id and defaulted
 		   last 1 parameter */
-		gen_pv_func(stmt_type, ep, fname, func_code, FALSE, 1);
+		gen_pv_func(context, ep, fname, func_code, FALSE, 1);
 		return TRUE;
 
 	    case F_PVPUTCOMPLETE:
 		/* PV functions requiring a channel id, an array length and
 		   defaulted last 2 parameters */
-		gen_pv_func(stmt_type, ep, fname, func_code, TRUE, 2);
+		gen_pv_func(context, ep, fname, func_code, TRUE, 2);
 		return TRUE;
 
 	    case F_PVFLUSH:
@@ -796,7 +796,7 @@ static int special_func(int stmt_type,	Expr *ep)
 		foreach (ap, ep->func_args)
 		{
 			printf(", ");
-			gen_expr(stmt_type, ap, 0);
+			gen_expr(context, ap, 0);
 		}
 		printf(")");
 		return TRUE;
@@ -809,7 +809,7 @@ static int special_func(int stmt_type,	Expr *ep)
 
 /* Generate code for all event flag functions */
 static void gen_ef_func(
-	int	stmt_type,
+	int	context,
 	Expr	*ep,		/* function call expression */
 	char	*fname,		/* function name */
 	int	func_code	/* function code */
@@ -824,7 +824,7 @@ static void gen_ef_func(
 	{
 		vp = ap->extra.e_var;
 	}
-	if ((func_code == F_EFSET || func_code == F_EFCLEAR) && stmt_type == EVENT_STMT)
+	if ((func_code == F_EFSET || func_code == F_EFCLEAR) && context == EVENT_STMT)
 	{
 		error_at_expr(ep, "%s cannot be used in a when condition\n", fname);
 		return;
@@ -839,7 +839,7 @@ static void gen_ef_func(
 
 #if 0
 static void gen_pv_func_va(
-	int	stmt_type,
+	int	context,
 	Expr	*ep,		/* function call expression */
 	char	*fname,		/* function name */
 	int	func_code	/* function code */
@@ -891,7 +891,7 @@ static void gen_pv_func_va(
 		{	/* e.g. pvPut(xyz[i+2]); => seq_pvPut(ssId, 3 + (i+2)); */
 			printf(" + (");
 			/* evalute the subscript expression */
-			gen_expr(stmt_type, subscr, 0);
+			gen_expr(context, subscr, 0);
 			printf(")");
 		}
 	}
@@ -904,7 +904,7 @@ static void gen_pv_func_va(
    "add_length" => the array length (1 if not an array) follows the channel id 
    "num_params > 0" => add default (zero) parameters up to the spec. number */
 static void gen_pv_func(
-	int	stmt_type,
+	int	context,
 	Expr	*ep,		/* function call expression */
 	char	*fname,		/* function name */
 	int	func_code,	/* function code */
@@ -965,7 +965,7 @@ static void gen_pv_func(
 	{	/* e.g. pvPut(xyz[i+2]); => seq_pvPut(ssId, 3 + (i+2)); */
 		printf(" + (");
 		/* evalute the subscript expression */
-		gen_expr(stmt_type, subscr, 0);
+		gen_expr(context, subscr, 0);
 		printf(")");
 	}
 
@@ -988,7 +988,7 @@ static void gen_pv_func(
 	foreach (ap, ap->next)
 	{
 		printf(", ");
-		gen_expr(stmt_type, ap, 0);
+		gen_expr(context, ap, 0);
 		num++;
 	}
 
