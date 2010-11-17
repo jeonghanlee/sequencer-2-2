@@ -128,9 +128,6 @@ static void gen_expr(int context, Expr *ep, int level);
 static void gen_ef_func(int context, Expr *ep, char *fname, int func_code);
 static void gen_pv_func(int context, Expr *ep,
 	char *fname, int func_code, int add_length, int num_params);
-#if 0
-static void gen_pv_func_va(int context, Expr *ep, char *fname, int func_code);
-#endif
 static int special_func(int context, Expr *ep);
 static int special_const(int context,	Expr *ep);
 
@@ -260,7 +257,7 @@ void gen_ss_code(Program *program)
 		}
 	}
 
-	/* Generate exit func code */
+	/* Generate program exit func */
 	if (prog->prog_exit)
 		gen_prog_func(prog, "exit", prog->prog_exit, gen_exit_body);
 }
@@ -286,16 +283,8 @@ static void gen_local_var_decls(Expr *scope, int level)
 			/* optional initialisation */
 			if (vp->init)
 			{
-#if 0
-				if (vp->type->tag == V_STRING)
-				{
-					error_at_expr(vp->decl,
-					  "initialisation not allowed for variables of this type");
-					return;
-				}
-#endif
 				printf(" = ");
-				gen_expr(C_INIT, vp->init, 0);
+				gen_expr(C_INIT, vp->init, level);
 			}
 			printf(";\n");
 		}
@@ -444,9 +433,9 @@ static void gen_event_body(Expr *xp)
 			gen_line_marker(tp->when_cond);
 		indent(level); printf("if (");
 		if (tp->when_cond == 0)
-		      printf("TRUE");
+			printf("TRUE");
 		else
-		      gen_expr(C_COND, tp->when_cond, 0);
+			gen_expr(C_COND, tp->when_cond, 0);
 		printf(")\n");
 		indent(level); printf("{\n");
 
@@ -504,37 +493,6 @@ static void gen_var_access(Var *vp)
 		printf("%s", vp->name);
 	}
 }
-
-void gen_string_assign(int context, Expr *left, Expr *right, int level)
-{
-	printf("(strncpy(");
-	gen_expr(context, left, level);
-	printf(", ");
-	gen_expr(context, right, level);
-	printf(", sizeof(string)), ");
-	gen_expr(context, left, level);
-	printf("[sizeof(string)-1] = '\\0')");
-}
-
-#if 0
-int special_assign_op(int context, Expr *ep, int level)
-{
-	Expr *left = ep->binop_left;
-	Expr *right = ep->binop_right;
-	if (
-		(left->type == E_VAR &&
-		left->extra.e_var->type->tag == V_STRING)
-		|| (left->type == E_SUBSCR
-		&& left->subscr_operand->type == E_VAR
-		&& type_base_type(left->subscr_operand->extra.e_var->type) == V_STRING)
-	)
-	{
-		gen_string_assign(context, left, right, level);
-		return TRUE;
-	}
-	return FALSE;
-}
-#endif
 
 /* Recursively generate code for an expression (tree) */
 static void gen_expr(
@@ -665,10 +623,6 @@ static void gen_expr(
 		gen_expr(context, ep->ternop_else, 0);
 		break;
 	case E_BINOP:
-#if 0
-		if (special_assign_op(context, ep, 0))
-			break;
-#endif
 		gen_expr(context, ep->binop_left, 0);
 		printf(" %s ", ep->value);
 		gen_expr(context, ep->binop_right, 0);
@@ -741,65 +695,60 @@ static int special_func(int context,	Expr *ep)
 #endif
 	switch (func_code)
 	{
-	    case F_DELAY:
+	case F_DELAY:
 		return TRUE;
 
-	    case F_EFSET:
-	    case F_EFTEST:
-	    case F_EFCLEAR:
-	    case F_EFTESTANDCLEAR:
+	case F_EFSET:
+	case F_EFTEST:
+	case F_EFCLEAR:
+	case F_EFTESTANDCLEAR:
 		/* Event flag functions */
 		gen_ef_func(context, ep, fname, func_code);
 		return TRUE;
 
-	    case F_PVGETQ:
-	    case F_PVFLUSHQ:
-	    case F_PVFREEQ:
-	    case F_PVTIMESTAMP:
-	    case F_PVGETCOMPLETE:
-	    case F_PVNAME:
-	    case F_PVSTATUS:
-	    case F_PVSEVERITY:
-	    case F_PVMESSAGE:
-	    case F_PVCONNECTED:
-	    case F_PVASSIGNED:
-	    case F_PVMONITOR:
-	    case F_PVSTOPMONITOR:
-	    case F_PVCOUNT:
-	    case F_PVINDEX:
-	    case F_PVDISCONNECT:
-	    case F_PVASSIGN:
-	    case F_PVSYNC:
-		/* PV functions requiring a channel id */
+	case F_PVASSIGN:
+	case F_PVASSIGNED:
+	case F_PVCONNECTED:
+	case F_PVCOUNT:
+	case F_PVDISCONNECT:
+	case F_PVFLUSHQ:
+	case F_PVFREEQ:
+	case F_PVGETCOMPLETE:
+	case F_PVGETQ:
+	case F_PVINDEX:
+	case F_PVMESSAGE:
+	case F_PVMONITOR:
+	case F_PVNAME:
+	case F_PVSEVERITY:
+	case F_PVSTATUS:
+	case F_PVSTOPMONITOR:
+	case F_PVSYNC:
+	case F_PVTIMESTAMP:
+		/* PV functions requiring a channel id and no default args */
 		gen_pv_func(context, ep, fname, func_code, FALSE, 0);
 		return TRUE;
 
-	    case F_PVPUT:
-	    case F_PVGET:
-		/* PV functions requiring a channel id and defaulted
-		   last 1 parameter */
+	case F_PVPUT:
+	case F_PVGET:
+		/* PV functions requiring a channel id and
+		   defaulted last 1 parameter */
 		gen_pv_func(context, ep, fname, func_code, FALSE, 1);
 		return TRUE;
 
-	    case F_PVPUTCOMPLETE:
-		/* PV functions requiring a channel id, an array length and
-		   defaulted last 2 parameters */
+	case F_PVPUTCOMPLETE:
+		/* PV functions requiring a channel id, an (implicit) array
+		   length and defaulted last 2 parameters */
 		gen_pv_func(context, ep, fname, func_code, TRUE, 2);
 		return TRUE;
 
-	    case F_PVFLUSH:
-	    case F_PVCHANNELCOUNT:
-	    case F_PVCONNECTCOUNT:
-	    case F_PVASSIGNCOUNT:
-		/* pv functions NOT requiring a channel structure */
-		printf("seq_%s(ssId)", fname);
-		return TRUE;
-
-	    case F_SEQLOG:
-	    case F_MACVALUEGET:
-	    case F_OPTGET:
-		/* Any funtion that requires adding ssID as 1st parameter.
-		 * Note:  name is changed by prepending "seq_". */
+	case F_MACVALUEGET:
+	case F_OPTGET:
+	case F_PVASSIGNCOUNT:
+	case F_PVCHANNELCOUNT:
+	case F_PVCONNECTCOUNT:
+	case F_PVFLUSH:
+	case F_SEQLOG:
+		/* Any function that requires adding ssID as 1st parameter. */
 		printf("seq_%s(ssId", fname);
 		/* now fill in user-supplied parameters */
 		foreach (ap, ep->func_args)
@@ -810,7 +759,7 @@ static int special_func(int context,	Expr *ep)
 		printf(")");
 		return TRUE;
 
-	    default:
+	default:
 		/* Not a special function */
 		return FALSE;
 	}
@@ -872,68 +821,6 @@ static void gen_ef_func(
 	gen_ef_arg(fname, ap, 1);
 	printf(")");
 }
-
-#if 0
-static void gen_pv_func_va(
-	int	context,
-	Expr	*ep,		/* function call expression */
-	char	*fname,		/* function name */
-	int	func_code	/* function code */
-)
-{
-	Expr	*ap = 0;
-	int	nargs = 0;
-
-	foreach(ap, ep->func_args)
-	{
-		nargs++;
-	}
-	printf("seq_%s(ssId, %d", fname, nargs);
-	foreach(ap, ep->func_args)
-	{
-		Expr	*subscr = 0;
-		Var	*vp = 0;
-		char	*vn = "?";
-		int	id = -1;
-
-		if (ap->type == E_VAR)
-		{
-			/* plain <pv variable> */
-			vp = ap->extra.e_var;
-		}
-		else if (ap->type == E_SUBSCR)
-		{
-			/* <pv variable>[<expression>] */
-			Expr *ep2 = ap->subscr_operand;
-			subscr = ap->subscr_index;
-			if (ep2->type == E_VAR)
-			{
-				vp = ep2->extra.e_var;
-			}
-		}
-		assert(vp != 0);
-		vn = vp->name;
-		if (vp->assign == M_NONE)
-		{
-			error_at_expr(ep,
-				"parameter to '%s' was not assigned to a pv\n", fname);
-		}
-		else
-		{
-			id = vp->index;
-		}
-		printf(", %d /* %s */", id, vn);
-		if (ap->type == E_SUBSCR) /* subscripted variable? */
-		{	/* e.g. pvPut(xyz[i+2]); => seq_pvPut(ssId, 3 + (i+2)); */
-			printf(" + (");
-			/* evalute the subscript expression */
-			gen_expr(context, subscr, 0);
-			printf(")");
-		}
-	}
-	printf(")");
-}
-#endif
 
 /* Generate code for pv functions requiring a database variable.
    The channel id (index into channel array) is substituted for the variable.
@@ -1064,15 +951,6 @@ static int iter_user_var_init(Expr *dp, Expr *scope, void *parg)
 		{
 			error_at_expr(vp->decl,
 			  "initialisation not allowed for variables of this type");
-		}
-		else if (type_base_type(vp->type) == V_STRING)
-		{
-			Expr *ep = new(Expr);
-			ep->type = E_VAR;
-			ep->extra.e_var = vp;
-			indent(1);
-			gen_string_assign(C_INIT, ep, vp->init, 1);
-			printf(";\n");
 		}
 		else
 		{
