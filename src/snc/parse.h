@@ -30,7 +30,7 @@ Expr *link_expr(
 	Expr	*ep2		/* beginning 2-nd (append it to 1-st) */
 );
 
-boolean strtoui(
+uint strtoui(
 	char *str,		/* string representing a number */
 	uint limit,		/* result should be < limit */
 	uint *pnumber		/* location for result if successful */

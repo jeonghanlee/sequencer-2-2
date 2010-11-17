@@ -42,7 +42,6 @@ typedef struct var_list		VarList;
 typedef struct expr_pair	ExprPair;
 
 typedef unsigned int		uint;
-typedef unsigned int		boolean;
 
 struct sym_table
 {

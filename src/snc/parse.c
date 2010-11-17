@@ -31,7 +31,7 @@ Expr *expr(
 )
 {
 	va_list	argp;
-	int	i, num_children;
+	uint	i, num_children;
 	Expr	*ep;
 
 	num_children = expr_type_info[type].num_children;
@@ -107,7 +107,7 @@ Expr *link_expr(
 	return ep1;
 }
 
-boolean strtoui(
+uint strtoui(
 	char *str,		/* string representing a number */
 	uint limit,		/* result should be < limit */
 	uint *pnumber		/* location for result if successful */

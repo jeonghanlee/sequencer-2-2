@@ -134,7 +134,7 @@ static void parse_args(int argc, char *argv[])
 
 	if (!out_file)	/* no -o option given */
 	{
-		int l = strlen(in_file);
+		unsigned l = strlen(in_file);
 		char *ext = strrchr(in_file, '.');
 
 		if (ext && strcmp(ext,".st") == 0)

@@ -27,16 +27,16 @@ typedef struct event_mask_args {
 	int	num_event_flags;
 } event_mask_args;
 
-static void gen_channel_table(ChanList *chan_list, int num_event_flags, int opt_reent);
-static void gen_channel(Chan *cp, int num_event_flags, int opt_reent);
-static void gen_state_table(Expr *ss_list, int num_event_flags, int num_channels);
+static void gen_channel_table(ChanList *chan_list, uint num_event_flags, int opt_reent);
+static void gen_channel(Chan *cp, uint num_event_flags, int opt_reent);
+static void gen_state_table(Expr *ss_list, uint num_event_flags, uint num_channels);
 static void fill_state_struct(Expr *sp, char *ss_name);
 static void gen_prog_table(Program *p);
 static void encode_options(Options options);
 static void encode_state_options(StateOptions options);
 static void gen_ss_table(SymTable st, Expr *ss_list);
-static void gen_state_event_mask(Expr *sp, int num_event_flags,
-	bitMask *event_words, int num_event_words);
+static void gen_state_event_mask(Expr *sp, uint num_event_flags,
+	bitMask *event_words, uint num_event_words);
 static int iter_event_mask_scalar(Expr *ep, Expr *scope, void *parg);
 static int iter_event_mask_array(Expr *ep, Expr *scope, void *parg);
 static char *pv_type_str(int type);
@@ -53,7 +53,7 @@ void gen_tables(Program *p)
 }
 
 /* Generate channel table with data for each defined channel */
-static void gen_channel_table(ChanList *chan_list, int num_event_flags, int opt_reent)
+static void gen_channel_table(ChanList *chan_list, uint num_event_flags, int opt_reent)
 {
 	Chan *cp;
 
@@ -95,7 +95,7 @@ static void gen_var_name(Var *vp)
 }
 
 /* Generate a seqChan structure */
-static void gen_channel(Chan *cp, int num_event_flags, int opt_reent)
+static void gen_channel(Chan *cp, uint num_event_flags, int opt_reent)
 {
 	Var	*vp = cp->var;
 	char	elem_str[20] = "";
@@ -171,12 +171,12 @@ static char *pv_type_str(int type)
 }
 
 /* Generate state event mask and table */
-static void gen_state_table(Expr *ss_list, int num_event_flags, int num_channels)
+static void gen_state_table(Expr *ss_list, uint num_event_flags, uint num_channels)
 {
 	Expr	*ssp;
 	Expr	*sp;
-	int	n;
-	int	num_event_words = (num_event_flags + num_channels + NBITS)/NBITS;
+	uint	n;
+	uint	num_event_words = (num_event_flags + num_channels + NBITS)/NBITS;
 	bitMask	event_mask[num_event_words];
 
 	/* NOTE: Bit zero of event mask is not used. Bit 1 to num_event_flags
@@ -321,10 +321,10 @@ static void gen_ss_table(SymTable st, Expr *ss_list)
    event flags. The bits from num_event_flags+1 to num_event_flags+num_channels
    are for process variables. Bit zero is not used for whatever mysterious reason
    I cannot tell. */
-static void gen_state_event_mask(Expr *sp, int num_event_flags,
-	bitMask *event_words, int num_event_words)
+static void gen_state_event_mask(Expr *sp, uint num_event_flags,
+	bitMask *event_words, uint num_event_words)
 {
-	int	n;
+	uint	n;
 	Expr	*tp;
 
 	for (n = 0; n < num_event_words; n++)
@@ -465,7 +465,7 @@ static int iter_event_mask_array(Expr *ep, Expr *scope, void *parg)
 	}
 	else
 	{
-		unsigned length1 = type_array_length1(vp->type);
+		uint length1 = type_array_length1(vp->type);
 
 		assert(vp->assign == M_MULTI);
 		/* an array variable subscripted with a constant */
