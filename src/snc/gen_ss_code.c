@@ -18,6 +18,7 @@
 #include	"gen_code.h"
 #include	"snc_main.h"
 #include	"sym_table.h"
+#include	"gen_ss_code.h"
 
 static const int impossible = 0;
 

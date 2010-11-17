@@ -14,6 +14,7 @@
 
 #include "types.h"
 
-void gen_ss_code(struct program *program);
+void gen_ss_code(Program *program);
+void gen_string_assign(int context, Expr *left, Expr *right, int level);
 
 #endif	/*INCLgensscodeh*/

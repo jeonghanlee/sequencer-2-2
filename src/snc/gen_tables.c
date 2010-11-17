@@ -20,6 +20,7 @@
 #include	"sym_table.h"
 #include	"gen_code.h"
 #include	"parse.h"
+#include	"gen_tables.h"
 
 typedef struct event_mask_args {
 	bitMask	*event_words;

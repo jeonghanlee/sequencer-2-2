@@ -167,7 +167,7 @@ VarList **pvar_list_from_scope(Expr *scope)
 	case S_CMPND:
 		return &scope->extra.e_cmpnd;
 	default:
-		assert(impossible);
+		assert(impossible); return NULL;
 	}
 }
 
@@ -191,7 +191,7 @@ Expr *defn_list_from_scope(Expr *scope)
 	case S_CMPND:
 		return scope->cmpnd_defns;
 	default:
-		assert(impossible);
+		assert(impossible); return NULL;
 	}
 }
 
@@ -368,7 +368,7 @@ static void assign_elem(
 	ChanList	*chan_list,
 	Expr		*defn,
 	Var		*vp,
-	int		n_subscr,
+	uint		n_subscr,
 	char		*pv_name
 )
 {
@@ -379,7 +379,7 @@ static void assign_elem(
 
 	if (vp->assign == M_NONE)
 	{
-		int n;
+		uint n;
 
 		vp->assign = M_MULTI;
 		vp->chan.multi = newArray(Chan*, type_array_length1(vp->type));

@@ -44,7 +44,7 @@ typedef struct Scanner {
 	uchar	*top;	/* pointer to (one after) top of allocated buffer */
 	uchar	*eof;	/* pointer to (one after) last char in file (or 0) */
 	char	*file;	/* source file name */
-	uint	line;	/* line number */
+	int	line;	/* line number */
 } Scanner;
 
 static void scan_report(Scanner *s, const char *format, ...)
