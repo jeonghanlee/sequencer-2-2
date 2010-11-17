@@ -38,6 +38,10 @@ Option  Description
   -l    Do not produce line markers.
   +m    Generate a main procedure for a stand-alone program.
   -m    Do not generate a main procedure. This is the default.
+  +s    :ref:`Safe mode`: variables are local to state set
+        and must be communicated explicitly. Implies +r.
+  -s    Traditional (non-safe) mode. This is the default for
+        compatibility.
   +r    Make the generated code reentrant, thus allowing more than one
         instance of the state program to run on an IOC.
   -r    Generated code is not reentrant. This is the default.
