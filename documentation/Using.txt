@@ -153,7 +153,7 @@ signal (this is an untidy exit, but who cares?) or by entering an
 *<EOF>* (*Ctrl-D*) character. The latter calls ``seqStop`` and is a
 tidy exit.
 
-.. _SpecifyingRunTimeParameters:
+.. _run time parameters:
 
 Specifying Run-Time Parameters
 ------------------------------
@@ -196,7 +196,7 @@ Access within program
 ^^^^^^^^^^^^^^^^^^^^^
 
 Parameters can be accessed by your program with the function
-:ref:`macValueGet`. The following built-in
+:c:func:`macValueGet`. The following built-in
 parameters have special meaning to the sequencer::
 
   debug = <level>

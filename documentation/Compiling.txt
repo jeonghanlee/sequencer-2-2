@@ -50,12 +50,12 @@ Option  Description
 ======  ===============================================================
 
 Note that :option:`+a` and :option:`-a` are ignored for calls to
-:ref:`pvGet` that explicitly specify ``SYNC`` or ``ASYNC`` in the 2nd
+:c:func:`pvGet` that explicitly specify ``SYNC`` or ``ASYNC`` in the 2nd
 argument.
 
 Options may also be set from within the program (somewhere between the
 program name/parameter and the state set definitions), see
-:ref:`OptionDefinition` in the :doc:`Reference`.
+:ref:`option definition` in the :doc:`Reference`.
 
 Output File
 ^^^^^^^^^^^
@@ -95,7 +95,7 @@ in embedded C code, which *snc* does not interpret at all). Warnings
 can be suppressed with the :option:`-w` compiler option.
 
 Note that since version 2.1 you can avoid these warnings by declaring
-such variables in SNL, see the :ref:`foreign_decl` statement.
+such variables in SNL, see the :ref:`foreign entities` declaration.
 
 C Pre-processor
 ---------------

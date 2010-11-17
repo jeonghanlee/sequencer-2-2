@@ -199,7 +199,7 @@ variable name. For example, if the macro "unit" is given
 a name "DTL\_6:CM\_2", then the run-time variable name is
 "DTL\_6:CM\_2:ai1". More than one macro may be specified within
 a string, and the entire string may be a macro. See
-:ref:`SpecifyingRunTimeParameters` for more on macros.
+:ref:`run time parameters` for more on macros.
 
 Data Types
 ----------

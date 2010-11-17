@@ -106,11 +106,11 @@ Program Name and Parameter
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The program name is an identifier. It is used as the name of the global
-variable which contains or points to all the state program data
-structures (the address of this global variable is passed to the
-``seq`` function when creating the run-time sequencer). It is also used
-as the base for the state set thread names unless overridden via the
-*name* parameter (see :ref:`SpecifyingRunTimeParameters`).
+variable which contains or points to all the state program data structures
+(the address of this global variable is passed to the ``seq`` function when
+creating the run-time sequencer). It is also used as the base for the state
+set thread names unless overridden via the *name* parameter (see :ref:`run
+time parameters`).
 
 .. productionlist::
    program_param: "(" `string` ")"
@@ -237,7 +237,6 @@ Event Flags
 
 This declares an event flag, see :ref:`EventFlags`.
 
-.. _foreign_decl:
 
 Foreign Declarations
 ~~~~~~~~~~~~~~~~~~~~
@@ -344,7 +343,6 @@ variables). When a monitor is posted on any of the associated
 process variables, the corresponding event flag is set (even
 if it was already set).
 
-.. _syncq_stmt:
 
 syncQ
 ~~~~~
@@ -366,7 +364,7 @@ be accommodated in the queue (if the variable is array-valued, only
 the first item will be saved). The :c:func:`pvGetQ` function reads items
 from the queue.
 
-.. _OptionDefinition:
+.. _option definition:
 
 Option
 ^^^^^^
@@ -421,7 +419,7 @@ Inside state sets are allowed variable declarations and process variable
 definitions (:token:`assign`, :token:`monitor`, :token:`sync`, and
 :token:`syncq`).
 
-See `Variable Scope`_ for details on what local definitions mean.
+See `variable scope`_ for details on what local definitions mean.
 
 State
 ^^^^^
@@ -458,7 +456,7 @@ State Option
 ~~~~~~~~~~~~
 
 The syntax for a state option is the same as for global options
-(see :ref:`OptionDefinition`).
+(see :ref:`option definition`).
 
 The state options are:
 
@@ -500,7 +498,7 @@ For example::
     exit { ... }
   }
 
-.. _StateEntryExit:
+.. _state entry and exit blocks:
 
 State Entry and Exit Blocks
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1133,6 +1131,8 @@ parameters to C code, because the compiler will do the work).
 Examination of the intermediate C code that the compiler produces
 will indicate how to use the built-in functions and database
 variables.
+
+.. _reentrant option:
 
 Variable Modification for Reentrant Option
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

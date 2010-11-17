@@ -258,8 +258,6 @@ will not start an iocShell and you will have difficulty terminating the
 program (in fact, you have to ``kill -9`` it). Similar for the other
 test programs.
 
-.. _using-the-installation:
-
 Use
 ---
 
