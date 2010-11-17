@@ -1064,7 +1064,7 @@ static int connect_variable(Expr *ep, Expr *scope, void *parg)
 		vp->name = ep->value;
                 vp->type = new(Type);
 		vp->type->tag = V_NONE;	/* undeclared type */
-		vp->value = 0;
+		vp->init = 0;
 		/* add this variable to the top-level scope, NOT the current scope */
 		while (var_list->parent_scope) {
 			scope = var_list->parent_scope;

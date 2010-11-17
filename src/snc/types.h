@@ -143,7 +143,7 @@ struct variable				/* Variable or function definition */
 {
 	Var	*next;			/* link to next variable in list */
 	char	*name;			/* variable name */
-	Expr	*value;			/* initial value or NULL */
+	Expr	*init;			/* initial value or NULL */
 	Expr	*decl;			/* declaration of this variable
 					   (or NULL if not declared) */
 	Expr	*scope;			/* scope of this variable */

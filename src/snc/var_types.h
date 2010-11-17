@@ -46,11 +46,15 @@ struct type {
         struct array_type   array;
         struct enum_type    enumeration;
     } val;
+    struct type *parent;
 };
 
-unsigned type_base_type(Type *t);
+const char *type_name (unsigned tag);
+#define type_base_type(t) (t->parent->tag)
+#define base_type(t) (t->parent)
 unsigned type_array_length1(Type *t);
 unsigned type_array_length2(Type *t);
 unsigned type_assignable(Type *t);
+void gen_type(Type *t, char *name);
 
 #endif /*INCLvar_typesh */

@@ -124,49 +124,9 @@ static void gen_preamble(char *prog_name)
 	printf("#include \"seqCom.h\"\n");
 }
 
-static void gen_array_pointer(Type *t, unsigned last_tag, char *name)
-{
-	switch (t->tag)
-	{
-	case V_POINTER:
-		if (last_tag == V_ARRAY)
-			printf("(");
-		printf("*");
-		gen_array_pointer(t->val.pointer.value_type, t->tag, name);
-		if (last_tag == V_ARRAY)
-			printf(")");
-		break;
-	case V_ARRAY:
-		gen_array_pointer(t->val.array.elem_type, t->tag, name);
-		printf("[%d]", t->val.array.num_elems);
-		break;
-	default:
-		printf("%s", name);
-	}
-}
-
 void gen_var_decl(Var *vp)
 {
-	char	*type_str;
-	Type	*t = vp->type;
-
-	switch (type_base_type(vp->type))
-	{
-	case V_CHAR:	type_str = "char";		break;
-	case V_INT:	type_str = "int";		break;
-	case V_LONG:	type_str = "long";		break;
-	case V_SHORT:	type_str = "short";		break;
-	case V_UCHAR:	type_str = "unsigned char";	break;
-	case V_UINT:	type_str = "unsigned int";	break;
-	case V_ULONG:	type_str = "unsigned long";	break;
-	case V_USHORT:	type_str = "unsigned short";	break;
-	case V_FLOAT:	type_str = "float";		break;
-	case V_DOUBLE:	type_str = "double";		break;
-	case V_STRING:	type_str = "string";		break;
-	default:	type_str = 0;			break;
-	}
-	printf("%s\t", type_str);
-	gen_array_pointer(t, V_NONE, vp->name);
+	gen_type(vp->type, vp->name);
 }
 
 /* Generate the UserVar struct containing all program variables with

@@ -275,7 +275,7 @@ static void gen_local_var_decls(Expr *scope, int level)
 			gen_var_decl(vp);
 
 			/* optional initialisation */
-			if (vp->value)
+			if (vp->init)
 			{
 #if 0
 				if (vp->type->tag == V_STRING)
@@ -286,7 +286,7 @@ static void gen_local_var_decls(Expr *scope, int level)
 				}
 #endif
 				printf(" = ");
-				gen_expr(OTHER_STMT, vp->value, 0);
+				gen_expr(OTHER_STMT, vp->init, 0);
 			}
 			printf(";\n");
 		}
@@ -1015,7 +1015,7 @@ static int iter_user_var_init(Expr *dp, Expr *scope, void *parg)
 	Var *vp = dp->extra.e_decl;
 
 	assert(vp);
-	if (vp->value && vp->decl)
+	if (vp->init && vp->decl)
 	{
 		if (vp->type->tag < V_CHAR)
 		{
@@ -1028,7 +1028,7 @@ static int iter_user_var_init(Expr *dp, Expr *scope, void *parg)
 			ep->type = E_VAR;
 			ep->extra.e_var = vp;
 			indent(1);
-			gen_string_assign(OTHER_STMT, ep, vp->value, 1);
+			gen_string_assign(OTHER_STMT, ep, vp->init, 1);
 			printf(";\n");
 		}
 		else
@@ -1037,7 +1037,7 @@ static int iter_user_var_init(Expr *dp, Expr *scope, void *parg)
 			indent(1);
 			gen_var_access(vp);
 			printf(" = ");
-			gen_expr(OTHER_STMT, vp->value, 0);
+			gen_expr(OTHER_STMT, vp->init, 0);
 			printf(";\n");
 		}
 	}

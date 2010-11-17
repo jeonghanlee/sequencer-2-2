@@ -11,68 +11,71 @@
 
 /* #define DEBUG */
 
-static void retrofit_base_type(unsigned tag, Type *t, Expr *d)
+const char *type_name(unsigned tag)
 {
-    assert(tag < V_POINTER);        /* pre-condition */
-    assert(t != NULL);
-    assert(t->tag >= V_POINTER);    /* pre-condition */
-    switch (t->tag) {
-    case V_ARRAY:
-        if (tag == V_NONE) {
-            error_at_expr(d, "cannot declare array of foreign variables\n");
-            break;
-        }
-        if (tag == V_EVFLAG) {
-            error_at_expr(d, "cannot declare array of event flags\n");
-            break;
-        }
-        if (t->val.array.elem_type == NULL) {
-            t->val.array.elem_type  = new(Type);
-            t->val.array.elem_type->tag = tag;
-        } else {
-            retrofit_base_type(tag, t->val.array.elem_type, d);
-        }
-        break;
-    case V_POINTER:
-        if (tag == V_NONE) {
-            error_at_expr(d, "cannot declare pointer to foreign variable\n");
-            break;
-        }
-        if (tag == V_EVFLAG) {
-            error_at_expr(d, "cannot declare pointer to event flag\n");
-            break;
-        }
-        if (t->val.pointer.value_type == NULL) {
-            t->val.pointer.value_type  = new(Type);
-            t->val.pointer.value_type->tag = tag;
-        } else {
-            retrofit_base_type(tag, t->val.pointer.value_type, d);
-        }
-        break;
-    default:
-        break;                      /* dummy to pacify compiler */
+    switch (tag) {
+        case V_NONE:    return "foreign";
+        case V_EVFLAG:  return "evflag";
+        case V_CHAR:    return "char";
+        case V_UCHAR:   return "unsigned char";
+        case V_SHORT:   return "short";
+        case V_USHORT:  return "unsigned short";
+        case V_INT:     return "int";
+        case V_UINT:    return "unsigned int";
+        case V_LONG:    return "long";
+        case V_ULONG:   return "unsigned long";
+        case V_FLOAT:   return "float";
+        case V_DOUBLE:  return "double";
+        case V_STRING:  return "string";
+        case V_ENUM:    return "enumeration";
+        default:        return "";
     }
 }
 
-Expr *decl_add_base_type(Expr *ds, int tag)
+Expr *decl_add_base_type(Expr *ds, unsigned tag)
 {
     Expr *d;
+    static const int impossible = FALSE;
 
     foreach(d, ds) {
-        Var *var = d->extra.e_decl;
+        Var *var;
+        Type *t = new(Type), *bt = t;
 
         assert(d->type == D_DECL);      /* pre-condition */
-        if (var->type == NULL) {
-            var->type = new(Type);
-            var->type->tag = tag;
-        } else {
-            retrofit_base_type(tag, var->type, d);
+        var = d->extra.e_decl;
+        assert(var);
+        t->tag = tag;
+        t->parent = var->type;
+        /* now roll back the stack of type expressions */
+        while(t->parent) {
+            switch (t->parent->tag) {
+            case V_ARRAY:
+                if (tag == V_NONE) {
+                    error_at_expr(d, "cannot declare array of foreign variables\n");
+                }
+                if (tag == V_EVFLAG) {
+                    error_at_expr(d, "cannot declare array of event flags\n");
+                }
+                t->parent->val.array.elem_type = t;
+                break;
+            case V_POINTER:
+                if (tag == V_NONE) {
+                    error_at_expr(d, "cannot declare pointer to foreign variable\n");
+                }
+                if (tag == V_EVFLAG) {
+                    error_at_expr(d, "cannot declare pointer to event flag\n");
+                }
+                t->parent->val.pointer.value_type = t;
+                break;
+            default: assert(impossible);
+            }
+            t = t->parent;
         }
+        assert(!t->parent);
+        t->parent = bt;
+        var->type = t;
         if (tag == V_EVFLAG)
             var->chan.evflag = new(EvFlag);
-#ifdef DEBUG
-        fprintf(stderr, "base_type(%d) for name = %s\n", tag, var->name);
-#endif
     }
     return ds;
 }
@@ -80,7 +83,7 @@ Expr *decl_add_base_type(Expr *ds, int tag)
 Expr *decl_add_init(Expr *d, Expr *init)
 {
     assert(d->type == D_DECL);          /* pre-condition */
-    d->extra.e_decl->value = init;
+    d->extra.e_decl->init = init;
     return d;
 }
 
@@ -90,7 +93,7 @@ Expr *decl_create(Token name)
     Var *var = new(Var);
 
 #ifdef DEBUG
-    fprintf(stderr, "name(%s)\n", name.str);
+    fprintf(stderr, "decl_create: name(%s)\n", name.str);
 #endif
     assert(d->type == D_DECL);          /* expr() post-condition */
     var->name = name.str;
@@ -104,17 +107,19 @@ Expr *decl_postfix_array(Expr *d, char *s)
     int l = atoi(s);
     Type *t = new(Type);
 
-#ifdef DEBUG
-    fprintf(stderr, "array\n");
-#endif
     assert(d->type == D_DECL);          /* pre-condition */
     if (l <= 0) {
         error_at_expr(d, "invalid array size (must be >= 1)\n");
         l = 1;
     }
+
+#ifdef DEBUG
+    fprintf(stderr, "decl_postfix_array %d\n", l);
+#endif
+
     t->tag = V_ARRAY;
     t->val.array.num_elems = l;
-    t->val.array.elem_type = d->extra.e_decl->type;
+    t->parent = d->extra.e_decl->type;
     d->extra.e_decl->type = t;
     return d;
 }
@@ -124,25 +129,13 @@ Expr *decl_prefix_pointer(Expr *d)
     Type *t = new(Type);
 
 #ifdef DEBUG
-    fprintf(stderr, "pointer\n");
+    fprintf(stderr, "decl_prefix_pointer\n");
 #endif
     assert(d->type == D_DECL);          /* pre-condition */
     t->tag = V_POINTER;
-    t->val.pointer.value_type = d->extra.e_decl->type;
+    t->parent = d->extra.e_decl->type;
     d->extra.e_decl->type = t;
     return d;
-}
-
-unsigned type_base_type(Type *t)
-{
-    switch (t->tag) {
-    case V_ARRAY:
-        return type_base_type(t->val.array.elem_type);
-    case V_POINTER:
-        return type_base_type(t->val.pointer.value_type);
-    default:
-        return t->tag;
-    }
 }
 
 unsigned type_array_length1(Type *t)
@@ -184,4 +177,33 @@ static unsigned type_assignable_array(Type *t, int depth)
 unsigned type_assignable(Type *t)
 {
     return type_assignable_array(t, 0);
+}
+
+static void gen_array_pointer(Type *t, unsigned last_tag, char *name)
+{
+    int paren = last_tag == V_ARRAY;
+    switch (t->tag) {
+    case V_POINTER:
+        if (paren)
+            printf("(");
+        printf("*");
+        gen_array_pointer(t->parent, t->tag, name);
+        if (paren)
+            printf(")");
+        break;
+    case V_ARRAY:
+        gen_array_pointer(t->parent, t->tag, name);
+        printf("[%d]", t->val.array.num_elems);
+        break;
+    default:
+        printf("%s", name);
+    }
+}
+
+void gen_type(Type *t, char *name)
+{
+    Type *bt = base_type(t);
+
+    printf("%s ", type_name(bt->tag));
+    gen_array_pointer(bt->parent, V_NONE, name);
 }
