@@ -20,7 +20,8 @@
 #include	"snc_main.h"
 #include	"gen_code.h"
 
-static void gen_preamble(char *prog_name, int opt_main);
+static void gen_preamble(char *prog_name);
+static void gen_main(char *prog_name);
 static void gen_user_var(Program *p);
 static void gen_global_c_code(Expr *global_c_list);
 static void gen_init_reg(char *prog_name);
@@ -55,12 +56,12 @@ void generate_code(Program *p)
 #endif
 
 	/* Generate preamble code */
-	gen_preamble(p->name, p->options.main);
+	gen_preamble(p->name);
 
 	/* Generate global variable declarations */
 	gen_user_var(p);
 
-	/* Generate definition C code */
+	/* Generate literal C code intermixed with global definitions */
 	gen_defn_c_code(p->prog, 0);
 
 	/* Generate code for each state set */
@@ -72,14 +73,47 @@ void generate_code(Program *p)
 	/* Output global C code */
 	gen_global_c_code(p->prog->prog_ccode);
 
-	/* Sequencer registration (if "init_register" option set) */
-	if (p->options.init_reg) {
-		gen_init_reg(p->name);
-	}
+	/* Generate main function */
+	if (p->options.main) gen_main(p->name);
+
+	/* Sequencer registration */
+	if (p->options.init_reg) gen_init_reg(p->name);
+}
+
+/* Generate main program */
+static void gen_main(char *prog_name)
+{
+	printf("\n/* Main program */\n");
+	printf("#include \"epicsThread.h\"\n");
+	printf("#include \"iocsh.h\"\n");
+	printf("\n");
+	printf("int main(int argc,char *argv[]) {\n");
+	printf("    char * macro_def;\n");
+	printf("    int callIocsh = TRUE;\n");
+	printf("\n");
+	printf("    if(argc>1 && strcmp(argv[1],\"-s\")==0) {\n");
+	printf("        callIocsh = TRUE;\n");
+	printf("        --argc; ++argv;\n");
+	printf("    }\n");
+	printf("    if(argc>1 && strcmp(argv[1],\"-S\")==0) {\n");
+	printf("        --argc; ++argv;\n");
+	printf("        callIocsh = FALSE;\n");
+	printf("    }\n");
+	printf("    macro_def = (argc>1)?argv[1]:NULL;\n");
+	printf("    seqRegisterSequencerProgram(&%s);\n", prog_name);
+	printf("    seq(&%s, macro_def, 0);\n", prog_name);
+	printf("    if(callIocsh) {\n");
+	printf("        seqRegisterSequencerCommands();\n");
+	printf("        iocsh(0);\n");
+	printf("    } else {\n");
+	printf("        epicsThreadExitMain();\n");
+	printf("    }\n");
+	printf("    return(0);\n");
+	printf("}\n");
 }
 
 /* Generate preamble (includes, defines, etc.) */
-static void gen_preamble(char *prog_name, int opt_main)
+static void gen_preamble(char *prog_name)
 {
 	/* Program name (comment) */
 	printf("\n/* Program \"%s\" */\n", prog_name);
@@ -88,35 +122,6 @@ static void gen_preamble(char *prog_name, int opt_main)
 	printf("#include <string.h>\n");
 	printf("#include <stdio.h>\n");
 	printf("#include \"seqCom.h\"\n");
-
-	/* Main program (if "main" option set) */
-	if (opt_main) {
-		printf("\n/* Main program */\n");
-		printf("#include \"epicsThread.h\"\n");
-		printf("#include \"iocsh.h\"\n");
-		printf("\n");
-		printf("extern struct seqProgram %s;\n", prog_name);
-		printf("\n");
-		printf("int main(int argc,char *argv[]) {\n");
-		printf("    char * macro_def;\n");
-		printf("    epicsThreadId threadId;\n");
-		printf("    int callIocsh = 0;\n");
-		printf("\n");
-		printf("    if(argc>1 && strcmp(argv[1],\"-s\")==0) {\n");
-		printf("        callIocsh=1;\n");
-		printf("        --argc; ++argv;\n");
-		printf("    }\n");
-		printf("    macro_def = (argc>1)?argv[1]:NULL;\n");
-		printf("    threadId = seq(&%s, macro_def, 0);\n", prog_name);
-		printf("    if(callIocsh) {\n");
-		printf("        seqRegisterSequencerCommands();\n");
-		printf("        iocsh(0);\n");
-		printf("    } else {\n");
-		printf("        epicsThreadExitMain();\n");
-		printf("    }\n");
-		printf("    return(0);\n");
-		printf("}\n");
-	}
 }
 
 static void gen_array_pointer(Type *t, unsigned last_tag, char *name)
@@ -278,7 +283,7 @@ static void gen_global_c_code(Expr *global_c_list)
 
 static void gen_init_reg(char *prog_name)
 {
-	printf("\n/* Register sequencer commands and program */\n\n");
+	printf("\n/* Register sequencer commands and program */\n");
 	printf("#include \"epicsExport.h\"\n");
 	printf("void %sRegistrar (void) {\n", prog_name);
 	printf("    seqRegisterSequencerCommands();\n");
