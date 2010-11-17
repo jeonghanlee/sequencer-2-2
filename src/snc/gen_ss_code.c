@@ -48,8 +48,8 @@ enum
 	F_PVCONNECTED,
 	F_PVCOUNT,
 	F_PVDISCONNECT,
-	F_PVERROR,
 	F_PVFLUSH,
+	F_PVFLUSHQ,
 	F_PVFREEQ,
 	F_PVGET,
 	F_PVGETCOMPLETE,
@@ -86,8 +86,8 @@ static char *fcode_str[] = {
 	"pvConnected",
 	"pvCount",
 	"pvDisconnect",
-	"pvError",
 	"pvFlush",
+	"pvFlushQ",
 	"pvFreeQ",
 	"pvGet",
 	"pvGetComplete",
@@ -754,6 +754,7 @@ static int special_func(int context,	Expr *ep)
 		return TRUE;
 
 	    case F_PVGETQ:
+	    case F_PVFLUSHQ:
 	    case F_PVFREEQ:
 	    case F_PVTIMESTAMP:
 	    case F_PVGETCOMPLETE:
@@ -788,7 +789,6 @@ static int special_func(int context,	Expr *ep)
 		return TRUE;
 
 	    case F_PVFLUSH:
-	    case F_PVERROR:
 	    case F_PVCHANNELCOUNT:
 	    case F_PVCONNECTCOUNT:
 	    case F_PVASSIGNCOUNT:
