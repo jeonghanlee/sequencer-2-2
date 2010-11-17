@@ -190,7 +190,7 @@ pvCallback::~pvCallback()
         printf( "%8p: pvCallback::~pvCallback()\n", (void *)this );
 }
 
-epicsSingleton < tsFreeList < class pvCallback > > pvCallback::pFreeList;
+//epicsSingleton < tsFreeList < class pvCallback > > pvCallback::pFreeList;
 
 ////////////////////////////////////////////////////////////////////////////////
 /* C interface */

@@ -195,8 +195,8 @@ public:
     epicsShareFunc inline void setPrivate( void *priv ) { private_ = priv; }
     epicsShareFunc inline void *getPrivate() { return private_; }
 
-    static inline void* operator new(size_t size);
-    static inline void operator delete(void *pCadaver, size_t size);
+    // static inline void* operator new(size_t size);
+    // static inline void operator delete(void *pCadaver, size_t size);
 
 private:
     int		magic_;		/* magic number (used for authentication) */
@@ -209,22 +209,22 @@ private:
     void	*arg_;		/* user's event function argument */
     void	*private_;	/* message system's private data */
 
-    static epicsSingleton < tsFreeList < class pvCallback > > pFreeList;
+    // static epicsSingleton < tsFreeList < class pvCallback > > pFreeList;
 };
 
-inline void * pvCallback::operator new ( size_t size )
-{
-    epicsSingleton < tsFreeList < class pvCallback > >::reference ref = 
-            pFreeList.getReference ();
-    return ref->allocate ( size );
-}
+// inline void * pvCallback::operator new ( size_t size )
+// {
+    // epicsSingleton < tsFreeList < class pvCallback > >::reference ref = 
+            // pFreeList.getReference ();
+    // return ref->allocate ( size );
+// }
 
-inline void pvCallback::operator delete ( void *pCadaver, size_t size )
-{
-    epicsSingleton < tsFreeList < class pvCallback > >::reference ref = 
-            pFreeList.getReference ();
-    ref->release ( pCadaver, size );
-}
+// inline void pvCallback::operator delete ( void *pCadaver, size_t size )
+// {
+    // epicsSingleton < tsFreeList < class pvCallback > >::reference ref = 
+            // pFreeList.getReference ();
+    // ref->release ( pCadaver, size );
+// }
 
 ////////////////////////////////////////////////////////////////////////////////
 /*
