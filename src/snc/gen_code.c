@@ -120,6 +120,7 @@ static void gen_preamble(char *prog_name)
 
 	/* Includes */
 	printf("#include <string.h>\n");
+	printf("#include <stddef.h>\n");
 	printf("#include <stdio.h>\n");
 	printf("#include \"seqCom.h\"\n");
 }

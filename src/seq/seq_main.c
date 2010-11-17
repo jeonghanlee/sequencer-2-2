@@ -415,57 +415,57 @@ static struct pv_type_map
 {
 	{
 	"char",		 pvTypeCHAR,	pvTypeTIME_CHAR,
-	sizeof (char),   OFFSET(pvTimeChar, value[0])
+	sizeof (char),   offsetof(pvTimeChar, value[0])
 	},
 
 	{
 	"short",	 pvTypeSHORT,	pvTypeTIME_SHORT,
-	sizeof (short),  OFFSET(pvTimeShort, value[0])
+	sizeof (short),  offsetof(pvTimeShort, value[0])
 	},
 
 	{
 	"int",		 pvTypeLONG,	pvTypeTIME_LONG,
-	sizeof (long),   OFFSET(pvTimeLong, value[0])
+	sizeof (long),   offsetof(pvTimeLong, value[0])
 	},
 
 	{
 	"long",		 pvTypeLONG,	pvTypeTIME_LONG,
-	sizeof (long),   OFFSET(pvTimeLong, value[0])
+	sizeof (long),   offsetof(pvTimeLong, value[0])
 	},
 
 	{
 	"unsigned char", pvTypeCHAR,	pvTypeTIME_CHAR,
-	sizeof (char),   OFFSET(pvTimeChar, value[0])
+	sizeof (char),   offsetof(pvTimeChar, value[0])
 	},
 
 	{
 	"unsigned short",pvTypeSHORT,	pvTypeTIME_SHORT,
-	sizeof (short),  OFFSET(pvTimeShort, value[0])
+	sizeof (short),  offsetof(pvTimeShort, value[0])
 	},
 
 	{
 	"unsigned int",  pvTypeLONG,	pvTypeTIME_LONG,
-	sizeof (long),   OFFSET(pvTimeLong, value[0])
+	sizeof (long),   offsetof(pvTimeLong, value[0])
 	},
 
 	{
 	"unsigned long", pvTypeLONG,	pvTypeTIME_LONG,
-	sizeof (long),   OFFSET(pvTimeLong, value[0])
+	sizeof (long),   offsetof(pvTimeLong, value[0])
 	},
 
 	{
 	"float",	 pvTypeFLOAT,	pvTypeTIME_FLOAT,
-	sizeof (float),  OFFSET(pvTimeFloat, value[0])
+	sizeof (float),  offsetof(pvTimeFloat, value[0])
 	},
 
 	{
 	"double",	 pvTypeDOUBLE,	pvTypeTIME_DOUBLE,
-	sizeof (double), OFFSET(pvTimeDouble, value[0])
+	sizeof (double), offsetof(pvTimeDouble, value[0])
 	},
 
 	{
 	"string",	 pvTypeSTRING,	pvTypeTIME_STRING,
-	MAX_STRING_SIZE, OFFSET(pvTimeString, value[0])
+	MAX_STRING_SIZE, offsetof(pvTimeString, value[0])
 	},
 
 	{

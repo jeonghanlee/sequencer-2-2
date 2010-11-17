@@ -118,7 +118,7 @@ static void gen_channel(Chan *cp, int num_event_flags, int opt_reent)
 	/* Ptr or offset to user variable */
 	if (opt_reent)
 	{
-		printf("OFFSET(struct %s, ", VAR_PREFIX);
+		printf("offsetof(struct %s, ", VAR_PREFIX);
 		gen_var_name(vp);
 		printf("%s), ", elem_str);
 	}

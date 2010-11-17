@@ -81,13 +81,6 @@ typedef void ENTRY_FUNC(SS_ID ssId, USER_VAR *pVar);
 typedef void EXIT_FUNC(SS_ID ssId, USER_VAR *pVar);
 typedef void INIT_FUNC(USER_VAR *pVar);
 
-#ifdef OFFSET
-#undef OFFSET
-#endif
-/* The OFFSET macro calculates the byte offset of a structure member
- * from the start of a structure */
-#define OFFSET(structure, member) ((long) &(((structure *) 0) -> member))
-
 /* Structure to hold information about database channels */
 struct seqChan
 {
