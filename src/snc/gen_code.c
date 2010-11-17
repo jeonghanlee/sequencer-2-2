@@ -220,7 +220,8 @@ void gen_defn_c_code(Expr *scope, int level)
 			if (first)
 			{
 				first = FALSE;
-				printf("\n/* C code definitions */\n");
+				indent(level);
+				printf("/* C code definitions */\n");
 			}
 			gen_line_marker(ep);
 			indent(level);
