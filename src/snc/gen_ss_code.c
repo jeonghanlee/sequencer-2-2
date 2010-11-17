@@ -142,9 +142,19 @@ static void gen_prog_func(
 static void gen_prog_init_func(Expr *prog);
 static void gen_ss_init_func(Expr *ssp, int opt_safe);
 
-#define	EVENT_STMT	1
-#define	ACTION_STMT	2
-#define	OTHER_STMT	3
+/*
+ * Expression context. Certain nodes of the syntax tree are
+ * interpreted differently depending on the context in which
+ * they appear. For instance, the state change command is only
+ * allowed in transition action context (C_TRANS).
+ */
+enum expr_context {
+	C_COND,		/* when() condition */
+	C_TRANS,	/* state transition actions */
+	C_ENTRY,	/* entry block */
+	C_EXIT,		/* exit block */
+	C_INIT		/* variable initialization */
+};
 
 /*
  * HACK: use global variables to make program options and
@@ -286,7 +296,7 @@ static void gen_local_var_decls(Expr *scope, int level)
 				}
 #endif
 				printf(" = ");
-				gen_expr(OTHER_STMT, vp->init, 0);
+				gen_expr(C_INIT, vp->init, 0);
 			}
 			printf(";\n");
 		}
@@ -321,7 +331,7 @@ static void gen_entry_body(Expr *xp)
 	gen_defn_c_code(xp, 1);
 	foreach (ep, xp->entry_stmts)
 	{
-		gen_expr(OTHER_STMT, ep, 1);
+		gen_expr(C_ENTRY, ep, 1);
 	}
 }
 
@@ -334,7 +344,7 @@ static void gen_exit_body(Expr *xp)
 	gen_defn_c_code(xp, 1);
 	foreach (ep, xp->exit_stmts)
 	{
-		gen_expr(OTHER_STMT, ep, 1);
+		gen_expr(C_ENTRY, ep, 1);
 	}
 }
 
@@ -365,7 +375,7 @@ static int gen_delay(Expr *ep, Expr *scope, void *parg)
 	/* Generate 1-st part of function w/ 1-st 2 parameters */
 	indent(1); printf("seq_delayInit(ssId, %d, (", ep->extra.e_delay);
 	/* generate the 3-rd parameter (an expression) */
-	gen_expr(EVENT_STMT, ep->delay_args, 0);
+	gen_expr(C_COND, ep->delay_args, 0);
 	/* Complete the function call */
 	printf("));\n");
 	return FALSE;	/* no sense descending into children, as delay cannot be nested */
@@ -404,7 +414,7 @@ static void gen_action_body(Expr *xp)
 		/* for each action statement insert action code */
 		foreach (ap, tp->when_stmts)
 		{
-			gen_expr(ACTION_STMT, ap, level+2);
+			gen_expr(C_TRANS, ap, level+2);
 		}
 		/* end of block */
 		indent(level+1); printf("}\n");
@@ -437,7 +447,7 @@ static void gen_event_body(Expr *xp)
 		if (tp->when_cond == 0)
 		      printf("TRUE");
 		else
-		      gen_expr(EVENT_STMT, tp->when_cond, 0);
+		      gen_expr(C_COND, tp->when_cond, 0);
 		printf(")\n");
 		indent(level); printf("{\n");
 
@@ -607,7 +617,7 @@ static void gen_expr(
 		printf("%s;\n", ep->value);
 		break;
 	case S_CHANGE:
-		if (context != ACTION_STMT)
+		if (context != C_TRANS)
 		{
 			error_at_expr(ep, "state change statement not allowed here\n");
 			break;
@@ -824,7 +834,7 @@ static void gen_ef_func(
 	{
 		vp = ap->extra.e_var;
 	}
-	if ((func_code == F_EFSET || func_code == F_EFCLEAR) && context == EVENT_STMT)
+	if ((func_code == F_EFSET || func_code == F_EFCLEAR) && context == C_COND)
 	{
 		error_at_expr(ep, "%s cannot be used in a when condition\n", fname);
 		return;
@@ -1028,7 +1038,7 @@ static int iter_user_var_init(Expr *dp, Expr *scope, void *parg)
 			ep->type = E_VAR;
 			ep->extra.e_var = vp;
 			indent(1);
-			gen_string_assign(OTHER_STMT, ep, vp->init, 1);
+			gen_string_assign(C_INIT, ep, vp->init, 1);
 			printf(";\n");
 		}
 		else
@@ -1037,7 +1047,7 @@ static int iter_user_var_init(Expr *dp, Expr *scope, void *parg)
 			indent(1);
 			gen_var_access(vp);
 			printf(" = ");
-			gen_expr(OTHER_STMT, vp->init, 0);
+			gen_expr(C_INIT, vp->init, 0);
 			printf(";\n");
 		}
 	}
