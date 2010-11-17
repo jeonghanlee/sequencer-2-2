@@ -560,7 +560,7 @@ long epicsShareAPI seqStop(epicsThreadId tid)
 	}
 
 	/* Delete program-wide semaphores */
-	epicsMutexDestroy(pSP->caSemId);
+	epicsMutexDestroy(pSP->programLock);
 	epicsMutexDestroy(pSP->logSemId);
 
 	/* Free all allocated memory */

@@ -46,7 +46,7 @@ long epicsShareAPI seqShow(epicsThreadId tid)
 		printf("  queue array address = %p\n",pSP->pQueues);
 	printf("  number of channels = %ld\n", pSP->numChans);
 	printf("  number of channels assigned = %ld\n", pSP->assignCount);
-	printf("  number of channels connected = %ld\n", pSP->connCount);
+	printf("  number of channels connected = %ld\n", pSP->connectCount);
 	printf("  options: async=%d, debug=%d, newef=%d, reent=%d, conn=%d, "
 		"main=%d\n",
 	 ((pSP->options & OPT_ASYNC) != 0), ((pSP->options & OPT_DEBUG) != 0),

@@ -32,9 +32,9 @@ static void init_sprog(struct seqProgram *, SPROG *);
 static void init_sscb(struct seqProgram *, SPROG *);
 static void init_chan(struct seqProgram *, SPROG *);
 
-static void seq_logInit(SPROG *);
+static void init_log(SPROG *);
 static void seqChanNameEval(SPROG *);
-static void selectDBtype(char *, short *, short *, short *, short *);
+static void init_type(char *, short *, short *, short *, short *);
 
 /*	Globals */
 
@@ -93,7 +93,7 @@ epicsThreadId seq (
 	seqChanNameEval(pSP);
 
 	/* Initialize sequencer logging */
-	seq_logInit(pSP);
+	init_log(pSP);
 
 	/* Specify stack size */
 	if (stackSize == 0)
@@ -217,8 +217,8 @@ static void init_sprog(struct seqProgram *pSeqProg, SPROG *pSP)
 		pSP->numEvents, pSP->pProgName, pSP->varSize);
 
 	/* Create a semaphore for resource locking on PV events */
-	pSP->caSemId = epicsMutexMustCreate();
-	pSP->connCount = 0;
+	pSP->programLock = epicsMutexMustCreate();
+	pSP->connectCount = 0;
 	pSP->assignCount = 0;
 	pSP->logFd = NULL;
 
@@ -360,7 +360,7 @@ static void init_chan(struct seqProgram *pSeqProg, SPROG *pSP)
 		pDB->message = NULL;
 
 		/* Fill in get/put db types, element size, & access offset */
-		selectDBtype(pSeqChan->pVarType, &pDB->getType,
+		init_type(pSeqChan->pVarType, &pDB->getType,
 			&pDB->putType, &pDB->size, &pDB->dbOffset);
 
 		DEBUG(" Assigned Name=%s, VarName=%s, VarType=%s, count=%ld\n"
@@ -399,19 +399,19 @@ static void seqChanNameEval(SPROG *pSP)
 }
 
 /*
- * selectDBtype -- returns types for DB put/get, element size, and db access
+ * init_type -- returns types for DB put/get, element size, and db access
  * offset based on user variable type.
- * Mapping is determined by the following typeMap[] array.
+ * Mapping is determined by the following pv_type_map[] array.
  * pvTypeTIME_* types for gets/monitors return status and time stamp.
  */
-static struct typeMap
+static struct pv_type_map
 {
 	char	*pTypeStr;
 	short	putType;
 	short	getType;
 	short	size;
 	short	offset;
-} typeMap[] =
+} pv_type_map[] =
 {
 	{
 	"char",		 pvTypeCHAR,	pvTypeTIME_CHAR,
@@ -473,16 +473,16 @@ static struct typeMap
 	}
 };
 
-static void selectDBtype(
+static void init_type(
 	char	*pUserType,
 	short	*pGetType,
 	short	*pPutType,
 	short	*pSize,
 	short	*pOffset)
 {
-	struct typeMap	*pMap;
+	struct pv_type_map	*pMap;
 
-	for (pMap = &typeMap[0]; *pMap->pTypeStr != 0; pMap++)
+	for (pMap = &pv_type_map[0]; *pMap->pTypeStr != 0; pMap++)
 	{
 		if (strcmp(pUserType, pMap->pTypeStr) == 0)
 		{
@@ -497,10 +497,10 @@ static void selectDBtype(
 }
 
 /*
- * seq_logInit() - Initialize logging.
+ * init_log() - Initialize logging.
  * If "logfile" is not specified, then we log to standard output.
  */
-static void seq_logInit(SPROG *pSP)
+static void init_log(SPROG *pSP)
 {
 	char	*pValue;
 	FILE	*fd;

@@ -131,7 +131,7 @@ typedef enum {
 typedef union {
     long          numSS;
     long          assignCount;
-    long          connCount;
+    long          connectCount;
     long          numChans;
     int           numQueues;
     ELLLIST       *pQueues;
@@ -278,7 +278,7 @@ LOCAL void devSeqScanThread(void)
                     UPDATE_SEQSHOW_VAR(pvtPt->updateFlag, pvtPt->pSP->assignCount, varPt->assignCount)
                     break;
                 case seqShownConnect:
-                    UPDATE_SEQSHOW_VAR(pvtPt->updateFlag, pvtPt->pSP->connCount, varPt->connCount)
+                    UPDATE_SEQSHOW_VAR(pvtPt->updateFlag, pvtPt->pSP->connectCount, varPt->connectCount)
                     break;
                 case seqShownChans:
                     UPDATE_SEQSHOW_VAR(pvtPt->updateFlag, pvtPt->pSP->numChans, varPt->numChans)
@@ -396,7 +396,7 @@ LOCAL long siRead( struct stringinRecord *pRec )
     switch(pvtPt->type){
         case seqShownStateSets:     sprintf(pRec->val, "%ld", varPt->numSS);                      break;
         case seqShownAssign:        sprintf(pRec->val, "%ld", varPt->assignCount);                break;
-        case seqShownConnect:       sprintf(pRec->val, "%ld", varPt->connCount);                  break;
+        case seqShownConnect:       sprintf(pRec->val, "%ld", varPt->connectCount);               break;
         case seqShownChans:         sprintf(pRec->val, "%ld", varPt->numChans);                   break;
         case seqShownQueues:        sprintf(pRec->val, "%d", varPt->numQueues);                   break;
         case seqShowpQueues:        sprintf(pRec->val, "%p", varPt->pQueues);                     break;

@@ -333,7 +333,7 @@ epicsShareFunc long seq_disconnect(SPROG *pSP)
 	SPROG	*pMySP; /* will be NULL if this is not a sequencer thread */
 
 	/* Did we already disconnect? */
-	if (pSP->connCount < 0)
+	if (pSP->connectCount < 0)
 		return 0;
 	DEBUG("seq_disconnect: pSP = %p\n", pSP);
 
@@ -372,7 +372,7 @@ epicsShareFunc long seq_disconnect(SPROG *pSP)
 		pDB->connected = FALSE;
 	}
 
-	pSP->connCount = -1; /* flag to indicate all disconnected */
+	pSP->connectCount = -1; /* flag to indicate all disconnected */
 
 	pvSysFlush(pvSys);
 
@@ -401,7 +401,7 @@ void seq_conn_handler(void *var,int connected)
 		if (pDB->connected)
 		{
 			pDB->connected = FALSE;
-			pSP->connCount--;
+			pSP->connectCount--;
 			pDB->monitored = FALSE;
 		}
 		else
@@ -416,7 +416,7 @@ void seq_conn_handler(void *var,int connected)
 		if (!pDB->connected)
 		{
 			pDB->connected = TRUE;
-			pSP->connCount++;
+			pSP->connectCount++;
 			if (pDB->monFlag)
 				pDB->monitored = TRUE;
 			pDB->dbCount = pvVarGetCount(var);

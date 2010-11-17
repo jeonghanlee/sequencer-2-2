@@ -104,7 +104,7 @@ struct db_channel
 	unsigned	gotFirstMonitor;
 	unsigned	gotFirstConnect;
 	unsigned	monitored;	/* whether channel is monitored */
-	void		*evid;		/* event id (supplied by PV lib) */
+	void		*monid;		/* event id (supplied by PV lib) */
 
 	/* buffer access, only used in safe mode */
 	epicsMutexId	varLock;	/* mutex for un-assigned vars */
@@ -173,11 +173,11 @@ struct state_program
 	epicsThreadId	threadId;	/* thread id (main thread) */
 	unsigned int	threadPriority;	/* thread priority */
 	unsigned int	stackSize;	/* stack size */
-	epicsMutexId	caSemId;	/* mutex for locking CA events */
+	epicsMutexId	programLock;	/* mutex for locking CA events */
 	CHAN		*pChan;		/* table of channels */
 	long		numChans;	/* number of db channels, incl. unass */
 	long		assignCount;	/* number of db channels assigned */
-	long		connCount;	/* number of channels connected */
+	long		connectCount;	/* number of channels connected */
 	long		firstConnectCount;
 	long		numMonitoredChans;
 	long		firstMonitorCount;
