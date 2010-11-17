@@ -4,9 +4,6 @@ include $(TOP)/configure/CONFIG
 #----------------------------------------
 #  ADD MACRO DEFINITIONS AFTER THIS LINE
 
-# uncomment next line to see how safe mode solves race conditions
-#SNCFLAGS += +s
-
 SNC = $(INSTALL_HOST_BIN)/snc
 
 #  Generate snc main programs

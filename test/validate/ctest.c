@@ -16,7 +16,7 @@ int main()
 {
     int i;
     string x = {"bla"};
-    plain_string y = {"bla"};
+    plain_string y = "bla";
     char *z = "blub";
 
     int s = 10;
@@ -26,15 +26,18 @@ int main()
     printf("%s\n",x.chars);
     x = (string){"12345678901234567890123456789012345678901234567890"};
     printf("%s\n",x.chars);
+
 #if 0
     x = (string){z};
     printf("%s\n",x.chars);
 #endif
-#if 0
+
     printf("%s\n",y);
-    y = "12345678901234567890123456789012345678901234567890";
+    y = (string)"12345678901234567890123456789012345678901234567890";
     printf("%s\n",y);
-#endif
+
+    pa = (int (*)[2])&a;
+
     printf("%p,%p,%p,%d,%d\n",pa,&a[0],&a[1],(*pa)[0],(*pa)[1]);
     printf("b=0x");
     for(i=0;i<2;i++)

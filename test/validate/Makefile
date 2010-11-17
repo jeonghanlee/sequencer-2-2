@@ -7,7 +7,7 @@ include $(TOP)/configure/CONFIG
 SNC = $(INSTALL_HOST_BIN)/snc
 
 #  Generate snc main programs (not needed under VxWorks)
-SNCFLAGS_DEFAULT += +m
+SNCFLAGS_DEFAULT += +m -i
 SNCFLAGS_vxWorks += -nil-
 
 #  Sequence programs and/or object files to create
@@ -22,6 +22,7 @@ PROD += assign
 PROD += change
 PROD += declarations
 PROD += local
+PROD += subscript
 PROD += syncq
 PROD += pvSync
 PROD += pvPutAsync
