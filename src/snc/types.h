@@ -247,14 +247,15 @@ struct program
 /* Expressions types that may have sub-expressions */
 #define has_sub_expr_mask	( (1<<D_DECL) | (1<<D_ENTRY) | (1<<D_EXIT) | (1<<D_PROG)\
 				| (1<<D_SS) | (1<<D_STATE) | (1<<D_SYNC) | (1<<D_SYNCQ)\
-				| (1<<D_WHEN) | (1<<E_BINOP)\
-				| (1<<E_DELAY) | (1<<E_FUNC) | (1<<E_PAREN) | (1<<E_POST)\
+				| (1<<D_WHEN) | (1<<E_BINOP) | (1<<E_DELAY) | (1<<E_FUNC)\
+				| (1<<E_INIT) | (1<<E_PAREN) | (1<<E_POST)\
 				| (1<<E_PRE) | (1<<E_SUBSCR) | (1<<E_TERNOP) | (1<<E_VAR)\
 				| (1<<S_CHANGE) | (1<<S_CMPND) | (1<<S_FOR) | (1<<S_IF)\
 				| (1<<S_STMT) | (1<<S_WHILE) )
 /* Expression types that are actually expressions i.e. no definitions or statements.
    These are the ones that start with E_. */
 #define	expr_mask		( (1<<E_BINOP) | (1<<E_CONST) | (1<<E_DELAY) | (1<<E_FUNC)\
+				| (1<<E_INIT)\
 				| (1<<E_PAREN) | (1<<E_POST) | (1<<E_PRE) | (1<<E_STRING)\
 				| (1<<E_SUBSCR) | (1<<E_TERNOP) | (1<<E_VAR) | (1<<T_TEXT) )
 
@@ -288,6 +289,7 @@ enum expr_type			/* description [child expressions...] */
 	E_CONST,		/* numeric (inkl. character) constant [] */
 	E_DELAY,		/* delay function call [args] */
 	E_FUNC,			/* function call [args] */
+	E_INIT,			/* array or struct initializer [elems] */
 	E_PAREN,		/* parenthesis around an expression [expr] */
 	E_POST,			/* unary postfix operator [operand] */
 	E_PRE,			/* unary prefix operator [operand] */
@@ -331,6 +333,7 @@ enum expr_type			/* description [child expressions...] */
 #define if_cond		children[0]
 #define if_then		children[1]
 #define if_else		children[2]
+#define init_elems	children[0]
 #define monitor_subscr	children[0]
 #define paren_expr	children[0]
 #define post_operand	children[0]
@@ -391,6 +394,7 @@ expr_type_info[]
 	{ "E_CONST",	0 },
 	{ "E_DELAY",	1 },
 	{ "E_FUNC",	1 },
+	{ "E_INIT",	1 },
 	{ "E_PAREN",	1 },
 	{ "E_POST",	1 },
 	{ "E_PRE",	1 },

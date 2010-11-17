@@ -105,17 +105,17 @@ global_defn(p) ::= declaration(x).	{ p = x; }
 global_defn(p) ::= option(x).		{ p = x; }
 global_defn(p) ::= c_code(x).		{ p = x; }
 
+assign(p) ::= connect variable(v) SEMICOLON. {
+	p = expr(D_ASSIGN, v, 0, 0);
+}
 assign(p) ::= connect variable(v) to string(t) SEMICOLON. {
 	p = expr(D_ASSIGN, v, 0, t);
 }
 assign(p) ::= connect variable(v) subscript(s) to string(t) SEMICOLON. {
 	p = expr(D_ASSIGN, v, expr(E_CONST, s), t);
 }
-assign(p) ::= connect variable(v) to LBRACE strings(ss) RBRACE SEMICOLON. {
-	p = expr(D_ASSIGN, v, 0, ss);
-}
-assign(p) ::= connect variable(v) SEMICOLON. {
-	p = expr(D_ASSIGN, v, 0, 0);
+assign(p) ::= connect variable(v) to LBRACE(t) strings(ss) RBRACE SEMICOLON. {
+	p = expr(D_ASSIGN, v, 0, expr(E_INIT, t, ss));
 }
 
 connect ::= ASSIGN.
@@ -124,12 +124,9 @@ connect ::= CONNECT.
 to ::= TO.
 to ::= .
 
-strings(p) ::= strings(xs) COMMA string(x). {
-	p = link_expr(xs, x);
-}
-strings(p) ::= string(x). {
-	p = x;
-}
+strings(p) ::= strings(xs) COMMA string(x).	{ p = link_expr(xs, x); }
+strings(p) ::= string(x).			{ p = x; }
+strings(p) ::= .				{ p = 0; }
 
 monitor(p) ::= MONITOR variable(v) opt_subscript(s) SEMICOLON. {
 	p = expr(D_MONITOR, v, s);

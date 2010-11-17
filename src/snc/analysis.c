@@ -32,7 +32,7 @@ static void analyse_sync(SymTable st, Expr *scope, Expr *defn);
 static void analyse_syncq(SymTable st, SyncQList *syncq_list, Expr *scope, Expr *defn);
 static void assign_subscript(ChanList *chan_list, Expr *defn, Var *vp, Expr *subscr, Expr *pv_name);
 static void assign_single(ChanList *chan_list, Expr *defn, Var *vp, Expr *pv_name);
-static void assign_list(ChanList *chan_list, Expr *defn, Var *vp, Expr *pv_name_list);
+static void assign_multi(ChanList *chan_list, Expr *defn, Var *vp, Expr *pv_name_list);
 static Chan *new_channel(ChanList *chan_list, Var *vp, uint count, uint index);
 static SyncQ *new_sync_queue(SyncQList *syncq_list, Var *evp, uint size);
 static void connect_variables(SymTable st, Expr *scope);
@@ -303,6 +303,7 @@ static void analyse_assign(SymTable st, ChanList *chan_list, Expr *scope, Expr *
 	char *name = defn->value;
 	Var *vp = find_var(st, name, scope);
 
+	assert(defn->type == D_ASSIGN);
 	if (!vp)
 	{
 		error_at_expr(defn, "variable '%s' not declared\n", name);
@@ -322,13 +323,13 @@ static void analyse_assign(SymTable st, ChanList *chan_list, Expr *scope, Expr *
 	{
 		assign_single(chan_list, defn, vp, 0);
 	}
-	else if (!defn->assign_pvs->next)
+	else if (defn->assign_pvs->type == E_INIT)
 	{
-		assign_single(chan_list, defn, vp, defn->assign_pvs);
+		assign_multi(chan_list, defn, vp, defn->assign_pvs->init_elems);
 	}
 	else
 	{
-		assign_list(chan_list, defn, vp, defn->assign_pvs);
+		assign_single(chan_list, defn, vp, defn->assign_pvs);
 	}
 }
 
@@ -368,13 +369,12 @@ static void assign_elem(
 	Expr		*defn,
 	Var		*vp,
 	int		n_subscr,
-	Expr		*pv_name
+	char		*pv_name
 )
 {
 	assert(chan_list);
 	assert(defn);
 	assert(vp);
-	assert(pv_name);
 	assert(n_subscr <= type_array_length1(vp->type));
 
 	if (vp->assign == M_NONE)
@@ -396,7 +396,7 @@ static void assign_elem(
 			vp->name, n_subscr, vp->chan.multi[n_subscr]->name);
 		return;
 	}
-	vp->chan.multi[n_subscr]->name = pv_name->value;
+	vp->chan.multi[n_subscr]->name = pv_name;
 }
 
 /* Assign an array element to a channel.
@@ -415,7 +415,7 @@ static void assign_subscript(
 	assert(defn);
 	assert(vp);
 	assert(subscr);
-	assert(subscr->type == E_CONST);		/* syntax */
+	assert(subscr->type == E_CONST);	/* syntax */
 	assert(pv_name);
 
 #ifdef DEBUG
@@ -438,13 +438,13 @@ static void assign_subscript(
 			vp->name, subscr->value);
 		return;
 	}
-	assign_elem(chan_list, defn, vp, n_subscr, pv_name);
+	assign_elem(chan_list, defn, vp, n_subscr, pv_name->value);
 }
 
 /* Assign an array variable to multiple channels.
  * Format: assign <variable> to { <string>, <string>, ... };
  */
-static void assign_list(
+static void assign_multi(
 	ChanList	*chan_list,
 	Expr		*defn,
 	Var		*vp,
@@ -457,7 +457,6 @@ static void assign_list(
 	assert(chan_list);
 	assert(defn);
 	assert(vp);
-	assert(pv_name_list);
 
 #ifdef DEBUG
 	report("assign %s to {", vp->name);
@@ -478,7 +477,12 @@ static void assign_list(
 #ifdef DEBUG
 		report("'%s'%s", pv_name->value, pv_name->next ? ", " : "};\n");
 #endif
-		assign_elem(chan_list, defn, vp, n_subscr++, pv_name);
+		assign_elem(chan_list, defn, vp, n_subscr++, pv_name->value);
+	}
+	/* for the remaining array elements, assign to "" */
+	while (n_subscr < type_array_length1(vp->type))
+	{
+		assign_elem(chan_list, defn, vp, n_subscr++, "");
 	}
 }
 
