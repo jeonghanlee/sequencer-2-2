@@ -468,7 +468,7 @@ static void gen_var_access(Var *vp)
 
 	if (vp->type->tag == V_EVFLAG)
 	{
-		printf("%d", vp->chan.evflag->index);
+		printf("%d/*%s*/", vp->chan.evflag->index, vp->name);
 	}
 	else if (vp->type->tag == V_NONE)
 	{
@@ -688,7 +688,7 @@ static int special_func(int context,	Expr *ep)
 	fname = ep->value;
 	func_code = func_name_to_code(fname);
 	if (func_code == F_NONE)
-		return FALSE; /* not a special function */
+		return FALSE;	/* not a special function */
 
 #ifdef	DEBUG
 	report("special_func: code=%d, name=%s\n", func_code, fname);
@@ -836,12 +836,11 @@ static void gen_pv_func(
 )
 {
 	Expr	*ap, *subscr = 0;
-	Var	*vp;
-	char	*vn;
-	int	id;
+	Var	*vp = NULL;
 	int	num_extra_parms = 0;
 
-	ap = ep->func_args; /* ptr to 1-st parameter in the function */
+	ap = ep->func_args;
+	/* first parameter is always */
 	if (ap == 0)
 	{
 		error_at_expr(ep,
@@ -849,9 +848,6 @@ static void gen_pv_func(
 		return;
 	}
 
-	vp = 0;
-	vn = "?";
-	id = -1;
 	if (ap->type == E_VAR)
 	{
 		vp = ap->extra.e_var;
@@ -859,35 +855,48 @@ static void gen_pv_func(
 	else if (ap->type == E_SUBSCR)
 	{
 		/* Form should be: <pv variable>[<expression>] */
-		Expr *ep2 = ap->subscr_operand;
+		Expr *operand = ap->subscr_operand;
 		subscr = ap->subscr_index;
-		if (ep2->type == E_VAR)
+		if (operand->type == E_VAR)
 		{
-			vp = ep2->extra.e_var;
+			vp = operand->extra.e_var;
 		}
 	}
+	if (vp == 0)
+	{
+		error_at_expr(ep,
+		  "parameter 1 to '%s' must be a variable or subscripted variable\n",
+		  fname);
+		return;
+	}
 
-	assert(vp != 0);
 #ifdef	DEBUG
 	report("gen_pv_func: fun=%s, var=%s\n", ep->value, vp->name);
 #endif
-	vn = vp->name;
+	printf("seq_%s(ssId, ", fname);
 	if (vp->assign == M_NONE)
 	{
 		error_at_expr(ep,
-			"parameter to '%s' was not assigned to a pv\n", fname);
+			"parameter 1 to '%s' was not assigned to a pv\n", fname);
+		printf("?/*%s*/", vp->name);
+	}
+	else if (ap->type == E_SUBSCR && vp->assign != M_MULTI)
+	{
+		error_at_expr(ep,
+			"parameter 1 to '%s' is subscripted but the variable "
+			"it refers to has not been assigned to multiple pvs\n", fname);
+		printf("%d/*%s*/", vp->index, vp->name);
 	}
 	else
 	{
-		id = vp->index;
+		printf("%d/*%s*/", vp->index, vp->name);
 	}
 
-	printf("seq_%s(ssId, %d /* %s */", fname, id, vn);
-
-	if (ap->type == E_SUBSCR) /* subscripted variable? */
-	{	/* e.g. pvPut(xyz[i+2]); => seq_pvPut(ssId, 3 + (i+2)); */
+	if (ap->type == E_SUBSCR)
+	{
+		/* e.g. pvPut(xyz[i+2]); => seq_pvPut(ssId, 3 + (i+2)); */
 		printf(" + (");
-		/* evalute the subscript expression */
+		/* generate the subscript expression */
 		gen_expr(context, subscr, 0);
 		printf(")");
 	}
