@@ -325,7 +325,7 @@ static void gen_entry_body(Expr *xp)
 {
 	Expr	*ep;
 
-	assert(xp->type = D_ENTRY);
+	assert(xp->type == D_ENTRY);
 	gen_local_var_decls(xp, 1);
 	gen_defn_c_code(xp, 1);
 	foreach (ep, xp->entry_stmts)
@@ -338,7 +338,7 @@ static void gen_exit_body(Expr *xp)
 {
 	Expr	*ep;
 
-	assert(xp->type = D_EXIT);
+	assert(xp->type == D_EXIT);
 	gen_local_var_decls(xp, 1);
 	gen_defn_c_code(xp, 1);
 	foreach (ep, xp->exit_stmts)
@@ -1064,7 +1064,7 @@ static void gen_prog_init_func(Expr *prog)
 {
 	const int global_stop_mask = ~((1<<D_DECL)|(1<<D_PROG));
 
-	assert(prog->type = D_PROG);
+	assert(prog->type == D_PROG);
 	printf("\n/* Program init func */\n");
 	printf("static void global_prog_init(struct %s *pVar)\n{\n", VAR_PREFIX);
 	/* initialize global variables */
@@ -1078,7 +1078,7 @@ static void gen_prog_func(
 	Expr *xp,
 	void (*gen_body)(Expr *xp))
 {
-	assert(prog->type = D_PROG);
+	assert(prog->type == D_PROG);
 	printf("\n/* Program %s func */\n", name);
 	printf("static void global_prog_%s(SS_ID ssId, struct %s *pVar)\n{\n",
 		name, VAR_PREFIX);
