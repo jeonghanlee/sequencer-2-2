@@ -39,7 +39,6 @@ static void gen_state_event_mask(Expr *sp, uint num_event_flags,
 	bitMask *event_words, uint num_event_words);
 static int iter_event_mask_scalar(Expr *ep, Expr *scope, void *parg);
 static int iter_event_mask_array(Expr *ep, Expr *scope, void *parg);
-static char *pv_type_str(int type);
 
 /* Generate all kinds of tables for a SNL program. */
 void gen_tables(Program *p)
@@ -101,7 +100,6 @@ static void gen_channel(Chan *cp, uint num_event_flags, int opt_reent)
 	char	elem_str[20] = "";
 	uint	ef_num = 0;
 
-	/* Figure out text needed to handle subscripts */
 	if (vp->assign == M_MULTI)
 		sprintf(elem_str, "[%d]", cp->index);
 
@@ -115,7 +113,6 @@ static void gen_channel(Chan *cp, uint num_event_flags, int opt_reent)
 	else
 		printf("  {\"%s\", ", cp->name);
 
-	/* Ptr or offset to user variable */
 	if (opt_reent)
 	{
 		printf("offsetof(struct %s, ", VAR_PREFIX);
@@ -128,10 +125,11 @@ static void gen_channel(Chan *cp, uint num_event_flags, int opt_reent)
 		gen_var_name(vp);
 		printf("%s - (char*)0, ", elem_str);
 	}
- 	/* variable name with optional elem num */
-	printf("\"%s%s\", ", vp->name, elem_str);
- 	/* variable type */
-	printf("\n    \"%s\", ", pv_type_str(type_base_type(vp->type)));
+
+	/* variable name with optional elem num */
+	printf("\"%s%s\",\n", vp->name, elem_str);
+	/* variable type */
+	printf("    \"%s\", ", type_name(type_base_type(vp->type)));
 	/* count, for requests */
 	printf("%d, ", cp->count);
 	/* event number */
@@ -148,26 +146,6 @@ static void gen_channel(Chan *cp, uint num_event_flags, int opt_reent)
 	else
 		printf("1, %d, %d", cp->syncq->size, cp->syncq->index);
 	printf("}");
-}
-
-/* Convert variable type to pv type as a string */
-static char *pv_type_str(int type)
-{
-	switch (type)
-	{
-	case V_CHAR:	return "char";
-	case V_SHORT:	return "short";
-	case V_INT:	return "int";
-	case V_LONG:	return "long";
-	case V_UCHAR:	return "unsigned char";
-	case V_USHORT:	return "unsigned short";
-	case V_UINT:	return "unsigned int";
-	case V_ULONG:	return "unsigned long";
-	case V_FLOAT:	return "float";
-	case V_DOUBLE:	return "double";
-	case V_STRING:	return "string";
-	default:	return "";
-	}
 }
 
 /* Generate state event mask and table */
