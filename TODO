@@ -1,2 +1,53 @@
+* Make sure that variables assigned to anonymous PVs are only updated
+  before when() clauses if monitored or if they are a pvGet completions.
+  This is important so we can exchange an anonymous for a named PV and vice
+  versa w/o disrupting the program logic.
+
+* Check that communication via anonymous PVs uses the full array length.
+
+* Check whether it makes sense to let users specify the communication
+  (request) type. This is currently baked-in to be inferred from the
+  variable's type as specified in the program text. The question is if this
+  brings any actual benefit, considering that sequencer and database
+  typically run on the same IOC. It might be convenient, sometimes.
+
+* Add optional timeout argument for pvGet and pvPut to override the
+  hard-coded default of 10 seconds.
+
 * Check event_flag argument for pvSync in the compiler.
 
+* Raw ideas:
+
+  - Allow 'final' states with no transitions (no when() clauses, no exit
+    clauses). They would serve as an end-point, e.g. in case of an error.
+    Same as ::
+
+      when (FALSE) {
+      } state no_matter
+
+  - Allow parameterized state sets (like a function). Then allow to "jump"
+    from one state set to another one. The "caller" i.e. the original state
+    set must wait for the "callee" to finish. The idea here is to avoid
+    dynamic creation of threads, as this could be implemented as a simple
+    procedure call. Needs more thought.
+
+  - Design and implement an "enumeration" type. Maybe something like ::
+
+      typedef struct {
+        int index;
+        char *name;
+      } enumeration;
+
+    so user can select whether to set/get index or name. Not sure if this
+    can be made to work.
+
+  - Invent a new syntax for pv "assign". My current favourite::
+
+      pv int x = 0;                   /* single anonymous scalar pv */
+      pv "name" int x;                /* single named scalar pv */
+      pv int x[2] = {1,2};            /* single anonymous array[2] pv */
+      pv "name" int x[2] = {1,2};     /* single named array[2] pv */
+      pv {} int x[2];                 /* multiple(2) anonymous scalar pvs */
+      pv {"n1", "n2"} int x[2];       /* multiple(2) named scalar pvs */
+      pv {} int x[2][100];            /* multiple(2) anonymous array[100] pvs */
+      pv {"n1", "n2"} int x[2][100];  /* multiple(2) named array[100] pvs */
