@@ -28,7 +28,8 @@
  *	  Advanced Photon Source
  *	  Argonne National Laboratory
  */
-#define DEBUG errlogPrintf /* nothing, printf, errlogPrintf etc. */
+/* #define DEBUG errlogPrintf */
+#define DEBUG nothing
 
 #include <string.h>
 

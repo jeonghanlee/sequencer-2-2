@@ -7,13 +7,9 @@
 	Copyright, 2010, Helmholtz-Zentrum Berlin f. Materialien
 		und Energie GmbH, Germany (HZB)
 		(see file Copyright.HZB included in this distribution)
-
-	Seq() initiates a sequence as a group of cooperating
-	tasks.  An optional string parameter specifies the values for
-	macros.  The PV context and auxiliary thread are shared by all state
-	programs.
 ***************************************************************************/
-#define DEBUG errlogPrintf /* nothing, printf, errlogPrintf etc. */
+/* #define DEBUG printf */
+#define DEBUG nothing
 
 #include <sys/types.h>
 #include <sys/stat.h>

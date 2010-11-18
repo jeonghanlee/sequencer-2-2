@@ -7,7 +7,8 @@
 	The macro table contains name & value pairs.  These are both pointers
 	to strings.
 ***************************************************************************/
-#define DEBUG errlogPrintf /* nothing, printf, errlogPrintf etc. */
+/* #define DEBUG printf */
+#define DEBUG nothing
 
 #include <ctype.h>
 #include <stdlib.h>

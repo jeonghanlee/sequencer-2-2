@@ -9,9 +9,10 @@
 		und Energie GmbH, Germany (HZB)
 		(see file Copyright.HZB included in this distribution)
 
-	Thread creation and control for sequencer state-sets.
+	Thread creation and control for sequencer state sets.
 ***************************************************************************/
-#define DEBUG errlogPrintf /* nothing, printf, errlogPrintf etc. */
+/* #define DEBUG errlogPrintf */
+#define DEBUG nothing
 
 #include <limits.h>
 #include <string.h>
