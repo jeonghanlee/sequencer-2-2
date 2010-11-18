@@ -488,8 +488,7 @@ static void gen_event_body(Expr *xp)
 
 static void gen_var_access(Var *vp)
 {
-	char *pre = global_opt_reent ? "(pVar->" : "";
-	char *post = global_opt_reent ? ")" : "";
+	char *pre = global_opt_reent ? "pVar->" : "";
 
 	assert(vp);
 	assert(vp->scope);
@@ -510,17 +509,17 @@ static void gen_var_access(Var *vp)
 	}
 	else if (vp->scope->type == D_PROG)
 	{
-		printf("%s%s%s", pre, vp->name, post);
+		printf("%s%s", pre, vp->name);
 	}
 	else if (vp->scope->type == D_SS)
 	{
-		printf("%s%s_%s.%s%s", pre, VAR_PREFIX, vp->scope->value, vp->name, post);
+		printf("%s%s_%s.%s", pre, VAR_PREFIX, vp->scope->value, vp->name);
 	}
 	else if (vp->scope->type == D_STATE)
 	{
-		printf("%s%s_%s.%s_%s.%s%s", pre, VAR_PREFIX,
+		printf("%s%s_%s.%s_%s.%s", pre, VAR_PREFIX,
 			vp->scope->extra.e_state->var_list->parent_scope->value,
-			VAR_PREFIX, vp->scope->value, vp->name, post);
+			VAR_PREFIX, vp->scope->value, vp->name);
 	}
 	else	/* compound or when stmt => generate a local C variable */
 	{
