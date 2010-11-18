@@ -1,5 +1,6 @@
 program race
 
+/* un-comment the following to demonstrate safe mode */
 /* option +s; */
 
 %%#include <stdio.h>
