@@ -26,7 +26,7 @@ typedef struct seqQueue *QUEUE;
 /* Create a new queue with the given element size and
    number of elements and return it, if successful,
    otherwise (out of memory) return NULL. */
-QUEUE seqQueueCreate(int numElems, int elemSize);
+QUEUE seqQueueCreate(unsigned numElems, unsigned elemSize);
 
 /* A common precondition of the following operations is
    that their QUEUE argument is valid; they do not check
@@ -46,24 +46,24 @@ void seqQueueDestroy(QUEUE q);
 /* Get an element from the queue if possible. Return
    whether the queue was empty and therefore no
    element could be copied. */
-int seqQueueGet(QUEUE q, void *value);
+boolean seqQueueGet(QUEUE q, void *value);
 /* Put an element into the queue. Return whether the
    queue was full and therefore its last element was
    overwritten. */
-int seqQueuePut(QUEUE q, const void *value);
+boolean seqQueuePut(QUEUE q, const void *value);
 /* Remove all elements. Cheap. */
 void seqQueueFlush(QUEUE q);
 /* How many free elements are left. */
-int seqQueueFree(const QUEUE q);
+boolean seqQueueFree(const QUEUE q);
 /* How many elements are used up. */
-int seqQueueUsed(const QUEUE q);
+boolean seqQueueUsed(const QUEUE q);
 /* Number of elements (fixed on construction). */
-int seqQueueNumElems(const QUEUE q);
+unsigned seqQueueNumElems(const QUEUE q);
 /* Element size (fixed on construction). */
-int seqQueueElemSize(const QUEUE q);
+unsigned seqQueueElemSize(const QUEUE q);
 /* Whether empty, same as seqQueueUsed(q)==0 */
-int seqQueueIsEmpty(const QUEUE q);
+boolean seqQueueIsEmpty(const QUEUE q);
 /* Whether full, same as seqQueueFree(q)==0 */
-int seqQueueIsFull(const QUEUE q);
+boolean seqQueueIsFull(const QUEUE q);
 
 #endif /* INCLseq_queueh */
