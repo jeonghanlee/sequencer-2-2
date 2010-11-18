@@ -27,6 +27,7 @@ PROD += syncq
 PROD += pvSync
 PROD += pvPutAsync
 PROD += array
+PROD += stop
 
 #PROD += ctest
 
