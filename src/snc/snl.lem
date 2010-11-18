@@ -95,7 +95,7 @@ program_param(p) ::= .			{ p = 0; }
 global_defns(p) ::= global_defns(xs) global_defn(x). {
 	p = link_expr(xs, x);
 }
-global_defns(p) ::= global_defn(x).	{ p = x; }
+global_defns(p) ::= .			{ p = 0; }
 
 global_defn(p) ::= assign(x).		{ p = x; }
 global_defn(p) ::= monitor(x).		{ p = x; }
@@ -216,9 +216,7 @@ state_sets(p) ::= state_set(x).			{ p = x; }
 state_set(p) ::= SS NAME(n) LBRACE ss_defns(ds) states(xs) RBRACE.
 						{ p = expr(D_SS, n, ds, xs); }
 
-ss_defns(p) ::= ss_defns(xs) ss_defn(x). {
-	p = link_expr(xs, x);
-}
+ss_defns(p) ::= ss_defns(xs) ss_defn(x).	{ p = link_expr(xs, x); }
 ss_defns(p) ::= .				{ p = 0; }
 
 ss_defn(p) ::= assign(x).			{ p = x; }
