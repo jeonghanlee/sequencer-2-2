@@ -2,6 +2,7 @@
    (see file Copyright.HZB included in this distribution)
 */
 
+#include <limits.h>
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -104,21 +105,21 @@ Expr *decl_create(Token name)
 
 Expr *decl_postfix_array(Expr *d, char *s)
 {
-    int l = atoi(s);
     Type *t = new(Type);
+    uint num_elems;
 
     assert(d->type == D_DECL);          /* pre-condition */
-    if (l <= 0) {
+    if (!strtoui(s, UINT_MAX, &num_elems) || num_elems == 0) {
         error_at_expr(d, "invalid array size (must be >= 1)\n");
-        l = 1;
+        num_elems = 1;
     }
 
 #ifdef DEBUG
-    fprintf(stderr, "decl_postfix_array %d\n", l);
+    fprintf(stderr, "decl_postfix_array %u\n", num_elems);
 #endif
 
     t->tag = V_ARRAY;
-    t->val.array.num_elems = l;
+    t->val.array.num_elems = num_elems;
     t->parent = d->extra.e_decl->type;
     d->extra.e_decl->type = t;
     return d;
