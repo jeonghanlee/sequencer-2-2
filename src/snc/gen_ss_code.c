@@ -247,13 +247,13 @@ void gen_ss_code(Program *program)
 			/* Generate event processing function */
 			gen_state_func(ssp->value, sp->value,
 				sp->state_whens, gen_event_body,
-				"Event", "E", "unsigned",
+				"Event", "E", "boolean",
 				", short *pTransNum, short *pNextState");
 			/* Generate action processing function */
 			gen_state_func(ssp->value, sp->value,
 				sp->state_whens, gen_action_body,
 				"Action", "A", "void",
-                                ", short transNum, short *pNextState");
+                                ", int transNum, short *pNextState");
 		}
 	}
 

@@ -172,7 +172,7 @@ static void gen_state_table(Expr *ss_list, uint num_event_flags, uint num_channe
 			printf("static bitMask\tEM_%s_%s[] = {\n",
 				ssp->value, sp->value);
 			for (n = 0; n < num_event_words; n++)
-				printf("\t0x%08lx,\n", event_mask[n]);
+				printf("\t0x%08x,\n", event_mask[n]);
 			printf("};\n");
 		}
 
