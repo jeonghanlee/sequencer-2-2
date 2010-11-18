@@ -26,6 +26,7 @@ PROD += subscript
 PROD += syncq
 PROD += pvSync
 PROD += pvPutAsync
+PROD += array
 
 #PROD += ctest
 
