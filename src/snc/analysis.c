@@ -1047,8 +1047,8 @@ static int connect_variable(Expr *ep, Expr *scope, void *parg)
 	if (vp)
 	{
 		report_at_expr(ep, "var %s found in scope (%s:%s)\n", ep->value,
-			expr_type_name(scope),
-			scope->value);
+			expr_type_name(vp->scope),
+			vp->scope->value);
 	}
 	else
 		report_at_expr(ep, "var %s not found\n", ep->value);
