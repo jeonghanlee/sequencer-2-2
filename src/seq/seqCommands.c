@@ -199,3 +199,6 @@ epicsShareFunc void epicsShareAPI seqRegisterSequencerCommands(void)
         iocshRegister(&seqcarFuncDef,seqcarCallFunc);
     }
 }
+
+/* avoid nothing define but not used warnings */
+pr_fun *seqCommands_nothing_dummy = nothing;

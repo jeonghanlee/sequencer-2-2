@@ -487,3 +487,6 @@ static void seqShowAll(void)
 	if (seqProgCount == 0)
 		printf("No active state programs\n");
 }
+
+/* avoid nothing define but not used warnings */
+pr_fun *qry_nothing_dummy = nothing;
