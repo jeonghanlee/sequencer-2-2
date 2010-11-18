@@ -24,7 +24,7 @@ static void seqShowAll(void);
  * If a non-zero thread id is specified then print the information about
  * the state program, otherwise print a brief summary of all state programs
  */
-long epicsShareAPI seqShow(epicsThreadId tid)
+epicsShareFunc void epicsShareAPI seqShow(epicsThreadId tid)
 {
 	SPROG	*pSP;
 	SSCB	*pSS;
@@ -34,7 +34,7 @@ long epicsShareAPI seqShow(epicsThreadId tid)
 
 	pSP = seqQryFind(tid);
 	if (pSP == NULL)
-		return 0;
+		return;
 
 	/* Print info about state program */
 	printf("State Program: \"%s\"\n", pSP->pProgName);
@@ -104,13 +104,11 @@ long epicsShareAPI seqShow(epicsThreadId tid)
 		}
 		printf("\n");
 	}
-
-	return 0;
 }
 /*
  * seqChanShow() - Show channel information for a state program.
  */
-long epicsShareAPI seqChanShow(epicsThreadId tid, char *pStr)
+epicsShareFunc void epicsShareAPI seqChanShow(epicsThreadId tid, char *pStr)
 {
 	SPROG	*pSP;
 	CHAN	*pDB;
@@ -119,7 +117,7 @@ long epicsShareAPI seqChanShow(epicsThreadId tid, char *pStr)
 	int	match, showAll;
 
 	pSP = seqQryFind(tid);
-	if(!pSP) return 0;
+	if(!pSP) return;
 
 	printf("State Program: \"%s\"\n", pSP->pProgName);
 	printf("Number of channels=%ld\n", pSP->numChans);
@@ -206,14 +204,12 @@ long epicsShareAPI seqChanShow(epicsThreadId tid, char *pStr)
 
 		n = wait_rtn();
 		if (n == 0)
-			return 0;
+			return;
 		nch += n;
 		if (nch < 0)
 			nch = 0;
 		pDB = pSP->pChan + nch;
 	}
-
-	return 0;
 }
 /*
  * seqcar() - Sequencer Channel Access Report
@@ -257,7 +253,7 @@ static int seqcarCollect(SPROG *pSP, void *param)
 	return FALSE;	/* continue traversal */
 }
 
-long epicsShareAPI seqcar(int level)
+epicsShareFunc void epicsShareAPI seqcar(int level)
 {
 	struct seqStats stats = {0, 0, 0, 0};
 	int diss;
@@ -266,20 +262,23 @@ long epicsShareAPI seqcar(int level)
 	diss = stats.nChans - stats.nConn;
 	printf("Total programs=%d, channels=%d, connected=%d, disconnected=%d\n",
 		stats.nProgs, stats.nChans, stats.nConn, diss);
-	return diss;
+	return;
 }
 
-void epicsShareAPI seqcaStats(int *pchans, int *pdiscon)
+#if 0
+epicsShareFunc void epicsShareAPI seqcaStats(int *pchans, int *pdiscon)
 {
 	struct seqStats stats = {0, 0, 0, 0};
 	seqTraverseProg(seqcarCollect, (void *) &stats);
 	if (pchans)  *pchans  = stats.nChans;
 	if (pdiscon) *pdiscon = stats.nChans - stats.nConn;
 }
+#endif
+
 /*
  * seqQueueShow() - Show syncQ queue information for a state program.
  */
-long epicsShareAPI seqQueueShow(epicsThreadId tid)
+epicsShareFunc void epicsShareAPI seqQueueShow(epicsThreadId tid)
 {
 	SPROG	*pSP;
 	ELLLIST	*pQueue;
@@ -287,7 +286,7 @@ long epicsShareAPI seqQueueShow(epicsThreadId tid)
 	char	tsBfr[50];
 
 	pSP = seqQryFind(tid);
-	if(!pSP) return 0;
+	if(!pSP) return;
 
 	printf("State Program: \"%s\"\n", pSP->pProgName);
 	printf("Number of queues = %d\n", pSP->numQueues);
@@ -327,14 +326,12 @@ long epicsShareAPI seqQueueShow(epicsThreadId tid)
 
 		n = wait_rtn();
 		if (n == 0)
-			return 0;
+			return;
 		nque += n;
 		if (nque < 0)
 			nque = 0;
 		pQueue = pSP->pQueues + nque;
 	}
-
-	return 0;
 }
 
 /* Read from console until a RETURN is detected */
@@ -489,5 +486,4 @@ static void seqShowAll(void)
 	seqTraverseProg(seqShowSP, 0);
 	if (seqProgCount == 0)
 		printf("No active state programs\n");
-	return;
 }
