@@ -163,7 +163,7 @@ init_declarators(p) ::= init_declarator(x).	{ p = x; }
 init_declarators(p) ::= init_declarators(xs) COMMA init_declarator(x).
 						{ p = link_expr(xs, x); }
 
-init_declarator(p) ::= declarator(x).		{ p = decl_add_init(x, 0); }
+init_declarator(p) ::= declarator(x).		{ p = x; }
 init_declarator(p) ::= declarator(x) EQUAL init_expr(i).
 						{ p = decl_add_init(x, i); }
 
