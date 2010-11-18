@@ -84,6 +84,9 @@ Expr *decl_add_base_type(Expr *ds, unsigned tag)
 Expr *decl_add_init(Expr *d, Expr *init)
 {
     assert(d->type == D_DECL);          /* pre-condition */
+#ifdef DEBUG
+    report("decl_add_init: var=%s, init=%p\n", d->extra.e_decl->name, init);
+#endif
     d->extra.e_decl->init = init;
     return d;
 }
@@ -94,7 +97,7 @@ Expr *decl_create(Token name)
     Var *var = new(Var);
 
 #ifdef DEBUG
-    fprintf(stderr, "decl_create: name(%s)\n", name.str);
+    report("decl_create: name(%s)\n", name.str);
 #endif
     assert(d->type == D_DECL);          /* expr() post-condition */
     var->name = name.str;
@@ -115,7 +118,7 @@ Expr *decl_postfix_array(Expr *d, char *s)
     }
 
 #ifdef DEBUG
-    fprintf(stderr, "decl_postfix_array %u\n", num_elems);
+    report("decl_postfix_array %u\n", num_elems);
 #endif
 
     t->tag = V_ARRAY;
@@ -130,7 +133,7 @@ Expr *decl_prefix_pointer(Expr *d)
     Type *t = new(Type);
 
 #ifdef DEBUG
-    fprintf(stderr, "decl_prefix_pointer\n");
+    report("decl_prefix_pointer\n");
 #endif
     assert(d->type == D_DECL);          /* pre-condition */
     t->tag = V_POINTER;
