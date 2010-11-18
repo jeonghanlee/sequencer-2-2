@@ -448,7 +448,7 @@ static int seq_getTimeout(SSCB *pSS, double *pdelay)
 /*
  * Delete all state-set threads and do general clean-up.
  */
-long epicsShareAPI seqStop(epicsThreadId tid)
+void epicsShareAPI seqStop(epicsThreadId tid)
 {
 	SPROG		*pSP;
 	SSCB		*pSS;
@@ -457,7 +457,7 @@ long epicsShareAPI seqStop(epicsThreadId tid)
 	/* Check that this is indeed a state program thread */
 	pSP = seqFindProg(tid);
 	if (pSP == NULL)
-		return -1;
+		return;
 
 	DEBUG("Stop %s: pSP=%p, tid=%p\n", pSP->pProgName, pSP,tid);
 
@@ -567,7 +567,6 @@ long epicsShareAPI seqStop(epicsThreadId tid)
 	seqFree(pSP);
 
 	DEBUG("   Done\n");
-	return 0;
 }
 
 /* seqFree()--free all allocated memory */
