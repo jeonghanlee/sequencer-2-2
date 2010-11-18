@@ -1,4 +1,4 @@
-/*	Definitions for the run-time sequencer
+/*	Internal common definitions for the run-time sequencer library
  *
  *      Author:         Andy Kozubal
  *      Date:           
@@ -57,6 +57,10 @@ extern void *pvSys;
 #ifndef max
 #define max(x, y) (((x) < (y)) ? (y) : (x))
 #endif
+
+/* Allocation */
+#define newArray(type,count)	(type *)calloc(count, sizeof(type))
+#define new(type)		newArray(type,1)
 
 typedef struct db_channel CHAN;
 typedef struct queue_entry QENTRY;
