@@ -170,7 +170,7 @@ init_declarator(p) ::= declarator(x) EQUAL init_expr(i).
 declarator(p) ::= ASTERISK declarator(x).	{ p = decl_prefix_pointer(x); }
 declarator(p) ::= direct_declarator(x).		{ p = x; }
 
-direct_declarator(p) ::= NAME(n).		{ p = decl_create(n); }
+direct_declarator(p) ::= variable(n).		{ p = decl_create(n); }
 direct_declarator(p) ::= LPAREN declarator(x) RPAREN.
 						{ p = x; }
 direct_declarator(p) ::= direct_declarator(x) subscript(s).
@@ -305,7 +305,7 @@ for_statement(p) ::=
 expr(p) ::= INTCON(x).				{ p = expr(E_CONST, x); }
 expr(p) ::= FPCON(x).				{ p = expr(E_CONST, x); }
 expr(p) ::= string(x).				{ p = x; }
-expr(p) ::= NAME(v).				{ p = expr(E_VAR, v); }
+expr(p) ::= variable(v).			{ p = expr(E_VAR, v); }
 
 // Parenthesized
 expr(p) ::= LPAREN(t) expr(x) RPAREN.		{ p = expr(E_PAREN, t, x); }
