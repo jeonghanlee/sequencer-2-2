@@ -47,13 +47,12 @@ epicsThreadId seqAuxThreadId = (epicsThreadId) 0;
  * Creates the initial state program thread and returns its thread id.
  * Most initialization is performed here.
  */
-epicsThreadId seq (
-	struct seqProgram *pSeqProg, char *macroDef, unsigned int stackSize)
+void seq (struct seqProgram *pSeqProg, char *macroDef, unsigned stackSize)
 {
 	epicsThreadId	tid;
 	SPROG		*pSP;
 	char		*pValue, *pThreadName;
-	unsigned int	smallStack;
+	unsigned	smallStack;
 	AUXARGS		auxArgs;
 
 	/* Print version & date of sequencer */
@@ -62,7 +61,7 @@ epicsThreadId seq (
 	/* Exit if no parameters specified */
 	if (pSeqProg == 0)
 	{
-		return 0;
+		return;
 	}
 
 	/* Check for correct state program format */
@@ -73,7 +72,7 @@ epicsThreadId seq (
 			"versions\n");
 		errlogPrintf(" - Re-compile your program?\n");
 		epicsThreadSleep( 1.0 );	/* let error messages get printed */
-		return 0;
+		return;
 	}
 
 	/* Initialize the sequencer tables */
@@ -128,7 +127,7 @@ epicsThreadId seq (
 	/* Spawn the sequencer auxiliary thread */
 	if (seqAuxThreadId == (epicsThreadId) 0)
 	{
-		unsigned int auxStack = epicsThreadGetStackSize(epicsThreadStackMedium);
+		unsigned auxStack = epicsThreadGetStackSize(epicsThreadStackMedium);
 		epicsThreadCreate("seqAux", THREAD_PRIORITY+1, auxStack,
 				(EPICSTHREADFUNC)seqAuxThread, &auxArgs);
 		while (seqAuxThreadId == (epicsThreadId) 0)
@@ -138,7 +137,7 @@ epicsThreadId seq (
 		if (seqAuxThreadId == (epicsThreadId) -1)
 		{
 			epicsThreadSleep( 1.0 );	/* let error messages get printed */
-			return 0;
+			return;
 		}
 		DEBUG("thread seqAux spawned, tid=%p\n", seqAuxThreadId);
 	}
@@ -161,8 +160,6 @@ epicsThreadId seq (
 
 	printf("Spawning state program \"%s\", thread %p: \"%s\"\n",
 		pSP->pProgName, tid, pThreadName);
-
-	return tid;
 }
 
 /* seqInitTables - initialize sequencer tables */
@@ -306,7 +303,7 @@ static void init_sscb(struct seqProgram *pSeqProg, SPROG *pSP)
 			pState->pEventMask = pSeqState->pEventMask;
 			pState->options = pSeqState->options;
 
-			DEBUG("init_sscb: State Name=%s, Event Mask=0x%lx\n",
+			DEBUG("init_sscb: State Name=%s, Event Mask=0x%x\n",
 				pState->pStateName, *pState->pEventMask);
 		}
 		/* Allocate user variable area if safe mode option (+s) is set */
@@ -343,11 +340,11 @@ static void init_chan(struct seqProgram *pSeqProg, SPROG *pSP)
 		pDB->offset = pSeqChan->offset;
 		pDB->count = pSeqChan->count;
 		pDB->efId = pSeqChan->efId;
-		pDB->monFlag = pSeqChan->monFlag;
+		pDB->monFlag = pSeqChan->monitored;
 		pDB->eventNum = pSeqChan->eventNum;
 		pDB->queued = pSeqChan->queued;
-		pDB->maxQueueSize = pSeqChan->maxQueueSize ?
-				    pSeqChan->maxQueueSize : MAX_QUEUE_SIZE;
+		pDB->maxQueueSize = pSeqChan->queueSize ?
+				    pSeqChan->queueSize : MAX_QUEUE_SIZE;
 		pDB->queueIndex = pSeqChan->queueIndex;
 		pDB->assigned = 0;
 
@@ -585,7 +582,7 @@ static long seq_logv(SPROG *pSP, const char *fmt, va_list args)
  * seq_seqLog() - State program interface to seq_log().
  * Does not require ptr to state program block.
  */
-epicsShareFunc long seq_seqLog(SS_ID ssId, const char *fmt, ...)
+epicsShareFunc pvStat seq_seqLog(SS_ID ssId, const char *fmt, ...)
 {
 	SPROG		*pSP;
 	va_list		args;
