@@ -88,6 +88,7 @@ Expr *decl_add_init(Expr *d, Expr *init)
     report("decl_add_init: var=%s, init=%p\n", d->extra.e_decl->name, init);
 #endif
     d->extra.e_decl->init = init;
+    d->decl_init = init;
     return d;
 }
 
