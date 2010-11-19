@@ -106,6 +106,3 @@ doctest:
 pdf: html
 	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTS) $(BUILDDIR)/latex
 	$(MAKE) -C $(BUILDDIR)/latex all-pdf
-
-bnf.inc: snl.bnf bnf2txt.pl
-	perl -n bnf2txt.pl $< > $@

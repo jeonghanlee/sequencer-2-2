@@ -122,4 +122,3 @@
 ^lib($|/)
 ^html($|/)
 ^documentation/bnf.inc$
-^documentation/snl.bnf$

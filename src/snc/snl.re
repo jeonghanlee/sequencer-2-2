@@ -34,6 +34,15 @@ typedef unsigned char uchar;
 	return i;\
 }
 
+#define OPERATOR		RET
+#define LITERAL(t,e,n) 		RET(t,n)
+#define KEYWORD 		RET
+#define TYPEWORD		RET
+#define IDENTIFIER(t,e,n)	RET(t,n)
+#define DELIMITER		RET
+
+#define DONE			RET(EOI,0)
+
 typedef struct Scanner {
 	int	fd;	/* file descriptor */
 	uchar	*bot;	/* pointer to bottom (start) of buffer */
@@ -168,7 +177,7 @@ snl:
 
 /*!re2c
 	"\n"		{
-				if(cursor == s->eof) RET(EOI,0);
+				if(cursor == s->eof) DONE;
 				s->line++;
 				goto snl;
 			}
@@ -193,94 +202,96 @@ snl:
 				s->tok = end = cursor;
 				goto c_code_line;
 			}
-	"assign"	{ RET(ASSIGN,	"assign"); }
-	"break"		{ RET(BREAK,	"break"); }
-	"char"		{ RET(CHAR,	"char"); }
-	"connect"	{ RET(CONNECT,	"connect"); }
-	"continue"	{ RET(CONTINUE,	"continue"); }
-	"double"	{ RET(DOUBLE,	"double"); }
-	"else"		{ RET(ELSE,	"else"); }
-	"entry"		{ RET(ENTRY,	"entry"); }
-	"evflag"	{ RET(EVFLAG,	"evflag"); }
-	"exit"		{ RET(EXIT,	"exit"); }
-	"float"		{ RET(FLOAT,	"float"); }
-	"for"		{ RET(FOR,	"for"); }
-	"foreign"	{ RET(FOREIGN,	"foreign"); }
-	"if"		{ RET(IF,	"if"); }
-	"int"		{ RET(INT,	"int"); }
-	"long"		{ RET(LONG,	"long"); }
-	"monitor"	{ RET(MONITOR,	"monitor"); }
-	"option"	{ RET(OPTION,	"option"); }
-	"program"	{ RET(PROGRAM,	"program"); }
-	"short"		{ RET(SHORT,	"short"); }
-	"ss"		{ RET(SS,	"ss"); }
-	"state"		{ RET(STATE,	"state"); }
-	"string"	{ RET(STRING,	"string"); }
-	"syncQ"		{ RET(SYNCQ,	"syncQ"); }
-	"syncq"		{ RET(SYNCQ,	"syncq"); }
-	"sync"		{ RET(SYNC,	"sync"); }
-	"to"		{ RET(TO,	"to"); }
-	"unsigned"	{ RET(UNSIGNED,	"unsigned"); }
-	"when"		{ RET(WHEN,	"when"); }
-	"while"		{ RET(WHILE,	"while"); }
-	"TRUE"		{ RET(INTCON,	"TRUE"); }
-	"FALSE"		{ RET(INTCON,	"FALSE"); }
-	"ASYNC"		{ RET(INTCON,	"ASYNC"); }
-	"SYNC"		{ RET(INTCON,	"SYNC"); }
-	LET (LET|DEC)*	{ RET(NAME, strdupft(s->tok, cursor)); }
+	"assign"	{ KEYWORD(ASSIGN,	"assign"); }
+	"break"		{ KEYWORD(BREAK,	"break"); }
+	"char"		{ TYPEWORD(CHAR,	"char"); }
+	"connect"	{ KEYWORD(CONNECT,	"connect"); }
+	"continue"	{ KEYWORD(CONTINUE,	"continue"); }
+	"double"	{ TYPEWORD(DOUBLE,	"double"); }
+	"else"		{ KEYWORD(ELSE,		"else"); }
+	"entry"		{ KEYWORD(ENTRY,	"entry"); }
+	"evflag"	{ TYPEWORD(EVFLAG,	"evflag"); }
+	"exit"		{ KEYWORD(EXIT,		"exit"); }
+	"float"		{ TYPEWORD(FLOAT,	"float"); }
+	"for"		{ KEYWORD(FOR,		"for"); }
+	"foreign"	{ TYPEWORD(FOREIGN,	"foreign"); }
+	"if"		{ KEYWORD(IF,		"if"); }
+	"int"		{ TYPEWORD(INT,		"int"); }
+	"long"		{ TYPEWORD(LONG,	"long"); }
+	"monitor"	{ KEYWORD(MONITOR,	"monitor"); }
+	"option"	{ KEYWORD(OPTION,	"option"); }
+	"program"	{ KEYWORD(PROGRAM,	"program"); }
+	"short"		{ TYPEWORD(SHORT,	"short"); }
+	"ss"		{ KEYWORD(SS,		"ss"); }
+	"state"		{ KEYWORD(STATE,	"state"); }
+	"string"	{ KEYWORD(STRING,	"string"); }
+	"syncQ"		{ KEYWORD(SYNCQ,	"syncQ"); }
+	"syncq"		{ KEYWORD(SYNCQ,	"syncq"); }
+	"sync"		{ KEYWORD(SYNC,		"sync"); }
+	"to"		{ KEYWORD(TO,		"to"); }
+	"unsigned"	{ TYPEWORD(UNSIGNED,	"unsigned"); }
+	"when"		{ KEYWORD(WHEN,		"when"); }
+	"while"		{ KEYWORD(WHILE,	"while"); }
+
+	"TRUE"		{ LITERAL(INTCON, integer_literal, "TRUE"); }
+	"FALSE"		{ LITERAL(INTCON, integer_literal, "FALSE"); }
+	"ASYNC"		{ LITERAL(INTCON, integer_literal, "ASYNC"); }
+	"SYNC"		{ LITERAL(INTCON, integer_literal, "SYNC"); }
+
+	LET (LET|DEC)*	{ IDENTIFIER(NAME, identifier, strdupft(s->tok, cursor)); }
 	("0" [xX] HEX+ IS?) | ("0" DEC+ IS?) | (DEC+ IS?) | (['] (ESC|ANY\[\n\\'])* ['])
-			{ RET(INTCON, strdupft(s->tok, cursor)); }
+			{ LITERAL(INTCON, integer_literal, strdupft(s->tok, cursor)); }
 
 	(DEC+ EXP FS?) | (DEC* "." DEC+ EXP? FS?) | (DEC+ "." DEC* EXP? FS?)
-			{ RET(FPCON, strdupft(s->tok, cursor)); }
+			{ LITERAL(FPCON, floating_point_literal, strdupft(s->tok, cursor)); }
 
-	">>="		{ RET(RSHEQ,	">>="); }
-	"<<="		{ RET(LSHEQ,	"<<="); }
-	"+="		{ RET(ADDEQ,	"+="); }
-	"-="		{ RET(SUBEQ,	"-="); }
-	"*="		{ RET(MULEQ,	"*="); }
-	"/="		{ RET(DIVEQ,	"/="); }
-	"%="		{ RET(MODEQ,	"%="); }
-	"&="		{ RET(ANDEQ,	"&="); }
-	"^="		{ RET(XOREQ,	"^="); }
-	"|="		{ RET(OREQ,	"|="); }
-	">>"		{ RET(RSHIFT,	">>"); }
-	"<<"		{ RET(LSHIFT,	"<<"); }
-	"++"		{ RET(INCR,	"++"); }
-	"--"		{ RET(DECR,	"--"); }
-	"->"		{ RET(POINTER,	"->"); }
-	"&&"		{ RET(ANDAND,	"&&"); }
-	"||"		{ RET(OROR,	"||"); }
-	"<="		{ RET(LE,	"<="); }
-	">="		{ RET(GE,	">="); }
-	"=="		{ RET(EQ,	"=="); }
-	"!="		{ RET(NE,	"!="); }
-	";"		{ RET(SEMICOLON,";"); }
-	"{"		{ RET(LBRACE,	"{"); }
-	"}"		{ RET(RBRACE,	"}"); }
-	","		{ RET(COMMA,	","); }
-	":"		{ RET(COLON,	":"); }
-	"="		{ RET(EQUAL,	"="); }
-	"("		{ RET(LPAREN,	"("); }
-	")"		{ RET(RPAREN,	")"); }
-	"["		{ RET(LBRACKET,	"["); }
-	"]"		{ RET(RBRACKET,	"]"); }
-	"."		{ RET(PERIOD,	"."); }
-	"&"		{ RET(AMPERSAND,"&"); }
-	"!"		{ RET(NOT,	"!"); }
-	"~"		{ RET(TILDE,	"~"); }
-	"-"		{ RET(SUB,	"-"); }
-	"+"		{ RET(ADD,	"+"); }
-	"*"		{ RET(ASTERISK,	"*"); }
-	"/"		{ RET(SLASH,	"/"); }
-	"%"		{ RET(MOD,	"%"); }
-	"<"		{ RET(LT,	"<"); }
-	">"		{ RET(GT,	">"); }
-	"^"		{ RET(CARET,	"^"); }
-	"|"		{ RET(VBAR,	"|"); }
-	"?"		{ RET(QUESTION,	"?"); }
+	">>="		{ OPERATOR(RSHEQ,	">>="); }
+	"<<="		{ OPERATOR(LSHEQ,	"<<="); }
+	"+="		{ OPERATOR(ADDEQ,	"+="); }
+	"-="		{ OPERATOR(SUBEQ,	"-="); }
+	"*="		{ OPERATOR(MULEQ,	"*="); }
+	"/="		{ OPERATOR(DIVEQ,	"/="); }
+	"%="		{ OPERATOR(MODEQ,	"%="); }
+	"&="		{ OPERATOR(ANDEQ,	"&="); }
+	"^="		{ OPERATOR(XOREQ,	"^="); }
+	"|="		{ OPERATOR(OREQ,	"|="); }
+	">>"		{ OPERATOR(RSHIFT,	">>"); }
+	"<<"		{ OPERATOR(LSHIFT,	"<<"); }
+	"++"		{ OPERATOR(INCR,	"++"); }
+	"--"		{ OPERATOR(DECR,	"--"); }
+	"->"		{ OPERATOR(POINTER,	"->"); }
+	"&&"		{ OPERATOR(ANDAND,	"&&"); }
+	"||"		{ OPERATOR(OROR,	"||"); }
+	"<="		{ OPERATOR(LE,		"<="); }
+	">="		{ OPERATOR(GE,		">="); }
+	"=="		{ OPERATOR(EQ,		"=="); }
+	"!="		{ OPERATOR(NE,		"!="); }
+	";"		{ DELIMITER(SEMICOLON,	";"); }
+	"{"		{ DELIMITER(LBRACE,	"{"); }
+	"}"		{ DELIMITER(RBRACE,	"}"); }
+	","		{ DELIMITER(COMMA,	","); }
+	":"		{ OPERATOR(COLON,	":"); }
+	"="		{ OPERATOR(EQUAL,	"="); }
+	"("		{ DELIMITER(LPAREN,	"("); }
+	")"		{ DELIMITER(RPAREN,	")"); }
+	"["		{ DELIMITER(LBRACKET,	"["); }
+	"]"		{ DELIMITER(RBRACKET,	"]"); }
+	"."		{ OPERATOR(PERIOD,	"."); }
+	"&"		{ OPERATOR(AMPERSAND,	"&"); }
+	"!"		{ OPERATOR(NOT,		"!"); }
+	"~"		{ OPERATOR(TILDE,	"~"); }
+	"-"		{ OPERATOR(SUB,		"-"); }
+	"+"		{ OPERATOR(ADD,		"+"); }
+	"*"		{ OPERATOR(ASTERISK,	"*"); }
+	"/"		{ OPERATOR(SLASH,	"/"); }
+	"%"		{ OPERATOR(MOD,		"%"); }
+	"<"		{ OPERATOR(LT,		"<"); }
+	">"		{ OPERATOR(GT,		">"); }
+	"^"		{ OPERATOR(CARET,	"^"); }
+	"|"		{ OPERATOR(VBAR,	"|"); }
+	"?"		{ OPERATOR(QUESTION,	"?"); }
 	[ \t\v\f]+	{ goto snl; }
-	ANY		{ scan_report(s, "invalid character\n"); RET(EOI,0); }
+	ANY		{ scan_report(s, "invalid character\n"); DONE; }
 */
 
 string_const:
@@ -291,7 +302,7 @@ string_const:
 				end = cursor - 1;
 				goto string_cat;
 			}
-	ANY		{ scan_report(s, "invalid character in string constant\n"); RET(EOI,0); }
+	ANY		{ scan_report(s, "invalid character in string constant\n"); DONE; }
 */
 
 string_cat:
@@ -300,7 +311,7 @@ string_cat:
 	"\n"		{
 				if (cursor == s->eof) {
 					cursor -= 1;
-					RET(STRCON, strdupft(s->tok, end));
+					LITERAL(STRCON, string_literal, strdupft(s->tok, end));
 				}
 				s->line++;
 				goto string_cat;
@@ -313,7 +324,7 @@ string_cat:
 			}
 	ANY		{
 				cursor -= 1;
-				RET(STRCON, strdupft(s->tok, end));
+				LITERAL(STRCON, string_literal, strdupft(s->tok, end));
 			}
 */
 
@@ -363,7 +374,7 @@ comment:
 	"\n"		{
 				if (cursor == s->eof) {
 					scan_report(s, "at eof: unterminated comment\n");
-					RET(EOI,0);
+					DONE;
 				}
 				s->tok = cursor;
 				s->line++;
@@ -377,7 +388,7 @@ c_code:
 #ifdef DEBUG
 				report("c_code: tok=%p", s->tok);
 #endif
-				RET(CCODE, strdupft(s->tok, cursor - 2));
+				LITERAL(CCODE, embedded_c_code, strdupft(s->tok, cursor - 2));
 			}
 	.		{ goto c_code; }
 	"#" SPC+	{
@@ -387,7 +398,7 @@ c_code:
 	"\n"		{
 				if (cursor == s->eof) {
 					scan_report(s, "at eof: unterminated literal c-code section\n");
-					RET(EOI,0);
+					DONE;
 				}
 				s->line++;
 				goto c_code;
@@ -406,7 +417,7 @@ c_code_line:
 				}
 				s->line++;
 				if (end > s->tok) {
-					RET(CCODE, strdupft(s->tok, end));
+					LITERAL(CCODE, embedded_c_code, strdupft(s->tok, end));
 				}
 				goto snl;
 			}

@@ -50,7 +50,7 @@ endif
 
 # locally overwrite default value for this variable
 INSTALL_DOC = $(INSTALL_LOCATION)/documentation
-DOCS += snl.bnf
+DOCS += bnf.inc
 
 include $(TOP)/configure/RULES
 #----------------------------------------
@@ -72,6 +72,10 @@ $(COMMON_DIR)/snl.bnf: snl.lem
 	$(RM) $@
 	$(LEMON) o=. -g $< > $@.tmp
 	$(MV) $@.tmp $@
+
+$(COMMON_DIR)/bnf.inc: ../bnf2txt.pl snl.re $(COMMON_DIR)/snl.bnf
+	$(RM) $@
+	$(PERL) $^ > $@
 
 $(INSTALL_DOC)/%: $(COMMON_DIR)/%
 	@$(INSTALL) -d -m 644 $< $(INSTALL_DOC)
