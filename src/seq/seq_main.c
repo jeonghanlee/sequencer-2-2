@@ -8,19 +8,10 @@
 		und Energie GmbH, Germany (HZB)
 		(see file Copyright.HZB included in this distribution)
 ***************************************************************************/
+#include "seq.h"
+
 /* #define DEBUG printf */
 #define DEBUG nothing
-
-#include <sys/types.h>
-#include <sys/stat.h>
-
-#include <errno.h>
-#include <fcntl.h>
-#include <string.h>
-#include <stddef.h>
-#include <stdarg.h>
-
-#include "seq.h"
 
 /* function prototypes for local routines */
 static SPROG *seqInitTables(struct seqProgram *);

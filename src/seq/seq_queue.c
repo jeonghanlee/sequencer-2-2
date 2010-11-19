@@ -1,14 +1,7 @@
 /* Copyright 2010 Helmholtz-Zentrum Berlin f. Materialien und Energie GmbH
    (see file Copyright.HZB included in this distribution)
 */
-#include <assert.h>
-#include <limits.h>
-#include <stdlib.h>
-#include <string.h>
-#include "errlog.h"
-
-typedef int boolean;
-#include "seq_queue.h"
+#include "seq.h"
 
 struct seqQueue {
     int     nextPut;    /* count elements, not bytes */
@@ -125,3 +118,6 @@ boolean seqQueueIsFull(const QUEUE q)
     n = (q->nextPut - q->nextGet) + 1;
     return (n == 0 || n == q->numElems);
 }
+
+/* avoid nothing define but not used warnings */
+pr_fun *queue_nothing_dummy = nothing;

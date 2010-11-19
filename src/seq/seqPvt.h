@@ -31,6 +31,8 @@
 #ifndef	INCLseqPvth
 #define	INCLseqPvth
 
+#include "seq_queue.h"
+
 #define OK 0
 #define ERROR (-1)
 #define LOCAL static

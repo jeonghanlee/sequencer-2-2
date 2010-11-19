@@ -11,15 +11,6 @@
  *    Saskatoon, Saskatchewan, CANADA
  *    cls.usask.ca
  */
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-
-#include "epicsThread.h"
-#include "cantProceed.h"
-#include "iocsh.h"
-
 #include "seq.h"
 
 struct sequencerProgram {

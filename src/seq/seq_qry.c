@@ -9,9 +9,6 @@
 
 	Task query & debug routines for run-time sequencer
 ***************************************************************************/
-
-#include <string.h>
-
 #include "seq.h"
 
 static int wait_rtn(void);

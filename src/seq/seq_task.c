@@ -11,14 +11,12 @@
 
 	Thread creation and control for sequencer state sets.
 ***************************************************************************/
-/* #define DEBUG errlogPrintf */
-#define DEBUG nothing
-
-#include <limits.h>
-#include <string.h>
 
 #define DECLARE_PV_SYS
 #include "seq.h"
+
+/* #define DEBUG errlogPrintf */
+#define DEBUG nothing
 
 #define varPtr(sp,ss)	(((sp)->options & OPT_SAFE) ? (ss)->pVar : (sp)->pVar)
 

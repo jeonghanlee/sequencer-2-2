@@ -28,13 +28,10 @@
  *	  Advanced Photon Source
  *	  Argonne National Laboratory
  */
+#include "seq.h"
+
 /* #define DEBUG errlogPrintf */
 #define DEBUG nothing
-
-#include <stdlib.h>
-#include <string.h>
-
-#include "seq.h"
 
 /* Flush outstanding PV requests */
 epicsShareFunc void epicsShareAPI seq_pvFlush(SS_ID pSS)

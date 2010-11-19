@@ -28,10 +28,11 @@
  *	  Advanced Photon Source
  *	  Argonne National Laboratory
  */
+#include "seq.h"
+
 /* #define DEBUG errlogPrintf */
 #define DEBUG nothing
 
-#include <string.h>
 
 #include "seq.h"
 

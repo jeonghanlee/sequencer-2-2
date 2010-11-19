@@ -7,14 +7,10 @@
 	The macro table contains name & value pairs.  These are both pointers
 	to strings.
 ***************************************************************************/
+#include "seq.h"
+
 /* #define DEBUG printf */
 #define DEBUG nothing
-
-#include <ctype.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include "seq.h"
 
 /* Macro table */
 struct macro

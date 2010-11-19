@@ -11,11 +11,10 @@
 	All active state programs are inserted into the list when created
 	and removed from the list when deleted.
 ***************************************************************************/
+#include "seq.h"
+
 /* #define DEBUG errlogPrintf */
 #define DEBUG nothing
-
-#include <string.h>
-#include "seq.h"
 
 /*
  * seqFindProg() - find a program in the state program list from thread id.
