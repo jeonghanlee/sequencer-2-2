@@ -229,10 +229,8 @@ static void init_sprog(struct seqProgram *pSeqProg, SPROG *pSP)
 static void init_sscb(struct seqProgram *pSeqProg, SPROG *pSP)
 {
 	SSCB		*pSS;
-	STATE		*pState;
-	int		nss, nstates;
+	int		nss;
 	struct seqSS	*pSeqSS;
-	struct seqState	*pSeqState;
 
 
 	/* Allocate space for the SSCB structures */
@@ -273,26 +271,10 @@ static void init_sscb(struct seqProgram *pSeqProg, SPROG *pSP)
 		pSS->death3SemId = epicsEventMustCreate(epicsEventEmpty);
 		pSS->death4SemId = epicsEventMustCreate(epicsEventEmpty);
 
-		/* Allocate & fill in state blocks */
-		pSS->pStates = pState = (STATE *)calloc(pSS->numStates,
-							sizeof(STATE));
+		/* No need to copy the state structs, they can be shared
+		   because nothing gets mutated. */
+		pSS->pStates = pSeqSS->pStates;
 
-		pSeqState = pSeqSS->pStates;
-		for (nstates = 0; nstates < pSeqSS->numStates;
-					       nstates++, pState++, pSeqState++)
-		{
-			pState->pStateName = pSeqState->pStateName;
-			pState->actionFunc = pSeqState->actionFunc;
-			pState->eventFunc = pSeqState->eventFunc;
-			pState->delayFunc = pSeqState->delayFunc;
-			pState->entryFunc = pSeqState->entryFunc;
-			pState->exitFunc = pSeqState->exitFunc;
-			pState->pEventMask = pSeqState->pEventMask;
-			pState->options = pSeqState->options;
-
-			DEBUG("init_sscb: State Name=%s, Event Mask=0x%x\n",
-				pState->pStateName, *pState->pEventMask);
-		}
 		/* Allocate user variable area if safe mode option (+s) is set */
 		if (pSP->options & OPT_SAFE)
 		{

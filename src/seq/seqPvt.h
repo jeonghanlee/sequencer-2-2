@@ -66,7 +66,7 @@ extern void *pvSys;
 
 typedef struct db_channel CHAN;
 typedef struct queue_entry QENTRY;
-typedef struct state_info_block STATE;
+typedef struct seqState STATE;
 typedef struct macro MACRO;
 typedef struct state_set_control_block SSCB;
 typedef struct state_program SPROG;
@@ -124,19 +124,6 @@ struct queue_entry
 	ELLNODE		node;		/* linked list node */
 	CHAN		*pDB;		/* ptr to db channel info */
 	pvValue		value;		/* value, time stamp etc */
-};
-
-/* Structure to hold information about a state */
-struct state_info_block
-{
-	char		*pStateName;	/* state name */
-	ACTION_FUNC	*actionFunc;	/* ptr to action rout. for this state */
-	EVENT_FUNC	*eventFunc;	/* ptr to event rout. for this state */
-	DELAY_FUNC	*delayFunc;	/* ptr to delay rout. for this state */
-	ENTRY_FUNC	*entryFunc;	/* ptr to entry rout. for this state */
-	EXIT_FUNC	*exitFunc;	/* ptr to exit rout. for this state */
-	bitMask		*pEventMask;	/* event mask for this state */
-	bitMask		options;	/* options mask for this state */
 };
 
 /* Structure to hold information about a State Set */
