@@ -2,7 +2,7 @@ TOP = ..
 include $(TOP)/configure/CONFIG
 
 # You can set these variables from the command line.
-SPHINXOPTS    =
+SPHINXOPTS    = -q #-n
 SPHINXBUILD   = sphinx-build
 PAPER         = a4
 BUILDDIR      = O.Common

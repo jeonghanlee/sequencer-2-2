@@ -27,3 +27,5 @@ download, build, and install the software.
    Reference
    PV-API
    Examples
+
+:ref:`genindex`
