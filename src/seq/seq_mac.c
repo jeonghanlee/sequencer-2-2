@@ -24,8 +24,8 @@ struct macro
 	MACRO	*next;
 };
 
-static int seqMacParseName(char *pStr);
-static int seqMacParseValue(char *pStr);
+static unsigned seqMacParseName(char *pStr);
+static unsigned seqMacParseValue(char *pStr);
 static char *skipBlanks(char *pChar);
 static MACRO *seqMacTblGet(SPROG *pSP, char *pName);
 
@@ -115,7 +115,7 @@ char *seqMacValGet(SPROG *pSP, char *pName)
  */
 void seqMacParse(SPROG *pSP, char *pMacStr)
 {
-	int		nChar;
+	unsigned	nChar;
 	MACRO		*pMac;		/* macro tbl entry */
 	char		*pName, *pValue;
 
@@ -130,7 +130,7 @@ void seqMacParse(SPROG *pSP, char *pMacStr)
 		nChar = seqMacParseName(pMacStr);
 		if (nChar == 0)
 			break;		/* finished or error */
-		pName = (char *)calloc(nChar+1, 1);
+		pName = newArray(char, nChar+1);
 		if (pName == NULL)
 			break;
 		memcpy(pName, pMacStr, nChar);
@@ -172,7 +172,7 @@ void seqMacParse(SPROG *pSP, char *pMacStr)
 			free(pValue);
 
 		/* Copy value string into newly allocated space */
-		pValue = (char *)calloc(nChar+1, 1);
+		pValue = newArray(char, nChar+1);
 		if (pValue == NULL)
 			break;
 		pMac->pValue = pValue;
@@ -192,17 +192,17 @@ void seqMacParse(SPROG *pSP, char *pMacStr)
 /*
  * seqMacParseName() - Parse a macro name from the input string.
  */
-static int seqMacParseName(char *pStr)
+static unsigned seqMacParseName(char *pStr)
 {
-	int	nChar;
+	unsigned nChar;
 
 	/* First character must be [A-Z,a-z] */
-	if (!isalpha((int)*pStr))
+	if (!isalpha(*pStr))
 		return 0;
 	pStr++;
 	nChar = 1;
 	/* Character must be [A-Z,a-z,0-9,_] */
-	while ( isalnum((int)*pStr) || *pStr == '_' )
+	while ( isalnum(*pStr) || *pStr == '_' )
 	{
 		pStr++;
 		nChar++;
@@ -214,9 +214,9 @@ static int seqMacParseName(char *pStr)
 /*
  * seqMacParseValue() - Parse a macro value from the input string.
  */
-static int seqMacParseValue(char *pStr)
+static unsigned seqMacParseValue(char *pStr)
 {
-	int	nChar;
+	unsigned nChar;
 
 	nChar = 0;
 	/* Character string terminates on blank, comma, or EOS */
@@ -255,7 +255,7 @@ static MACRO *seqMacTblGet(SPROG *pSP, char *pName)
 		}
 	}
 	/* Not found, allocate an empty slot */
-	pMac = calloc(1,sizeof(MACRO));
+	pMac = new(MACRO);
 	/* This assumes ptr assignment is atomic */
 	if (pLastMac != NULL)
 		pLastMac->next = pMac;
