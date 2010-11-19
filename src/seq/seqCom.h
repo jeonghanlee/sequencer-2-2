@@ -193,7 +193,6 @@ epicsShareFunc boolean epicsShareAPI seq_pvConnected(SS_ID, VAR_ID);
 epicsShareFunc VAR_ID epicsShareAPI seq_pvIndex(SS_ID, VAR_ID);
 /* global operations */
 epicsShareFunc void epicsShareAPI seq_pvFlush(SS_ID);
-epicsShareFunc pvStat seq_seqLog(SS_ID, const char *, ...);
 epicsShareFunc void epicsShareAPI seq_delayInit(SS_ID, DELAY_ID, double);
 epicsShareFunc boolean epicsShareAPI seq_delay(SS_ID, DELAY_ID);
 epicsShareFunc char *epicsShareAPI seq_macValueGet(SS_ID, char *);

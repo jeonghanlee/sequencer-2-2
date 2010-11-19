@@ -19,7 +19,6 @@ static void init_sprog(struct seqProgram *, SPROG *);
 static void init_sscb(struct seqProgram *, SPROG *);
 static void init_chan(struct seqProgram *, SPROG *);
 
-static void init_log(SPROG *);
 static void seqChanNameEval(SPROG *);
 static void init_type(char *, short *, short *, short *, short *);
 
@@ -78,8 +77,6 @@ void seq (struct seqProgram *pSeqProg, char *macroDef, unsigned stackSize)
 	/* Do macro substitution on channel names */
 	seqChanNameEval(pSP);
 
-	/* Initialize sequencer logging */
-	init_log(pSP);
 
 	/* Specify stack size */
 	if (stackSize == 0)
@@ -204,7 +201,6 @@ static void init_sprog(struct seqProgram *pSeqProg, SPROG *pSP)
 	pSP->programLock = epicsMutexMustCreate();
 	pSP->connectCount = 0;
 	pSP->assignCount = 0;
-	pSP->logFd = NULL;
 
 	/* Allocate an array for event flag bits */
 	nWords = (pSP->numEvents + NBITS - 1) / NBITS;
@@ -477,111 +473,4 @@ static void init_type(
 		}
 	}
 	*pGetType = *pPutType = *pSize = *pOffset = 0; /* this shouldn't happen */
-}
-
-/*
- * init_log() - Initialize logging.
- * If "logfile" is not specified, then we log to standard output.
- */
-static void init_log(SPROG *pSP)
-{
-	char	*pValue;
-	FILE	*fd;
-
-	/* Create a logging resource locking semaphore */
-	pSP->logSemId = epicsMutexMustCreate();
-	pSP->pLogFile = "";
-
-	/* Check for logfile spec. */
-	pValue = seqMacValGet(pSP, "logfile");
-	if (pValue != NULL && strlen(pValue) > 0)
-	{	/* Create & open a new log file for write only */
-		fd = fopen(pValue, "w");
-		if (fd == NULL)
-		{
-			errlogPrintf("Log file open error, file=%s, error=%s\n",
-			pSP->pLogFile, strerror(errno));
-		}
-		else
-		{
-			errlogPrintf("Log file opened, fd=%d, file=%s\n",
-				     fileno(fd), pValue);
-			pSP->logFd = fd;
-			pSP->pLogFile = pValue;
-		}
-	}
-}
-
-/*
- * seq_logv
- * Log a message to the console or a file with thread name, date, & time of day.
- * The format looks like "mythread 12/13/93 10:07:43: Hello world!".
- */
-#define	LOG_BFR_SIZE	200
-
-static long seq_logv(SPROG *pSP, const char *fmt, va_list args)
-{
-	int		count, status;
-	epicsTimeStamp	timeStamp;
-	char		logBfr[LOG_BFR_SIZE], *eBfr=logBfr+LOG_BFR_SIZE, *pBfr;
-	FILE		*fd = pSP->logFd ? pSP->logFd : stdout;
-	pBfr = logBfr;
-
-	/* Enter thread name */
-	sprintf(pBfr, "%s ", epicsThreadGetNameSelf() );
-	pBfr += strlen(pBfr);
-
-	/* Get time of day */
-	epicsTimeGetCurrent(&timeStamp);	/* time stamp format */
-
-	/* Convert to text format: "yyyy/mm/dd hh:mm:ss" */
-	epicsTimeToStrftime(pBfr, eBfr-pBfr, "%Y/%m/%d %H:%M:%S", &timeStamp);
-	pBfr += strlen(pBfr);
-
-	/* Insert ": " */
-	*pBfr++ = ':';
-	*pBfr++ = ' ';
-
-	/* Append the user's msg to the buffer */
-	vsprintf(pBfr, fmt, args);
-	pBfr += strlen(pBfr);
-
-	/* Write the msg */
-	epicsMutexMustLock(pSP->logSemId);
-	count = pBfr - logBfr + 1;
-	status = fwrite(logBfr, 1, count, fd);
-	epicsMutexUnlock(pSP->logSemId);
-
-	if (status != count)
-	{
-		errlogPrintf("Log file write error, fd=%d, file=%s, error=%s\n",
-			fileno(pSP->logFd), pSP->pLogFile, strerror(errno));
-		return ERROR;
-	}
-
-	/* If this is not stdout, flush the buffer */
-	if (fd != stdout)
-	{
-		epicsMutexMustLock(pSP->logSemId);
-		fflush(pSP->logFd);
-		epicsMutexUnlock(pSP->logSemId);
-	}
-	return OK;
-}
-
-/*
- * seq_seqLog() - State program interface to seq_log().
- * Does not require ptr to state program block.
- */
-epicsShareFunc pvStat seq_seqLog(SS_ID ssId, const char *fmt, ...)
-{
-	SPROG		*pSP;
-	va_list		args;
-	long		rtn;
-
-	va_start (args, fmt);
-	pSP = ssId->sprog;
-	rtn = seq_logv(pSP, fmt, args);
-	va_end (args);
-	return(rtn);
 }

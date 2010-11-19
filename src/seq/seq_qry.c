@@ -53,11 +53,6 @@ epicsShareFunc void epicsShareAPI seqShow(epicsThreadId tid)
 		printf("  user variables: address = %lu = 0x%lx, length = %ld "
 			"= 0x%lx bytes\n", (unsigned long)pSP->pVar,
 			(unsigned long)pSP->pVar, pSP->varSize, pSP->varSize);
-	if (pSP->logFd)
-	{
-		printf("  log file fd = %d\n", fileno(pSP->logFd));
-		printf("  log file name = \"%s\"\n", pSP->pLogFile);
-	}
 	printf("\n");
 
 	/* Print state set info */

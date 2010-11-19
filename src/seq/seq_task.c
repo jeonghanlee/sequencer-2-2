@@ -525,16 +525,6 @@ void epicsShareAPI seqStop(epicsThreadId tid)
 		}
 	}
 
-	/* Close the log file */
-	if (pSP->logFd != NULL)
-	{
-		DEBUG("Log file closed, fd=%d, file=%s\n", fileno(pSP->logFd),
-		      pSP->pLogFile);
-		fclose(pSP->logFd);
-		pSP->logFd = NULL;
-		pSP->pLogFile = "";
-	}
-
 	/* Remove the state program from the state program list */
 	seqDelProg(pSP);
 
@@ -559,7 +549,6 @@ void epicsShareAPI seqStop(epicsThreadId tid)
 
 	/* Delete program-wide semaphores */
 	epicsMutexDestroy(pSP->programLock);
-	epicsMutexDestroy(pSP->logSemId);
 
 	/* Free all allocated memory */
 	seqFree(pSP);

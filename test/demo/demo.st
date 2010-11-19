@@ -1,6 +1,6 @@
 /* Demo EPICS sequence */
 
-#define PRINTF seqLog
+#define PRINTF errlogPrintf
 
 /* message system choice */
 #ifdef KTL
@@ -28,6 +28,8 @@
 #endif
 
 program demo( PVSYS ",debug=1" )
+
+%%#include "errlog.h"
 
 /* options */
 option  +r;

@@ -25,7 +25,6 @@
  *    <seqName>.nChans
  *    <seqName>.nQueues
  *    <seqName>.pQueues
- *    <seqName>.nlogFile
  *    <seqName>.threadPriority
  *    <seqName>.varSize
  *
@@ -84,7 +83,6 @@ LOCAL  char *nConnect       = "nConnect";
 LOCAL  char *nChans         = "nChans";
 LOCAL  char *nQueues        = "nQueues";
 LOCAL  char *pQueues        = "pQueues";
-LOCAL  char *logFile        = "logFile";
 LOCAL  char *threadPriority = "threadPriority";
 LOCAL  char *varSize        = "varSize";
 
@@ -114,7 +112,6 @@ typedef enum {
     seqShownChans,
     seqShownQueues,
     seqShowpQueues,
-    seqShowlogFile,
     seqShowthreadPriority,
     seqShowvarSize,
     seqShowthreadId,
@@ -135,7 +132,6 @@ typedef union {
     long          numChans;
     int           numQueues;
     ELLLIST       *pQueues;
-    char          *pLogFile;
     unsigned int  threadPriority;
     long          varSize;
 
@@ -216,7 +212,6 @@ LOCAL seqShowScanPvt* seqShowScanPvtInit(struct link* pLink)
     else if(!strcmp(inpArg[1],nChans))         pvtPt->type = seqShownChans;
     else if(!strcmp(inpArg[1],nQueues))        pvtPt->type = seqShownQueues;
     else if(!strcmp(inpArg[1],pQueues))        pvtPt->type = seqShowpQueues;
-    else if(!strcmp(inpArg[1],logFile))        pvtPt->type = seqShowlogFile;
     else if(!strcmp(inpArg[1],threadPriority)) pvtPt->type = seqShowthreadPriority;
     else if(!strcmp(inpArg[1],varSize))        pvtPt->type = seqShowvarSize;
     else {
@@ -288,9 +283,6 @@ LOCAL void devSeqScanThread(void)
                     break;
                 case seqShowpQueues:
                     UPDATE_SEQSHOW_VAR(pvtPt->updateFlag, pvtPt->pSP->pQueues, varPt->pQueues)
-                    break;
-                case seqShowlogFile:
-                    UPDATE_SEQSHOW_VAR(pvtPt->updateFlag, pvtPt->pSP->pLogFile, varPt->pLogFile)
                     break;
                 case seqShowthreadPriority:
                     UPDATE_SEQSHOW_VAR(pvtPt->updateFlag, pvtPt->pSP->threadPriority, varPt->threadPriority)
@@ -400,7 +392,6 @@ LOCAL long siRead( struct stringinRecord *pRec )
         case seqShownChans:         sprintf(pRec->val, "%ld", varPt->numChans);                   break;
         case seqShownQueues:        sprintf(pRec->val, "%d", varPt->numQueues);                   break;
         case seqShowpQueues:        sprintf(pRec->val, "%p", varPt->pQueues);                     break;
-        case seqShowlogFile:        sprintf(pRec->val, "%s", varPt->pLogFile);                    break;
         case seqShowthreadPriority: sprintf(pRec->val, "%d", varPt->threadPriority);              break;
         case seqShowvarSize:        sprintf(pRec->val, "%ld", varPt->varSize);                    break;
         case seqShowthreadId:       sprintf(pRec->val, "%lu", (unsigned long) varPt->threadId);   break;

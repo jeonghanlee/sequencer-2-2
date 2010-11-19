@@ -199,9 +199,6 @@ struct state_program
 	INIT_FUNC	*initFunc;	/* init function */
 	ENTRY_FUNC	*entryFunc;	/* entry function */
 	EXIT_FUNC	*exitFunc;	/* exit function */
-	epicsMutexId	logSemId;	/* logfile locking semaphore */
-	FILE		*logFd;		/* logfile file descr. */
-	char		*pLogFile;	/* logfile name */
 	int		numQueues;	/* number of syncQ queues */
 	ELLLIST		*pQueues;	/* ptr to syncQ queues */
 	void		*pvReqPool;	/* freeList for pv requests */
