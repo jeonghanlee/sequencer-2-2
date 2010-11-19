@@ -107,6 +107,9 @@ only when major changes are made.
 Notes on Release 2.1.0
 ----------------------
 
+Safe Mode
+^^^^^^^^^
+
 After releasing 2.0.99 for testing, I found a serious bug in the sequencer,
 see http://www.aps.anl.gov/epics/tech-talk/2010/msg00605.php for a
 detailed description of the problem. To summarise, variables that are
@@ -121,38 +124,112 @@ depending on architecture and C compiler, some numeric types like
 ``double`` as well).
 
 This version of the sequencer offers a clean and simple solution to the
-problem. However, this solution is not completely backwards compatible.
-You must therefore explicitly enable it with a command line option
-:option:`s`, for *safe mode*. In safe mode, program semantics deviates from
-the traditional one, in that state sets are completely isolated against
-each other and against updates from the CA layer. Assignment to a variable
-(even indirect, via pointers or C functions) never directly affect the
-values as seen by other state sets. The new value must instead be published
-explicitly by calling pvPut on the variable. For un-assigned variables,
-this directly writes to an internal buffer, by-passing the CA layer. Other
-state sets will see such an explicit update only if they themselves perform
-a pvGet on them, or else after a state change is initiated i.e. one of
-the when-conditions fires. In safe mode, the value of a program variable
-is completely under the control of the executing state set. This implies
-that all conditions given inside the transition rule that has fired are
-still valid when the action block runs and can only be destroyed by the
-actions themselves, not from the outside. Unassigned variables can also
-be monitored, causing state sets that wait for a change on them to be
-woken, just as with variables assigned to an external (named) PV. In fact
-un-assigned variables are exactly like assigned variables, only anonymous
-(unnamed) and therefore not accessible from outside the program.
+problem. However, this solution is not completely backwards compatible. You
+must therefore explicitly enable it with a command line option
+:option:`+s`, for :ref:`safe mode`. In safe mode, program semantics
+deviates from the traditional one, in that state sets are completely
+isolated against each other and against updates from the CA layer.
+Assignment to a variable (even indirect, via pointers or C functions) never
+directly affect the values as seen by other state sets. The new value must
+instead be published explicitly by calling pvPut on the variable.
 
-In safe mode it is no longer necessary to assign variables to a dummy
-empty string -- you can call pvAssign on all variables in scope that have
-global lifetime (i.e. state local, state set local, and global). In order
-to distinguish whether an array variable is to be understood as one
-PV of array type or an array of PVs, the keywords "single" and "multiple"
-have been added. A variable declaration preceded by the word "single"
-indicates that this variable is communicated wholesale (i.e. as single
-PV), whereas "multiple" (which only makes sense for an array variable)
-means that there is a PV for each element in the array.
+To facilitate internal communication between state sets, variables assigned
+to an empty string are treated as anonymous pseudo PVs, see :ref:`anonymous
+pvs` for details. For anonymous PVs, pvPut directly writes to an internal
+buffer, by-passing the CA layer. Other state sets will see such an explicit
+update only if they themselves perform a pvGet on them, or else --if the
+variable is monitored-- after a state change is initiated i.e. one of the
+when-conditions fires. In safe mode, the value of a program variable is
+completely under the control of the executing state set. This implies that
+all conditions given inside the transition rule that has fired are still
+valid when the action block runs and can only be destroyed by the actions
+themselves, not from the outside.
 
+pvPut/SYNC/ASYNC
+^^^^^^^^^^^^^^^^
 
+Another problem that I became aware of only after releasing 2.0.99 is that
+ca_put_callback based pvPut calls, i.e. the variants with explicit SYNC or
+ASYNC, are subject to failures on the server which cannot be avoided
+reliably. This is due to the fact that ca_put_callback invokes the
+putNotify feature on the IOC, which has the property that it blocks a whole
+chain of records against further putNotify requests, as long as one of the
+records in the processing chain has not completed its processing; note that
+this means *asynchronous* processsing, i.e. it could take arbitrarily long.
+
+After receiving somewhat contradictory advice from tech-talk I made experiments
+and it turned out that the CA server (just as Jeff Hill claimed) queues
+put_callback requests from the same client to the same PV, so that there is
+no need to take special precautions in the sequencer to avoid multiple
+state sets issuing pvPut/ASYNC concurrently.
+
+Note however that in the sequencer only one callback request per state set
+may be pending for a given variable (this concerns put and get). If there
+is already another such callback pending the command will fail and a warning
+message written.
+
+Note also that a failure in the server cannot be completely ruled out, as
+we have no control over what other clients may do. So, in fact, if all you
+need is to ensure that a certain put has reached the target
+record, it is more reliable to use a simple pvPut, add a monitor to the
+variable, and wait for a monitor event using an event flag. In cases where
+you must ensure that an actual hardware access has happened, it is more
+reliable to read back a status bit and wait for it to change, rather than to
+use pvPut/SYNC.
+
+Other Stuff
+^^^^^^^^^^^
+
+Added keyword "connect" as a synonym for "assign". I think it is more
+descriptive; ultimately I want to move away from the term "assign" to avoid
+confusion with the usual notion of assigning a value to a variable; thus
+"assign" will probably be deprecated in some future version.
+
+Added pvSync function, analogous to pvMonitor etc.
+
+Foreign declarations (introduced in 2.0.99) now use the keyword "foreign",
+instead of "declare" as this is more specific and fits better with the
+new extended declaration features (see next paragraph).
+
+Lifted many restrictions on declarations: You can now arbitrarily nest
+pointer and array specifiers, initializers are supported (you may use any
+valid SNL expression), and multiple declarations with the same base type
+can be grouped just as in C. I did that mostly to get rid of the ugly and
+ad hoc way variable types were handled before. The new code is not *that*
+much more complicated and it is certainly easier to extend with new
+features.
+
+Lofts of minor fixes.
+
+In the sequencer library interface, bitMask is now a synonym for unsigned,
+not unsigned long. The C standards and books say that all the bitwise
+operations convert numbers to int or unsigned anyway.
+
+Lots of internal restructuring in the sequencer library:
+
+* Re-grouped struct members in the internally used structs and
+  changed lots of types from long to int or unsigned.
+* Drastically simplified the seqStop functionality, removing the need for
+  four dedicated semaphores to just one and a single flag.
+* Added program instance number, so seqProgFindByName can select between
+  multiple running instances of the same program, simplified implementation.
+* Added a new implementation for pv queues that uses a fixed size
+  buffer instead of dynamically allocating (and freeing) queue elements.
+* Removed the fixed maximum number of macros; rewrote macro implementation
+  to use a list instead of an array.
+* Debug messages now consistently use DEBUG(format,args...).
+
+The whole pv layer over CA (or KTL) is now **deprecated**. It will be
+removed in one of the next releases unless I hear of people who need it.
+Still I made a number of improvements to it, mostly to reduce dynamic
+memory allocation at runtime. I also changed the size of the pvString
+type to 40 as in EPICS, so that now arrays values
+can be copied with a single memcpy.
+
+I am not sure what to do with devSequencer. It is ugly, accesses sequencer
+internals, and does not work if programs are instantiated more than once.
+
+**Many** improvements to the documentation, especially the SNL reference.
 
 .. _Release_Notes_2.0.99:
 
@@ -827,3 +904,8 @@ Fix for task deletion
    Version 1.8 of the sequencer didn't handle the task deletion
    properly if a task tried to delete itself. We corrected this in
    version 1.9.
+
+ToDo List
+---------
+
+.. todolist::
