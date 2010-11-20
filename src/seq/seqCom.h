@@ -187,7 +187,7 @@ epicsShareFunc unsigned epicsShareAPI seq_pvCount(SS_ID, VAR_ID);
 epicsShareFunc pvStat epicsShareAPI seq_pvStatus(SS_ID, VAR_ID);
 epicsShareFunc pvSevr epicsShareAPI seq_pvSeverity(SS_ID, VAR_ID);
 epicsShareFunc epicsTimeStamp epicsShareAPI seq_pvTimeStamp(SS_ID, VAR_ID);
-epicsShareFunc char *epicsShareAPI seq_pvMessage(SS_ID, VAR_ID);
+epicsShareFunc const char *epicsShareAPI seq_pvMessage(SS_ID, VAR_ID);
 epicsShareFunc boolean epicsShareAPI seq_pvAssigned(SS_ID, VAR_ID);
 epicsShareFunc boolean epicsShareAPI seq_pvConnected(SS_ID, VAR_ID);
 epicsShareFunc VAR_ID epicsShareAPI seq_pvIndex(SS_ID, VAR_ID);

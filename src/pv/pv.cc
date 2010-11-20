@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <epicsString.h>
 
 #define epicsExportSharedSymbols
 #include "pv.h"
@@ -86,7 +87,7 @@ epicsShareFunc void pvSystem::setError( int status, pvSevr sevr, pvStat stat,
     status_ = status;
     sevr_   = sevr;
     stat_   = stat;
-    mess_   = Strdcpy( mess_, mess );
+    mess_   = mess;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -103,7 +104,7 @@ pvVariable::pvVariable( pvSystem *system, const char *name, pvConnFunc func,
     debug_( debug ),
     func_( func ),
     system_( system ),
-    name_( Strdup( name ) ),
+    name_( epicsStrDup( name ) ),
     private_( priv ),
     status_( 0 ),
     sevr_( pvSevrNONE ),
@@ -149,7 +150,7 @@ void pvVariable::setError( int status, pvSevr sevr, pvStat stat,
     status_ = status;
     sevr_   = sevr;
     stat_   = stat;
-    mess_   = Strdcpy( mess_, mess );
+    mess_   = mess;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -268,8 +269,8 @@ epicsShareFunc pvStat epicsShareAPI pvSysGetStat( void *sys ) {
     return Sys->getStat();
 }
 
-epicsShareFunc char * epicsShareAPI pvSysGetMess( void *sys ) {
-    SYS_CHECK( return ( char * ) "" );
+epicsShareFunc const char * epicsShareAPI pvSysGetMess( void *sys ) {
+    SYS_CHECK( return "" );
     return Sys->getMess();
 }
 
@@ -394,8 +395,8 @@ epicsShareFunc pvStat epicsShareAPI pvVarGetStat( void *var ) {
     return Var->getStat();
 }
 
-epicsShareFunc char *epicsShareAPI pvVarGetMess( void *var ) {
-    VAR_CHECK( return ( char * ) "" );
+epicsShareFunc const char *epicsShareAPI pvVarGetMess( void *var ) {
+    VAR_CHECK( return "" );
     return Var->getMess();
 }
 
@@ -414,27 +415,8 @@ epicsShareFunc int epicsShareAPI pvTimeGetCurrentDouble( double *pTime ) {
 }
 
 /*
- * Misc utilities
+ * Type tables
  */
-epicsShareFunc char * epicsShareAPI Strdup( const char *s ) {
-    char *p = ( char * ) malloc( strlen( s ) + 1 );
-    if ( p != NULL )
-	strcpy( p, s );
-    return p;
-}
-
-epicsShareFunc char * epicsShareAPI Strdcpy( char *dst, const char *src ) {
-    if ( dst != NULL && strlen( src ) > strlen( dst ) ) {
-	free( dst );
-	dst = NULL;
-    }
-    if ( dst == NULL )
-	dst = ( char * ) malloc( strlen( src ) + 1 );
-    if ( dst != NULL )
-	strcpy( dst, src );
-    return dst;
-}
-
 epicsShareDef const size_t pv_sizes[] = {
     sizeof(pvChar      ),
     sizeof(pvShort     ),

@@ -106,7 +106,7 @@ struct db_channel
 	short		size;		/* size (in bytes) of single var elem */
 	short		getType;	/* db get type (e.g. DBR_STS_INT) */
 	short		putType;	/* db put type (e.g. DBR_INT) */
-	char		*message;	/* last db access error message */
+	const char	*message;	/* last db access error message */
 	unsigned	gotFirstMonitor;
 	unsigned	gotFirstConnect;
 	unsigned	monitored;	/* whether channel is monitored */

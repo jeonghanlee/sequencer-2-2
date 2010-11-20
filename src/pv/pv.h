@@ -88,7 +88,7 @@ public:
     epicsShareFunc inline pvStat getStat() const { return stat_; }
     epicsShareFunc inline void setStatus( int status ) { status_ = status; }
     epicsShareFunc inline void setStat( pvStat stat ) { stat_ = stat; }
-    epicsShareFunc inline char *getMess() const { return mess_?mess_:(char *)""; }
+    epicsShareFunc inline const char *getMess() const { return mess_?mess_:""; }
 
 private:
     int		magic_;		/* magic number (used for authentication) */
@@ -97,7 +97,7 @@ private:
     int		status_;	/* message system-specific status code */
     pvSevr	sevr_;		/* severity */
     pvStat	stat_;		/* status */
-    char	*mess_;		/* error message */
+    const char	*mess_;		/* error message */
 
     epicsMutexId	lock_;		/* prevents more than one thread in library */
 };
@@ -150,7 +150,7 @@ public:
     epicsShareFunc inline pvStat getStat() const { return stat_; }
     epicsShareFunc inline void setStatus( int status ) { status_ = status; }
     epicsShareFunc inline void setStat( pvStat stat ) { stat_ = stat; }
-    epicsShareFunc inline char *getMess() const { return mess_?mess_:(char *)""; }
+    epicsShareFunc inline const char *getMess() const { return mess_?mess_:""; }
 
 private:
     int		magic_;		/* magic number (used for authentication) */
@@ -164,7 +164,7 @@ private:
     int		status_;	/* message system-specific status code */
     pvSevr	sevr_;		/* severity */
     pvStat	stat_;		/* status */
-    char	*mess_;		/* error message */
+    const char	*mess_;		/* error message */
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -253,7 +253,7 @@ epicsShareFunc int    epicsShareAPI pvSysGetDebug( void *sys );
 epicsShareFunc int    epicsShareAPI pvSysGetStatus( void *sys );
 epicsShareFunc pvSevr epicsShareAPI pvSysGetSevr( void *sys );
 epicsShareFunc pvStat epicsShareAPI pvSysGetStat( void *sys );
-epicsShareFunc char * epicsShareAPI pvSysGetMess( void *sys );
+epicsShareFunc const char * epicsShareAPI pvSysGetMess( void *sys );
 
 epicsShareFunc pvStat epicsShareAPI pvVarCreate( void *sys, const char *name, pvConnFunc func, void *priv,
 		    int debug, void **pVar );
@@ -281,18 +281,12 @@ epicsShareFunc void * epicsShareAPI pvVarGetPrivate( void *var );
 epicsShareFunc int    epicsShareAPI pvVarGetStatus( void *var );
 epicsShareFunc pvSevr epicsShareAPI pvVarGetSevr( void *var );
 epicsShareFunc pvStat epicsShareAPI pvVarGetStat( void *var );
-epicsShareFunc char * epicsShareAPI pvVarGetMess( void *var );
+epicsShareFunc const char * epicsShareAPI pvVarGetMess( void *var );
 
 /*
  * Time utilities
  */
 epicsShareFunc int    epicsShareAPI pvTimeGetCurrentDouble( double *pTime );
-
-/*
- * Misc utilities
- */
-epicsShareFunc char * epicsShareAPI Strdup( const char *s );
-epicsShareFunc char * epicsShareAPI Strdcpy( char *dst, const char *src );
 
 #ifdef __cplusplus
 }

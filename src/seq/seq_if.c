@@ -76,7 +76,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvGet(SS_ID pSS, VAR_ID varId, enum comp
 	{
 		pDB->status = pvStatDISCONN;
 		pDB->severity = pvSevrINVALID;
-		pDB->message = Strdcpy(pDB->message, "disconnected");
+		pDB->message = "disconnected";
 		return pDB->status;
 	}
 
@@ -117,8 +117,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvGet(SS_ID pSS, VAR_ID varId, enum comp
 		{
 			pDB->status = pvStatTIMEOUT;
 			pDB->severity = pvSevrMAJOR;
-			pDB->message = Strdcpy(pDB->message,
-						"get completion timeout");
+			pDB->message = "get completion timeout";
 			return pDB->status;
 		}
 	}
@@ -186,7 +185,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvPut(SS_ID pSS, VAR_ID varId, enum comp
 	{
 		pDB->status = pvStatDISCONN;
 		pDB->severity = pvSevrINVALID;
-		pDB->message = Strdcpy(pDB->message, "disconnected");
+		pDB->message = "disconnected";
 		return pDB->status;
 	}
 
@@ -238,8 +237,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvPut(SS_ID pSS, VAR_ID varId, enum comp
 		{
 			pDB->status = pvStatTIMEOUT;
 			pDB->severity = pvSevrMAJOR;
-			pDB->message = Strdcpy(pDB->message,
-				"put completion timeout");
+			pDB->message = "put completion timeout";
 			return pDB->status;
 		}
 	}
@@ -528,7 +526,7 @@ epicsShareFunc pvSevr epicsShareAPI seq_pvSeverity(SS_ID pSS, VAR_ID varId)
 /*
  * seq_pvMessage() - returns channel error message.
  */
-epicsShareFunc char *epicsShareAPI seq_pvMessage(SS_ID pSS, VAR_ID varId)
+epicsShareFunc const char *epicsShareAPI seq_pvMessage(SS_ID pSS, VAR_ID varId)
 {
 	CHAN *pDB = pSS->sprog->pChan + varId;
 

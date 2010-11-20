@@ -236,9 +236,9 @@ static void proc_db_events(
 		/* Copy error message (only when severity indicates error) */
 		if (pDB->severity != pvSevrNONE)
 		{
-			char *pmsg = pvVarGetMess(pDB->pvid);
+			const char *pmsg = pvVarGetMess(pDB->pvid);
 			if (!pmsg) pmsg = "unknown";
-			pDB->message = Strdcpy(pDB->message, pmsg);
+			pDB->message = pmsg;
 		}
 	}
 
