@@ -86,28 +86,24 @@ program ::=
 	*presult =  expr(D_PROG, n, pp, ds, en, ss, ex, cc);
 }
 
-program_param(p) ::=
-	LPAREN string(x) RPAREN.	{ p = x; }
-program_param(p) ::= .			{ p = 0; }
+program_param(p) ::= LPAREN string(x) RPAREN.	{ p = x; }
+program_param(p) ::= .				{ p = 0; }
 
 // Definitions
 
 global_defns(p) ::= global_defns(xs) global_defn(x). {
 	p = link_expr(xs, x);
 }
-global_defns(p) ::= .			{ p = 0; }
+global_defns(p) ::= .				{ p = 0; }
 
-global_defn(p) ::= assign(x).		{ p = x; }
-global_defn(p) ::= monitor(x).		{ p = x; }
-global_defn(p) ::= sync(x).		{ p = x; }
-global_defn(p) ::= syncq(x).		{ p = x; }
-global_defn(p) ::= declaration(x).	{ p = x; }
-global_defn(p) ::= option(x).		{ p = x; }
-global_defn(p) ::= c_code(x).		{ p = x; }
+global_defn(p) ::= assign(x).			{ p = x; }
+global_defn(p) ::= monitor(x).			{ p = x; }
+global_defn(p) ::= sync(x).			{ p = x; }
+global_defn(p) ::= syncq(x).			{ p = x; }
+global_defn(p) ::= declaration(x).		{ p = x; }
+global_defn(p) ::= option(x).			{ p = x; }
+global_defn(p) ::= c_code(x).			{ p = x; }
 
-assign(p) ::= connect variable(v) SEMICOLON. {
-	p = expr(D_ASSIGN, v, 0, 0);
-}
 assign(p) ::= connect variable(v) to string(t) SEMICOLON. {
 	p = expr(D_ASSIGN, v, 0, t);
 }
@@ -116,6 +112,9 @@ assign(p) ::= connect variable(v) subscript(s) to string(t) SEMICOLON. {
 }
 assign(p) ::= connect variable(v) to LBRACE(t) strings(ss) RBRACE SEMICOLON. {
 	p = expr(D_ASSIGN, v, 0, expr(E_INIT, t, ss));
+}
+assign(p) ::= connect variable(v) SEMICOLON. {
+	p = expr(D_ASSIGN, v, 0, 0);
 }
 
 connect ::= ASSIGN.
