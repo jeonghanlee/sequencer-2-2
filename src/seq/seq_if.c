@@ -54,13 +54,13 @@ epicsShareFunc pvStat epicsShareAPI seq_pvGet(SS_ID pSS, VAR_ID varId, enum comp
 	/* Determine whether performing asynchronous or synchronous i/o */
 	switch (compType)
 	{
-	case HONOR_OPTION:
+	case DEFAULT:
 		sync = !(pSP->options & OPT_ASYNC);
 		break;
-	case ASYNCHRONOUS:
+	case ASYNC:
 		sync = FALSE;
 		break;
-	case SYNCHRONOUS:
+	case SYNC:
 		sync = TRUE;
 		break;
 	default:
@@ -152,19 +152,19 @@ epicsShareFunc pvStat epicsShareAPI seq_pvPut(SS_ID pSS, VAR_ID varId, enum comp
 	DEBUG("seq_pvPut: pv name=%s, pVar=%p\n", pDB->dbName, pVar);
 
 	/* Determine whether performing asynchronous or synchronous i/o
-	   ((+a) option was never honored for put, so HONOR_OPTION
+	   ((+a) option was never honored for put, so DEFAULT
 	   means non-blocking and therefore implicitly asynchronous) */
 	switch (compType)
 	{
-	case HONOR_OPTION:
+	case DEFAULT:
 		nonb = TRUE;
 		sync = FALSE;
 		break;
-	case ASYNCHRONOUS:
+	case ASYNC:
 		nonb = FALSE;
 		sync = FALSE;
 		break;
-	case SYNCHRONOUS:
+	case SYNC:
 		nonb = FALSE;
 		sync = TRUE;
 		break;

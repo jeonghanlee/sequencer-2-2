@@ -66,9 +66,9 @@ extern "C" {
 
 /* I/O completion type (extra argument passed to seq_pvGet() and seq_pvPut()) */
 enum compType {
-	HONOR_OPTION,
-	ASYNCHRONOUS,
-	SYNCHRONOUS
+	DEFAULT,
+        ASYNC,
+        SYNC
 };
 
 #ifndef TRUE
