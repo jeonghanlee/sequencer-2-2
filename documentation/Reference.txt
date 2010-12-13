@@ -944,7 +944,7 @@ variable).
 
 As usual, ``var`` can also be an array element.
 
-Note: :cfunc:`pvAssign` can only be called on variables (or array elements)
+Note: :c:func:`pvAssign` can only be called on variables (or array elements)
 that have been statically marked as process variables using the
 :token:`assign` syntax. An empty string may be used for the initial
 assignment.
