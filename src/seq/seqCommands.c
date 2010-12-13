@@ -16,7 +16,7 @@
 struct sequencerProgram {
     struct seqProgram *prog;
     epicsMutexId lock;
-    struct state_program *instances;
+    struct program_instance *instances;
     struct sequencerProgram *next;
 };
 static struct sequencerProgram *seqHead;
@@ -85,11 +85,15 @@ static void seqCallFunc(const iocshArgBuf *args)
         printf("No sequencer specified.\n");
         return;
     }
+    if (stackSize <= 0) {
+        errlogPrintf("3rd argument of seq must be a positive integer");
+        return;
+    }
     if (*table == '&')
         table++;
     foreach(sp, seqHead) {
         if (!strcmp(table, sp->prog->pProgName)) {
-            seq(sp->prog, macroDef, stackSize);
+            seq(sp->prog, macroDef, (unsigned)stackSize);
             return;
         }
     }

@@ -21,7 +21,7 @@
 #define varPtr(sp,ss)	(((sp)->options & OPT_SAFE) ? (ss)->pVar : (sp)->pVar)
 
 /* Function declarations */
-static long seq_waitConnect(SPROG *pSP, SSCB *pSS);
+static boolean seq_waitConnect(SPROG *pSP, SSCB *pSS);
 static void ss_entry(SSCB *pSS);
 static void ss_thread_init(SPROG *, SSCB *);
 static void ss_thread_uninit(SPROG *, SSCB *,int);
@@ -31,10 +31,10 @@ static int seq_getTimeout(SSCB *, double *);
 /*
  * sequencer() - Sequencer main thread entry point.
  */
-long sequencer (SPROG *pSP)	/* ptr to original (global) state program table */
+void sequencer (SPROG *pSP)	/* ptr to original (global) state program table */
 {
 	SSCB		*pSS = pSP->pSS;
-	int		nss;
+	unsigned	nss;
 	epicsThreadId	tid;
 	size_t		threadLen;
 	char		threadName[THREAD_NAME_SIZE+10];
@@ -53,7 +53,7 @@ long sequencer (SPROG *pSP)	/* ptr to original (global) state program table */
 	/* TODO: document this */
 
 	/* Call sequencer init function to initialize variables. */
-	pSP->initFunc(pSP->pVar);
+	pSP->initFunc((USER_VAR *)pSP->pVar);
 
 	/* Initialize state set variables. In safe mode, copy variable
 	   block to state set buffers.
@@ -76,11 +76,11 @@ long sequencer (SPROG *pSP)	/* ptr to original (global) state program table */
 	 * return means that we have been asked to exit) */
 	if (pSP->options & OPT_CONN)
 	{
-		if (seq_waitConnect(pSP, pSS) < 0) goto exit;
+		if (!seq_waitConnect(pSP, pSS)) return;
 	}
 
 	/* Call program entry function if defined. */
-	if (pSP->entryFunc) pSP->entryFunc(pSS, pSP->pVar);
+	if (pSP->entryFunc) pSP->entryFunc(pSS, (USER_VAR *)pSP->pVar);
 
 	/* Create each additional state-set task (additional state-set thread
 	   names are derived from the first ss) */
@@ -105,10 +105,7 @@ long sequencer (SPROG *pSP)	/* ptr to original (global) state program table */
 	ss_entry(pSP->pSS);
 
 	/* Call program exit function if defined */
-	if (pSP->exitFunc) pSP->exitFunc(pSS, pSP->pVar);
-
-exit:
-	return 0;
+	if (pSP->exitFunc) pSP->exitFunc(pSS, (USER_VAR *)pSP->pVar);
 }
 
 /*
@@ -118,17 +115,17 @@ exit:
  */
 static void ss_read_buffer(SSCB *pSS)
 {
-	SPROG	*pSP = pSS->sprog;
-	int	ss_num = pSS - pSP->pSS;
-	int	var;
+	SPROG		*pSP = pSS->sprog;
+	ptrdiff_t	ss_num = pSS - pSP->pSS;
+	unsigned	var;
 
 	for (var = 0; var < pSP->numChans; var++)
 	{
 		CHAN	*pDB = pSP->pChan + var;
-		void	*pVal = pSS->pVar + pDB->offset;
-		void	*pBuf = pSP->pVar + pDB->offset;
-		unsigned *dirty = pDB->dirty;
-		size_t	var_size = pDB->size * pDB->dbCount;
+		char	*pVal = (char*)pSS->pVar + pDB->offset;
+		char	*pBuf = (char*)pSP->pVar + pDB->offset;
+		boolean *dirty = pDB->dirty;
+		size_t	var_size = (unsigned)pDB->size * pDB->dbCount;
 
 		if (!dirty[ss_num])
 			continue;
@@ -148,10 +145,10 @@ static void ss_read_buffer(SSCB *pSS)
 void ss_write_buffer(CHAN *pDB, void *pVal)
 {
 	SPROG	*pSP = pDB->sprog;
-	void	*pBuf = pSP->pVar + pDB->offset;
-	unsigned *dirty = pDB->dirty;
-	size_t	var_size = pDB->size * pDB->dbCount;
-	int	ss_num;
+	char	*pBuf = (char*)pSP->pVar + pDB->offset;
+	boolean *dirty = pDB->dirty;
+	size_t	var_size = (unsigned)pDB->size * pDB->dbCount;
+	unsigned ss_num;
 
 	pDB->wr_active = TRUE;
 	memcpy(pBuf, pVal, var_size);
@@ -169,7 +166,7 @@ void ss_write_buffer(CHAN *pDB, void *pVal)
 static void ss_entry(SSCB *pSS)
 {
 	SPROG		*pSP = pSS->sprog;
-	int		nWords = (pSP->numEvents + NBITS - 1) / NBITS;
+	unsigned	nWords = (pSP->numEvents + NBITS - 1) / NBITS;
 	USER_VAR	*pVar = (USER_VAR *)varPtr(pSP,pSS);
 
 	/* Initialize this state-set thread */
@@ -194,7 +191,7 @@ static void ss_entry(SSCB *pSS)
 	 */
 	while (TRUE)
 	{
-		unsigned ev_trig;
+		boolean ev_trig;
 
 		/* Set state to current state */
 		STATE *pST = pSS->pStates + pSS->currentState;
@@ -256,7 +253,7 @@ static void ss_entry(SSCB *pSS)
 			/* Clear all event flags (old ef mode only) */
 			if (ev_trig && !(pSP->options & OPT_NEWEF))
 			{
-				int i;
+				unsigned i;
 				for (i = 0; i < nWords; i++)
 				{
 					pSP->pEvents[i] &= ~pSS->pMask[i];
@@ -339,32 +336,32 @@ static void ss_thread_uninit(SPROG *pSP, SSCB *pSS, int phase)
 }
 
 /* Wait for all channels to connect */
-static long seq_waitConnect(SPROG *pSP, SSCB *pSS)
+static boolean seq_waitConnect(SPROG *pSP, SSCB *pSS)
 {
 	epicsStatus	status;
 	double		delay;
 
 	if (pSP->numChans == 0)
-		return OK;
+		return TRUE;
 	delay = 10.0; /* 10, 20, 30, 40, 40,... sec */
 	while (1)
 	{
 		status = epicsEventWaitWithTimeout(
 			pSS->allFirstConnectAndMonitorSemId, delay);
-		if(status==OK) break;
+		if(status==epicsEventWaitOK) break;
 		if (delay < 40.0)
 		{
 			delay += 10.0;
-			errlogPrintf("numMonitoredChans %ld firstMonitorCount %ld",
+			errlogPrintf("numMonitoredChans %u firstMonitorCount %u",
 				pSP->numMonitoredChans,pSP->firstMonitorCount);
-			errlogPrintf(" assignCount %ld firstConnectCount %ld\n",
+			errlogPrintf(" assignCount %u firstConnectCount %u\n",
 				pSP->assignCount,pSP->firstConnectCount);
 		}
 		/* Check whether we have been asked to exit */
 		if (epicsEventTryWait(pSS->death1SemId) == epicsEventWaitOK)
-			return ERROR;
+			return FALSE;
 	}
-	return OK;
+	return TRUE;
 }
 
 /*
@@ -372,7 +369,7 @@ static long seq_waitConnect(SPROG *pSP, SSCB *pSS)
  */
 static void seq_clearDelay(SSCB *pSS, STATE *pST)
 {
-	int	ndelay;
+	unsigned ndelay;
 
 	/* On state change set time we entered this state; or if transition from
 	 * same state if option to do so is on for this state.
@@ -399,7 +396,8 @@ static void seq_clearDelay(SSCB *pSS, STATE *pST)
  */
 static int seq_getTimeout(SSCB *pSS, double *pdelay)
 {
-	int	ndelay, do_timeout = FALSE;
+	unsigned ndelay;
+	boolean	do_timeout = FALSE;
 	double	cur, delay;
 	double	delayMin = 0;
 	/* not really necessary to initialize delayMin,
@@ -450,7 +448,7 @@ void epicsShareAPI seqStop(epicsThreadId tid)
 {
 	SPROG		*pSP;
 	SSCB		*pSS;
-	int		nss;
+	unsigned	nss;
 
 	/* Check that this is indeed a state program thread */
 	pSP = seqFindProg(tid);
@@ -561,12 +559,12 @@ void seqFree(SPROG *pSP)
 {
 	SSCB		*pSS;
 	CHAN		*pDB;
-	int		n;
+	unsigned	nch;
 
 	seqMacFree(pSP);
-	for (n = 0; n < pSP->numChans; n++)
+	for (nch = 0; nch < pSP->numChans; nch++)
 	{
-		pDB = pSP->pChan + n;
+		pDB = pSP->pChan + nch;
 
 		if (pDB->dbName != NULL)
 			free(pDB->dbName);

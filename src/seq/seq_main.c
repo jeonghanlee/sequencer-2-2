@@ -20,7 +20,7 @@ static void init_sscb(struct seqProgram *, SPROG *);
 static void init_chan(struct seqProgram *, SPROG *);
 
 static void seqChanNameEval(SPROG *);
-static void init_type(char *, short *, short *, short *, short *);
+static void init_type(char *, short *, short *, unsigned *, unsigned *);
 
 /*	Globals */
 
@@ -41,7 +41,8 @@ void seq (struct seqProgram *pSeqProg, char *macroDef, unsigned stackSize)
 {
 	epicsThreadId	tid;
 	SPROG		*pSP;
-	char		*pValue, *pThreadName;
+	char		*pValue;
+	const char	*pThreadName;
 	unsigned	smallStack;
 	AUXARGS		auxArgs;
 
@@ -175,7 +176,7 @@ static SPROG *seqInitTables(struct seqProgram *pSeqProg)
  */
 static void init_sprog(struct seqProgram *pSeqProg, SPROG *pSP)
 {
-	int	i, nWords;
+	unsigned i, nWords;
 
 	/* Copy information for state program */
 	pSP->numSS = pSeqProg->numSS;
@@ -190,7 +191,7 @@ static void init_sprog(struct seqProgram *pSeqProg, SPROG *pSP)
 	/* Allocate user variable area if reentrant option (+r) is set */
 	if (pSP->options & OPT_REENT)
 	{
-		pSP->pVar = (USER_VAR *)calloc(pSP->varSize, 1);
+		pSP->pVar = (char *)calloc(pSP->varSize, 1);
 	}
 
 	DEBUG("init_sprog: num SS=%ld, num Chans=%ld, num Events=%ld, "
@@ -201,6 +202,7 @@ static void init_sprog(struct seqProgram *pSeqProg, SPROG *pSP)
 	pSP->programLock = epicsMutexMustCreate();
 	pSP->connectCount = 0;
 	pSP->assignCount = 0;
+	pSP->allDisconnected = TRUE;
 
 	/* Allocate an array for event flag bits */
 	nWords = (pSP->numEvents + NBITS - 1) / NBITS;
@@ -229,7 +231,7 @@ static void init_sprog(struct seqProgram *pSeqProg, SPROG *pSP)
 static void init_sscb(struct seqProgram *pSeqProg, SPROG *pSP)
 {
 	SSCB		*pSS;
-	int		nss;
+	unsigned	nss;
 	struct seqSS	*pSeqSS;
 
 
@@ -246,7 +248,7 @@ static void init_sscb(struct seqProgram *pSeqProg, SPROG *pSP)
 		pSS->maxNumDelays = pSeqSS->numDelays;
 
 		pSS->delay = (double *)calloc(pSS->maxNumDelays, sizeof(double));
-		pSS->delayExpired = (unsigned *)calloc(pSS->maxNumDelays, sizeof(unsigned));
+		pSS->delayExpired = (boolean *)calloc(pSS->maxNumDelays, sizeof(boolean));
 		pSS->currentState = 0; /* initial state */
 		pSS->nextState = 0;
 		pSS->prevState = 0;
@@ -278,7 +280,7 @@ static void init_sscb(struct seqProgram *pSeqProg, SPROG *pSP)
 		/* Allocate user variable area if safe mode option (+s) is set */
 		if (pSP->options & OPT_SAFE)
 		{
-			pSP->pVar = (USER_VAR *)calloc(pSP->varSize, 1);
+			pSP->pVar = (char *)calloc(pSP->varSize, 1);
 		}
 	}
 
@@ -290,7 +292,7 @@ static void init_sscb(struct seqProgram *pSeqProg, SPROG *pSP)
  * Note:  Actual PV name is not filled in here. */
 static void init_chan(struct seqProgram *pSeqProg, SPROG *pSP)
 {
-	int		nchan;
+	unsigned	nchan;
 	CHAN		*pDB;
 	struct seqChan	*pSeqChan;
 
@@ -333,8 +335,8 @@ static void init_chan(struct seqProgram *pSeqProg, SPROG *pSP)
 			pDB->efId, pDB->monFlag, pDB->eventNum);
 
 		pDB->varLock = epicsMutexMustCreate();
-		pDB->dirty = (unsigned *)calloc(pSP->numSS,sizeof(unsigned));
-		pDB->getComplete = (unsigned *)calloc(pSP->numSS,sizeof(unsigned));
+		pDB->dirty = (boolean *)calloc(pSP->numSS,sizeof(boolean));
+		pDB->getComplete = (boolean *)calloc(pSP->numSS,sizeof(boolean));
 		pDB->putSemId = epicsEventMustCreate(epicsEventFull);
 	}
 }
@@ -346,7 +348,7 @@ static void init_chan(struct seqProgram *pSeqProg, SPROG *pSP)
 static void seqChanNameEval(SPROG *pSP)
 {
 	CHAN		*pDB;
-	int		i;
+	unsigned	i;
 
 	pDB = pSP->pChan;
 	for (i = 0; i < pSP->numChans; i++, pDB++)
@@ -370,8 +372,8 @@ static struct pv_type_map
 	char	*pTypeStr;
 	short	putType;
 	short	getType;
-	short	size;
-	short	offset;
+	unsigned size;
+	unsigned offset;
 } pv_type_map[] =
 {
 	{
@@ -438,21 +440,18 @@ static void init_type(
 	char	*pUserType,
 	short	*pGetType,
 	short	*pPutType,
-	short	*pSize,
-	short	*pOffset)
+	unsigned *pSize,
+	unsigned *pOffset)
 {
 	struct pv_type_map	*pMap;
 
 	for (pMap = &pv_type_map[0]; *pMap->pTypeStr != 0; pMap++)
 	{
 		if (strcmp(pUserType, pMap->pTypeStr) == 0)
-		{
-			*pGetType = pMap->getType;
-			*pPutType = pMap->putType;
-			*pSize = pMap->size;
-			*pOffset = pMap->offset;
-			return;
-		}
+			break;
 	}
-	*pGetType = *pPutType = *pSize = *pOffset = 0; /* this shouldn't happen */
+	*pGetType = pMap->getType;
+	*pPutType = pMap->putType;
+	*pSize = pMap->size;
+	*pOffset = pMap->offset;
 }

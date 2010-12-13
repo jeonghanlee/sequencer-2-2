@@ -48,7 +48,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvGet(SS_ID pSS, VAR_ID varId, enum comp
 	SPROG	*pSP = pSS->sprog;
 	CHAN	*pDB = pSP->pChan + varId;
 	int	sync;	/* whether synchronous get */
-	int	status;
+	pvStat	status;
 	PVREQ	*req;
 
 	/* Determine whether performing asynchronous or synchronous i/o */
@@ -95,7 +95,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvGet(SS_ID pSS, VAR_ID varId, enum comp
 	status = pvVarGetCallback(
 			pDB->pvid,		/* PV id */
 			pDB->getType,		/* request type */
-			pDB->count,		/* element count */
+			(int)pDB->count,	/* element count */
 			seq_get_handler,	/* callback handler */
 			req);			/* user arg */
 	if (status != pvStatOK)
@@ -145,8 +145,8 @@ epicsShareFunc pvStat epicsShareAPI seq_pvPut(SS_ID pSS, VAR_ID varId, enum comp
 	int	nonb;	/* whether to call pvVarPutNoBlock (=fire&forget) */
 	int	sync;	/* whether to wait for completion */
 	int	status;
-	int	count;
-	void	*pVar = valPtr(pDB,pSS);	/* ptr to value */
+	unsigned count;
+	char	*pVar = valPtr(pDB,pSS);	/* ptr to value */
 	PVREQ	*req;
 
 	DEBUG("seq_pvPut: pv name=%s, pVar=%p\n", pDB->dbName, pVar);
@@ -200,7 +200,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvPut(SS_ID pSS, VAR_ID varId, enum comp
 		status = pvVarPutNoBlock(
 				pDB->pvid,		/* PV id */
 				pDB->putType,		/* data type */
-				count,			/* element count */
+				(int)count,		/* element count */
 				(pvValue *)pVar);	/* data value */
 	}
 	else
@@ -213,7 +213,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvPut(SS_ID pSS, VAR_ID varId, enum comp
 		status = pvVarPutCallback(
 				pDB->pvid,		/* PV id */
 				pDB->putType,		/* data type */
-				count,			/* element count */
+				(int)count,		/* element count */
 				(pvValue *)pVar,	/* data value */
 				seq_put_handler,	/* callback handler */
 				req);			/* user arg */
@@ -266,7 +266,7 @@ epicsShareFunc boolean epicsShareAPI seq_pvPutComplete(
 {
 	SPROG	*pSP = pSS->sprog;
 	long	anyDone = FALSE, allDone = TRUE;
-	int	i;
+	unsigned i;
 
 	for (i=0; i<length; i++)
 	{
@@ -301,7 +301,8 @@ epicsShareFunc pvStat epicsShareAPI seq_pvAssign(SS_ID pSS, VAR_ID varId, char *
 {
 	SPROG	*pSP = pSS->sprog;
 	CHAN	*pDB = pSP->pChan + varId;
-	int	status, nchar;
+	pvStat	status;
+        unsigned nchar;
 
 	DEBUG("Assign %s to \"%s\"\n", pDB->pVarName, pvName);
 
@@ -381,7 +382,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvMonitor(SS_ID pSS, VAR_ID varId)
 	status = pvVarMonitorOn(
 		pDB->pvid,		/* pvid */
 		pDB->getType,		/* requested type */
-		pDB->count,		/* element count */
+		(int)pDB->count,	/* element count */
 		seq_mon_handler,	/* function to call */
 		pDB,			/* user arg (db struct) */
 		&pDB->monid);		/* where to put event id */
@@ -641,9 +642,9 @@ epicsShareFunc boolean epicsShareAPI seq_pvGetQ(SS_ID pSS, VAR_ID varId)
 {
 	SPROG	*pSP = pSS->sprog;
 	CHAN	*pDB = pSP->pChan + varId;
-	void	*pVar = valPtr(pDB,pSS);
-	int	ev_flag;
-	int	isSet;
+	char	*pVar = valPtr(pDB,pSS);
+	EV_ID	ev_flag;
+	boolean	isSet;
 
 	epicsMutexMustLock(pSP->programLock);
 
@@ -676,55 +677,24 @@ epicsShareFunc boolean epicsShareAPI seq_pvGetQ(SS_ID pSS, VAR_ID varId)
 		   was posted) */
 		else
 		{
-		        pvType	type = pDB->getType;
+		        pvType type = pDB->getType;
 
 			pDB = pEntry->pDB;
 			pAccess = &pEntry->value;
 
 			/* Copy value returned into user variable */
 			/* For now, can only return _one_ array element */
-			pVal = (char *)pAccess + pDB->dbOffset;
+			pVal = pv_value_ptr(pAccess, type);
 
 			epicsMutexLock(pDB->varLock);
 			memcpy(pVar, pVal, pDB->size * 1 );
 							/* was pDB->dbCount */
-
-				/* Copy status, severity, timestamp */
-				switch (type)
-				{
-				case pvTypeTIME_CHAR:
-					pDB->status = pAccess->timeCharVal.status;
-					pDB->severity = pAccess->timeCharVal.severity;
-					pDB->timeStamp = pAccess->timeCharVal.stamp;
-					break;
-				case pvTypeTIME_SHORT:
-					pDB->status = pAccess->timeShortVal.status;
-					pDB->severity = pAccess->timeShortVal.severity;
-					pDB->timeStamp = pAccess->timeShortVal.stamp;
-					break;
-				case pvTypeTIME_LONG:
-					pDB->status = pAccess->timeLongVal.status;
-					pDB->severity = pAccess->timeLongVal.severity;
-					pDB->timeStamp = pAccess->timeLongVal.stamp;
-					break;
-				case pvTypeTIME_FLOAT:
-					pDB->status = pAccess->timeFloatVal.status;
-					pDB->severity = pAccess->timeFloatVal.severity;
-					pDB->timeStamp = pAccess->timeFloatVal.stamp;
-					break;
-				case pvTypeTIME_DOUBLE:
-					pDB->status = pAccess->timeDoubleVal.status;
-					pDB->severity = pAccess->timeDoubleVal.severity;
-					pDB->timeStamp = pAccess->timeDoubleVal.stamp;
-					break;
-				case pvTypeTIME_STRING:
-					pDB->status = pAccess->timeStringVal.status;
-					pDB->severity = pAccess->timeStringVal.severity;
-					pDB->timeStamp = pAccess->timeStringVal.stamp;
-					break;
-				default:
-					break;
-				}
+			if (pv_is_time_type(type))
+			{
+				pDB->status = *pv_status_ptr(pAccess, type);
+				pDB->severity = *pv_severity_ptr(pAccess, type);
+				pDB->timeStamp = *pv_stamp_ptr(pAccess, type);
+			}
 			epicsMutexUnlock(pDB->varLock);
 
 			/* Free queue entry */
@@ -761,7 +731,7 @@ epicsShareFunc void epicsShareAPI seq_pvFlushQ(SS_ID pSS, VAR_ID varId)
 	SPROG	*pSP = pSS->sprog;
 	CHAN	*pDB = pSP->pChan + varId;
 	QENTRY	*pEntry;
-	int	ev_flag;
+	EV_ID	ev_flag;
 
 	epicsMutexMustLock(pSP->programLock);
 
@@ -786,7 +756,7 @@ epicsShareFunc void epicsShareAPI seq_pvFlushQ(SS_ID pSS, VAR_ID varId)
 epicsShareFunc boolean epicsShareAPI seq_delay(SS_ID pSS, DELAY_ID delayId)
 {
 	double	timeNow, timeElapsed;
-	long	expired = FALSE;
+	boolean	expired = FALSE;
 
 	/* Calc. elapsed time since state was entered */
 	pvTimeGetCurrentDouble( &timeNow );

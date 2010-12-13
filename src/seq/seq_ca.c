@@ -43,12 +43,13 @@ static void proc_db_events_queued(pvValue *pValue, CHAN *pDB);
 /*
  * seq_connect() - Connect to all database channels.
  */
-epicsShareFunc long seq_connect(SPROG *pSP)
+pvStat seq_connect(SPROG *pSP)
 {
 	CHAN		*pDB;
-	int		status, i;
+        pvStat		status;
+	unsigned	nch;
 
-	for (i = 0, pDB = pSP->pChan; i < pSP->numChans; i++, pDB++)
+	for (nch = 0, pDB = pSP->pChan; nch < pSP->numChans; nch++, pDB++)
 	{
 		if (pDB->dbName == NULL || pDB->dbName[0] == 0)
 			continue; /* skip records without pv names */
@@ -58,7 +59,7 @@ epicsShareFunc long seq_connect(SPROG *pSP)
 	/*
 	 * For each channel: connect to db & issue monitor (if monFlag is TRUE).
 	 */
-	for (i = 0, pDB = pSP->pChan; i < pSP->numChans; i++, pDB++)
+	for (nch = 0, pDB = pSP->pChan; nch < pSP->numChans; nch++, pDB++)
 	{
 		if (pDB->dbName == NULL || pDB->dbName[0] == 0)
 			continue; /* skip records without pv names */
@@ -87,11 +88,12 @@ epicsShareFunc long seq_connect(SPROG *pSP)
 		 */
 		if (pDB->monFlag)
 		{
-			seq_pvMonitor(pSP->pSS, i);
+			seq_pvMonitor(pSP->pSS, nch);
 		}
 	}
+	pSP->allDisconnected = FALSE;
 	pvSysFlush(pvSys);
-	return 0;
+	return pvStatOK;
 }
 
 /*
@@ -152,8 +154,8 @@ epicsShareFunc void seq_mon_handler(
 			&& (pSP->firstConnectCount==pSP->assignCount))
 		{
 			SSCB *pSS;
-			int i;
-			for(i=0, pSS=pSP->pSS; i<pSP->numSS; i++,pSS++)
+			unsigned nss;
+			for(nss=0, pSS=pSP->pSS; nss<pSP->numSS; nss++,pSS++)
 			{
 				epicsEventSignal(pSS->allFirstConnectAndMonitorSemId);
 			}
@@ -185,53 +187,15 @@ static void proc_db_events(
 	   for put completion only) */
 	if (pValue != NULL)
 	{
-		void *pVal;
+		void *pVal = pv_value_ptr(pValue, type);
 
-		if (PV_SIMPLE(type))
-		{
-			pVal = (void *)pValue;
-		}
-		else
-		{
-			pVal = (void *)((long)pValue + pDB->dbOffset);
-		}
 		/* Write value to CA buffer (lock-free) */
 		ss_write_buffer(pDB, pVal);
-		/* Copy status, severity and time stamp (leave unchanged if absent) */
-		switch (type)
+		if (pv_is_time_type(type))
 		{
-		case pvTypeTIME_CHAR:
-			pDB->status = pValue->timeCharVal.status;
-			pDB->severity = pValue->timeCharVal.severity;
-			pDB->timeStamp = pValue->timeCharVal.stamp;
-			break;
-		case pvTypeTIME_SHORT:
-			pDB->status = pValue->timeShortVal.status;
-			pDB->severity = pValue->timeShortVal.severity;
-			pDB->timeStamp = pValue->timeShortVal.stamp;
-			break;
-		case pvTypeTIME_LONG:
-			pDB->status = pValue->timeLongVal.status;
-			pDB->severity = pValue->timeLongVal.severity;
-			pDB->timeStamp = pValue->timeLongVal.stamp;
-			break;
-		case pvTypeTIME_FLOAT:
-			pDB->status = pValue->timeFloatVal.status;
-			pDB->severity = pValue->timeFloatVal.severity;
-			pDB->timeStamp = pValue->timeFloatVal.stamp;
-			break;
-		case pvTypeTIME_DOUBLE:
-			pDB->status = pValue->timeDoubleVal.status;
-			pDB->severity = pValue->timeDoubleVal.severity;
-			pDB->timeStamp = pValue->timeDoubleVal.stamp;
-			break;
-		case pvTypeTIME_STRING:
-			pDB->status = pValue->timeStringVal.status;
-			pDB->severity = pValue->timeStringVal.severity;
-			pDB->timeStamp = pValue->timeStringVal.stamp;
-			break;
-		default:
-			break;
+			pDB->status = *pv_status_ptr(pValue, type);
+			pDB->severity = *pv_severity_ptr(pValue, type);
+			pDB->timeStamp = *pv_stamp_ptr(pValue, type);
 		}
 		/* Copy error message (only when severity indicates error) */
 		if (pDB->severity != pvSevrNONE)
@@ -295,7 +259,8 @@ static void proc_db_events_queued(pvValue *pValue, CHAN *pDB)
 
 	/* Allocate queue entry (re-use last one if queue has reached its
 	   maximum size) */
-	if ( count < pDB->maxQueueSize )
+	assert(count >= 0);
+	if ( (unsigned)count < pDB->maxQueueSize )
 	{
 		pEntry = (QENTRY *) calloc(sizeof(QENTRY), 1);
 		if (pEntry == NULL)
@@ -328,15 +293,15 @@ static void proc_db_events_queued(pvValue *pValue, CHAN *pDB)
 }
 
 /* Disconnect all database channels */
-epicsShareFunc long seq_disconnect(SPROG *pSP)
+pvStat seq_disconnect(SPROG *pSP)
 {
 	CHAN	*pDB;
-	int	i;
+	unsigned nch;
 	SPROG	*pMySP; /* will be NULL if this is not a sequencer thread */
 
 	/* Did we already disconnect? */
-	if (pSP->connectCount < 0)
-		return 0;
+	if (pSP->allDisconnected)
+		return pvStatOK;
 	DEBUG("seq_disconnect: pSP = %p\n", pSP);
 
 	/* Attach to PV context of pvSys creator (auxiliary thread) */
@@ -355,7 +320,7 @@ epicsShareFunc long seq_disconnect(SPROG *pSP)
 	errlogPrintf("seq_disconnect: pSP = %p, pDB = %p\n", pSP, pDB);
 #endif	/*DEBUG_DISCONNECT*/
 
-	for (i = 0; i < pSP->numChans; i++, pDB++)
+	for (nch = 0; nch < pSP->numChans; nch++, pDB++)
 	{
 		pvStat	status;
 
@@ -374,11 +339,11 @@ epicsShareFunc long seq_disconnect(SPROG *pSP)
 		pDB->connected = FALSE;
 	}
 
-	pSP->connectCount = -1; /* flag to indicate all disconnected */
+	pSP->allDisconnected = TRUE;
 
 	pvSysFlush(pvSys);
 
-	return 0;
+	return pvStatOK;
 }
 
 /*
@@ -421,7 +386,7 @@ void seq_conn_handler(void *var,int connected)
 			pSP->connectCount++;
 			if (pDB->monFlag)
 				pDB->monitored = TRUE;
-			pDB->dbCount = pvVarGetCount(var);
+			pDB->dbCount = (unsigned)pvVarGetCount(var);
 			if (pDB->dbCount > pDB->count)
 				pDB->dbCount = pDB->count;
 		}
@@ -438,8 +403,8 @@ void seq_conn_handler(void *var,int connected)
 				&& (pSP->firstConnectCount==pSP->assignCount))
 			{
 				SSCB *pSS;
-				int i;
-				for(i=0, pSS=pSP->pSS; i<pSP->numSS; i++,pSS++)
+				unsigned nss;
+				for(nss=0, pSS=pSP->pSS; nss<pSP->numSS; nss++,pSS++)
 				{
 					epicsEventSignal(pSS->allFirstConnectAndMonitorSemId);
 				}
@@ -455,9 +420,9 @@ void seq_conn_handler(void *var,int connected)
  * seqWakeup() -- wake up each state set that is waiting on this event
  * based on the current event mask.   EventNum = 0 means wake all state sets.
  */
-void seqWakeup(SPROG *pSP, long eventNum)
+void seqWakeup(SPROG *pSP, unsigned eventNum)
 {
-	int	nss;
+	unsigned nss;
 	SSCB	*pSS;
 
 	/* Check event number against mask for all state sets: */

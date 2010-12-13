@@ -33,7 +33,7 @@ struct findStateSetArgs {
 static int findStateSet(SPROG *pSP, void *param)
 {
     struct findStateSetArgs *pargs = (struct findStateSetArgs *)param;
-    int n;
+    unsigned n;
 
     for (n = 0; n < pSP->numSS; n++) {
         SSCB *pSS = pSP->pSS + n;

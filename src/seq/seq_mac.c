@@ -20,16 +20,16 @@ struct macro
 	MACRO	*next;
 };
 
-static unsigned seqMacParseName(char *pStr);
-static unsigned seqMacParseValue(char *pStr);
-static char *skipBlanks(char *pChar);
+static unsigned seqMacParseName(const char *pStr);
+static unsigned seqMacParseValue(const char *pStr);
+static const char *skipBlanks(const char *pChar);
 static MACRO *seqMacTblGet(SPROG *pSP, char *pName);
 
 /* 
  *seqMacEval - substitute macro value into a string containing:
  * ....{mac_name}....
  */
-void seqMacEval(SPROG *pSP, char *pInStr, char *pOutStr, size_t maxChar)
+void seqMacEval(SPROG *pSP, const char *pInStr, char *pOutStr, size_t maxChar)
 {
 	char	name[50], *pValue, *pTmp;
 	size_t	valLth, nameLth;
@@ -86,7 +86,7 @@ void seqMacEval(SPROG *pSP, char *pInStr, char *pOutStr, size_t maxChar)
 /*
  * seqMacValGet - internal routine to convert macro name to macro value.
  */
-char *seqMacValGet(SPROG *pSP, char *pName)
+char *seqMacValGet(SPROG *pSP, const char *pName)
 {
 	MACRO	*pMac;
 
@@ -109,7 +109,7 @@ char *seqMacValGet(SPROG *pSP, char *pName)
  * Assumes the table may already contain entries (values may be changed).
  * String for name and value are allocated dynamically from pool.
  */
-void seqMacParse(SPROG *pSP, char *pMacStr)
+void seqMacParse(SPROG *pSP, const char *pMacStr)
 {
 	unsigned	nChar;
 	MACRO		*pMac;		/* macro tbl entry */
@@ -188,7 +188,7 @@ void seqMacParse(SPROG *pSP, char *pMacStr)
 /*
  * seqMacParseName() - Parse a macro name from the input string.
  */
-static unsigned seqMacParseName(char *pStr)
+static unsigned seqMacParseName(const char *pStr)
 {
 	unsigned nChar;
 
@@ -210,7 +210,7 @@ static unsigned seqMacParseName(char *pStr)
 /*
  * seqMacParseValue() - Parse a macro value from the input string.
  */
-static unsigned seqMacParseValue(char *pStr)
+static unsigned seqMacParseValue(const char *pStr)
 {
 	unsigned nChar;
 
@@ -225,7 +225,7 @@ static unsigned seqMacParseValue(char *pStr)
 }
 
 /* skipBlanks() - skip blank characters */
-static char *skipBlanks(char *pChar)
+static const char *skipBlanks(const char *pChar)
 {
 	while (*pChar == ' ')
 		pChar++;
