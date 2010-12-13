@@ -53,11 +53,12 @@ extern "C" {
 #define OPT_DOEXITTOSELF	(1<<2)	/* Do exit{} even if to same state */
 
 /* bitMask macros */
-#define NBITS	(8*sizeof(bitMask))	/* # bits in bitMask word */
+#define NBITS			(8*sizeof(bitMask))	/* # bits in bitMask word */
+#define NWORDS(maxBitNum)	(1+(maxBitNum)/NBITS)	/* # words in bitMask */
 
-#define bitSet(word, bitnum)	( word[(bitnum)/NBITS] |=  (1u<<((bitnum)%NBITS)))
-#define bitClear(word, bitnum)	( word[(bitnum)/NBITS] &= ~(1u<<((bitnum)%NBITS)))
-#define bitTest(word, bitnum)	((word[(bitnum)/NBITS] &  (1u<<((bitnum)%NBITS))) != 0)
+#define bitSet(words, bitnum)	( words[(bitnum)/NBITS] |=  (1u<<((bitnum)%NBITS)))
+#define bitClear(words, bitnum)	( words[(bitnum)/NBITS] &= ~(1u<<((bitnum)%NBITS)))
+#define bitTest(words, bitnum)	((words[(bitnum)/NBITS] &  (1u<<((bitnum)%NBITS))) != 0)
 
 #define NO_EVENT_FLAG		0	/* argument to pvSync to remove sync */
 
