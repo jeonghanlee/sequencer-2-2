@@ -462,6 +462,33 @@ epicsShareDef const size_t pv_value_offsets[] = {
     offsetof(pvTimeString, value),
 };
 
+epicsShareDef const size_t pv_status_offsets[] = {
+    offsetof(pvTimeChar  , status),
+    offsetof(pvTimeShort , status),
+    offsetof(pvTimeLong  , status),
+    offsetof(pvTimeFloat , status),
+    offsetof(pvTimeDouble, status),
+    offsetof(pvTimeString, status),
+};
+
+epicsShareDef const size_t pv_severity_offsets[] = {
+    offsetof(pvTimeChar  , severity),
+    offsetof(pvTimeShort , severity),
+    offsetof(pvTimeLong  , severity),
+    offsetof(pvTimeFloat , severity),
+    offsetof(pvTimeDouble, severity),
+    offsetof(pvTimeString, severity),
+};
+
+epicsShareDef const size_t pv_stamp_offsets[] = {
+    offsetof(pvTimeChar  , stamp),
+    offsetof(pvTimeShort , stamp),
+    offsetof(pvTimeLong  , stamp),
+    offsetof(pvTimeFloat , stamp),
+    offsetof(pvTimeDouble, stamp),
+    offsetof(pvTimeString, stamp),
+};
+
 /*
  * pv.cc,v
  * Revision 1.4  2001/02/16 21:45:16  norume

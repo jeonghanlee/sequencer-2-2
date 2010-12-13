@@ -80,15 +80,36 @@ typedef union {
     ((PV_SIMPLE(type)?(void*)(value):\
                       (void*)(&value->timeCharVal.value)))
 
+#define pv_is_simple_type(type)\
+    ((type)>=pvTypeCHAR&&(type)<=pvTypeSTRING)
+#define pv_is_time_type(type)\
+    ((type)>=pvTypeTIME_CHAR&&(type)<=pvTypeTIME_STRING)
+#define pv_is_valid_type(type)\
+    ((type)>=pvTypeCHAR&&(type)<=pvTypeTIME_STRING)
+
+#define pv_status_ptr(pv,type)\
+    (assert(pv_is_time_type(type)),\
+    (pvStat *)(((char *)pv)+pv_status_offsets[(type)-pvTypeTIME_CHAR]))
+#define pv_severity_ptr(pv,type)\
+    (assert(pv_is_time_type(type)),\
+    (pvSevr *)(((char *)pv)+pv_severity_offsets[(type)-pvTypeTIME_CHAR]))
+#define pv_stamp_ptr(pv,type)\
+    (assert(pv_is_time_type(type)),\
+    (epicsTimeStamp *)(((char *)pv)+pv_stamp_offsets[(type)-pvTypeTIME_CHAR]))
+
 #define pv_value_ptr(pv,type)\
-    ((void *)(((char *)pv)+pv_value_offsets[type]))
+    (assert(pv_is_valid_type(type)),(void *)(((char *)pv)+pv_value_offsets[type]))
 #define pv_size(type)\
-    (pv_sizes[type])
+    (assert(pv_is_valid_type(type)),pv_sizes[type])
 #define pv_size_n(type,count)\
-    ((count)<=0?pv_sizes[type]:pv_sizes[type]+((count)-1)*pv_value_sizes[type])
+    (assert(pv_is_valid_type(type)),\
+    (count)<=0?pv_sizes[type]:pv_sizes[type]+((count)-1)*pv_value_sizes[type])
 
 epicsShareExtern const size_t pv_sizes[];
 epicsShareExtern const size_t pv_value_sizes[];
 epicsShareExtern const size_t pv_value_offsets[];
+epicsShareExtern const size_t pv_status_offsets[];
+epicsShareExtern const size_t pv_severity_offsets[];
+epicsShareExtern const size_t pv_stamp_offsets[];
 
 #endif /* INCLpvTypeh */
