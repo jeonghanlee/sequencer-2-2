@@ -99,7 +99,7 @@ epicsShareFunc void epicsShareAPI seqShow(epicsThreadId tid)
 /*
  * seqChanShow() - Show channel information for a state program.
  */
-epicsShareFunc void epicsShareAPI seqChanShow(epicsThreadId tid, char *pStr)
+epicsShareFunc void epicsShareAPI seqChanShow(epicsThreadId tid, const char *pStr)
 {
 	SPROG	*pSP;
 	CHAN	*pDB;

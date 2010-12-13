@@ -97,13 +97,18 @@ typedef void ENTRY_FUNC(SS_ID ssId, USER_VAR *pVar);
 typedef void EXIT_FUNC(SS_ID ssId, USER_VAR *pVar);
 typedef void INIT_FUNC(USER_VAR *pVar);
 
+typedef const struct seqChan seqChan;
+typedef const struct seqState seqState;
+typedef const struct seqSS seqSS;
+typedef const struct seqProgram seqProgram;
+
 /* Static information about a channel */
 struct seqChan
 {
-	char		*dbAsName;	/* assigned channel name */
+	const char	*dbAsName;	/* assigned channel name */
 	ptrdiff_t	offset;		/* offset to value */
-	char		*pVarName;	/* variable name, including subscripts*/
-	char		*pVarType;	/* variable type, e.g. "int" */
+	const char	*pVarName;	/* variable name, including subscripts*/
+	const char	*pVarType;	/* variable type, e.g. "int" */
 	unsigned	count;		/* element count for arrays */
 	unsigned	eventNum;	/* event number for this channel */
 	EV_ID		efId;		/* event flag id if synced */
@@ -116,21 +121,21 @@ struct seqChan
 /* Static information about a state */
 struct seqState
 {
-	char		*pStateName;	/* state name */
+	const char	*pStateName;	/* state name */
 	ACTION_FUNC	*actionFunc;	/* action routine for this state */
 	EVENT_FUNC	*eventFunc;	/* event routine for this state */
 	DELAY_FUNC	*delayFunc;	/* delay setup routine for this state */
 	ENTRY_FUNC	*entryFunc;	/* statements performed on entry to state */
 	EXIT_FUNC	*exitFunc;	/* statements performed on exit from state */
-	bitMask		*pEventMask;	/* event mask for this state */
+	const bitMask	*pEventMask;	/* event mask for this state */
 	bitMask		options;	/* state option mask */
 };
 
 /* Static information about a state set */
 struct seqSS
 {
-	char		*pSSName;	/* state set name */
-	struct seqState	*pStates;	/* array of state blocks */
+	const char	*pSSName;	/* state set name */
+	seqState	*pStates;	/* array of state blocks */
 	unsigned	numStates;	/* number of states in this state set */
 	unsigned	numDelays;	/* number of delays in this state set */
 };
@@ -139,13 +144,13 @@ struct seqSS
 struct seqProgram
 {
 	unsigned	magic;		/* magic number */
-	char		*pProgName;	/* program name (for debugging) */
-	struct seqChan	*pChan;		/* table of channels */
+	const char	*pProgName;	/* program name (for debugging) */
+	seqChan		*pChan;		/* table of channels */
 	unsigned	numChans;	/* number of db channels */
-	struct seqSS	*pSS;		/* array of state set info structs */
+	seqSS		*pSS;		/* array of state set info structs */
 	unsigned	numSS;		/* number of state sets */
 	unsigned	varSize;	/* # bytes in user variable area */
-	char		*pParams;	/* program paramters */
+	const char	*pParams;	/* program paramters */
 	unsigned	numEvents;	/* number of event flags */
 	bitMask		options;	/* program option mask */
 	INIT_FUNC	*initFunc;	/* init function */
@@ -178,7 +183,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvPutMultiple(SS_ID, VAR_ID,
 epicsShareFunc boolean epicsShareAPI seq_pvGetComplete(SS_ID, VAR_ID);
 epicsShareFunc boolean epicsShareAPI seq_pvPutComplete(SS_ID, VAR_ID,
 	unsigned, boolean, boolean*);
-epicsShareFunc pvStat epicsShareAPI seq_pvAssign(SS_ID, VAR_ID, char *);
+epicsShareFunc pvStat epicsShareAPI seq_pvAssign(SS_ID, VAR_ID, const char *);
 epicsShareFunc pvStat epicsShareAPI seq_pvMonitor(SS_ID, VAR_ID);
 epicsShareFunc void epicsShareAPI seq_pvSync(SS_ID, VAR_ID, EV_ID);
 epicsShareFunc pvStat epicsShareAPI seq_pvStopMonitor(SS_ID, VAR_ID);
@@ -196,23 +201,23 @@ epicsShareFunc VAR_ID epicsShareAPI seq_pvIndex(SS_ID, VAR_ID);
 epicsShareFunc void epicsShareAPI seq_pvFlush(SS_ID);
 epicsShareFunc void epicsShareAPI seq_delayInit(SS_ID, DELAY_ID, double);
 epicsShareFunc boolean epicsShareAPI seq_delay(SS_ID, DELAY_ID);
-epicsShareFunc char *epicsShareAPI seq_macValueGet(SS_ID, char *);
+epicsShareFunc char *epicsShareAPI seq_macValueGet(SS_ID, const char *);
 /* global info */
 epicsShareFunc unsigned epicsShareAPI seq_pvChannelCount(SS_ID);
 epicsShareFunc unsigned epicsShareAPI seq_pvConnectCount(SS_ID);
 epicsShareFunc unsigned epicsShareAPI seq_pvAssignCount(SS_ID);
-epicsShareFunc boolean epicsShareAPI seq_optGet(SS_ID, char *);
+epicsShareFunc boolean epicsShareAPI seq_optGet(SS_ID, const char *);
 /* shell commands */
 epicsShareFunc void epicsShareAPI seqShow(epicsThreadId);
-epicsShareFunc void epicsShareAPI seqChanShow(epicsThreadId, char *);
+epicsShareFunc void epicsShareAPI seqChanShow(epicsThreadId, const char *);
 epicsShareFunc void epicsShareAPI seqcar(int level);
 epicsShareFunc void epicsShareAPI seqQueueShow(epicsThreadId);
 epicsShareFunc void epicsShareAPI seqStop(epicsThreadId);
-epicsShareFunc void epicsShareAPI seqRegisterSequencerProgram(struct seqProgram *p);
+epicsShareFunc void epicsShareAPI seqRegisterSequencerProgram(seqProgram *p);
 epicsShareFunc void epicsShareAPI seqRegisterSequencerCommands(void);
-epicsShareFunc void epicsShareAPI seq(struct seqProgram *, char *, unsigned);
+epicsShareFunc void epicsShareAPI seq(seqProgram *, const char *, unsigned);
 /* exported for devSequencer */
-epicsShareFunc struct program_instance* epicsShareAPI seqFindProgByName(char *, int);
+epicsShareFunc struct program_instance* epicsShareAPI seqFindProgByName(const char *, int);
 
 #ifdef __cplusplus
 } /* extern "C" */

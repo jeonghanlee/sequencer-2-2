@@ -575,9 +575,7 @@ void seqFree(SPROG *pSP)
 	/* Free channel structures */
 	free(pSP->pChan);
 
-	/* Free STATE blocks */
 	pSS = pSP->pSS;
-	free(pSS->pStates);
 
 	/* Free event words */
 	free(pSP->pEvents);

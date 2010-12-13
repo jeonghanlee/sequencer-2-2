@@ -138,10 +138,10 @@ typedef union {
     epicsThreadId threadId;
     double        timeElapsed;
     long          numStates;
-    char          *pFirstStateName;
-    char          *pPrevStateName;
-    char          *pNextStateName;
-    char          *pCurrentStateName;
+    const char    *pFirstStateName;
+    const char    *pPrevStateName;
+    const char    *pNextStateName;
+    const char    *pCurrentStateName;
 
     char          *pSyntaxErrMsg;
 } seqShowVar;

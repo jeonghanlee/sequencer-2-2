@@ -14,13 +14,12 @@
 #define DEBUG nothing
 
 /* function prototypes for local routines */
-static SPROG *seqInitTables(struct seqProgram *);
-static void init_sprog(struct seqProgram *, SPROG *);
-static void init_sscb(struct seqProgram *, SPROG *);
-static void init_chan(struct seqProgram *, SPROG *);
+static void seqInitTables(SPROG *, seqProgram *);
+static void init_sprog(seqProgram *, SPROG *);
+static void init_sscb(seqProgram *, SPROG *);
+static void init_chan(seqProgram *, SPROG *);
 
-static void seqChanNameEval(SPROG *);
-static void init_type(char *, short *, short *, unsigned *, unsigned *);
+static void init_type(const char *, short *, short *, unsigned *, unsigned *);
 
 /*	Globals */
 
@@ -37,7 +36,8 @@ epicsThreadId seqAuxThreadId = (epicsThreadId) 0;
  * Creates the initial state program thread and returns its thread id.
  * Most initialization is performed here.
  */
-void seq (struct seqProgram *pSeqProg, char *macroDef, unsigned stackSize)
+epicsShareFunc void epicsShareAPI seq(
+	seqProgram *pSeqProg, const char *macroDef, unsigned stackSize)
 {
 	epicsThreadId	tid;
 	SPROG		*pSP;
@@ -66,8 +66,7 @@ void seq (struct seqProgram *pSeqProg, char *macroDef, unsigned stackSize)
 		return;
 	}
 
-	/* Initialize the sequencer tables */
-	pSP = seqInitTables(pSeqProg);
+	pSP = (SPROG *)calloc(1, sizeof (SPROG));
 
 	/* Parse the macro definitions from the "program" statement */
 	seqMacParse(pSP, pSeqProg->pParams);
@@ -75,8 +74,8 @@ void seq (struct seqProgram *pSeqProg, char *macroDef, unsigned stackSize)
 	/* Parse the macro definitions from the command line */
 	seqMacParse(pSP, macroDef);
 
-	/* Do macro substitution on channel names */
-	seqChanNameEval(pSP);
+	/* Initialize the sequencer tables */
+	seqInitTables(pSP, pSeqProg);
 
 
 	/* Specify stack size */
@@ -152,12 +151,8 @@ void seq (struct seqProgram *pSeqProg, char *macroDef, unsigned stackSize)
 }
 
 /* seqInitTables - initialize sequencer tables */
-static SPROG *seqInitTables(struct seqProgram *pSeqProg)
+static void seqInitTables(SPROG *pSP, seqProgram *pSeqProg)
 {
-	SPROG	*pSP;
-
-	pSP = (SPROG *)calloc(1, sizeof (SPROG));
-
 	/* Initialize state program block */
 	init_sprog(pSeqProg, pSP);
 
@@ -166,15 +161,13 @@ static SPROG *seqInitTables(struct seqProgram *pSeqProg)
 
 	/* Initialize database channel blocks */
 	init_chan(pSeqProg, pSP);
-
-	return pSP;
 }
 
 /*
  * Copy data from seqCom.h structures into this thread's dynamic structures
  * as defined in seq.h.
  */
-static void init_sprog(struct seqProgram *pSeqProg, SPROG *pSP)
+static void init_sprog(seqProgram *pSeqProg, SPROG *pSP)
 {
 	unsigned i, nWords;
 
@@ -228,11 +221,11 @@ static void init_sprog(struct seqProgram *pSeqProg, SPROG *pSP)
 /*
  * Initialize the state set control blocks
  */
-static void init_sscb(struct seqProgram *pSeqProg, SPROG *pSP)
+static void init_sscb(seqProgram *pSeqProg, SPROG *pSP)
 {
 	SSCB		*pSS;
 	unsigned	nss;
-	struct seqSS	*pSeqSS;
+	seqSS		*pSeqSS;
 
 
 	/* Allocate space for the SSCB structures */
@@ -290,11 +283,11 @@ static void init_sscb(struct seqProgram *pSeqProg, SPROG *pSP)
 /*
  * init_chan--Build the database channel structures.
  * Note:  Actual PV name is not filled in here. */
-static void init_chan(struct seqProgram *pSeqProg, SPROG *pSP)
+static void init_chan(seqProgram *pSeqProg, SPROG *pSP)
 {
 	unsigned	nchan;
 	CHAN		*pDB;
-	struct seqChan	*pSeqChan;
+	seqChan		*pSeqChan;
 
 	/* Allocate space for the CHAN structures */
 	pSP->pChan = (CHAN *)calloc(pSP->numChans, sizeof(CHAN));
@@ -305,7 +298,6 @@ static void init_chan(struct seqProgram *pSeqProg, SPROG *pSP)
 	{
 		DEBUG("init_chan: pDB=%p\n", pDB);
 		pDB->sprog = pSP;
-		pDB->dbAsName = pSeqChan->dbAsName;
 		pDB->pVarName = pSeqChan->pVarName;
 		pDB->pVarType = pSeqChan->pVarType;
 		pDB->offset = pSeqChan->offset;
@@ -318,6 +310,21 @@ static void init_chan(struct seqProgram *pSeqProg, SPROG *pSP)
 				    pSeqChan->queueSize : MAX_QUEUE_SIZE;
 		pDB->queueIndex = pSeqChan->queueIndex;
 		pDB->assigned = 0;
+
+		if (pSeqChan->dbAsName != NULL)
+		{
+			char name_buffer[100];
+
+			seqMacEval(pSP, pSeqChan->dbAsName, name_buffer, sizeof(name_buffer));
+			if (name_buffer[0])
+			{
+				pDB->dbAsName = epicsStrDup(name_buffer);
+			}
+			DEBUG("  assigned name=%s, expanded name=%s\n",
+				pSeqChan->dbAsName, pDB->dbAsName);
+		}
+		else
+			DEBUG("  pv name=<anonymous>\n");
 
 		/* Latest error message (dynamically allocated) */
 		pDB->message = NULL;
@@ -342,26 +349,6 @@ static void init_chan(struct seqProgram *pSeqProg, SPROG *pSP)
 }
 
 /*
- * Evaluate channel names by macro substitution.
- */
-#define		MACRO_STR_LEN	(MAX_STRING_SIZE+1)
-static void seqChanNameEval(SPROG *pSP)
-{
-	CHAN		*pDB;
-	unsigned	i;
-
-	pDB = pSP->pChan;
-	for (i = 0; i < pSP->numChans; i++, pDB++)
-	{
-		pDB->dbName = (char *)calloc(1, MACRO_STR_LEN);
-		seqMacEval(pSP, pDB->dbAsName, pDB->dbName, MACRO_STR_LEN);
-
-		DEBUG("seqChanNameEval: \"%s\" evaluated to \"%s\"\n",
-			pDB->dbAsName, pDB->dbName);
-	}
-}
-
-/*
  * init_type -- returns types for DB put/get, element size, and db access
  * offset based on user variable type.
  * Mapping is determined by the following pv_type_map[] array.
@@ -369,7 +356,7 @@ static void seqChanNameEval(SPROG *pSP)
  */
 static struct pv_type_map
 {
-	char	*pTypeStr;
+	const char *pTypeStr;
 	short	putType;
 	short	getType;
 	unsigned size;
@@ -437,7 +424,7 @@ static struct pv_type_map
 };
 
 static void init_type(
-	char	*pUserType,
+	const char *pUserType,
 	short	*pGetType,
 	short	*pPutType,
 	unsigned *pSize,

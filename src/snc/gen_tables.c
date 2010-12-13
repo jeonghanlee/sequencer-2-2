@@ -59,7 +59,7 @@ static void gen_channel_table(ChanList *chan_list, uint num_event_flags, int opt
 	if (chan_list->first)
 	{
 		printf("\n/* Channel Definitions */\n");
-		printf("static struct seqChan seqChan[] = {\n");
+		printf("static seqChan G_channels[] = {\n");
 		printf("  /* dbAsName, offset, pVarName, */\n");
 		printf("  /* pVarType, count, eventNum, efId, monitored, queued, queueSize, queueIndex */\n");
 		foreach (cp, chan_list->first)
@@ -70,8 +70,8 @@ static void gen_channel_table(ChanList *chan_list, uint num_event_flags, int opt
 	}
 	else
 	{
-		printf("\n/* No Channel Definitions, create 1 for ptr init. */\n");
-		printf("static struct seqChan seqChan[1];\n");
+		printf("\n/* No channel definitions */\n");
+		printf("#define G_channels NULL\n");
 	}
 }
 
@@ -178,7 +178,7 @@ static void gen_state_table(Expr *ss_list, uint num_event_flags, uint num_channe
 
 		/* For each state, generate state structure */
 		printf("\n/* State Table */\n");
-		printf("static struct seqState state_%s[] = {\n", ssp->value);
+		printf("static seqState state_%s[] = {\n", ssp->value);
 		foreach (sp, ssp->ss_states)
 		{
 			fill_state_struct(sp, ssp->value);
@@ -225,16 +225,16 @@ static void encode_state_options(StateOptions options)
 	printf(")");
 } 
 
-/* Generate a single program structure ("struct seqProgram") */
+/* Generate a single program structure ("seqProgram") */
 static void gen_prog_table(Program *p)
 {
 	printf("\n/* State Program table (global) */\n");
-	printf("struct seqProgram %s = {\n", p->name);
+	printf("seqProgram %s = {\n", p->name);
 	printf("\t/* magic number */      %d,\n", MAGIC);
 	printf("\t/* name */              \"%s\",\n", p->name);
-	printf("\t/* channels */          seqChan,\n");
+	printf("\t/* channels */          G_channels,\n");
 	printf("\t/* num. channels */     %d,\n", p->chan_list->num_elems);
-	printf("\t/* state sets */        seqSS,\n");
+	printf("\t/* state sets */        G_state_sets,\n");
 	printf("\t/* num. state sets */   %d,\n", p->num_ss);
 	if (p->options.reent)
 		printf("\t/* user var size */     sizeof(struct %s),\n", VAR_PREFIX);
@@ -277,7 +277,7 @@ static void gen_ss_table(SymTable st, Expr *ss_list)
 	int	num_ss;
 
 	printf("\n/* State Set Table */\n");
-	printf("static struct seqSS seqSS[] = {\n");
+	printf("static seqSS G_state_sets[] = {\n");
 	num_ss = 0;
 	foreach (ssp, ss_list)
 	{

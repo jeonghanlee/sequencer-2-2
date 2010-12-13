@@ -63,7 +63,7 @@ SSCB *seqFindStateSet(epicsThreadId threadId)
 
 struct findByNameArgs {
     SPROG *pSP;
-    char *pProgName;
+    const char *pProgName;
     int instance;
 };
 
@@ -80,7 +80,7 @@ static int findByName(SPROG *pSP, void *param)
  * seqFindProgByName() - find a program in the program instance list by name
  * and instance number.
  */
-epicsShareFunc SPROG *epicsShareAPI seqFindProgByName(char *pProgName, int instance)
+epicsShareFunc SPROG *epicsShareAPI seqFindProgByName(const char *pProgName, int instance)
 {
     struct findByNameArgs args;
 
@@ -96,7 +96,7 @@ struct traverseInstancesArgs {
     void *param;
 };
 
-static int traverseInstances(SPROG **ppInstances, struct seqProgram *pseq, void *param)
+static int traverseInstances(SPROG **ppInstances, seqProgram *pseq, void *param)
 {
     struct traverseInstancesArgs *pargs = (struct traverseInstancesArgs *)param;
     SPROG *pSP;
@@ -121,7 +121,7 @@ void seqTraverseProg(seqTraversee * pFunc, void *param)
     traverseSequencerPrograms(traverseInstances, &args);
 }
 
-static int addProg(SPROG **ppInstances, struct seqProgram *pseq, void *param)
+static int addProg(SPROG **ppInstances, seqProgram *pseq, void *param)
 {
     SPROG *pSP = (SPROG *)param;
 
@@ -157,7 +157,7 @@ void seqAddProg(SPROG *pSP)
     traverseSequencerPrograms(addProg, pSP);
 }
 
-static int delProg(SPROG **ppInstances, struct seqProgram *pseq, void *param)
+static int delProg(SPROG **ppInstances, seqProgram *pseq, void *param)
 {
     SPROG *pSP = (SPROG *)param;
 

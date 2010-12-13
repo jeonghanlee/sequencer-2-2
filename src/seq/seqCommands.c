@@ -14,7 +14,7 @@
 #include "seq.h"
 
 struct sequencerProgram {
-    struct seqProgram *prog;
+    seqProgram *prog;
     epicsMutexId lock;
     struct program_instance *instances;
     struct sequencerProgram *next;
@@ -25,7 +25,7 @@ static struct sequencerProgram *seqHead;
  * This routine is called before multitasking has started, so there's
  * no race condition in creating the linked list or the instance lock.
  */
-epicsShareFunc void epicsShareAPI seqRegisterSequencerProgram(struct seqProgram *p)
+epicsShareFunc void epicsShareAPI seqRegisterSequencerProgram(seqProgram *p)
 {
     struct sequencerProgram *sp;
 

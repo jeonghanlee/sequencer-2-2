@@ -66,7 +66,7 @@ extern void *pvSys;
 
 typedef struct channel		CHAN;
 typedef struct queue_entry	QENTRY;
-typedef struct seqState		STATE;
+typedef seqState		STATE;
 typedef struct macro		MACRO;
 typedef struct state_set	SSCB;
 typedef struct program_instance	SPROG;
@@ -245,7 +245,7 @@ SPROG *seqFindProg(epicsThreadId threadId);
 void seqDelProg(SPROG *pSP);
 void seqAddProg(SPROG *pSP);
 /* seqCommands.c */
-typedef int sequencerProgramTraversee(SPROG **sprog, struct seqProgram *pseq, void *param);
+typedef int sequencerProgramTraversee(SPROG **sprog, seqProgram *pseq, void *param);
 void traverseSequencerPrograms(sequencerProgramTraversee *traversee, void *param);
 
 /* debug/query support */

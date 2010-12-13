@@ -297,7 +297,7 @@ epicsShareFunc boolean epicsShareAPI seq_pvPutComplete(
  * seq_pvAssign() - Assign/Connect to a channel.
  * Assign to a zero-length string ("") disconnects/de-assigns.
  */
-epicsShareFunc pvStat epicsShareAPI seq_pvAssign(SS_ID pSS, VAR_ID varId, char *pvName)
+epicsShareFunc pvStat epicsShareAPI seq_pvAssign(SS_ID pSS, VAR_ID varId, const char *pvName)
 {
 	SPROG	*pSP = pSS->sprog;
 	CHAN	*pDB = pSP->pChan + varId;
@@ -791,7 +791,7 @@ epicsShareFunc void epicsShareAPI seq_delayInit(SS_ID pSS, DELAY_ID delayId, dou
  * seq_optGet: return the value of an option (e.g. "a").
  * FALSE means "-" and TRUE means "+".
  */
-epicsShareFunc boolean epicsShareAPI seq_optGet(SS_ID pSS, char *opt)
+epicsShareFunc boolean epicsShareAPI seq_optGet(SS_ID pSS, const char *opt)
 {
 	SPROG	*pSP = pSS->sprog;
 
@@ -811,7 +811,7 @@ epicsShareFunc boolean epicsShareAPI seq_optGet(SS_ID pSS, char *opt)
 /* 
  * seq_macValueGet - given macro name, return pointer to its value.
  */
-epicsShareFunc char *epicsShareAPI seq_macValueGet(SS_ID ssId, char *pName)
+epicsShareFunc char *epicsShareAPI seq_macValueGet(SS_ID ssId, const char *pName)
 {
 	return seqMacValGet(ssId->sprog, pName);
 }
