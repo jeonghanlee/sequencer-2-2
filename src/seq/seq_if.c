@@ -94,7 +94,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvGet(SS_ID pSS, VAR_ID varId, enum comp
 	/* Perform the PV get operation with a callback routine specified */
 	status = pvVarGetCallback(
 			pDB->pvid,		/* PV id */
-			pDB->getType,		/* request type */
+			pDB->type->getType,	/* request type */
 			(int)pDB->count,	/* element count */
 			seq_get_handler,	/* callback handler */
 			req);			/* user arg */
@@ -199,7 +199,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvPut(SS_ID pSS, VAR_ID varId, enum comp
 	{
 		status = pvVarPutNoBlock(
 				pDB->pvid,		/* PV id */
-				pDB->putType,		/* data type */
+				pDB->type->putType,	/* data type */
 				(int)count,		/* element count */
 				(pvValue *)pVar);	/* data value */
 	}
@@ -212,7 +212,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvPut(SS_ID pSS, VAR_ID varId, enum comp
 
 		status = pvVarPutCallback(
 				pDB->pvid,		/* PV id */
-				pDB->putType,		/* data type */
+				pDB->type->putType,	/* data type */
 				(int)count,		/* element count */
 				(pvValue *)pVar,	/* data value */
 				seq_put_handler,	/* callback handler */
@@ -247,8 +247,8 @@ epicsShareFunc pvStat epicsShareAPI seq_pvPut(SS_ID pSS, VAR_ID varId, enum comp
 	if (status != pvStatOK)
 	{
 		DEBUG("pvPut on \"%s\" failed (%d)\n", pDB->dbName, status);
-		DEBUG("  putType=%d\n", pDB->putType);
-		DEBUG("  size=%d, count=%d\n", pDB->size, count);
+		DEBUG("  putType=%d\n", pDB->type->putType);
+		DEBUG("  size=%d, count=%d\n", pDB->type->size, count);
 	}
 
 	return pvStatOK;
@@ -381,7 +381,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvMonitor(SS_ID pSS, VAR_ID varId)
 
 	status = pvVarMonitorOn(
 		pDB->pvid,		/* pvid */
-		pDB->getType,		/* requested type */
+		pDB->type->getType,	/* requested type */
 		(int)pDB->count,	/* element count */
 		seq_mon_handler,	/* function to call */
 		pDB,			/* user arg (db struct) */
@@ -677,7 +677,7 @@ epicsShareFunc boolean epicsShareAPI seq_pvGetQ(SS_ID pSS, VAR_ID varId)
 		   was posted) */
 		else
 		{
-		        pvType type = pDB->getType;
+		        pvType type = pDB->type->getType;
 
 			pDB = pEntry->pDB;
 			pAccess = &pEntry->value;
@@ -687,7 +687,7 @@ epicsShareFunc boolean epicsShareAPI seq_pvGetQ(SS_ID pSS, VAR_ID varId)
 			pVal = pv_value_ptr(pAccess, type);
 
 			epicsMutexLock(pDB->varLock);
-			memcpy(pVar, pVal, pDB->size * 1 );
+			memcpy(pVar, pVal, pDB->type->size * 1 );
 							/* was pDB->dbCount */
 			if (pv_is_time_type(type))
 			{

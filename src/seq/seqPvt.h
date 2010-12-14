@@ -72,6 +72,7 @@ typedef struct state_set	SSCB;
 typedef struct program_instance	SPROG;
 typedef struct auxiliary_args	AUXARGS;
 typedef struct pvreq		PVREQ;
+typedef const struct pv_type	PVTYPE;
 
 /* Structure to hold information about database channels */
 struct channel
@@ -79,12 +80,12 @@ struct channel
 	/* static channel data (assigned once on startup) */
 	ptrdiff_t	offset;		/* offset to value */
 	const char	*pVarName;	/* variable name */
-	const char	*pVarType;	/* variable type string (e.g. ("int") */
 	unsigned	count;		/* number of elements in array */
 	unsigned	eventNum;	/* event number */
 	boolean		queued;		/* whether queued via syncQ */
 	unsigned	maxQueueSize;	/* max syncQ queue size (0 => def) */
 	unsigned	queueIndex;	/* syncQ queue index */
+	PVTYPE		*type;		/* request type info */
 	SPROG		*sprog;		/* state program that owns this struct*/
 
 	/* dynamic channel data (assigned at runtime) */
@@ -98,14 +99,10 @@ struct channel
 	boolean		connected;	/* whether channel is connected */
 	boolean		*getComplete;	/* array of flags, one for each state set */
 	epicsEventId	putSemId;	/* semaphore id for async put */
-	unsigned	dbOffset;	/* offset to value in db access struct */
 	short		status;		/* last db access status code */
 	epicsTimeStamp	timeStamp;	/* time stamp */
 	unsigned	dbCount;	/* actual count for db access */
 	short		severity;	/* last db access severity code */
-	unsigned	size;		/* size (in bytes) of single var elem */
-	short		getType;	/* db get type (e.g. DBR_STS_INT) */
-	short		putType;	/* db put type (e.g. DBR_INT) */
 	const char	*message;	/* last db access error message */
 	boolean		gotFirstMonitor;
 	boolean		gotFirstConnect;
@@ -116,6 +113,14 @@ struct channel
 	epicsMutexId	varLock;	/* mutex for un-assigned vars */
 	boolean		*dirty;		/* array of dirty flags, one for each state set */
 	boolean		wr_active;	/* buffer is currently being written */
+};
+
+struct pv_type
+{
+	const char	*pTypeStr;
+	pvType		putType;
+	pvType		getType;
+	size_t		size;
 };
 
 /* Structure for syncQ queue entry */

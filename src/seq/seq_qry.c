@@ -154,9 +154,9 @@ epicsShareFunc void epicsShareAPI seqChanShow(epicsThreadId tid, const char *pSt
 		printf("  Unexpanded (assigned) name: \"%s\"\n", pDB->dbAsName);
 		printf("  Variable name: \"%s\"\n", pDB->pVarName);
 		printf("    offset = %d\n", pDB->offset);
-		printf("    type = %s\n", pDB->pVarType);
+		printf("    type = %s\n", pDB->type->pTypeStr);
 		printf("    count = %u\n", pDB->count);
-		printValue(bufPtr(pDB)+pDB->offset, pDB->count, pDB->putType);
+		printValue(bufPtr(pDB)+pDB->offset, pDB->count, pDB->type->putType);
 
 		printf("  Monitor flag = %d\n", pDB->monFlag);
 		if (pDB->monitored)
@@ -297,12 +297,12 @@ epicsShareFunc void epicsShareAPI seqQueueShow(epicsThreadId tid)
 		{
 			CHAN	*pDB = pEntry->pDB;
 			pvValue	*pAccess = &pEntry->value;
-			void	*pVal = (char *)pAccess + pDB->dbOffset;
+			void	*pVal = pv_value_ptr(pAccess, pDB->type->getType);
 
 			printf("\nEntry #%d: channel name: \"%s\"\n",
 							    i, pDB->dbName);
 			printf("  Variable name: \"%s\"\n", pDB->pVarName);
-			printValue(pVal, 1, pDB->putType);
+			printValue(pVal, 1, pDB->type->putType);
 							/* was pDB->count */
 			printf("  Status = %d\n",
 					pAccess->timeStringVal.status);

@@ -125,7 +125,7 @@ static void ss_read_buffer(SSCB *pSS)
 		char	*pVal = (char*)pSS->pVar + pDB->offset;
 		char	*pBuf = (char*)pSP->pVar + pDB->offset;
 		boolean *dirty = pDB->dirty;
-		size_t	var_size = (unsigned)pDB->size * pDB->dbCount;
+		size_t	var_size = pDB->type->size * pDB->dbCount;
 
 		if (!dirty[ss_num])
 			continue;
@@ -147,7 +147,7 @@ void ss_write_buffer(CHAN *pDB, void *pVal)
 	SPROG	*pSP = pDB->sprog;
 	char	*pBuf = (char*)pSP->pVar + pDB->offset;
 	boolean *dirty = pDB->dirty;
-	size_t	var_size = (unsigned)pDB->size * pDB->dbCount;
+	size_t	var_size = pDB->type->size * pDB->dbCount;
 	unsigned ss_num;
 
 	pDB->wr_active = TRUE;

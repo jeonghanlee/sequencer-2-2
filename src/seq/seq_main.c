@@ -18,8 +18,7 @@ static void seqInitTables(SPROG *, seqProgram *);
 static void init_sprog(seqProgram *, SPROG *);
 static void init_sscb(seqProgram *, SPROG *);
 static void init_chan(seqProgram *, SPROG *);
-
-static void init_type(const char *, short *, short *, unsigned *, unsigned *);
+static PVTYPE *find_type(const char *pUserType);
 
 /*	Globals */
 
@@ -299,7 +298,6 @@ static void init_chan(seqProgram *pSeqProg, SPROG *pSP)
 		DEBUG("init_chan: pDB=%p\n", pDB);
 		pDB->sprog = pSP;
 		pDB->pVarName = pSeqChan->pVarName;
-		pDB->pVarType = pSeqChan->pVarType;
 		pDB->offset = pSeqChan->offset;
 		pDB->count = pSeqChan->count;
 		pDB->efId = pSeqChan->efId;
@@ -329,16 +327,14 @@ static void init_chan(seqProgram *pSeqProg, SPROG *pSP)
 		/* Latest error message (dynamically allocated) */
 		pDB->message = NULL;
 
-		/* Fill in get/put db types, element size, & access offset */
-		init_type(pSeqChan->pVarType, &pDB->getType,
-			&pDB->putType, &pDB->size, &pDB->dbOffset);
+		/* Fill in get/put db types, element size */
+		pDB->type = find_type(pSeqChan->pVarType);
 
 		DEBUG(" Assigned Name=%s, VarName=%s, VarType=%s, count=%ld\n"
-			"   size=%u, dbOffset=%u\n"
-			"   efId=%ld, monFlag=%u, eventNum=%ld\n",
+			"   size=%u, efId=%ld, monFlag=%u, eventNum=%ld\n",
 			pDB->dbAsName, pDB->pVarName,
-			pDB->pVarType, pDB->count,
-			pDB->size, pDB->dbOffset,
+			pDB->type->pTypeStr, pDB->count,
+			pDB->type->size,
 			pDB->efId, pDB->monFlag, pDB->eventNum);
 
 		pDB->varLock = epicsMutexMustCreate();
@@ -349,96 +345,38 @@ static void init_chan(seqProgram *pSeqProg, SPROG *pSP)
 }
 
 /*
- * init_type -- returns types for DB put/get, element size, and db access
- * offset based on user variable type.
+ * find_type -- returns types for DB put/get and element size
+ * based on user variable type.
  * Mapping is determined by the following pv_type_map[] array.
  * pvTypeTIME_* types for gets/monitors return status and time stamp.
  */
-static struct pv_type_map
+static PVTYPE pv_type_map[] =
 {
-	const char *pTypeStr;
-	short	putType;
-	short	getType;
-	unsigned size;
-	unsigned offset;
-} pv_type_map[] =
-{
-	{
-	"char",		 pvTypeCHAR,	pvTypeTIME_CHAR,
-	sizeof (char),   offsetof(pvTimeChar, value[0])
-	},
-
-	{
-	"short",	 pvTypeSHORT,	pvTypeTIME_SHORT,
-	sizeof (short),  offsetof(pvTimeShort, value[0])
-	},
-
-	{
-	"int",		 pvTypeLONG,	pvTypeTIME_LONG,
-	sizeof (long),   offsetof(pvTimeLong, value[0])
-	},
-
-	{
-	"long",		 pvTypeLONG,	pvTypeTIME_LONG,
-	sizeof (long),   offsetof(pvTimeLong, value[0])
-	},
-
-	{
-	"unsigned char", pvTypeCHAR,	pvTypeTIME_CHAR,
-	sizeof (char),   offsetof(pvTimeChar, value[0])
-	},
-
-	{
-	"unsigned short",pvTypeSHORT,	pvTypeTIME_SHORT,
-	sizeof (short),  offsetof(pvTimeShort, value[0])
-	},
-
-	{
-	"unsigned int",  pvTypeLONG,	pvTypeTIME_LONG,
-	sizeof (long),   offsetof(pvTimeLong, value[0])
-	},
-
-	{
-	"unsigned long", pvTypeLONG,	pvTypeTIME_LONG,
-	sizeof (long),   offsetof(pvTimeLong, value[0])
-	},
-
-	{
-	"float",	 pvTypeFLOAT,	pvTypeTIME_FLOAT,
-	sizeof (float),  offsetof(pvTimeFloat, value[0])
-	},
-
-	{
-	"double",	 pvTypeDOUBLE,	pvTypeTIME_DOUBLE,
-	sizeof (double), offsetof(pvTimeDouble, value[0])
-	},
-
-	{
-	"string",	 pvTypeSTRING,	pvTypeTIME_STRING,
-	MAX_STRING_SIZE, offsetof(pvTimeString, value[0])
-	},
-
-	{
-	0, 0, 0, 0, 0
-	}
+	{ "char",		pvTypeCHAR,	pvTypeTIME_CHAR,	sizeof(char)	},
+	{ "short",		pvTypeSHORT,	pvTypeTIME_SHORT,	sizeof(short)	},
+	{ "int",		pvTypeLONG,	pvTypeTIME_LONG,	sizeof(long)	},
+	{ "long",		pvTypeLONG,	pvTypeTIME_LONG,	sizeof(long)	},
+	{ "unsigned char",	pvTypeCHAR,	pvTypeTIME_CHAR,	sizeof(char)	},
+	{ "unsigned short",	pvTypeSHORT,	pvTypeTIME_SHORT,	sizeof(short)	},
+	{ "unsigned int",	pvTypeLONG,	pvTypeTIME_LONG,	sizeof(long)	},
+	{ "unsigned long",	pvTypeLONG,	pvTypeTIME_LONG,	sizeof(long)	},
+	{ "float",		pvTypeFLOAT,	pvTypeTIME_FLOAT,	sizeof(float)	},
+	{ "double",		pvTypeDOUBLE,	pvTypeTIME_DOUBLE,	sizeof(double)	},
+	{ "string",		pvTypeSTRING,	pvTypeTIME_STRING,	sizeof(string)	},
+	{ NULL,			pvTypeERROR,	pvTypeERROR,		0		}
 };
 
-static void init_type(
-	const char *pUserType,
-	short	*pGetType,
-	short	*pPutType,
-	unsigned *pSize,
-	unsigned *pOffset)
+static PVTYPE *find_type(const char *pUserType)
 {
-	struct pv_type_map	*pMap;
+	PVTYPE	*pt = pv_type_map;
 
-	for (pMap = &pv_type_map[0]; *pMap->pTypeStr != 0; pMap++)
+	while (pt->pTypeStr)
 	{
-		if (strcmp(pUserType, pMap->pTypeStr) == 0)
+		if (strcmp(pUserType, pt->pTypeStr) == 0)
+		{
 			break;
+		}
+		pt++;
 	}
-	*pGetType = pMap->getType;
-	*pPutType = pMap->putType;
-	*pSize = pMap->size;
-	*pOffset = pMap->offset;
+	return pt;
 }
