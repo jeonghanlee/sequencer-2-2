@@ -622,3 +622,26 @@ void *seqAuxThread(void *tArgs)
 	return NULL;
 }
 
+/*
+ * seqWakeup() -- wake up each state set that is waiting on this event
+ * based on the current event mask; eventNum = 0 means wake all state sets.
+ */
+void seqWakeup(SPROG *sp, unsigned eventNum)
+{
+	unsigned nss;
+
+	/* Check event number against mask for all state sets: */
+	for (nss = 0; nss < sp->numSS; nss++)
+	{
+		SSCB *ss = sp->ss + nss;
+
+		epicsMutexMustLock(sp->programLock);
+		/* If event bit in mask is set, wake that state set */
+		if (eventNum == 0 || 
+			(ss->mask && bitTest(ss->mask, eventNum)))
+		{
+			epicsEventSignal(ss->syncSemId); /* wake up ss thread */
+		}
+		epicsMutexUnlock(sp->programLock);
+	}
+}

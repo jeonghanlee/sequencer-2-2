@@ -415,24 +415,3 @@ void seq_conn_handler(void *var,int connected)
 	/* Wake up each state set that is waiting for event processing */
 	seqWakeup(sp, 0);
 }
-
-/*
- * seqWakeup() -- wake up each state set that is waiting on this event
- * based on the current event mask.   EventNum = 0 means wake all state sets.
- */
-void seqWakeup(SPROG *sp, unsigned eventNum)
-{
-	unsigned nss;
-	SSCB	*ss;
-
-	/* Check event number against mask for all state sets: */
-	for (nss = 0, ss = sp->ss; nss < sp->numSS; nss++, ss++)
-	{
-		/* If event bit in mask is set, wake that state set */
-		if ((eventNum == 0) || 
-			(ss->mask && bitTest(ss->mask, eventNum)))
-		{
-			epicsEventSignal(ss->syncSemId); /* wake up ss thread */
-		}
-	}
-}
