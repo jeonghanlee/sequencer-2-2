@@ -3,9 +3,14 @@
 	Copyright, 1990, The Regents of the University of California.
 		         Los Alamos National Laboratory
 
+	Copyright, 2010, Helmholtz-Zentrum Berlin f. Materialien
+		und Energie GmbH, Germany (HZB)
+		(see file Copyright.HZB included in this distribution)
+
 	Macro routines for Sequencer.
 	The macro table contains name & value pairs.  These are both pointers
 	to strings.
+        TODO: Get rid of this and use the macLib from EPICS base.
 ***************************************************************************/
 #include "seq.h"
 
