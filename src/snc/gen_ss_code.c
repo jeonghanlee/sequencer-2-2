@@ -1067,7 +1067,7 @@ static void gen_prog_init_func(Expr *prog, int opt_reent)
 {
 	assert(prog->type == D_PROG);
 	printf("\n/* Program init func */\n");
-	printf("static void global_prog_init(struct %s *pVar)\n{\n", VAR_PREFIX);
+	printf("static void G_prog_init(struct %s *pVar)\n{\n", VAR_PREFIX);
 	if (opt_reent)
 	{
 		indent(1); printf("*pVar = (struct %s)", VAR_PREFIX);
@@ -1085,7 +1085,7 @@ static void gen_prog_func(
 {
 	assert(prog->type == D_PROG);
 	printf("\n/* Program %s func */\n", name);
-	printf("static void global_prog_%s(SS_ID ssId, struct %s *pVar)\n{\n",
+	printf("static void G_prog_%s(SS_ID ssId, struct %s *pVar)\n{\n",
 		name, VAR_PREFIX);
 	if (xp && gen_body) gen_body(xp);
 	printf("}\n");

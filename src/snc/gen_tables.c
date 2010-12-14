@@ -45,8 +45,7 @@ void gen_tables(Program *p)
 {
 	printf("\n/************************ Tables ************************/\n");
 	gen_channel_table(p->chan_list, p->num_event_flags, p->options.reent);
-	gen_state_table(p->prog->prog_statesets, p->num_event_flags,
-		p->chan_list->num_elems);
+	gen_state_table(p->prog->prog_statesets, p->num_event_flags, p->chan_list->num_elems);
 	gen_ss_table(p->sym_table, p->prog->prog_statesets);
 	gen_prog_table(p);
 }
@@ -58,7 +57,7 @@ static void gen_channel_table(ChanList *chan_list, uint num_event_flags, int opt
 
 	if (chan_list->first)
 	{
-		printf("\n/* Channel Definitions */\n");
+		printf("\n/* Channel table */\n");
 		printf("static seqChan G_channels[] = {\n");
 		printf("  /* dbAsName, offset, pVarName, */\n");
 		printf("  /* pVarType, count, eventNum, efId, monitored, queued, queueSize, queueIndex */\n");
@@ -163,22 +162,21 @@ static void gen_state_table(Expr *ss_list, uint num_event_flags, uint num_channe
 	/* For each state set... */
 	foreach (ssp, ss_list)
 	{
-		/* For each state, generate event mask array */
-		printf("\n/* Event masks for state set %s */\n", ssp->value);
+		/* Generate event mask array */
+		printf("\n/* Event masks for state set \"%s\" */\n", ssp->value);
 		foreach (sp, ssp->ss_states)
 		{
 			gen_state_event_mask(sp, num_event_flags, event_mask, num_event_words);
-			printf("/* state %s: */\n", sp->value);
-			printf("static bitMask\tEM_%s_%s[] = {\n",
+			printf("static const bitMask\tEM_%s_%s[] = {\n",
 				ssp->value, sp->value);
 			for (n = 0; n < num_event_words; n++)
 				printf("\t0x%08x,\n", event_mask[n]);
 			printf("};\n");
 		}
 
-		/* For each state, generate state structure */
-		printf("\n/* State Table */\n");
-		printf("static seqState state_%s[] = {\n", ssp->value);
+		/* Generate table of state structures */
+		printf("\n/* State table for state set \"%s\" */\n", ssp->value);
+		printf("static seqState G_%s_states[] = {\n", ssp->value);
 		foreach (sp, ssp->ss_states)
 		{
 			fill_state_struct(sp, ssp->value);
@@ -190,7 +188,7 @@ static void gen_state_table(Expr *ss_list, uint num_event_flags, uint num_channe
 /* Generate a state struct */
 static void fill_state_struct(Expr *sp, char *ss_name)
 {
-	printf("\t/* State \"%s\" */ {\n", sp->value);
+	printf("\t{\n");
 	printf("\t/* state name */        \"%s\",\n", sp->value);
 	printf("\t/* action function */   A_%s_%s,\n", ss_name, sp->value);
 	printf("\t/* event function */    E_%s_%s,\n", ss_name, sp->value);
@@ -208,8 +206,7 @@ static void fill_state_struct(Expr *sp, char *ss_name)
 	printf("\t/* event mask array */  EM_%s_%s,\n", ss_name, sp->value);
 	printf("\t/* state options */     ");
 	encode_state_options(sp->extra.e_state->options);
-	printf("}");
-	printf(",\n\n");
+	printf("\n\t},\n");
 }
 
 /* Generate the state option bitmask */
@@ -228,10 +225,10 @@ static void encode_state_options(StateOptions options)
 /* Generate a single program structure ("seqProgram") */
 static void gen_prog_table(Program *p)
 {
-	printf("\n/* State Program table (global) */\n");
+	printf("\n/* Program table (global) */\n");
 	printf("seqProgram %s = {\n", p->name);
 	printf("\t/* magic number */      %d,\n", MAGIC);
-	printf("\t/* name */              \"%s\",\n", p->name);
+	printf("\t/* program name */      \"%s\",\n", p->name);
 	printf("\t/* channels */          G_channels,\n");
 	printf("\t/* num. channels */     %d,\n", p->chan_list->num_elems);
 	printf("\t/* state sets */        G_state_sets,\n");
@@ -243,9 +240,9 @@ static void gen_prog_table(Program *p)
 	printf("\t/* param */             \"%s\",\n", p->param);
 	printf("\t/* num. event flags */  %d,\n", p->num_event_flags);
 	printf("\t/* encoded options */   "); encode_options(p->options);
-	printf("\t/* init func */         global_prog_init,\n");
-	printf("\t/* entry func */        %s,\n", p->prog->prog_entry?"global_prog_entry":"NULL");
-	printf("\t/* exit func */         %s,\n", p->prog->prog_exit?"global_prog_exit":"NULL");
+	printf("\t/* init func */         G_prog_init,\n");
+	printf("\t/* entry func */        %s,\n", p->prog->prog_entry?"G_prog_entry":"NULL");
+	printf("\t/* exit func */         %s,\n", p->prog->prog_exit?"G_prog_exit":"NULL");
 	printf("\t/* num. queues */       %d\n", p->syncq_list->num_elems);
 	printf("};\n");
 }
@@ -276,7 +273,7 @@ static void gen_ss_table(SymTable st, Expr *ss_list)
 	Expr	*ssp;
 	int	num_ss;
 
-	printf("\n/* State Set Table */\n");
+	printf("\n/* State set table */\n");
 	printf("static seqSS G_state_sets[] = {\n");
 	num_ss = 0;
 	foreach (ssp, ss_list)
@@ -284,11 +281,12 @@ static void gen_ss_table(SymTable st, Expr *ss_list)
 		if (num_ss > 0)
 			printf("\n");
 		num_ss++;
-		printf("\t/* State set \"%s\" */ {\n", ssp->value);
-		printf("\t/* ss name */           \"%s\",\n", ssp->value);
-		printf("\t/* state struct */      state_%s,\n", ssp->value);
+		printf("\t{\n");
+		printf("\t/* state set name */    \"%s\",\n", ssp->value);
+		printf("\t/* states */            G_%s_states,\n", ssp->value);
 		printf("\t/* number of states */  %d,\n", ssp->extra.e_ss->num_states);
-		printf("\t/* number of delays */  %d},\n", ssp->extra.e_ss->num_delays);
+		printf("\t/* number of delays */  %d\n", ssp->extra.e_ss->num_delays);
+		printf("\t},\n");
 	}
 	printf("};\n");
 }
