@@ -153,7 +153,7 @@ static void gen_state_table(Expr *ss_list, uint num_event_flags, uint num_channe
 	Expr	*ssp;
 	Expr	*sp;
 	uint	n;
-	uint	num_event_words = (num_event_flags + num_channels + NBITS)/NBITS;
+	uint	num_event_words = NWORDS(num_event_flags + num_channels);
 	bitMask	event_mask[num_event_words];
 
 	/* NOTE: Bit zero of event mask is not used. Bit 1 to num_event_flags
