@@ -18,7 +18,7 @@ static void seqInitTables(SPROG *, seqProgram *);
 static void init_sprog(seqProgram *, SPROG *);
 static void init_sscb(seqProgram *, SPROG *);
 static void init_chan(seqProgram *, SPROG *);
-static PVTYPE *find_type(const char *pUserType);
+static PVTYPE *find_type(const char *userType);
 
 /*	Globals */
 
@@ -27,8 +27,8 @@ epicsThreadId seqAuxThreadId = (epicsThreadId) 0;
 
 /*
  * seq: User-callable routine to run a state program.
- * Usage:  seq(<pSP>, <macros string>, <stack size>)
- *	pSP is the ptr to the state program structure.
+ * Usage:  seq(<sp>, <macros string>, <stack size>)
+ *	sp is the ptr to the state program structure.
  *	Example:  seq(&myprog, "logfile=mylog", 0)
  * When called from the shell, the 2nd & 3rd parameters are optional.
  *
@@ -36,12 +36,12 @@ epicsThreadId seqAuxThreadId = (epicsThreadId) 0;
  * Most initialization is performed here.
  */
 epicsShareFunc void epicsShareAPI seq(
-	seqProgram *pSeqProg, const char *macroDef, unsigned stackSize)
+	seqProgram *seqProg, const char *macroDef, unsigned stackSize)
 {
 	epicsThreadId	tid;
-	SPROG		*pSP;
-	char		*pValue;
-	const char	*pThreadName;
+	SPROG		*sp;
+	char		*value;
+	const char	*threadName;
 	unsigned	smallStack;
 	AUXARGS		auxArgs;
 
@@ -49,13 +49,13 @@ epicsShareFunc void epicsShareAPI seq(
 	printf(SEQ_VERSION "\n");
 
 	/* Exit if no parameters specified */
-	if (pSeqProg == 0)
+	if (seqProg == 0)
 	{
 		return;
 	}
 
 	/* Check for correct state program format */
-	if (pSeqProg->magic != MAGIC)
+	if (seqProg->magic != MAGIC)
 	{	/* Oops */
 		errlogPrintf("Illegal magic number in state program.\n");
 		errlogPrintf(" - Possible mismatch between SNC & SEQ "
@@ -65,49 +65,49 @@ epicsShareFunc void epicsShareAPI seq(
 		return;
 	}
 
-	pSP = (SPROG *)calloc(1, sizeof (SPROG));
+	sp = (SPROG *)calloc(1, sizeof (SPROG));
 
 	/* Parse the macro definitions from the "program" statement */
-	seqMacParse(pSP, pSeqProg->pParams);
+	seqMacParse(sp, seqProg->params);
 
 	/* Parse the macro definitions from the command line */
-	seqMacParse(pSP, macroDef);
+	seqMacParse(sp, macroDef);
 
 	/* Initialize the sequencer tables */
-	seqInitTables(pSP, pSeqProg);
+	seqInitTables(sp, seqProg);
 
 
 	/* Specify stack size */
 	if (stackSize == 0)
 		stackSize = epicsThreadGetStackSize(THREAD_STACK_SIZE);
-	pValue = seqMacValGet(pSP, "stack");
-	if (pValue != NULL && strlen(pValue) > 0)
+	value = seqMacValGet(sp, "stack");
+	if (value != NULL && strlen(value) > 0)
 	{
-		sscanf(pValue, "%ud", &stackSize);
+		sscanf(value, "%ud", &stackSize);
 	}
 	smallStack = epicsThreadGetStackSize(epicsThreadStackSmall);
 	if (stackSize < smallStack)
 		stackSize = smallStack;
-	pSP->stackSize = stackSize;
+	sp->stackSize = stackSize;
 
 	/* Specify thread name */
-	pValue = seqMacValGet(pSP, "name");
-	if (pValue != NULL && strlen(pValue) > 0)
-		pThreadName = pValue;
+	value = seqMacValGet(sp, "name");
+	if (value != NULL && strlen(value) > 0)
+		threadName = value;
 	else
-		pThreadName = pSP->pProgName;
+		threadName = sp->progName;
 
 	/* Specify PV system name (defaults to CA) */
-	pValue = seqMacValGet(pSP, "pvsys");
-	if (pValue != NULL && strlen(pValue) > 0)
-		auxArgs.pPvSysName = pValue;
+	value = seqMacValGet(sp, "pvsys");
+	if (value != NULL && strlen(value) > 0)
+		auxArgs.pvSysName = value;
 	else
-		auxArgs.pPvSysName = "ca";
+		auxArgs.pvSysName = "ca";
 
 	/* Determine debug level (currently only used for PV-level debugging) */
-	pValue = seqMacValGet(pSP, "debug");
-	if (pValue != NULL && strlen(pValue) > 0)
-		auxArgs.debug = atol(pValue);
+	value = seqMacValGet(sp, "debug");
+	if (value != NULL && strlen(value) > 0)
+		auxArgs.debug = atol(value);
 	else
 		auxArgs.debug = 0;
 
@@ -130,217 +130,217 @@ epicsShareFunc void epicsShareAPI seq(
 	}
 
 	/* Spawn the initial sequencer thread */
-	DEBUG("Spawning thread %s, stackSize=%d\n", pThreadName,
-		pSP->stackSize);
+	DEBUG("Spawning thread %s, stackSize=%d\n", threadName,
+		sp->stackSize);
 	/* Specify thread priority */
-	pSP->threadPriority = THREAD_PRIORITY;
-	pValue = seqMacValGet(pSP, "priority");
-	if (pValue != NULL && strlen(pValue) > 0)
+	sp->threadPriority = THREAD_PRIORITY;
+	value = seqMacValGet(sp, "priority");
+	if (value != NULL && strlen(value) > 0)
 	{
-		sscanf(pValue, "%ud", &(pSP->threadPriority));
+		sscanf(value, "%ud", &(sp->threadPriority));
 	}
-	if (pSP->threadPriority > THREAD_PRIORITY)
-		pSP->threadPriority = THREAD_PRIORITY;
+	if (sp->threadPriority > THREAD_PRIORITY)
+		sp->threadPriority = THREAD_PRIORITY;
 
-	tid = epicsThreadCreate(pThreadName, pSP->threadPriority, pSP->stackSize,
-		(EPICSTHREADFUNC)sequencer, pSP);
+	tid = epicsThreadCreate(threadName, sp->threadPriority, sp->stackSize,
+		(EPICSTHREADFUNC)sequencer, sp);
 
 	printf("Spawning state program \"%s\", thread %p: \"%s\"\n",
-		pSP->pProgName, tid, pThreadName);
+		sp->progName, tid, threadName);
 }
 
 /* seqInitTables - initialize sequencer tables */
-static void seqInitTables(SPROG *pSP, seqProgram *pSeqProg)
+static void seqInitTables(SPROG *sp, seqProgram *seqProg)
 {
 	/* Initialize state program block */
-	init_sprog(pSeqProg, pSP);
+	init_sprog(seqProg, sp);
 
 	/* Initialize state set control blocks */
-	init_sscb(pSeqProg, pSP);
+	init_sscb(seqProg, sp);
 
 	/* Initialize database channel blocks */
-	init_chan(pSeqProg, pSP);
+	init_chan(seqProg, sp);
 }
 
 /*
  * Copy data from seqCom.h structures into this thread's dynamic structures
  * as defined in seq.h.
  */
-static void init_sprog(seqProgram *pSeqProg, SPROG *pSP)
+static void init_sprog(seqProgram *seqProg, SPROG *sp)
 {
 	unsigned i, nWords;
 
 	/* Copy information for state program */
-	pSP->numSS = pSeqProg->numSS;
-	pSP->numChans = pSeqProg->numChans;
-	pSP->numEvents = pSeqProg->numEvents;
-	pSP->options = pSeqProg->options;
-	pSP->pProgName = pSeqProg->pProgName;
-	pSP->initFunc = pSeqProg->initFunc;
-	pSP->entryFunc = pSeqProg->entryFunc;
-	pSP->exitFunc = pSeqProg->exitFunc;
-	pSP->varSize = pSeqProg->varSize;
+	sp->numSS = seqProg->numSS;
+	sp->numChans = seqProg->numChans;
+	sp->numEvents = seqProg->numEvents;
+	sp->options = seqProg->options;
+	sp->progName = seqProg->progName;
+	sp->initFunc = seqProg->initFunc;
+	sp->entryFunc = seqProg->entryFunc;
+	sp->exitFunc = seqProg->exitFunc;
+	sp->varSize = seqProg->varSize;
 	/* Allocate user variable area if reentrant option (+r) is set */
-	if (pSP->options & OPT_REENT)
+	if (sp->options & OPT_REENT)
 	{
-		pSP->pVar = (char *)calloc(pSP->varSize, 1);
+		sp->var = (char *)calloc(sp->varSize, 1);
 	}
 
 	DEBUG("init_sprog: num SS=%ld, num Chans=%ld, num Events=%ld, "
-		"Prog Name=%s, var Size=%ld\n", pSP->numSS, pSP->numChans,
-		pSP->numEvents, pSP->pProgName, pSP->varSize);
+		"Prog Name=%s, var Size=%ld\n", sp->numSS, sp->numChans,
+		sp->numEvents, sp->progName, sp->varSize);
 
 	/* Create a semaphore for resource locking on PV events */
-	pSP->programLock = epicsMutexMustCreate();
-	pSP->connectCount = 0;
-	pSP->assignCount = 0;
-	pSP->allDisconnected = TRUE;
+	sp->programLock = epicsMutexMustCreate();
+	sp->connectCount = 0;
+	sp->assignCount = 0;
+	sp->allDisconnected = TRUE;
 
 	/* Allocate an array for event flag bits */
-	nWords = (pSP->numEvents + NBITS - 1) / NBITS;
+	nWords = (sp->numEvents + NBITS - 1) / NBITS;
 	if (nWords == 0)
 		nWords = 1;
-	pSP->pEvents = (bitMask *)calloc(nWords, sizeof(bitMask));
+	sp->events = (bitMask *)calloc(nWords, sizeof(bitMask));
 
 	/* Allocate and initialize syncQ queues */
-	pSP->numQueues = pSeqProg->numQueues;
-	pSP->pQueues = NULL;
+	sp->numQueues = seqProg->numQueues;
+	sp->queues = NULL;
 
-	if (pSP->numQueues > 0 )
+	if (sp->numQueues > 0 )
 	{
-		pSP->pQueues = (ELLLIST *)calloc(pSP->numQueues,
+		sp->queues = (ELLLIST *)calloc(sp->numQueues,
 						 sizeof(ELLLIST));
-		for (i = 0; i < pSP->numQueues; i++)
-			ellInit(&pSP->pQueues[i]);
+		for (i = 0; i < sp->numQueues; i++)
+			ellInit(&sp->queues[i]);
 	}
 	/* initial pool for pv requests is 1kB on 32-bit systems */
-	freeListInitPvt(&pSP->pvReqPool, 128, sizeof(PVREQ));
+	freeListInitPvt(&sp->pvReqPool, 128, sizeof(PVREQ));
 }
 
 /*
  * Initialize the state set control blocks
  */
-static void init_sscb(seqProgram *pSeqProg, SPROG *pSP)
+static void init_sscb(seqProgram *seqProg, SPROG *sp)
 {
-	SSCB		*pSS;
+	SSCB		*ss;
 	unsigned	nss;
-	seqSS		*pSeqSS;
+	seqSS		*seqSS;
 
 
 	/* Allocate space for the SSCB structures */
-	pSP->pSS = pSS = (SSCB *)calloc(pSeqProg->numSS, sizeof(SSCB));
+	sp->ss = ss = (SSCB *)calloc(seqProg->numSS, sizeof(SSCB));
 
 	/* Copy information for each state set and state */
-	pSeqSS = pSeqProg->pSS;
-	for (nss = 0; nss < pSeqProg->numSS; nss++, pSS++, pSeqSS++)
+	seqSS = seqProg->ss;
+	for (nss = 0; nss < seqProg->numSS; nss++, ss++, seqSS++)
 	{
 		/* Fill in SSCB */
-		pSS->pSSName = pSeqSS->pSSName;
-		pSS->numStates = pSeqSS->numStates;
-		pSS->maxNumDelays = pSeqSS->numDelays;
+		ss->ssName = seqSS->ssName;
+		ss->numStates = seqSS->numStates;
+		ss->maxNumDelays = seqSS->numDelays;
 
-		pSS->delay = (double *)calloc(pSS->maxNumDelays, sizeof(double));
-		pSS->delayExpired = (boolean *)calloc(pSS->maxNumDelays, sizeof(boolean));
-		pSS->currentState = 0; /* initial state */
-		pSS->nextState = 0;
-		pSS->prevState = 0;
-		pSS->threadId = 0;
+		ss->delay = (double *)calloc(ss->maxNumDelays, sizeof(double));
+		ss->delayExpired = (boolean *)calloc(ss->maxNumDelays, sizeof(boolean));
+		ss->currentState = 0; /* initial state */
+		ss->nextState = 0;
+		ss->prevState = 0;
+		ss->threadId = 0;
 		/* Initialize to start time rather than zero time! */
-		pvTimeGetCurrentDouble(&pSS->timeEntered);
-		pSS->sprog = pSP;
+		pvTimeGetCurrentDouble(&ss->timeEntered);
+		ss->sprog = sp;
 
-		DEBUG("init_sscb: SS Name=%s, num States=%ld, pSS=%p\n",
-			pSS->pSSName, pSS->numStates, pSS);
-		pSS->allFirstConnectAndMonitorSemId = epicsEventMustCreate(epicsEventEmpty);
+		DEBUG("init_sscb: SS Name=%s, num States=%ld, ss=%p\n",
+			ss->ssName, ss->numStates, ss);
+		ss->allFirstConnectAndMonitorSemId = epicsEventMustCreate(epicsEventEmpty);
 		/* Create a binary semaphore for synchronizing events in a SS */
-		pSS->syncSemId = epicsEventMustCreate(epicsEventEmpty);
+		ss->syncSemId = epicsEventMustCreate(epicsEventEmpty);
 
 		/* Create binary semaphores for synchronous pvGet() and
 		   pvPut() */
-		pSS->getSemId = epicsEventMustCreate(epicsEventFull);
+		ss->getSemId = epicsEventMustCreate(epicsEventFull);
 
 		/* Create binary semaphores for thread death */
-		pSS->death1SemId = epicsEventMustCreate(epicsEventEmpty);
-		pSS->death2SemId = epicsEventMustCreate(epicsEventEmpty);
-		pSS->death3SemId = epicsEventMustCreate(epicsEventEmpty);
-		pSS->death4SemId = epicsEventMustCreate(epicsEventEmpty);
+		ss->death1SemId = epicsEventMustCreate(epicsEventEmpty);
+		ss->death2SemId = epicsEventMustCreate(epicsEventEmpty);
+		ss->death3SemId = epicsEventMustCreate(epicsEventEmpty);
+		ss->death4SemId = epicsEventMustCreate(epicsEventEmpty);
 
 		/* No need to copy the state structs, they can be shared
 		   because nothing gets mutated. */
-		pSS->pStates = pSeqSS->pStates;
+		ss->states = seqSS->states;
 
 		/* Allocate user variable area if safe mode option (+s) is set */
-		if (pSP->options & OPT_SAFE)
+		if (sp->options & OPT_SAFE)
 		{
-			pSP->pVar = (char *)calloc(pSP->varSize, 1);
+			sp->var = (char *)calloc(sp->varSize, 1);
 		}
 	}
 
-	DEBUG("init_sscb: numSS=%ld\n", pSP->numSS);
+	DEBUG("init_sscb: numSS=%ld\n", sp->numSS);
 }
 
 /*
  * init_chan--Build the database channel structures.
  * Note:  Actual PV name is not filled in here. */
-static void init_chan(seqProgram *pSeqProg, SPROG *pSP)
+static void init_chan(seqProgram *seqProg, SPROG *sp)
 {
 	unsigned	nchan;
-	CHAN		*pDB;
-	seqChan		*pSeqChan;
+	CHAN		*ch;
+	seqChan		*seqChan;
 
 	/* Allocate space for the CHAN structures */
-	pSP->pChan = (CHAN *)calloc(pSP->numChans, sizeof(CHAN));
-	pDB = pSP->pChan;
+	sp->chan = (CHAN *)calloc(sp->numChans, sizeof(CHAN));
+	ch = sp->chan;
 
-	pSeqChan = pSeqProg->pChan;
-	for (nchan = 0; nchan < pSP->numChans; nchan++, pDB++, pSeqChan++)
+	seqChan = seqProg->chan;
+	for (nchan = 0; nchan < sp->numChans; nchan++, ch++, seqChan++)
 	{
-		DEBUG("init_chan: pDB=%p\n", pDB);
-		pDB->sprog = pSP;
-		pDB->pVarName = pSeqChan->pVarName;
-		pDB->offset = pSeqChan->offset;
-		pDB->count = pSeqChan->count;
-		pDB->efId = pSeqChan->efId;
-		pDB->monFlag = pSeqChan->monitored;
-		pDB->eventNum = pSeqChan->eventNum;
-		pDB->queued = pSeqChan->queued;
-		pDB->maxQueueSize = pSeqChan->queueSize ?
-				    pSeqChan->queueSize : MAX_QUEUE_SIZE;
-		pDB->queueIndex = pSeqChan->queueIndex;
-		pDB->assigned = 0;
+		DEBUG("init_chan: ch=%p\n", ch);
+		ch->sprog = sp;
+		ch->varName = seqChan->varName;
+		ch->offset = seqChan->offset;
+		ch->count = seqChan->count;
+		ch->efId = seqChan->efId;
+		ch->monFlag = seqChan->monitored;
+		ch->eventNum = seqChan->eventNum;
+		ch->queued = seqChan->queued;
+		ch->maxQueueSize = seqChan->queueSize ?
+				    seqChan->queueSize : MAX_QUEUE_SIZE;
+		ch->queueIndex = seqChan->queueIndex;
+		ch->assigned = 0;
 
-		if (pSeqChan->dbAsName != NULL)
+		if (seqChan->dbAsName != NULL)
 		{
 			char name_buffer[100];
 
-			seqMacEval(pSP, pSeqChan->dbAsName, name_buffer, sizeof(name_buffer));
+			seqMacEval(sp, seqChan->dbAsName, name_buffer, sizeof(name_buffer));
 			if (name_buffer[0])
 			{
-				pDB->dbAsName = epicsStrDup(name_buffer);
+				ch->dbAsName = epicsStrDup(name_buffer);
 			}
 			DEBUG("  assigned name=%s, expanded name=%s\n",
-				pSeqChan->dbAsName, pDB->dbAsName);
+				seqChan->dbAsName, ch->dbAsName);
 		}
 		else
 			DEBUG("  pv name=<anonymous>\n");
 
 		/* Latest error message (dynamically allocated) */
-		pDB->message = NULL;
+		ch->message = NULL;
 
 		/* Fill in get/put db types, element size */
-		pDB->type = find_type(pSeqChan->pVarType);
+		ch->type = find_type(seqChan->varType);
 
 		DEBUG(" Assigned Name=%s, VarName=%s, VarType=%s, count=%ld\n"
 			"   size=%u, efId=%ld, monFlag=%u, eventNum=%ld\n",
-			pDB->dbAsName, pDB->pVarName,
-			pDB->type->pTypeStr, pDB->count,
-			pDB->type->size,
-			pDB->efId, pDB->monFlag, pDB->eventNum);
+			ch->dbAsName, ch->varName,
+			ch->type->typeStr, ch->count,
+			ch->type->size,
+			ch->efId, ch->monFlag, ch->eventNum);
 
-		pDB->varLock = epicsMutexMustCreate();
-		pDB->dirty = (boolean *)calloc(pSP->numSS,sizeof(boolean));
-		pDB->getComplete = (boolean *)calloc(pSP->numSS,sizeof(boolean));
-		pDB->putSemId = epicsEventMustCreate(epicsEventFull);
+		ch->varLock = epicsMutexMustCreate();
+		ch->dirty = (boolean *)calloc(sp->numSS,sizeof(boolean));
+		ch->getComplete = (boolean *)calloc(sp->numSS,sizeof(boolean));
+		ch->putSemId = epicsEventMustCreate(epicsEventFull);
 	}
 }
 
@@ -366,13 +366,13 @@ static PVTYPE pv_type_map[] =
 	{ NULL,			pvTypeERROR,	pvTypeERROR,		0		}
 };
 
-static PVTYPE *find_type(const char *pUserType)
+static PVTYPE *find_type(const char *userType)
 {
 	PVTYPE	*pt = pv_type_map;
 
-	while (pt->pTypeStr)
+	while (pt->typeStr)
 	{
-		if (strcmp(pUserType, pt->pTypeStr) == 0)
+		if (strcmp(userType, pt->typeStr) == 0)
 		{
 			break;
 		}

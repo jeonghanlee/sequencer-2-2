@@ -34,7 +34,7 @@
 #define DEBUG nothing
 
 /* Flush outstanding PV requests */
-epicsShareFunc void epicsShareAPI seq_pvFlush(SS_ID pSS)
+epicsShareFunc void epicsShareAPI seq_pvFlush(SS_ID ss)
 {
 	pvSysFlush(pvSys);
 }	
@@ -43,10 +43,10 @@ epicsShareFunc void epicsShareAPI seq_pvFlush(SS_ID pSS)
  * seq_pvGet() - Get DB value.
  * TODO: add optional timeout argument.
  */
-epicsShareFunc pvStat epicsShareAPI seq_pvGet(SS_ID pSS, VAR_ID varId, enum compType compType)
+epicsShareFunc pvStat epicsShareAPI seq_pvGet(SS_ID ss, VAR_ID varId, enum compType compType)
 {
-	SPROG	*pSP = pSS->sprog;
-	CHAN	*pDB = pSP->pChan + varId;
+	SPROG	*sp = ss->sprog;
+	CHAN	*ch = sp->chan + varId;
 	int	sync;	/* whether synchronous get */
 	pvStat	status;
 	PVREQ	*req;
@@ -55,7 +55,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvGet(SS_ID pSS, VAR_ID varId, enum comp
 	switch (compType)
 	{
 	case DEFAULT:
-		sync = !(pSP->options & OPT_ASYNC);
+		sync = !(sp->options & OPT_ASYNC);
 		break;
 	case ASYNC:
 		sync = FALSE;
@@ -69,40 +69,40 @@ epicsShareFunc pvStat epicsShareAPI seq_pvGet(SS_ID pSS, VAR_ID varId, enum comp
 	}
 
 	/* Flag this pvGet() as not completed */
-	pDB->getComplete = FALSE;
+	ch->getComplete = FALSE;
 
 	/* Check for channel connected */
-	if (!pDB->connected)
+	if (!ch->connected)
 	{
-		pDB->status = pvStatDISCONN;
-		pDB->severity = pvSevrINVALID;
-		pDB->message = "disconnected";
-		return pDB->status;
+		ch->status = pvStatDISCONN;
+		ch->severity = pvSevrINVALID;
+		ch->message = "disconnected";
+		return ch->status;
 	}
 
 	/* If synchronous pvGet then clear the pvGet pend semaphore */
 	if (sync)
 	{
-		epicsEventTryWait(pSS->getSemId);
+		epicsEventTryWait(ss->getSemId);
 	}
 
 	/* Allocate and initialize a pv request */
-	req = (PVREQ *)freeListMalloc(pSP->pvReqPool);
-	req->pSS = pSS;
-	req->pDB = pDB;
+	req = (PVREQ *)freeListMalloc(sp->pvReqPool);
+	req->ss = ss;
+	req->ch = ch;
 
 	/* Perform the PV get operation with a callback routine specified */
 	status = pvVarGetCallback(
-			pDB->pvid,		/* PV id */
-			pDB->type->getType,	/* request type */
-			(int)pDB->count,	/* element count */
+			ch->pvid,		/* PV id */
+			ch->type->getType,	/* request type */
+			(int)ch->count,	/* element count */
 			seq_get_handler,	/* callback handler */
 			req);			/* user arg */
 	if (status != pvStatOK)
 	{
 		errlogPrintf("seq_pvGet: pvVarGetCallback() %s failure: %s\n",
-			pDB->dbName, pvVarGetMess(pDB->pvid));
-		pDB->getComplete[ssNum(pSS)] = TRUE;
+			ch->dbName, pvVarGetMess(ch->pvid));
+		ch->getComplete[ssNum(ss)] = TRUE;
 		return status;
 	}
 
@@ -112,13 +112,13 @@ epicsShareFunc pvStat epicsShareAPI seq_pvGet(SS_ID pSS, VAR_ID varId, enum comp
 		epicsEventWaitStatus sem_status;
 
 		pvSysFlush(pvSys);
-		sem_status = epicsEventWaitWithTimeout(pSS->getSemId, 10.0);
+		sem_status = epicsEventWaitWithTimeout(ss->getSemId, 10.0);
 		if (sem_status != epicsEventWaitOK)
 		{
-			pDB->status = pvStatTIMEOUT;
-			pDB->severity = pvSevrMAJOR;
-			pDB->message = "get completion timeout";
-			return pDB->status;
+			ch->status = pvStatTIMEOUT;
+			ch->severity = pvSevrMAJOR;
+			ch->message = "get completion timeout";
+			return ch->status;
 		}
 	}
         
@@ -128,28 +128,28 @@ epicsShareFunc pvStat epicsShareAPI seq_pvGet(SS_ID pSS, VAR_ID varId, enum comp
 /*
  * seq_pvGetComplete() - returns whether the last get completed.
  */
-epicsShareFunc boolean epicsShareAPI seq_pvGetComplete(SS_ID pSS, VAR_ID varId)
+epicsShareFunc boolean epicsShareAPI seq_pvGetComplete(SS_ID ss, VAR_ID varId)
 {
-	CHAN *pDB = pSS->sprog->pChan + varId;
+	CHAN *ch = ss->sprog->chan + varId;
 
-	return pDB->getComplete[ssNum(pSS)];
+	return ch->getComplete[ssNum(ss)];
 }
 
 /*
  * seq_pvPut() - Put DB value.
  */
-epicsShareFunc pvStat epicsShareAPI seq_pvPut(SS_ID pSS, VAR_ID varId, enum compType compType)
+epicsShareFunc pvStat epicsShareAPI seq_pvPut(SS_ID ss, VAR_ID varId, enum compType compType)
 {
-	SPROG	*pSP = pSS->sprog;
-	CHAN	*pDB = pSP->pChan + varId;
+	SPROG	*sp = ss->sprog;
+	CHAN	*ch = sp->chan + varId;
 	int	nonb;	/* whether to call pvVarPutNoBlock (=fire&forget) */
 	int	sync;	/* whether to wait for completion */
 	int	status;
 	unsigned count;
-	char	*pVar = valPtr(pDB,pSS);	/* ptr to value */
+	char	*var = valPtr(ch,ss);	/* ptr to value */
 	PVREQ	*req;
 
-	DEBUG("seq_pvPut: pv name=%s, pVar=%p\n", pDB->dbName, pVar);
+	DEBUG("seq_pvPut: pv name=%s, var=%p\n", ch->dbName, var);
 
 	/* Determine whether performing asynchronous or synchronous i/o
 	   ((+a) option was never honored for put, so DEFAULT
@@ -176,53 +176,53 @@ epicsShareFunc pvStat epicsShareAPI seq_pvPut(SS_ID pSS, VAR_ID varId, enum comp
 	if (!nonb)
 	{
 		/* Must wait for active put to complete first */
-		epicsEventWait(pDB->putSemId);
+		epicsEventWait(ch->putSemId);
 	}
 
 	/* Check for channel connected */
 	/* TODO: is this needed? */
-	if (!pDB->connected)
+	if (!ch->connected)
 	{
-		pDB->status = pvStatDISCONN;
-		pDB->severity = pvSevrINVALID;
-		pDB->message = "disconnected";
-		return pDB->status;
+		ch->status = pvStatDISCONN;
+		ch->severity = pvSevrINVALID;
+		ch->message = "disconnected";
+		return ch->status;
 	}
 
 	/* Determine number of elements to put (don't try to put more
 	   than db count) */
-	count = min(pDB->count, pDB->dbCount);
+	count = min(ch->count, ch->dbCount);
 
 	/* Perform the PV put operation (either non-blocking or with a
 	   callback routine specified) */
 	if (nonb)
 	{
 		status = pvVarPutNoBlock(
-				pDB->pvid,		/* PV id */
-				pDB->type->putType,	/* data type */
+				ch->pvid,		/* PV id */
+				ch->type->putType,	/* data type */
 				(int)count,		/* element count */
-				(pvValue *)pVar);	/* data value */
+				(pvValue *)var);	/* data value */
 	}
 	else
 	{
 		/* Allocate and initialize a pv request */
-		req = (PVREQ *)freeListMalloc(pSP->pvReqPool);
-		req->pSS = pSS;
-		req->pDB = pDB;
+		req = (PVREQ *)freeListMalloc(sp->pvReqPool);
+		req->ss = ss;
+		req->ch = ch;
 
 		status = pvVarPutCallback(
-				pDB->pvid,		/* PV id */
-				pDB->type->putType,	/* data type */
+				ch->pvid,		/* PV id */
+				ch->type->putType,	/* data type */
 				(int)count,		/* element count */
-				(pvValue *)pVar,	/* data value */
+				(pvValue *)var,	/* data value */
 				seq_put_handler,	/* callback handler */
 				req);			/* user arg */
 	}
 	if (status != pvStatOK)
 	{
 		errlogPrintf("seq_pvPut: pvVarPut%s() %s failure: %s\n",
-			nonb ? "NoBlock" : "Callback", pDB->dbName,
-			pvVarGetMess(pDB->pvid));
+			nonb ? "NoBlock" : "Callback", ch->dbName,
+			pvVarGetMess(ch->pvid));
 		return status;
 	}
 
@@ -232,23 +232,23 @@ epicsShareFunc pvStat epicsShareAPI seq_pvPut(SS_ID pSS, VAR_ID varId, enum comp
 		epicsEventWaitStatus sem_status;
 
 		pvSysFlush(pvSys);
-		sem_status = epicsEventWaitWithTimeout(pDB->putSemId, 10.0);
+		sem_status = epicsEventWaitWithTimeout(ch->putSemId, 10.0);
 		if (sem_status != epicsEventWaitOK)
 		{
-			pDB->status = pvStatTIMEOUT;
-			pDB->severity = pvSevrMAJOR;
-			pDB->message = "put completion timeout";
-			return pDB->status;
+			ch->status = pvStatTIMEOUT;
+			ch->severity = pvSevrMAJOR;
+			ch->message = "put completion timeout";
+			return ch->status;
 		}
 	}
 
 	DEBUG("seq_pvPut: status=%d, mess=%s\n", status,
-		pvVarGetMess(pDB->pvid));
+		pvVarGetMess(ch->pvid));
 	if (status != pvStatOK)
 	{
-		DEBUG("pvPut on \"%s\" failed (%d)\n", pDB->dbName, status);
-		DEBUG("  putType=%d\n", pDB->type->putType);
-		DEBUG("  size=%d, count=%d\n", pDB->type->size, count);
+		DEBUG("pvPut on \"%s\" failed (%d)\n", ch->dbName, status);
+		DEBUG("  putType=%d\n", ch->type->putType);
+		DEBUG("  size=%d, count=%d\n", ch->type->size, count);
 	}
 
 	return pvStatOK;
@@ -258,28 +258,28 @@ epicsShareFunc pvStat epicsShareAPI seq_pvPut(SS_ID pSS, VAR_ID varId, enum comp
  * seq_pvPutComplete() - returns whether the last put completed.
  */
 epicsShareFunc boolean epicsShareAPI seq_pvPutComplete(
-	SS_ID		pSS,
+	SS_ID		ss,
 	VAR_ID		varId,
 	unsigned	length,
 	boolean		any,
-	boolean		*pComplete)
+	boolean		*complete)
 {
-	SPROG	*pSP = pSS->sprog;
+	SPROG	*sp = ss->sprog;
 	long	anyDone = FALSE, allDone = TRUE;
 	unsigned i;
 
 	for (i=0; i<length; i++)
 	{
-		CHAN *pDB = pSP->pChan + varId + i;
+		CHAN *ch = sp->chan + varId + i;
 
-		long done = epicsEventTryWait(pDB->putSemId);
+		long done = epicsEventTryWait(ch->putSemId);
 
 		anyDone = anyDone || done;
 		allDone = allDone && done;
 
-		if (pComplete != NULL)
+		if (complete != NULL)
 		{
-			pComplete[i] = done;
+			complete[i] = done;
 		}
 		else if (any && done)
 		{
@@ -297,60 +297,60 @@ epicsShareFunc boolean epicsShareAPI seq_pvPutComplete(
  * seq_pvAssign() - Assign/Connect to a channel.
  * Assign to a zero-length string ("") disconnects/de-assigns.
  */
-epicsShareFunc pvStat epicsShareAPI seq_pvAssign(SS_ID pSS, VAR_ID varId, const char *pvName)
+epicsShareFunc pvStat epicsShareAPI seq_pvAssign(SS_ID ss, VAR_ID varId, const char *pvName)
 {
-	SPROG	*pSP = pSS->sprog;
-	CHAN	*pDB = pSP->pChan + varId;
+	SPROG	*sp = ss->sprog;
+	CHAN	*ch = sp->chan + varId;
 	pvStat	status;
         unsigned nchar;
 
-	DEBUG("Assign %s to \"%s\"\n", pDB->pVarName, pvName);
+	DEBUG("Assign %s to \"%s\"\n", ch->varName, pvName);
 
-	if (pDB->assigned)
+	if (ch->assigned)
 	{	/* Disconnect this PV */
-		status = pvVarDestroy(pDB->pvid);
+		status = pvVarDestroy(ch->pvid);
 		if (status != pvStatOK)
 		{
 			errlogPrintf("seq_pvAssign: pvVarDestroy() %s failure: "
-				"%s\n", pDB->dbName, pvVarGetMess(pDB->pvid));
+				"%s\n", ch->dbName, pvVarGetMess(ch->pvid));
 		}
-		free(pDB->dbName);
-		pDB->assigned = FALSE;
-		pSP->assignCount -= 1;
+		free(ch->dbName);
+		ch->assigned = FALSE;
+		sp->assignCount -= 1;
 	}
 
-	if (pDB->connected)
+	if (ch->connected)
 	{
-		pDB->connected = FALSE;
-		pSP->connectCount -= 1;
+		ch->connected = FALSE;
+		sp->connectCount -= 1;
 	}
-	pDB->monitored = FALSE;
+	ch->monitored = FALSE;
 	nchar = strlen(pvName);
-	pDB->dbName = (char *)calloc(1, nchar + 1);
-	strcpy(pDB->dbName, pvName);
+	ch->dbName = (char *)calloc(1, nchar + 1);
+	strcpy(ch->dbName, pvName);
 
 	/* Connect */
 	if (nchar > 0)
 	{
-		pDB->assigned = TRUE;
-		pSP->assignCount += 1;
+		ch->assigned = TRUE;
+		sp->assignCount += 1;
 		status = pvVarCreate(
 			pvSys,			/* PV system context */
-			pDB->dbName,		/* DB channel name */
+			ch->dbName,		/* DB channel name */
 			seq_conn_handler,	/* connection handler routine */
-			pDB,			/* user ptr is CHAN structure */
+			ch,			/* user ptr is CHAN structure */
 			0,			/* debug level (inherited) */
-			&pDB->pvid);		/* ptr to pvid */
+			&ch->pvid);		/* ptr to pvid */
 		if (status != pvStatOK)
 		{
 			errlogPrintf("seq_pvAssign: pvVarCreate() %s failure: "
-				"%s\n", pDB->dbName, pvVarGetMess(pDB->pvid));
+				"%s\n", ch->dbName, pvVarGetMess(ch->pvid));
 			return status;
 		}
 
-		if (pDB->monFlag)
+		if (ch->monFlag)
 		{
-			status = seq_pvMonitor(pSS, varId);
+			status = seq_pvMonitor(ss, varId);
 			if (status != pvStatOK)
 				return status;
 		}
@@ -364,61 +364,61 @@ epicsShareFunc pvStat epicsShareAPI seq_pvAssign(SS_ID pSS, VAR_ID varId, const 
 /*
  * seq_pvMonitor() - Initiate a monitor on a channel.
  */
-epicsShareFunc pvStat epicsShareAPI seq_pvMonitor(SS_ID pSS, VAR_ID varId)
+epicsShareFunc pvStat epicsShareAPI seq_pvMonitor(SS_ID ss, VAR_ID varId)
 {
-	SPROG	*pSP = pSS->sprog;
-	CHAN	*pDB = pSP->pChan + varId;
+	SPROG	*sp = ss->sprog;
+	CHAN	*ch = sp->chan + varId;
 	int	status;
 
-	DEBUG("seq_pvMonitor \"%s\"\n", pDB->dbName);
+	DEBUG("seq_pvMonitor \"%s\"\n", ch->dbName);
 
-/*	if (pDB->monitored || !pDB->assigned)	*/
+/*	if (ch->monitored || !ch->assigned)	*/
 /*	WFL, 96/08/07, don't check monitored because it can get set TRUE */
 /*	in the connection handler before this routine is executed; this */
 /*	fix pending a proper fix */
-	if (!pDB->assigned)
+	if (!ch->assigned)
 		return pvStatOK;
 
 	status = pvVarMonitorOn(
-		pDB->pvid,		/* pvid */
-		pDB->type->getType,	/* requested type */
-		(int)pDB->count,	/* element count */
+		ch->pvid,		/* pvid */
+		ch->type->getType,	/* requested type */
+		(int)ch->count,	/* element count */
 		seq_mon_handler,	/* function to call */
-		pDB,			/* user arg (db struct) */
-		&pDB->monid);		/* where to put event id */
+		ch,			/* user arg (db struct) */
+		&ch->monid);		/* where to put event id */
 
 	if (status != pvStatOK)
 	{
 		errlogPrintf("seq_pvMonitor: pvVarMonitorOn() %s failure: %s\n",
-			pDB->dbName, pvVarGetMess(pDB->pvid));
+			ch->dbName, pvVarGetMess(ch->pvid));
 		return status;
 	}
 	pvSysFlush(pvSys);
 
-	pDB->monitored = TRUE;
+	ch->monitored = TRUE;
 	return pvStatOK;
 }
 
 /*
  * seq_pvStopMonitor() - Cancel a monitor
  */
-epicsShareFunc pvStat epicsShareAPI seq_pvStopMonitor(SS_ID pSS, VAR_ID varId)
+epicsShareFunc pvStat epicsShareAPI seq_pvStopMonitor(SS_ID ss, VAR_ID varId)
 {
-	CHAN	*pDB = pSS->sprog->pChan + varId;
+	CHAN	*ch = ss->sprog->chan + varId;
 	int	status;
 
-	if (!pDB->monitored)
+	if (!ch->monitored)
 		return -1;
 
-	status = pvVarMonitorOff(pDB->pvid,pDB->monid);
+	status = pvVarMonitorOff(ch->pvid,ch->monid);
 	if (status != pvStatOK)
 	{
 		errlogPrintf("seq_pvStopMonitor: pvVarMonitorOff() %s failure: "
-			"%s\n", pDB->dbName, pvVarGetMess(pDB->pvid));
+			"%s\n", ch->dbName, pvVarGetMess(ch->pvid));
 		return status;
 	}
 
-	pDB->monitored = FALSE;
+	ch->monitored = FALSE;
 
 	return status;
 }
@@ -427,117 +427,117 @@ epicsShareFunc pvStat epicsShareAPI seq_pvStopMonitor(SS_ID pSS, VAR_ID varId)
  * seq_pvSync() - Synchronize pv with an event flag.
  * ev_flag == 0 means unSync.
  */
-epicsShareFunc void epicsShareAPI seq_pvSync(SS_ID pSS, VAR_ID varId, EV_ID ev_flag)
+epicsShareFunc void epicsShareAPI seq_pvSync(SS_ID ss, VAR_ID varId, EV_ID ev_flag)
 {
-	assert(ev_flag >= 0 && ev_flag <= pSS->sprog->numEvents);
-	pSS->sprog->pChan[varId].efId = ev_flag;
+	assert(ev_flag >= 0 && ev_flag <= ss->sprog->numEvents);
+	ss->sprog->chan[varId].efId = ev_flag;
 }
 
 /*
  * seq_pvChannelCount() - returns total number of database channels.
  */
-epicsShareFunc unsigned epicsShareAPI seq_pvChannelCount(SS_ID pSS)
+epicsShareFunc unsigned epicsShareAPI seq_pvChannelCount(SS_ID ss)
 {
-	SPROG	*pSP = pSS->sprog;
+	SPROG	*sp = ss->sprog;
 
-	return pSP->numChans;
+	return sp->numChans;
 }
 
 /*
  * seq_pvConnectCount() - returns number of database channels connected.
  */
-epicsShareFunc unsigned epicsShareAPI seq_pvConnectCount(SS_ID pSS)
+epicsShareFunc unsigned epicsShareAPI seq_pvConnectCount(SS_ID ss)
 {
-	SPROG	*pSP = pSS->sprog;
+	SPROG	*sp = ss->sprog;
 
-	return pSP->connectCount;
+	return sp->connectCount;
 }
 
 /*
  * seq_pvAssignCount() - returns number of database channels assigned.
  */
-epicsShareFunc unsigned epicsShareAPI seq_pvAssignCount(SS_ID pSS)
+epicsShareFunc unsigned epicsShareAPI seq_pvAssignCount(SS_ID ss)
 {
-	SPROG	*pSP = pSS->sprog;
+	SPROG	*sp = ss->sprog;
 
-	return pSP->assignCount;
+	return sp->assignCount;
 }
 
 /*
  * seq_pvConnected() - returns whether database channel is connected.
  */
-epicsShareFunc boolean epicsShareAPI seq_pvConnected(SS_ID pSS, VAR_ID varId)
+epicsShareFunc boolean epicsShareAPI seq_pvConnected(SS_ID ss, VAR_ID varId)
 {
-	CHAN *pDB = pSS->sprog->pChan + varId;
+	CHAN *ch = ss->sprog->chan + varId;
 
-	return pDB->connected;
+	return ch->connected;
 }
 
 /*
  * seq_pvAssigned() - returns whether database channel is assigned.
  */
-epicsShareFunc boolean epicsShareAPI seq_pvAssigned(SS_ID pSS, VAR_ID varId)
+epicsShareFunc boolean epicsShareAPI seq_pvAssigned(SS_ID ss, VAR_ID varId)
 {
-	CHAN *pDB = pSS->sprog->pChan + varId;
+	CHAN *ch = ss->sprog->chan + varId;
 
-	return pDB->assigned;
+	return ch->assigned;
 }
 
 /*
  * seq_pvCount() - returns number elements in an array, which is the lesser of
  * the array size and the element count returned by the PV layer.
  */
-epicsShareFunc unsigned epicsShareAPI seq_pvCount(SS_ID pSS, VAR_ID varId)
+epicsShareFunc unsigned epicsShareAPI seq_pvCount(SS_ID ss, VAR_ID varId)
 {
-	CHAN *pDB = pSS->sprog->pChan + varId;
+	CHAN *ch = ss->sprog->chan + varId;
 
-	return pDB->dbCount;
+	return ch->dbCount;
 }
 
 /*
  * seq_pvName() - returns channel name.
  */
-epicsShareFunc char *epicsShareAPI seq_pvName(SS_ID pSS, VAR_ID varId)
+epicsShareFunc char *epicsShareAPI seq_pvName(SS_ID ss, VAR_ID varId)
 {
-	CHAN *pDB = pSS->sprog->pChan + varId;
+	CHAN *ch = ss->sprog->chan + varId;
 
-	return pDB->dbName;
+	return ch->dbName;
 }
 
 /*
  * seq_pvStatus() - returns channel alarm status.
  */
-epicsShareFunc pvStat epicsShareAPI seq_pvStatus(SS_ID pSS, VAR_ID varId)
+epicsShareFunc pvStat epicsShareAPI seq_pvStatus(SS_ID ss, VAR_ID varId)
 {
-	CHAN *pDB = pSS->sprog->pChan + varId;
+	CHAN *ch = ss->sprog->chan + varId;
 
-	return pDB->status;
+	return ch->status;
 }
 
 /*
  * seq_pvSeverity() - returns channel alarm severity.
  */
-epicsShareFunc pvSevr epicsShareAPI seq_pvSeverity(SS_ID pSS, VAR_ID varId)
+epicsShareFunc pvSevr epicsShareAPI seq_pvSeverity(SS_ID ss, VAR_ID varId)
 {
-	CHAN *pDB = pSS->sprog->pChan + varId;
+	CHAN *ch = ss->sprog->chan + varId;
 
-	return pDB->severity;
+	return ch->severity;
 }
 
 /*
  * seq_pvMessage() - returns channel error message.
  */
-epicsShareFunc const char *epicsShareAPI seq_pvMessage(SS_ID pSS, VAR_ID varId)
+epicsShareFunc const char *epicsShareAPI seq_pvMessage(SS_ID ss, VAR_ID varId)
 {
-	CHAN *pDB = pSS->sprog->pChan + varId;
+	CHAN *ch = ss->sprog->chan + varId;
 
-	return pDB->message;
+	return ch->message;
 }
 
 /*
  * seq_pvIndex() - returns index of database variable.
  */
-epicsShareFunc VAR_ID epicsShareAPI seq_pvIndex(SS_ID pSS, VAR_ID varId)
+epicsShareFunc VAR_ID epicsShareAPI seq_pvIndex(SS_ID ss, VAR_ID varId)
 {
 	return varId; /* index is same as varId */
 }
@@ -545,51 +545,51 @@ epicsShareFunc VAR_ID epicsShareAPI seq_pvIndex(SS_ID pSS, VAR_ID varId)
 /*
  * seq_pvTimeStamp() - returns channel time stamp.
  */
-epicsShareFunc epicsTimeStamp epicsShareAPI seq_pvTimeStamp(SS_ID pSS, VAR_ID varId)
+epicsShareFunc epicsTimeStamp epicsShareAPI seq_pvTimeStamp(SS_ID ss, VAR_ID varId)
 {
-	CHAN *pDB = pSS->sprog->pChan + varId;
+	CHAN *ch = ss->sprog->chan + varId;
 
-	return pDB->timeStamp;
+	return ch->timeStamp;
 }
 /*
  * seq_efSet() - Set an event flag, then wake up each state
  * set that might be waiting on that event flag.
  */
-epicsShareFunc void epicsShareAPI seq_efSet(SS_ID pSS, EV_ID ev_flag)
+epicsShareFunc void epicsShareAPI seq_efSet(SS_ID ss, EV_ID ev_flag)
 {
-	SPROG	*pSP = pSS->sprog;
+	SPROG	*sp = ss->sprog;
 
-	epicsMutexMustLock(pSP->programLock);
+	epicsMutexMustLock(sp->programLock);
 
-	DEBUG("seq_efSet: pSP=%p, pSS=%p, ev_flag=%ld\n", pSP, pSS,
+	DEBUG("seq_efSet: sp=%p, ss=%p, ev_flag=%ld\n", sp, ss,
 		ev_flag);
 
 	/* Set this bit */
-	bitSet(pSP->pEvents, ev_flag);
+	bitSet(sp->events, ev_flag);
 
 	/* Wake up state sets that are waiting for this event flag */
-	seqWakeup(pSP, ev_flag);
+	seqWakeup(sp, ev_flag);
 
-	epicsMutexUnlock(pSP->programLock);
+	epicsMutexUnlock(sp->programLock);
 }
 
 /*
  * seq_efTest() - Test event flag against outstanding events.
  */
-epicsShareFunc boolean epicsShareAPI seq_efTest(SS_ID pSS, EV_ID ev_flag)
+epicsShareFunc boolean epicsShareAPI seq_efTest(SS_ID ss, EV_ID ev_flag)
 /* event flag */
 {
-	SPROG	*pSP = pSS->sprog;
+	SPROG	*sp = ss->sprog;
 	int	isSet;
 
-	epicsMutexMustLock(pSP->programLock);
+	epicsMutexMustLock(sp->programLock);
 
-	isSet = bitTest(pSP->pEvents, ev_flag);
+	isSet = bitTest(sp->events, ev_flag);
 
 	DEBUG("seq_efTest: ev_flag=%ld, event=%#lx, isSet=%d\n",
-		ev_flag, pSP->pEvents[0], isSet);
+		ev_flag, sp->events[0], isSet);
 
-	epicsMutexUnlock(pSP->programLock);
+	epicsMutexUnlock(sp->programLock);
 
 	return isSet;
 }
@@ -597,22 +597,22 @@ epicsShareFunc boolean epicsShareAPI seq_efTest(SS_ID pSS, EV_ID ev_flag)
 /*
  * seq_efClear() - Test event flag against outstanding events, then clear it.
  */
-epicsShareFunc boolean epicsShareAPI seq_efClear(SS_ID pSS, EV_ID ev_flag)
+epicsShareFunc boolean epicsShareAPI seq_efClear(SS_ID ss, EV_ID ev_flag)
 {
-	SPROG	*pSP = pSS->sprog;
+	SPROG	*sp = ss->sprog;
 	int	isSet;
 
-	isSet = bitTest(pSP->pEvents, ev_flag);
+	isSet = bitTest(sp->events, ev_flag);
 
-	epicsMutexMustLock(pSP->programLock);
+	epicsMutexMustLock(sp->programLock);
 
 	/* Clear this bit */
-	bitClear(pSP->pEvents, ev_flag);
+	bitClear(sp->events, ev_flag);
 
 	/* Wake up state sets that are waiting for this event flag */
-	seqWakeup(pSP, ev_flag);
+	seqWakeup(sp, ev_flag);
 
-	epicsMutexUnlock(pSP->programLock);
+	epicsMutexUnlock(sp->programLock);
 
 	return isSet;
 }
@@ -620,17 +620,17 @@ epicsShareFunc boolean epicsShareAPI seq_efClear(SS_ID pSS, EV_ID ev_flag)
 /*
  * seq_efTestAndClear() - Test event flag against outstanding events, then clear it.
  */
-epicsShareFunc boolean epicsShareAPI seq_efTestAndClear(SS_ID pSS, EV_ID ev_flag)
+epicsShareFunc boolean epicsShareAPI seq_efTestAndClear(SS_ID ss, EV_ID ev_flag)
 {
-	SPROG	*pSP = pSS->sprog;
+	SPROG	*sp = ss->sprog;
 	int	isSet;
 
-	epicsMutexMustLock(pSP->programLock);
+	epicsMutexMustLock(sp->programLock);
 
-	isSet = bitTest(pSP->pEvents, ev_flag);
-	bitClear(pSP->pEvents, ev_flag);
+	isSet = bitTest(sp->events, ev_flag);
+	bitClear(sp->events, ev_flag);
 
-	epicsMutexUnlock(pSP->programLock);
+	epicsMutexUnlock(sp->programLock);
 
 	return isSet;
 }
@@ -638,34 +638,34 @@ epicsShareFunc boolean epicsShareAPI seq_efTestAndClear(SS_ID pSS, EV_ID ev_flag
 /*
  * seq_pvGetQ() - Get queued DB value.
  */
-epicsShareFunc boolean epicsShareAPI seq_pvGetQ(SS_ID pSS, VAR_ID varId)
+epicsShareFunc boolean epicsShareAPI seq_pvGetQ(SS_ID ss, VAR_ID varId)
 {
-	SPROG	*pSP = pSS->sprog;
-	CHAN	*pDB = pSP->pChan + varId;
-	char	*pVar = valPtr(pDB,pSS);
+	SPROG	*sp = ss->sprog;
+	CHAN	*ch = sp->chan + varId;
+	char	*var = valPtr(ch,ss);
 	EV_ID	ev_flag;
 	boolean	isSet;
 
-	epicsMutexMustLock(pSP->programLock);
+	epicsMutexMustLock(sp->programLock);
 
 	/* Determine event flag number and whether set */
-	ev_flag = pDB->efId;
-	isSet = bitTest(pSP->pEvents, ev_flag);
+	ev_flag = ch->efId;
+	isSet = bitTest(sp->events, ev_flag);
 
-	DEBUG("seq_pvGetQ: pv name=%s, isSet=%d\n", pDB->dbName, isSet);
+	DEBUG("seq_pvGetQ: pv name=%s, isSet=%d\n", ch->dbName, isSet);
 
 	/* If set, queue should be non empty */
 	if (isSet)
 	{
-		QENTRY	*pEntry;
-		pvValue	*pAccess;
-		void	*pVal;
+		QENTRY	*entry;
+		pvValue	*access;
+		void	*val;
 
 		/* Dequeue first entry */
-		pEntry = (QENTRY *) ellGet(&pSP->pQueues[pDB->queueIndex]);
+		entry = (QENTRY *) ellGet(&sp->queues[ch->queueIndex]);
 
 		/* If none, "impossible" */
-		if (pEntry == NULL)
+		if (entry == NULL)
 		{
 			errlogPrintf("seq_pvGetQ: evflag set but queue empty "
 				"(impossible)\n");
@@ -673,42 +673,42 @@ epicsShareFunc boolean epicsShareAPI seq_pvGetQ(SS_ID pSS, VAR_ID varId)
 		}
 
 		/* Extract information from entry (code from seq_ca.c)
-		   (pDB changed to refer to channel for which monitor
+		   (ch changed to refer to channel for which monitor
 		   was posted) */
 		else
 		{
-		        pvType type = pDB->type->getType;
+		        pvType type = ch->type->getType;
 
-			pDB = pEntry->pDB;
-			pAccess = &pEntry->value;
+			ch = entry->ch;
+			access = &entry->value;
 
 			/* Copy value returned into user variable */
 			/* For now, can only return _one_ array element */
-			pVal = pv_value_ptr(pAccess, type);
+			val = pv_value_ptr(access, type);
 
-			epicsMutexLock(pDB->varLock);
-			memcpy(pVar, pVal, pDB->type->size * 1 );
-							/* was pDB->dbCount */
+			epicsMutexLock(ch->varLock);
+			memcpy(var, val, ch->type->size * 1 );
+							/* was ch->dbCount */
 			if (pv_is_time_type(type))
 			{
-				pDB->status = *pv_status_ptr(pAccess, type);
-				pDB->severity = *pv_severity_ptr(pAccess, type);
-				pDB->timeStamp = *pv_stamp_ptr(pAccess, type);
+				ch->status = *pv_status_ptr(access, type);
+				ch->severity = *pv_severity_ptr(access, type);
+				ch->timeStamp = *pv_stamp_ptr(access, type);
 			}
-			epicsMutexUnlock(pDB->varLock);
+			epicsMutexUnlock(ch->varLock);
 
 			/* Free queue entry */
-			free(pEntry);
+			free(entry);
 		}
 	}
 
 	/* If queue is now empty, clear the event flag */
-	if (ellCount(&pSP->pQueues[pDB->queueIndex]) == 0)
+	if (ellCount(&sp->queues[ch->queueIndex]) == 0)
 	{
-		bitClear(pSP->pEvents, ev_flag);
+		bitClear(sp->events, ev_flag);
 	}
 
-	epicsMutexUnlock(pSP->programLock);
+	epicsMutexUnlock(sp->programLock);
 
 	/* return TRUE iff event flag was set on entry */
 	return isSet;
@@ -718,92 +718,92 @@ epicsShareFunc boolean epicsShareAPI seq_pvGetQ(SS_ID pSS, VAR_ID varId)
  * seq_pvFreeQ() - Same as seq_pvFlushQ.
  *		   Provided for compatibility.
  */
-epicsShareFunc void epicsShareAPI seq_pvFreeQ(SS_ID pSS, VAR_ID varId)
+epicsShareFunc void epicsShareAPI seq_pvFreeQ(SS_ID ss, VAR_ID varId)
 {
-	seq_pvFreeQ(pSS, varId);
+	seq_pvFreeQ(ss, varId);
 }
 
 /*
  * seq_pvFlushQ() - Flush elements on syncQ queue and clear event flag.
  */
-epicsShareFunc void epicsShareAPI seq_pvFlushQ(SS_ID pSS, VAR_ID varId)
+epicsShareFunc void epicsShareAPI seq_pvFlushQ(SS_ID ss, VAR_ID varId)
 {
-	SPROG	*pSP = pSS->sprog;
-	CHAN	*pDB = pSP->pChan + varId;
-	QENTRY	*pEntry;
+	SPROG	*sp = ss->sprog;
+	CHAN	*ch = sp->chan + varId;
+	QENTRY	*entry;
 	EV_ID	ev_flag;
 
-	epicsMutexMustLock(pSP->programLock);
+	epicsMutexMustLock(sp->programLock);
 
-	DEBUG("seq_pvFreeQ: pv name=%s, count=%d\n", pDB->dbName,
-		ellCount(&pSP->pQueues[pDB->queueIndex]));
+	DEBUG("seq_pvFreeQ: pv name=%s, count=%d\n", ch->dbName,
+		ellCount(&sp->queues[ch->queueIndex]));
 
 	/* Determine event flag number */
-	ev_flag = pDB->efId;
+	ev_flag = ch->efId;
 
 	/* Free queue elements */
-	while((pEntry = (QENTRY *)ellGet(&pSP->pQueues[pDB->queueIndex])) != NULL)
-		free(pEntry);
+	while((entry = (QENTRY *)ellGet(&sp->queues[ch->queueIndex])) != NULL)
+		free(entry);
 
 	/* Clear event flag */
-	bitClear(pSP->pEvents, ev_flag);
+	bitClear(sp->events, ev_flag);
 
-	epicsMutexUnlock(pSP->programLock);
+	epicsMutexUnlock(sp->programLock);
 }
 
 
 /* seq_delay() - test for delay() time-out expired */
-epicsShareFunc boolean epicsShareAPI seq_delay(SS_ID pSS, DELAY_ID delayId)
+epicsShareFunc boolean epicsShareAPI seq_delay(SS_ID ss, DELAY_ID delayId)
 {
 	double	timeNow, timeElapsed;
 	boolean	expired = FALSE;
 
 	/* Calc. elapsed time since state was entered */
 	pvTimeGetCurrentDouble( &timeNow );
-	timeElapsed = timeNow - pSS->timeEntered;
+	timeElapsed = timeNow - ss->timeEntered;
 
 	/* Check for delay timeout */
-	if ( (timeElapsed >= pSS->delay[delayId]) )
+	if ( (timeElapsed >= ss->delay[delayId]) )
 	{
-		pSS->delayExpired[delayId] = TRUE; /* mark as expired */
+		ss->delayExpired[delayId] = TRUE; /* mark as expired */
 		expired = TRUE;
 	}
-	DEBUG("seq_delay(%s,%ld): %g seconds, %s\n", pSS->pSSName, delayId,
-		pSS->delay[delayId], expired ? "expired": "unexpired");
+	DEBUG("seq_delay(%s,%ld): %g seconds, %s\n", ss->ssName, delayId,
+		ss->delay[delayId], expired ? "expired": "unexpired");
 	return expired;
 }
 
 /*
  * seq_delayInit() - initialize delay time (in seconds) on entering a state.
  */
-epicsShareFunc void epicsShareAPI seq_delayInit(SS_ID pSS, DELAY_ID delayId, double delay)
+epicsShareFunc void epicsShareAPI seq_delayInit(SS_ID ss, DELAY_ID delayId, double delay)
 {
 	DEBUG("seq_delayInit(%s,%ld,%g): numDelays=%d, maxNumDelays=%d\n",
-		pSS->pSSName, delayId, delay, pSS->numDelays, pSS->maxNumDelays);
-	assert(delayId <= pSS->numDelays);
-	assert(pSS->numDelays < pSS->maxNumDelays);
+		ss->ssName, delayId, delay, ss->numDelays, ss->maxNumDelays);
+	assert(delayId <= ss->numDelays);
+	assert(ss->numDelays < ss->maxNumDelays);
 
-	pSS->delay[delayId] = delay;
-	pSS->numDelays = max(pSS->numDelays, delayId + 1);
+	ss->delay[delayId] = delay;
+	ss->numDelays = max(ss->numDelays, delayId + 1);
 }
 
 /*
  * seq_optGet: return the value of an option (e.g. "a").
  * FALSE means "-" and TRUE means "+".
  */
-epicsShareFunc boolean epicsShareAPI seq_optGet(SS_ID pSS, const char *opt)
+epicsShareFunc boolean epicsShareAPI seq_optGet(SS_ID ss, const char *opt)
 {
-	SPROG	*pSP = pSS->sprog;
+	SPROG	*sp = ss->sprog;
 
 	switch (opt[0])
 	{
-	case 'a': return ( (pSP->options & OPT_ASYNC) != 0);
-	case 'c': return ( (pSP->options & OPT_CONN)  != 0);
-	case 'd': return ( (pSP->options & OPT_DEBUG) != 0);
-	case 'e': return ( (pSP->options & OPT_NEWEF) != 0);
-	case 'm': return ( (pSP->options & OPT_MAIN)  != 0);
-	case 'r': return ( (pSP->options & OPT_REENT) != 0);
-	case 's': return ( (pSP->options & OPT_SAFE)  != 0);
+	case 'a': return ( (sp->options & OPT_ASYNC) != 0);
+	case 'c': return ( (sp->options & OPT_CONN)  != 0);
+	case 'd': return ( (sp->options & OPT_DEBUG) != 0);
+	case 'e': return ( (sp->options & OPT_NEWEF) != 0);
+	case 'm': return ( (sp->options & OPT_MAIN)  != 0);
+	case 'r': return ( (sp->options & OPT_REENT) != 0);
+	case 's': return ( (sp->options & OPT_SAFE)  != 0);
 	default:  return FALSE;
 	}
 }
@@ -811,7 +811,7 @@ epicsShareFunc boolean epicsShareAPI seq_optGet(SS_ID pSS, const char *opt)
 /* 
  * seq_macValueGet - given macro name, return pointer to its value.
  */
-epicsShareFunc char *epicsShareAPI seq_macValueGet(SS_ID ssId, const char *pName)
+epicsShareFunc char *epicsShareAPI seq_macValueGet(SS_ID ssId, const char *name)
 {
-	return seqMacValGet(ssId->sprog, pName);
+	return seqMacValGet(ssId->sprog, name);
 }

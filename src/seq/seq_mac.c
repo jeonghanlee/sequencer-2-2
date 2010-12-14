@@ -20,88 +20,88 @@
 /* Macro table */
 struct macro
 {
-	char	*pName;
-	char	*pValue;
+	char	*name;
+	char	*value;
 	MACRO	*next;
 };
 
-static unsigned seqMacParseName(const char *pStr);
-static unsigned seqMacParseValue(const char *pStr);
-static const char *skipBlanks(const char *pChar);
-static MACRO *seqMacTblGet(SPROG *pSP, char *pName);
+static unsigned seqMacParseName(const char *str);
+static unsigned seqMacParseValue(const char *str);
+static const char *skipBlanks(const char *str);
+static MACRO *seqMacTblGet(SPROG *sp, char *name);
 
 /* 
  *seqMacEval - substitute macro value into a string containing:
  * ....{mac_name}....
  */
-void seqMacEval(SPROG *pSP, const char *pInStr, char *pOutStr, size_t maxChar)
+void seqMacEval(SPROG *sp, const char *inStr, char *outStr, size_t maxChar)
 {
-	char	name[50], *pValue, *pTmp;
+	char	name[50], *value, *tmp;
 	size_t	valLth, nameLth;
 
-	DEBUG("seqMacEval: InStr=%s, ", pInStr);
+	DEBUG("seqMacEval: InStr=%s, ", inStr);
 
-	pTmp = pOutStr;
-	while (*pInStr != 0 && maxChar > 0)
+	tmp = outStr;
+	while (*inStr != 0 && maxChar > 0)
 	{
-		if (*pInStr == '{')
+		if (*inStr == '{')
 		{	/* Do macro substitution */
-			pInStr++; /* points to macro name */
+			inStr++; /* points to macro name */
 			/* Copy the macro name */
 			nameLth = 0;
-			while (*pInStr != '}' && *pInStr != 0)
+			while (*inStr != '}' && *inStr != 0)
 			{
-				name[nameLth] = *pInStr++;
+				name[nameLth] = *inStr++;
 				if (nameLth < (sizeof(name) - 1))
 					nameLth++;
 			}
 			name[nameLth] = 0;
-			if (*pInStr != 0)
-				pInStr++;
+			if (*inStr != 0)
+				inStr++;
 				
 			DEBUG("Macro name=%s, ", name);
 
 			/* Find macro value from macro name */
-			pValue = seqMacValGet(pSP, name);
-			if (pValue != NULL)
+			value = seqMacValGet(sp, name);
+			if (value != NULL)
 			{	/* Substitute macro value */
-				valLth = strlen(pValue);
+				valLth = strlen(value);
 				if (valLth > maxChar)
 					valLth = maxChar;
 
-				DEBUG("Value=%s, ", pValue);
+				DEBUG("Value=%s, ", value);
 
-				strncpy(pOutStr, pValue, valLth);
+				strncpy(outStr, value, valLth);
 				maxChar -= valLth;
-				pOutStr += valLth;
+				outStr += valLth;
 			}
 			
 		}
 		else
 		{	/* Straight substitution */
-			*pOutStr++ = *pInStr++;
+			*outStr++ = *inStr++;
 			maxChar--;
 		}
 	}
-	*pOutStr = 0;
+	*outStr = 0;
 
-	DEBUG("OutStr=%s\n", pTmp);
+	DEBUG("OutStr=%s\n", tmp);
 }
 
 /*
  * seqMacValGet - internal routine to convert macro name to macro value.
  */
-char *seqMacValGet(SPROG *pSP, const char *pName)
+char *seqMacValGet(SPROG *sp, const char *name)
 {
-	MACRO	*pMac;
+	MACRO	*mac;
 
-	DEBUG("seqMacValGet: name=%s", pName);
-	foreach(pMac, pSP->pMacros)
+	DEBUG("seqMacValGet: name=%s", name);
+	foreach(mac, sp->macros)
 	{
-		if (pMac->pName && strcmp(pName, pMac->pName) == 0)
+		if (mac->name && strcmp(name, mac->name) == 0)
 		{
-			DEBUG(", value=%s\n", pMac->pValue);
-			return pMac->pValue;
+			DEBUG(", value=%s\n", mac->value);
+			return mac->value;
 		}
 	}
 	DEBUG(", no value\n");
@@ -114,78 +114,78 @@ char *seqMacValGet(SPROG *pSP, const char *pName)
  * Assumes the table may already contain entries (values may be changed).
  * String for name and value are allocated dynamically from pool.
  */
-void seqMacParse(SPROG *pSP, const char *pMacStr)
+void seqMacParse(SPROG *sp, const char *macStr)
 {
 	unsigned	nChar;
-	MACRO		*pMac;		/* macro tbl entry */
-	char		*pName, *pValue;
+	MACRO		*mac;		/* macro tbl entry */
+	char		*name, *value;
 
-	if (pMacStr == NULL) return;
+	if (macStr == NULL) return;
 
-	while(*pMacStr)
+	while(*macStr)
 	{
 		/* Skip blanks */
-		pMacStr = skipBlanks(pMacStr);
+		macStr = skipBlanks(macStr);
 
 		/* Parse the macro name */
-		nChar = seqMacParseName(pMacStr);
+		nChar = seqMacParseName(macStr);
 		if (nChar == 0)
 			break;		/* finished or error */
-		pName = newArray(char, nChar+1);
-		if (pName == NULL)
+		name = newArray(char, nChar+1);
+		if (name == NULL)
 			break;
-		memcpy(pName, pMacStr, nChar);
-		pName[nChar] = '\0';
+		memcpy(name, macStr, nChar);
+		name[nChar] = '\0';
 
-		DEBUG("name=%s, nChar=%d\n", pName, nChar);
+		DEBUG("name=%s, nChar=%d\n", name, nChar);
 
-		pMacStr += nChar;
+		macStr += nChar;
 
 		/* Find a slot in the table */
-		pMac = seqMacTblGet(pSP, pName);
-		if (pMac == NULL)
+		mac = seqMacTblGet(sp, name);
+		if (mac == NULL)
 			break;		/* table is full */
-		if (pMac->pName == NULL)
+		if (mac->name == NULL)
 		{	/* Empty slot, insert macro name */
-			pMac->pName = pName;
+			mac->name = name;
 		}
 
 		/* Skip over blanks and equal sign or comma */
-		pMacStr = skipBlanks(pMacStr);
-		if (*pMacStr == ',')
+		macStr = skipBlanks(macStr);
+		if (*macStr == ',')
 		{
 			/* no value after the macro name */
-			pMacStr++;
+			macStr++;
 			continue;
 		}
-		if (*pMacStr == '\0' || *pMacStr++ != '=')
+		if (*macStr == '\0' || *macStr++ != '=')
 			break;
-		pMacStr = skipBlanks(pMacStr);
+		macStr = skipBlanks(macStr);
 
 		/* Parse the value */
-		nChar = seqMacParseValue(pMacStr);
+		nChar = seqMacParseValue(macStr);
 		if (nChar == 0)
 			break;
 
 		/* Remove previous value if it exists */
-		pValue = pMac->pValue;
-		if (pValue != NULL)
-			free(pValue);
+		value = mac->value;
+		if (value != NULL)
+			free(value);
 
 		/* Copy value string into newly allocated space */
-		pValue = newArray(char, nChar+1);
-		if (pValue == NULL)
+		value = newArray(char, nChar+1);
+		if (value == NULL)
 			break;
-		pMac->pValue = pValue;
-		memcpy(pValue, pMacStr, nChar);
-		pValue[nChar] = '\0';
+		mac->value = value;
+		memcpy(value, macStr, nChar);
+		value[nChar] = '\0';
 
-		DEBUG("value=%s, nChar=%d\n", pValue, nChar);
+		DEBUG("value=%s, nChar=%d\n", value, nChar);
 
 		/* Skip past last value and over blanks and comma */
-		pMacStr += nChar;
-		pMacStr = skipBlanks(pMacStr);
-		if (*pMacStr == '\0' || *pMacStr++ != ',')
+		macStr += nChar;
+		macStr = skipBlanks(macStr);
+		if (*macStr == '\0' || *macStr++ != ',')
 			break;
 	}
 }
@@ -193,19 +193,19 @@ void seqMacParse(SPROG *pSP, const char *pMacStr)
 /*
  * seqMacParseName() - Parse a macro name from the input string.
  */
-static unsigned seqMacParseName(const char *pStr)
+static unsigned seqMacParseName(const char *str)
 {
 	unsigned nChar;
 
 	/* First character must be [A-Z,a-z] */
-	if (!isalpha(*pStr))
+	if (!isalpha(*str))
 		return 0;
-	pStr++;
+	str++;
 	nChar = 1;
 	/* Character must be [A-Z,a-z,0-9,_] */
-	while ( isalnum(*pStr) || *pStr == '_' )
+	while ( isalnum(*str) || *str == '_' )
 	{
-		pStr++;
+		str++;
 		nChar++;
 	}
 	/* Loop terminates on any non-name character */
@@ -215,74 +215,74 @@ static unsigned seqMacParseName(const char *pStr)
 /*
  * seqMacParseValue() - Parse a macro value from the input string.
  */
-static unsigned seqMacParseValue(const char *pStr)
+static unsigned seqMacParseValue(const char *str)
 {
 	unsigned nChar;
 
 	nChar = 0;
 	/* Character string terminates on blank, comma, or EOS */
-	while ( (*pStr != ' ') && (*pStr != ',') && (*pStr != 0) )
+	while ( (*str != ' ') && (*str != ',') && (*str != 0) )
 	{
-		pStr++;
+		str++;
 		nChar++;
 	}
 	return nChar;
 }
 
 /* skipBlanks() - skip blank characters */
-static const char *skipBlanks(const char *pChar)
+static const char *skipBlanks(const char *str)
 {
-	while (*pChar == ' ')
-		pChar++;
-	return	pChar;
+	while (*str == ' ')
+		str++;
+	return str;
 }
 
 /*
  * seqMacTblGet - find a match for the specified name, otherwise
  * return a new empty slot in macro table.
  */
-static MACRO *seqMacTblGet(SPROG *pSP, char *pName)
+static MACRO *seqMacTblGet(SPROG *sp, char *name)
 {
-	MACRO	*pMac, *pLastMac = NULL;
+	MACRO	*mac, *lastMac = NULL;
 
-	DEBUG("seqMacTblGet: name=%s\n", pName);
-	foreach(pMac, pSP->pMacros)
+	DEBUG("seqMacTblGet: name=%s\n", name);
+	foreach(mac, sp->macros)
 	{
-		pLastMac = pMac;
-		if (pMac->pName != NULL &&
-			strcmp(pName, pMac->pName) == 0)
+		lastMac = mac;
+		if (mac->name != NULL &&
+			strcmp(name, mac->name) == 0)
 		{
-			return pMac;
+			return mac;
 		}
 	}
 	/* Not found, allocate an empty slot */
-	pMac = new(MACRO);
+	mac = new(MACRO);
 	/* This assumes ptr assignment is atomic */
-	if (pLastMac != NULL)
-		pLastMac->next = pMac;
+	if (lastMac != NULL)
+		lastMac->next = mac;
 	else
-		pSP->pMacros = pMac;
-	return pMac;
+		sp->macros = mac;
+	return mac;
 }
 
 /*
  * seqMacFree - free all the memory
  */
-void seqMacFree(SPROG *pSP)
+void seqMacFree(SPROG *sp)
 {
-	MACRO	*pMac, *pLastMac = NULL;
+	MACRO	*mac, *lastMac = NULL;
 
-	foreach(pMac, pSP->pMacros)
+	foreach(mac, sp->macros)
 	{
-		if (pMac->pName != NULL)
-			free(pMac->pName);
-		if (pMac->pValue != NULL)
-			free(pMac->pValue);
-		if (pLastMac != NULL)
-			free(pLastMac);
-		pLastMac = pMac;
+		if (mac->name != NULL)
+			free(mac->name);
+		if (mac->value != NULL)
+			free(mac->value);
+		if (lastMac != NULL)
+			free(lastMac);
+		lastMac = mac;
 	}
-	if (pLastMac != NULL)
-		free(pLastMac);
-	pSP->pMacros = 0;
+	if (lastMac != NULL)
+		free(lastMac);
+	sp->macros = 0;
 }

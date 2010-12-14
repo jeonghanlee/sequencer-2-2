@@ -92,7 +92,7 @@ static void seqCallFunc(const iocshArgBuf *args)
     if (*table == '&')
         table++;
     foreach(sp, seqHead) {
-        if (!strcmp(table, sp->prog->pProgName)) {
+        if (!strcmp(table, sp->prog->progName)) {
             seq(sp->prog, macroDef, (unsigned)stackSize);
             return;
         }

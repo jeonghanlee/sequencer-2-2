@@ -21,27 +21,27 @@
  */
 SPROG *seqFindProg(epicsThreadId threadId)
 {
-    SSCB *pSS = seqFindStateSet(threadId);
-    return pSS ? pSS->sprog : NULL;
+    SSCB *ss = seqFindStateSet(threadId);
+    return ss ? ss->sprog : NULL;
 }
 
 struct findStateSetArgs {
-    SSCB *pSS;
+    SSCB *ss;
     epicsThreadId threadId;
 };
 
-static int findStateSet(SPROG *pSP, void *param)
+static int findStateSet(SPROG *sp, void *param)
 {
     struct findStateSetArgs *pargs = (struct findStateSetArgs *)param;
     unsigned n;
 
-    for (n = 0; n < pSP->numSS; n++) {
-        SSCB *pSS = pSP->pSS + n;
+    for (n = 0; n < sp->numSS; n++) {
+        SSCB *ss = sp->ss + n;
 
-        DEBUG("findStateSet trying %s[%d] pSS[%d].threadId=%p\n",
-            pSP->pProgName, pSP->instance, n, pSS->threadId);
-        if (pSS->threadId == pargs->threadId) {
-            pargs->pSS = pSS;
+        DEBUG("findStateSet trying %s[%d] ss[%d].threadId=%p\n",
+            sp->progName, sp->instance, n, ss->threadId);
+        if (ss->threadId == pargs->threadId) {
+            pargs->ss = ss;
             return TRUE;
         }
     }
@@ -55,24 +55,24 @@ SSCB *seqFindStateSet(epicsThreadId threadId)
 {
     struct findStateSetArgs args;
 
-    args.pSS = 0;
+    args.ss = 0;
     args.threadId = threadId;
     seqTraverseProg(findStateSet, &args);
-    return args.pSS;
+    return args.ss;
 }
 
 struct findByNameArgs {
-    SPROG *pSP;
-    const char *pProgName;
+    SPROG *sp;
+    const char *progName;
     int instance;
 };
 
-static int findByName(SPROG *pSP, void *param)
+static int findByName(SPROG *sp, void *param)
 {
     struct findByNameArgs *pargs = (struct findByNameArgs *)param;
-    int found = strcmp(pSP->pProgName, pargs->pProgName) == 0 && pSP->instance == pargs->instance;
+    int found = strcmp(sp->progName, pargs->progName) == 0 && sp->instance == pargs->instance;
     if (found)
-        pargs->pSP = pSP;
+        pargs->sp = sp;
     return found;
 }
 
@@ -80,29 +80,29 @@ static int findByName(SPROG *pSP, void *param)
  * seqFindProgByName() - find a program in the program instance list by name
  * and instance number.
  */
-epicsShareFunc SPROG *epicsShareAPI seqFindProgByName(const char *pProgName, int instance)
+epicsShareFunc SPROG *epicsShareAPI seqFindProgByName(const char *progName, int instance)
 {
     struct findByNameArgs args;
 
-    args.pSP = 0;
-    args.pProgName = pProgName;
+    args.sp = 0;
+    args.progName = progName;
     args.instance = instance;
     seqTraverseProg(findByName, &args);
-    return args.pSP;
+    return args.sp;
 }
 
 struct traverseInstancesArgs {
-    seqTraversee *pFunc;
+    seqTraversee *func;
     void *param;
 };
 
 static int traverseInstances(SPROG **ppInstances, seqProgram *pseq, void *param)
 {
     struct traverseInstancesArgs *pargs = (struct traverseInstancesArgs *)param;
-    SPROG *pSP;
+    SPROG *sp;
 
-    foreach(pSP, *ppInstances) {
-        if (pargs->pFunc(pSP, pargs->param))
+    foreach(sp, *ppInstances) {
+        if (pargs->func(sp, pargs->param))
             return TRUE;    /* terminate traversal */
     }
     return FALSE;           /* continue traversal */
@@ -113,36 +113,36 @@ static int traverseInstances(SPROG **ppInstances, seqProgram *pseq, void *param)
  * call the specified routine or function.  Passes one parameter of
  * pointer size.
  */
-void seqTraverseProg(seqTraversee * pFunc, void *param)
+void seqTraverseProg(seqTraversee *func, void *param)
 {
     struct traverseInstancesArgs args;
-    args.pFunc = pFunc;
+    args.func = func;
     args.param = param;
     traverseSequencerPrograms(traverseInstances, &args);
 }
 
 static int addProg(SPROG **ppInstances, seqProgram *pseq, void *param)
 {
-    SPROG *pSP = (SPROG *)param;
+    SPROG *sp = (SPROG *)param;
 
     assert(ppInstances);
-    if (strcmp(pSP->pProgName, pseq->pProgName) == 0) {
-        SPROG *pCurSP, *pLastSP = NULL;
+    if (strcmp(sp->progName, pseq->progName) == 0) {
+        SPROG *curSP, *lastSP = NULL;
         int instance = -1;
 
-        foreach(pCurSP, *ppInstances) {
-            pLastSP = pCurSP;
+        foreach(curSP, *ppInstances) {
+            lastSP = curSP;
             /* check precondition */
-            assert(pCurSP != pSP);
-            instance = max(pCurSP->instance, instance);
+            assert(curSP != sp);
+            instance = max(curSP->instance, instance);
         }
-        pSP->instance = instance + 1;
-        if (pLastSP != NULL) {
-            pLastSP->next = pSP;
+        sp->instance = instance + 1;
+        if (lastSP != NULL) {
+            lastSP->next = sp;
         } else {
-            *ppInstances = pSP;
+            *ppInstances = sp;
         }
-        DEBUG("Added program %p, instance %d to instance list.\n", pSP, pSP->instance);
+        DEBUG("Added program %p, instance %d to instance list.\n", sp, sp->instance);
         return TRUE;
     }
     return FALSE;
@@ -152,28 +152,28 @@ static int addProg(SPROG **ppInstances, seqProgram *pseq, void *param)
  * seqAddProg() - add a program to the program instance list.
  * Precondition: must not be already in the list.
  */
-void seqAddProg(SPROG *pSP)
+void seqAddProg(SPROG *sp)
 {
-    traverseSequencerPrograms(addProg, pSP);
+    traverseSequencerPrograms(addProg, sp);
 }
 
 static int delProg(SPROG **ppInstances, seqProgram *pseq, void *param)
 {
-    SPROG *pSP = (SPROG *)param;
+    SPROG *sp = (SPROG *)param;
 
     assert(ppInstances);
-    if (strcmp(pSP->pProgName, pseq->pProgName) == 0) {
-        SPROG *pCurSP;
+    if (strcmp(sp->progName, pseq->progName) == 0) {
+        SPROG *curSP;
 
-        if (*ppInstances == pSP) {
-            *ppInstances = pSP->next;
-            DEBUG("Deleted program %p, instance %d from instance list.\n", pSP, pSP->instance);
+        if (*ppInstances == sp) {
+            *ppInstances = sp->next;
+            DEBUG("Deleted program %p, instance %d from instance list.\n", sp, sp->instance);
             return TRUE;
         }
-        foreach(pCurSP, *ppInstances) {
-            if (pCurSP->next == pSP) {
-                pCurSP->next = pSP->next;
-                DEBUG("Deleted program %p, instance %d from instance list.\n", pSP, pSP->instance);
+        foreach(curSP, *ppInstances) {
+            if (curSP->next == sp) {
+                curSP->next = sp->next;
+                DEBUG("Deleted program %p, instance %d from instance list.\n", sp, sp->instance);
                 return TRUE;
             }
         }
@@ -184,7 +184,7 @@ static int delProg(SPROG **ppInstances, seqProgram *pseq, void *param)
 /*
  * seqDelProg() - delete a program from the program instance list.
  */
-void seqDelProg(SPROG *pSP)
+void seqDelProg(SPROG *sp)
 {
-    traverseSequencerPrograms(delProg, pSP);
+    traverseSequencerPrograms(delProg, sp);
 }

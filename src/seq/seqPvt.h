@@ -43,10 +43,10 @@ extern void *pvSys;
 #define MAX_QUEUE_SIZE 100		/* default max_queue_size */
 
 #define valPtr(ch,ss)	((char*)basePtr(ch,ss)+(ch)->offset)
-#define basePtr(ch,ss)	(((ch)->sprog->options&OPT_SAFE)?(ss)->pVar:bufPtr(ch))
-#define bufPtr(ch)	(((ch)->sprog->options&OPT_REENT)?(ch)->sprog->pVar:0)
+#define basePtr(ch,ss)	(((ch)->sprog->options&OPT_SAFE)?(ss)->var:bufPtr(ch))
+#define bufPtr(ch)	(((ch)->sprog->options&OPT_REENT)?(ch)->sprog->var:0)
 
-#define ssNum(ss)	((ss)->sprog->pSS-(ss))
+#define ssNum(ss)	((ss)->sprog->ss-(ss))
 
 /* Generic iteration on lists */
 #define foreach(e,l)		for (e = l; e != 0; e = e->next)
@@ -79,7 +79,7 @@ struct channel
 {
 	/* static channel data (assigned once on startup) */
 	ptrdiff_t	offset;		/* offset to value */
-	const char	*pVarName;	/* variable name */
+	const char	*varName;	/* variable name */
 	unsigned	count;		/* number of elements in array */
 	unsigned	eventNum;	/* event number */
 	boolean		queued;		/* whether queued via syncQ */
@@ -117,7 +117,7 @@ struct channel
 
 struct pv_type
 {
-	const char	*pTypeStr;
+	const char	*typeStr;
 	pvType		putType;
 	pvType		getType;
 	size_t		size;
@@ -127,14 +127,14 @@ struct pv_type
 struct queue_entry
 {
 	ELLNODE		node;		/* linked list node */
-	CHAN		*pDB;		/* ptr to db channel info */
+	CHAN		*ch;		/* ptr to db channel info */
 	pvValue		value;		/* value, time stamp etc */
 };
 
 /* Structure to hold information about a State Set */
 struct state_set
 {
-	const char	*pSSName;	/* state set name (for debugging) */
+	const char	*ssName;	/* state set name (for debugging) */
 	epicsThreadId	threadId;	/* thread id */
 	unsigned	threadPriority;	/* thread priority */
 	unsigned	stackSize;	/* stack size */
@@ -146,18 +146,18 @@ struct state_set
 	epicsEventId	death3SemId;	/* semaphore id for death (#3) */
 	epicsEventId	death4SemId;	/* semaphore id for death (#4) */
 	unsigned	numStates;	/* number of states */
-	STATE		*pStates;	/* ptr to array of state blocks */
+	STATE		*states;	/* ptr to array of state blocks */
 	short		currentState;	/* current state index */
 	short		nextState;	/* next state index */
 	short		prevState;	/* previous state index */
 	short		transNum;	/* highest prio trans. # triggered */
-	const bitMask	*pMask;		/* current event mask */
+	const bitMask	*mask;		/* current event mask */
 	unsigned	maxNumDelays;	/* max. number of delays */
 	unsigned	numDelays;	/* number of delays activated */
 	double		*delay;		/* queued delay value in secs (array) */
 	boolean		*delayExpired;	/* TRUE if delay expired (array) */
 	double		timeEntered;	/* time that a state was entered */
-	char		*pVar;		/* variable value block (safe mode) */
+	char		*var;		/* variable value block (safe mode) */
 	SPROG		*sprog;	/* ptr back to state program block */
 };
 
@@ -166,12 +166,12 @@ struct state_set
  */
 struct program_instance
 {
-	const char	*pProgName;	/* program name (for debugging) */
+	const char	*progName;	/* program name (for debugging) */
 	epicsThreadId	threadId;	/* thread id (main thread) */
 	unsigned	threadPriority;	/* thread priority */
 	unsigned	stackSize;	/* stack size */
 	epicsMutexId	programLock;	/* mutex for locking CA events */
-	CHAN		*pChan;		/* table of channels */
+	CHAN		*chan;		/* table of channels */
 	unsigned	numChans;	/* number of db channels, incl. unass */
 	unsigned	assignCount;	/* number of db channels assigned */
 	unsigned	connectCount;	/* number of channels connected */
@@ -180,20 +180,20 @@ struct program_instance
 	unsigned	firstMonitorCount;
 	unsigned	allFirstConnectAndMonitor;
 	boolean		allDisconnected;
-	SSCB		*pSS;		/* array of state set control blocks */
+	SSCB		*ss;		/* array of state set control blocks */
 	unsigned	numSS;		/* number of state sets */
-	char		*pVar;		/* user variable area (or CA buffer in safe mode) */
+	char		*var;		/* user variable area (or CA buffer in safe mode) */
 	size_t		varSize;	/* # bytes in user variable area */
-	MACRO		*pMacros;	/* ptr to macro table */
-	char		*pParams;	/* program paramters */
-	bitMask		*pEvents;	/* event bits for event flags & db */
+	MACRO		*macros;	/* ptr to macro table */
+	char		*params;	/* program paramters */
+	bitMask		*events;	/* event bits for event flags & db */
 	unsigned	numEvents;	/* number of events */
 	unsigned	options;	/* options (bit-encoded) */
 	INIT_FUNC	*initFunc;	/* init function */
 	ENTRY_FUNC	*entryFunc;	/* entry function */
 	EXIT_FUNC	*exitFunc;	/* exit function */
 	unsigned	numQueues;	/* number of syncQ queues */
-	ELLLIST		*pQueues;	/* ptr to syncQ queues */
+	ELLLIST		*queues;	/* ptr to syncQ queues */
 	void		*pvReqPool;	/* freeList for pv requests */
 
 	int		instance;	/* program instance number */
@@ -203,14 +203,14 @@ struct program_instance
 /* Auxiliary thread arguments */
 struct auxiliary_args
 {
-	char		*pPvSysName;	/* PV system ("ca", "ktl", ...) */
+	char		*pvSysName;	/* PV system ("ca", "ktl", ...) */
 	int		debug;		/* debug level */
 };
 
 struct pvreq
 {
-	CHAN		*pDB;		/* requested variable */
-	SSCB		*pSS;		/* state set that made the request */
+	CHAN		*ch;		/* requested variable */
+	SSCB		*ss;		/* state set that made the request */
 };
 
 /* Thread parameters */
@@ -221,34 +221,34 @@ struct pvreq
 /* Internal procedures */
 
 /* seq_task.c */
-void sequencer (SPROG *pSP);
-void ss_write_buffer(CHAN *pDB, void *pVal);
-void seqWakeup(SPROG *pSP, unsigned eventNum);
-void seqFree(SPROG *pSP);
+void sequencer (SPROG *sp);
+void ss_write_buffer(CHAN *ch, void *val);
+void seqWakeup(SPROG *sp, unsigned eventNum);
+void seqFree(SPROG *sp);
 void *seqAuxThread(void *);
 epicsThreadId seqAuxThreadId;
 /* seq_mac.c */
-void seqMacParse(SPROG *pSP, const char *pMacStr);
-char *seqMacValGet(SPROG *pSP, const char *pName);
-void seqMacEval(SPROG *pSP, const char *pInStr, char *pOutStr, size_t maxChar);
-void seqMacFree(SPROG *pSP);
+void seqMacParse(SPROG *sp, const char *macStr);
+char *seqMacValGet(SPROG *sp, const char *name);
+void seqMacEval(SPROG *sp, const char *inStr, char *outStr, size_t maxChar);
+void seqMacFree(SPROG *sp);
 /* seq_ca.c */
 void seq_get_handler(void *var, pvType type, int count,
-	pvValue *pValue, void *arg, pvStat status);
+	pvValue *value, void *arg, pvStat status);
 void seq_put_handler(void *var, pvType type, int count,
-	pvValue *pValue, void *arg, pvStat status);
+	pvValue *value, void *arg, pvStat status);
 void seq_mon_handler(void *var, pvType type, int count,
-	pvValue *pValue, void *arg, pvStat status);
+	pvValue *value, void *arg, pvStat status);
 void seq_conn_handler(void *var,int connected);
-pvStat seq_connect(SPROG *pSP);
-pvStat seq_disconnect(SPROG *pSP);
+pvStat seq_connect(SPROG *sp);
+pvStat seq_disconnect(SPROG *sp);
 /* seq_prog.c */
 typedef int seqTraversee(SPROG *prog, void *param);
-void seqTraverseProg(seqTraversee *pFunc, void *param);
+void seqTraverseProg(seqTraversee *func, void *param);
 SSCB *seqFindStateSet(epicsThreadId threadId);
 SPROG *seqFindProg(epicsThreadId threadId);
-void seqDelProg(SPROG *pSP);
-void seqAddProg(SPROG *pSP);
+void seqDelProg(SPROG *sp);
+void seqAddProg(SPROG *sp);
 /* seqCommands.c */
 typedef int sequencerProgramTraversee(SPROG **sprog, seqProgram *pseq, void *param);
 void traverseSequencerPrograms(sequencerProgramTraversee *traversee, void *param);

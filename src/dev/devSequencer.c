@@ -24,7 +24,7 @@
  *    <seqName>.nConnect
  *    <seqName>.nChans
  *    <seqName>.nQueues
- *    <seqName>.pQueues
+ *    <seqName>.queues
  *    <seqName>.threadPriority
  *    <seqName>.varSize
  *
@@ -61,9 +61,9 @@ typedef struct {
 } DSET;
 
 /* stringin */
-LOCAL long siInit( struct stringinRecord *pRec );
-LOCAL long siRead( struct stringinRecord *pRec );
-LOCAL long siGetIoInitInfo(int cmd, struct stringinRecord *pRec, IOSCANPVT *ppvt);
+LOCAL long siInit( struct stringinRecord *rec );
+LOCAL long siRead( struct stringinRecord *rec );
+LOCAL long siGetIoInitInfo(int cmd, struct stringinRecord *rec, IOSCANPVT *ppvt);
 LOCAL DSET  devSiSeq = { 5, NULL, NULL, siInit, siGetIoInitInfo, siRead };
 epicsExportAddress(dset,devSiSeq);
 
@@ -82,7 +82,7 @@ LOCAL  char *nAssign        = "nAssign";
 LOCAL  char *nConnect       = "nConnect";
 LOCAL  char *nChans         = "nChans";
 LOCAL  char *nQueues        = "nQueues";
-LOCAL  char *pQueues        = "pQueues";
+LOCAL  char *queues        = "queues";
 LOCAL  char *threadPriority = "threadPriority";
 LOCAL  char *varSize        = "varSize";
 
@@ -131,28 +131,28 @@ typedef union {
     long          connectCount;
     long          numChans;
     int           numQueues;
-    ELLLIST       *pQueues;
+    ELLLIST       *queues;
     unsigned int  threadPriority;
     long          varSize;
 
     epicsThreadId threadId;
     double        timeElapsed;
     long          numStates;
-    const char    *pFirstStateName;
-    const char    *pPrevStateName;
-    const char    *pNextStateName;
-    const char    *pCurrentStateName;
+    const char    *firstStateName;
+    const char    *prevStateName;
+    const char    *nextStateName;
+    const char    *currentStateName;
 
-    char          *pSyntaxErrMsg;
+    char          *syntaxErrMsg;
 } seqShowVar;
 
 typedef struct {
     ELLNODE               devScanNode;
     IOSCANPVT             ioScanPvt;
     seqShowVarType        type;
-    SPROG                 *pSP;
-    SSCB                  *pSS;
-    STATE                 *pST;
+    SPROG                 *sp;
+    SSCB                  *ss;
+    STATE                 *st;
     char                  progName[80];
     char                  stateSetName[80];
     char                  updateFlag;
@@ -167,10 +167,10 @@ typedef struct {
         }
 #define NEW(type) (type*)calloc(1,sizeof(type))
 
-LOCAL seqShowScanPvt* seqShowScanPvtInit(struct link* pLink)
+LOCAL seqShowScanPvt* seqShowScanPvtInit(struct link* link)
 {
     seqShowScanPvt   *pvtPt;
-    char             inpStr[strlen(pLink->value.instio.string)+1];
+    char             inpStr[strlen(link->value.instio.string)+1];
     char             *inpArg[3];
     int              argN  = 0;
     int              i     = 0;
@@ -179,11 +179,11 @@ LOCAL seqShowScanPvt* seqShowScanPvtInit(struct link* pLink)
     if(!pvtPt) return NULL;
 
     pvtPt->updateFlag = 1;
-    pvtPt->pSP        = NULL;
+    pvtPt->sp        = NULL;
     pvtPt->mutexId    = epicsMutexCreate();
     scanIoInit(&pvtPt->ioScanPvt);
 
-    strcpy(inpStr,pLink->value.instio.string);
+    strcpy(inpStr,link->value.instio.string);
 
     /* Find deliminater in INP string
        and replace null characeter to point end of string.
@@ -211,7 +211,7 @@ LOCAL seqShowScanPvt* seqShowScanPvtInit(struct link* pLink)
     else if(!strcmp(inpArg[1],nConnect))       pvtPt->type = seqShownConnect;
     else if(!strcmp(inpArg[1],nChans))         pvtPt->type = seqShownChans;
     else if(!strcmp(inpArg[1],nQueues))        pvtPt->type = seqShownQueues;
-    else if(!strcmp(inpArg[1],pQueues))        pvtPt->type = seqShowpQueues;
+    else if(!strcmp(inpArg[1],queues))        pvtPt->type = seqShowpQueues;
     else if(!strcmp(inpArg[1],threadPriority)) pvtPt->type = seqShowthreadPriority;
     else if(!strcmp(inpArg[1],varSize))        pvtPt->type = seqShowvarSize;
     else {
@@ -259,42 +259,42 @@ LOCAL void devSeqScanThread(void)
     while(TRUE) {
         pvtPt = (seqShowScanPvt*) ellFirst(pdevSeqScanList);
         do {
-            pvtPt->pSP = seqFindProgByName(pvtPt->progName, 0);
+            pvtPt->sp = seqFindProgByName(pvtPt->progName, 0);
 
-            if(!pvtPt->pSP) continue;
+            if(!pvtPt->sp) continue;
             varPt = &(pvtPt->var);
 
             epicsMutexLock(pvtPt->mutexId);
             switch(pvtPt->type){
                 case seqShownStateSets:
-                    UPDATE_SEQSHOW_VAR(pvtPt->updateFlag, pvtPt->pSP->numSS, varPt->numSS)
+                    UPDATE_SEQSHOW_VAR(pvtPt->updateFlag, pvtPt->sp->numSS, varPt->numSS)
                     break;
                 case seqShownAssign:
-                    UPDATE_SEQSHOW_VAR(pvtPt->updateFlag, pvtPt->pSP->assignCount, varPt->assignCount)
+                    UPDATE_SEQSHOW_VAR(pvtPt->updateFlag, pvtPt->sp->assignCount, varPt->assignCount)
                     break;
                 case seqShownConnect:
-                    UPDATE_SEQSHOW_VAR(pvtPt->updateFlag, pvtPt->pSP->connectCount, varPt->connectCount)
+                    UPDATE_SEQSHOW_VAR(pvtPt->updateFlag, pvtPt->sp->connectCount, varPt->connectCount)
                     break;
                 case seqShownChans:
-                    UPDATE_SEQSHOW_VAR(pvtPt->updateFlag, pvtPt->pSP->numChans, varPt->numChans)
+                    UPDATE_SEQSHOW_VAR(pvtPt->updateFlag, pvtPt->sp->numChans, varPt->numChans)
                     break;
                 case seqShownQueues:
-                    UPDATE_SEQSHOW_VAR(pvtPt->updateFlag, pvtPt->pSP->numQueues, varPt->numQueues)
+                    UPDATE_SEQSHOW_VAR(pvtPt->updateFlag, pvtPt->sp->numQueues, varPt->numQueues)
                     break;
                 case seqShowpQueues:
-                    UPDATE_SEQSHOW_VAR(pvtPt->updateFlag, pvtPt->pSP->pQueues, varPt->pQueues)
+                    UPDATE_SEQSHOW_VAR(pvtPt->updateFlag, pvtPt->sp->queues, varPt->queues)
                     break;
                 case seqShowthreadPriority:
-                    UPDATE_SEQSHOW_VAR(pvtPt->updateFlag, pvtPt->pSP->threadPriority, varPt->threadPriority)
+                    UPDATE_SEQSHOW_VAR(pvtPt->updateFlag, pvtPt->sp->threadPriority, varPt->threadPriority)
                     break;
                 case seqShowvarSize:
-                    UPDATE_SEQSHOW_VAR(pvtPt->updateFlag, pvtPt->pSP->varSize, varPt->varSize)
+                    UPDATE_SEQSHOW_VAR(pvtPt->updateFlag, pvtPt->sp->varSize, varPt->varSize)
                     break;
                  default:
-                    for(i=0, pvtPt->pSS = pvtPt->pSP->pSS; i < pvtPt->pSP->numSS; i++, (pvtPt->pSS)++) {
-                        if(!strcmp(pvtPt->pSS->pSSName, pvtPt->stateSetName)) break;
+                    for(i=0, pvtPt->ss = pvtPt->sp->ss; i < pvtPt->sp->numSS; i++, (pvtPt->ss)++) {
+                        if(!strcmp(pvtPt->ss->ssName, pvtPt->stateSetName)) break;
                     }
-                    if(i >= pvtPt->pSP->numSS) { 
+                    if(i >= pvtPt->sp->numSS) { 
                         pvtPt->updateFlag = notFound;
                         epicsMutexUnlock(pvtPt->mutexId);
                         scanIoRequest(pvtPt->ioScanPvt);
@@ -305,38 +305,38 @@ LOCAL void devSeqScanThread(void)
         switch(pvtPt->type){
                 case seqShowthreadId:
                 case seqShowthreadIdHex:
-                    UPDATE_SEQSHOW_VAR(pvtPt->updateFlag, pvtPt->pSS->threadId, varPt->threadId)
+                    UPDATE_SEQSHOW_VAR(pvtPt->updateFlag, pvtPt->ss->threadId, varPt->threadId)
                     break;
                 case seqShowtimeElapsed:
                     pvTimeGetCurrentDouble(&timeNow);
-                    varPt->timeElapsed = timeNow - pvtPt->pSS->timeEntered;
+                    varPt->timeElapsed = timeNow - pvtPt->ss->timeEntered;
                     pvtPt->updateFlag = 1; 
                     break;
                 case seqShownStates:
-                    UPDATE_SEQSHOW_VAR(pvtPt->updateFlag, pvtPt->pSS->numStates, varPt->numStates)
+                    UPDATE_SEQSHOW_VAR(pvtPt->updateFlag, pvtPt->ss->numStates, varPt->numStates)
                     break;
                 case seqShowfirstState:
-                    pvtPt->pST = pvtPt->pSS->pStates;
-                    UPDATE_SEQSHOW_VAR(pvtPt->updateFlag, pvtPt->pST->pStateName, varPt->pFirstStateName)
+                    pvtPt->st = pvtPt->ss->states;
+                    UPDATE_SEQSHOW_VAR(pvtPt->updateFlag, pvtPt->st->stateName, varPt->firstStateName)
                     break;
                 case seqShowprevState:
-                    pvtPt->pST = pvtPt->pSS->pStates + pvtPt->pSS->prevState;
+                    pvtPt->st = pvtPt->ss->states + pvtPt->ss->prevState;
                     UPDATE_SEQSHOW_VAR(pvtPt->updateFlag, 
-                                       pvtPt->pSS->prevState >= 0 ? pvtPt->pST->pStateName: nullStr, 
-                                       varPt->pPrevStateName)
+                                       pvtPt->ss->prevState >= 0 ? pvtPt->st->stateName: nullStr, 
+                                       varPt->prevStateName)
                     break;
                 case seqShownextState:
-                    pvtPt->pST = pvtPt->pSS->pStates + pvtPt->pSS->nextState;
+                    pvtPt->st = pvtPt->ss->states + pvtPt->ss->nextState;
                     UPDATE_SEQSHOW_VAR(pvtPt->updateFlag, 
-                                       pvtPt->pSS->nextState >= 0 ? pvtPt->pST->pStateName: nullStr, 
-                                       varPt->pNextStateName)
+                                       pvtPt->ss->nextState >= 0 ? pvtPt->st->stateName: nullStr, 
+                                       varPt->nextStateName)
                     break;
                 case seqShowcurrentState:
-                    pvtPt->pST = pvtPt->pSS->pStates + pvtPt->pSS->currentState;
-                    UPDATE_SEQSHOW_VAR(pvtPt->updateFlag, pvtPt->pST->pStateName, varPt->pCurrentStateName)
+                    pvtPt->st = pvtPt->ss->states + pvtPt->ss->currentState;
+                    UPDATE_SEQSHOW_VAR(pvtPt->updateFlag, pvtPt->st->stateName, varPt->currentStateName)
                     break;
                 case seqShowsyntaxErr:
-                    UPDATE_SEQSHOW_VAR(pvtPt->updateFlag, syntaxErrMsg, varPt->pSyntaxErrMsg);
+                    UPDATE_SEQSHOW_VAR(pvtPt->updateFlag, syntaxErrMsg, varPt->syntaxErrMsg);
                     break;
                 default:
                     break;
@@ -354,64 +354,64 @@ LOCAL void devSeqScanThread(void)
 }
 
 
-LOCAL long siInit( struct stringinRecord *pRec )
+LOCAL long siInit( struct stringinRecord *rec )
 {
-    struct link      *pLink   = &pRec->inp;
+    struct link      *link   = &rec->inp;
 
     /* check that link is of type INST_IO */
-    if ( pLink->type != INST_IO ) {
+    if ( link->type != INST_IO ) {
 	return -1;
     }
 
-    pRec->dpvt = (void *) seqShowScanPvtInit(pLink);
-    if(!pRec->dpvt) return -1;
+    rec->dpvt = (void *) seqShowScanPvtInit(link);
+    if(!rec->dpvt) return -1;
 
     epicsThreadOnce(&devSeqScanThreadOnceFlag, (void(*)(void *)) devSeqScanThreadSpawn, (void *) NULL);
    
-    ellAdd(&devSeqScanList, &(((seqShowScanPvt *) pRec->dpvt)->devScanNode));
+    ellAdd(&devSeqScanList, &(((seqShowScanPvt *) rec->dpvt)->devScanNode));
    
     return 0;
 }
 
-LOCAL long siRead( struct stringinRecord *pRec )
+LOCAL long siRead( struct stringinRecord *rec )
 {
-    seqShowScanPvt    *pvtPt = (seqShowScanPvt *)pRec->dpvt;
+    seqShowScanPvt    *pvtPt = (seqShowScanPvt *)rec->dpvt;
     seqShowVar        *varPt;
 
-    if(!pvtPt || pvtPt->updateFlag == notFound || !pvtPt->pSP ) { 
-        strcpy(pRec->val, notFoundMsg); 
+    if(!pvtPt || pvtPt->updateFlag == notFound || !pvtPt->sp ) { 
+        strcpy(rec->val, notFoundMsg); 
         return 0; 
     }
     varPt = &(pvtPt->var);
    
     epicsMutexLock(pvtPt->mutexId);
     switch(pvtPt->type){
-        case seqShownStateSets:     sprintf(pRec->val, "%ld", varPt->numSS);                      break;
-        case seqShownAssign:        sprintf(pRec->val, "%ld", varPt->assignCount);                break;
-        case seqShownConnect:       sprintf(pRec->val, "%ld", varPt->connectCount);               break;
-        case seqShownChans:         sprintf(pRec->val, "%ld", varPt->numChans);                   break;
-        case seqShownQueues:        sprintf(pRec->val, "%d", varPt->numQueues);                   break;
-        case seqShowpQueues:        sprintf(pRec->val, "%p", varPt->pQueues);                     break;
-        case seqShowthreadPriority: sprintf(pRec->val, "%d", varPt->threadPriority);              break;
-        case seqShowvarSize:        sprintf(pRec->val, "%ld", varPt->varSize);                    break;
-        case seqShowthreadId:       sprintf(pRec->val, "%lu", (unsigned long) varPt->threadId);   break;
-        case seqShowthreadIdHex:    sprintf(pRec->val, "0x%lx", (unsigned long) varPt->threadId); break;
-        case seqShowtimeElapsed:    sprintf(pRec->val, "%.3f", varPt->timeElapsed);               break;
-        case seqShownStates:        sprintf(pRec->val, "%ld", varPt->numStates);                  break;
-        case seqShowfirstState:     strcpy(pRec->val, varPt->pFirstStateName);                    break;
-        case seqShowprevState:      strcpy(pRec->val, varPt->pPrevStateName);                     break;
-        case seqShownextState:      strcpy(pRec->val, varPt->pNextStateName);                     break;
-        case seqShowcurrentState:   strcpy(pRec->val, varPt->pCurrentStateName);                  break;
-        case seqShowsyntaxErr:      strcpy(pRec->val, varPt->pSyntaxErrMsg);                      break;
+        case seqShownStateSets:     sprintf(rec->val, "%ld", varPt->numSS);                      break;
+        case seqShownAssign:        sprintf(rec->val, "%ld", varPt->assignCount);                break;
+        case seqShownConnect:       sprintf(rec->val, "%ld", varPt->connectCount);               break;
+        case seqShownChans:         sprintf(rec->val, "%ld", varPt->numChans);                   break;
+        case seqShownQueues:        sprintf(rec->val, "%d", varPt->numQueues);                   break;
+        case seqShowpQueues:        sprintf(rec->val, "%p", varPt->queues);                     break;
+        case seqShowthreadPriority: sprintf(rec->val, "%d", varPt->threadPriority);              break;
+        case seqShowvarSize:        sprintf(rec->val, "%ld", varPt->varSize);                    break;
+        case seqShowthreadId:       sprintf(rec->val, "%lu", (unsigned long) varPt->threadId);   break;
+        case seqShowthreadIdHex:    sprintf(rec->val, "0x%lx", (unsigned long) varPt->threadId); break;
+        case seqShowtimeElapsed:    sprintf(rec->val, "%.3f", varPt->timeElapsed);               break;
+        case seqShownStates:        sprintf(rec->val, "%ld", varPt->numStates);                  break;
+        case seqShowfirstState:     strcpy(rec->val, varPt->firstStateName);                    break;
+        case seqShowprevState:      strcpy(rec->val, varPt->prevStateName);                     break;
+        case seqShownextState:      strcpy(rec->val, varPt->nextStateName);                     break;
+        case seqShowcurrentState:   strcpy(rec->val, varPt->currentStateName);                  break;
+        case seqShowsyntaxErr:      strcpy(rec->val, varPt->syntaxErrMsg);                      break;
     }
     epicsMutexUnlock(pvtPt->mutexId);
 
     return 0;
 }
 
-LOCAL long siGetIoInitInfo(int cmd, struct stringinRecord *pRec, IOSCANPVT *ppvt)
+LOCAL long siGetIoInitInfo(int cmd, struct stringinRecord *rec, IOSCANPVT *ppvt)
 {
-    seqShowScanPvt  *pvtPt = (seqShowScanPvt *)pRec->dpvt;
+    seqShowScanPvt  *pvtPt = (seqShowScanPvt *)rec->dpvt;
 
     *ppvt = pvtPt->ioScanPvt;
 
