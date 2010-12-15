@@ -168,7 +168,7 @@ static void seqInitTables(SPROG *sp, seqProgram *seqProg)
  */
 static void init_sprog(seqProgram *seqProg, SPROG *sp)
 {
-	unsigned i, nWords;
+	unsigned nWords;
 
 	/* Copy information for state program */
 	sp->numSS = seqProg->numSS;
@@ -180,6 +180,8 @@ static void init_sprog(seqProgram *seqProg, SPROG *sp)
 	sp->entryFunc = seqProg->entryFunc;
 	sp->exitFunc = seqProg->exitFunc;
 	sp->varSize = seqProg->varSize;
+	sp->numQueues = seqProg->numQueues;
+
 	/* Allocate user variable area if reentrant option (+r) is set */
 	if (sp->options & OPT_REENT)
 	{
@@ -206,12 +208,10 @@ static void init_sprog(seqProgram *seqProg, SPROG *sp)
 	sp->numQueues = seqProg->numQueues;
 	sp->queues = NULL;
 
-	if (sp->numQueues > 0 )
+	/* Allocate and initialize syncQ queues */
+	if (sp->numQueues > 0)
 	{
-		sp->queues = (ELLLIST *)calloc(sp->numQueues,
-						 sizeof(ELLLIST));
-		for (i = 0; i < sp->numQueues; i++)
-			ellInit(&sp->queues[i]);
+		sp->queues = newArray(QUEUE, sp->numQueues);
 	}
 	/* initial pool for pv requests is 1kB on 32-bit systems */
 	freeListInitPvt(&sp->pvReqPool, 128, sizeof(PVREQ));
@@ -303,10 +303,6 @@ static void init_chan(seqProgram *seqProg, SPROG *sp)
 		ch->efId = seqChan->efId;
 		ch->monFlag = seqChan->monitored;
 		ch->eventNum = seqChan->eventNum;
-		ch->queued = seqChan->queued;
-		ch->maxQueueSize = seqChan->queueSize ?
-				    seqChan->queueSize : MAX_QUEUE_SIZE;
-		ch->queueIndex = seqChan->queueIndex;
 		ch->assigned = 0;
 
 		if (seqChan->dbAsName != NULL)

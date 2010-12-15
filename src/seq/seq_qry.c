@@ -273,9 +273,8 @@ epicsShareFunc void epicsShareAPI seqcaStats(int *pchans, int *pdiscon)
 epicsShareFunc void epicsShareAPI seqQueueShow(epicsThreadId tid)
 {
 	SPROG	*sp;
-	ELLLIST	*queue;
-	int	nque, n;
-	char	tsBfr[50];
+	int	n = 0;
+	int	dn = 1;
 
 	sp = seqQryFind(tid);
 	if(!sp) return;
@@ -283,14 +282,15 @@ epicsShareFunc void epicsShareAPI seqQueueShow(epicsThreadId tid)
 	printf("State Program: \"%s\"\n", sp->progName);
 	printf("Number of queues = %d\n", sp->numQueues);
 
-	queue = sp->queues;
-	for (nque = 0; (unsigned)nque < sp->numQueues; )
+	while (dn && (unsigned)n < sp->numQueues)
 	{
-		QENTRY	*entry;
-		int i;
+		QUEUE	queue = sp->queues[n];
 
-		printf("\nQueue #%d of %d:\n", nque+1, sp->numQueues);
-		printf("Number of entries = %d\n", ellCount(queue));
+		printf("  Queue #%d: numElems=%d, used=%d, elemSize=%d\n", n,
+			seqQueueNumElems(queue),
+			seqQueueUsed(queue),
+			seqQueueElemSize(queue));
+#if 0
 		for (entry = (QENTRY *) ellFirst(queue), i = 1;
 		     entry != NULL;
 		     entry = (QENTRY *) ellNext(&entry->node), i++)
@@ -298,6 +298,7 @@ epicsShareFunc void epicsShareAPI seqQueueShow(epicsThreadId tid)
 			CHAN	*ch = entry->ch;
 			pvValue	*access = &entry->value;
 			void	*val = pv_value_ptr(access, ch->type->getType);
+			char	tsBfr[50];
 
 			printf("\nEntry #%d: channel name: \"%s\"\n",
 							    i, ch->dbName);
@@ -315,14 +316,13 @@ epicsShareFunc void epicsShareAPI seqQueueShow(epicsThreadId tid)
 				"%H:%M:%S.%03f", &access->timeStringVal.stamp);
 			printf("  Time stamp = %s\n", tsBfr);
 		}
+#endif
 
-		n = wait_rtn();
+		dn = wait_rtn();
 		if (n == 0)
 			return;
-		nque += n;
-		if (nque < 0)
-			nque = 0;
-		queue = sp->queues + nque;
+		n = max(0, n + dn);
+		assert(n >= 0);
 	}
 }
 

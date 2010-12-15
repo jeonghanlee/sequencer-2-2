@@ -38,7 +38,7 @@
 
 static void proc_db_events(pvValue *value, pvType type,
 	CHAN *ch, SSCB *ss, long complete_type);
-static void proc_db_events_queued(pvValue *value, CHAN *ch);
+static void proc_db_events_queued(SPROG *sp, CHAN *ch, pvValue *value);
 
 /*
  * seq_connect() - Connect to all database channels.
@@ -177,9 +177,9 @@ static void proc_db_events(
 		ch->dbName, complete_type==0?"get":complete_type==1?"put":"mon");
 
 	/* If monitor on var queued via syncQ, branch to alternative routine */
-	if (ch->queued && complete_type == MON_COMPLETE)
+	if (ch->queue && complete_type == MON_COMPLETE)
 	{
-		proc_db_events_queued(value, ch);
+		proc_db_events_queued(sp, ch, value);
 		return;
 	}
 
@@ -241,55 +241,27 @@ static void proc_db_events(
 }
 
 /* Common code for event and callback handling (queuing version) */
-static void proc_db_events_queued(pvValue *value, CHAN *ch)
+static void proc_db_events_queued(SPROG *sp, CHAN *ch, pvValue *value)
 {
-	QENTRY	*entry;
-	SPROG	*sp;
-	int	count;
+	boolean	full;
 
-	/* Get ptr to the state program that owns this db entry */
-	sp = ch->sprog;
-
-	/* Determine number of items currently on the queue */
-	count = ellCount(&sp->queues[ch->queueIndex]);
-
-	DEBUG("proc_db_events_queued: var=%s, pv=%s, count(max)=%d(%d), "
-		"index=%d\n", ch->varName, ch->dbName, count,
-		ch->maxQueueSize, ch->queueIndex);
-
-	/* Allocate queue entry (re-use last one if queue has reached its
-	   maximum size) */
-	assert(count >= 0);
-	if ( (unsigned)count < ch->maxQueueSize )
+	DEBUG("proc_db_events_queued: var=%s, pv=%s, queue=%p, used(max)=%d(%d)\n",
+		ch->varName, ch->dbName,
+		ch->queue, seqQueueUsed(ch->queue), seqQueueNumElems(ch->queue));
+	/* Copy whole message into queue; no lock needed because only one writer */
+	full = seqQueuePut(ch->queue, value);
+	if (full)
 	{
-		entry = (QENTRY *) calloc(sizeof(QENTRY), 1);
-		if (entry == NULL)
-		{
-			errlogPrintf("proc_db_events_queued: %s queue memory "
-				"allocation failure\n", ch->varName);
-			return;
-		}
-		ellAdd(&sp->queues[ch->queueIndex], (ELLNODE *) entry);
+		errlogSevPrintf(errlogMinor,
+		  "monitor event for variable %s (pv %s): "
+		  "last queue element overwritten (queue is full)\n",
+		  ch->varName, ch->dbName
+		);
 	}
-	else
-	{
-		entry = (QENTRY *) ellLast(&sp->queues[ch->queueIndex]);
-		if (entry == NULL)
-		{
-			errlogPrintf("proc_db_events_queued: %s queue "
-				"inconsistent failure\n", ch->varName);
-			return;
-		}
-	}
-
-	/* Copy channel id, value and associated information into queue
-	   entry (NB, currently only copy _first_ value for arrays) */
-	entry->ch = ch;
-	memcpy((char *)&entry->value, (char *)value, sizeof(entry->value));
-
-	/* Set the event flag associated with this channel */
-	DEBUG("setting event flag %ld\n", ch->efId);
+	/* Set event flag; note: it doesn't matter which state set we pass. */
 	seq_efSet(sp->ss, ch->efId);
+	/* Wake up each state set that uses this channel in an event */
+	seqWakeup(sp, ch->eventNum);
 }
 
 /* Disconnect all database channels */

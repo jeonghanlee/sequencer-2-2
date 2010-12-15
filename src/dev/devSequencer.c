@@ -131,7 +131,7 @@ typedef union {
     long          connectCount;
     long          numChans;
     int           numQueues;
-    ELLLIST       *queues;
+    QUEUE         *queues;
     unsigned int  threadPriority;
     long          varSize;
 
@@ -211,7 +211,7 @@ LOCAL seqShowScanPvt* seqShowScanPvtInit(struct link* link)
     else if(!strcmp(inpArg[1],nConnect))       pvtPt->type = seqShownConnect;
     else if(!strcmp(inpArg[1],nChans))         pvtPt->type = seqShownChans;
     else if(!strcmp(inpArg[1],nQueues))        pvtPt->type = seqShownQueues;
-    else if(!strcmp(inpArg[1],queues))        pvtPt->type = seqShowpQueues;
+    else if(!strcmp(inpArg[1],queues))         pvtPt->type = seqShowpQueues;
     else if(!strcmp(inpArg[1],threadPriority)) pvtPt->type = seqShowthreadPriority;
     else if(!strcmp(inpArg[1],varSize))        pvtPt->type = seqShowvarSize;
     else {

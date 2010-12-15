@@ -643,74 +643,47 @@ epicsShareFunc boolean epicsShareAPI seq_pvGetQ(SS_ID ss, VAR_ID varId)
 	SPROG	*sp = ss->sprog;
 	CHAN	*ch = sp->chan + varId;
 	char	*var = valPtr(ch,ss);
-	EV_ID	ev_flag;
+	EV_ID	ev_flag = ch->efId;
 	boolean	isSet;
 
 	epicsMutexMustLock(sp->programLock);
 
 	/* Determine event flag number and whether set */
-	ev_flag = ch->efId;
 	isSet = bitTest(sp->events, ev_flag);
 
 	DEBUG("seq_pvGetQ: pv name=%s, isSet=%d\n", ch->dbName, isSet);
 
-	/* If set, queue should be non empty */
+	/* If set, queue should be non-empty */
 	if (isSet)
 	{
-		QENTRY	*entry;
-		pvValue	*access;
-		void	*val;
+		pvType	type = ch->type->getType;
+		char	buffer[pv_size_n(type, ch->count)];
+		pvValue	*value = (pvValue *)buffer;
+		QUEUE	queue = ch->queue;
+		boolean	empty;
 
-		/* Dequeue first entry */
-		entry = (QENTRY *) ellGet(&sp->queues[ch->queueIndex]);
-
-		/* If none, "impossible" */
-		if (entry == NULL)
+		empty = seqQueueGet(queue, value);
+		if (empty)
 		{
-			errlogPrintf("seq_pvGetQ: evflag set but queue empty "
-				"(impossible)\n");
-			isSet = FALSE;
+			errlogSevPrintf(errlogMajor,
+				"pvGetQ: event flag set but queue is empty\n");
 		}
-
-		/* Extract information from entry (code from seq_ca.c)
-		   (ch changed to refer to channel for which monitor
-		   was posted) */
 		else
 		{
-		        pvType type = ch->type->getType;
-
-			ch = entry->ch;
-			access = &entry->value;
-
-			/* Copy value returned into user variable */
-			/* For now, can only return _one_ array element */
-			val = pv_value_ptr(access, type);
-
-			epicsMutexLock(ch->varLock);
-			memcpy(var, val, ch->type->size * 1 );
-							/* was ch->dbCount */
-			if (pv_is_time_type(type))
-			{
-				ch->status = *pv_status_ptr(access, type);
-				ch->severity = *pv_severity_ptr(access, type);
-				ch->timeStamp = *pv_stamp_ptr(access, type);
-			}
-			epicsMutexUnlock(ch->varLock);
-
-			/* Free queue entry */
-			free(entry);
+			assert(pv_is_time_type(type));
+			/* Copy status, severity and time stamp */
+			ch->status = *pv_status_ptr(value,type);
+			ch->severity = *pv_severity_ptr(value,type);
+			ch->timeStamp = *pv_stamp_ptr(value,type);
+			memcpy(var, pv_value_ptr(value,type), ch->type->size * ch->count);
+			/* If queue is now empty, clear the event flag */
+			if (seqQueueIsEmpty(queue))
+				bitClear(sp->events, ev_flag);
 		}
 	}
-
-	/* If queue is now empty, clear the event flag */
-	if (ellCount(&sp->queues[ch->queueIndex]) == 0)
-	{
-		bitClear(sp->events, ev_flag);
-	}
-
 	epicsMutexUnlock(sp->programLock);
 
-	/* return TRUE iff event flag was set on entry */
+	/* return whether event flag was set on entry */
 	return isSet;
 }
 
@@ -730,27 +703,18 @@ epicsShareFunc void epicsShareAPI seq_pvFlushQ(SS_ID ss, VAR_ID varId)
 {
 	SPROG	*sp = ss->sprog;
 	CHAN	*ch = sp->chan + varId;
-	QENTRY	*entry;
-	EV_ID	ev_flag;
+	EV_ID	ev_flag = ch->efId;
+	QUEUE	queue = ch->queue;
+
+	DEBUG("seq_pvFlushQ: pv name=%s, count=%d\n",
+		ch->dbName, seqQueueUsed(queue));
+	seqQueueFlush(queue);
 
 	epicsMutexMustLock(sp->programLock);
-
-	DEBUG("seq_pvFreeQ: pv name=%s, count=%d\n", ch->dbName,
-		ellCount(&sp->queues[ch->queueIndex]));
-
-	/* Determine event flag number */
-	ev_flag = ch->efId;
-
-	/* Free queue elements */
-	while((entry = (QENTRY *)ellGet(&sp->queues[ch->queueIndex])) != NULL)
-		free(entry);
-
 	/* Clear event flag */
 	bitClear(sp->events, ev_flag);
-
 	epicsMutexUnlock(sp->programLock);
 }
-
 
 /* seq_delay() - test for delay() time-out expired */
 epicsShareFunc boolean epicsShareAPI seq_delay(SS_ID ss, DELAY_ID delayId)

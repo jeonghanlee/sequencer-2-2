@@ -31,11 +31,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <errno.h>
 #include <limits.h>
 
 #include "cantProceed.h"
-#include "ellLib.h"
 #include "epicsEvent.h"
 #include "epicsMutex.h"
 #include "epicsString.h"

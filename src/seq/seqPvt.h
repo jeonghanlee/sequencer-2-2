@@ -40,8 +40,6 @@ void *pvSys;
 extern void *pvSys;
 #endif
 
-#define MAX_QUEUE_SIZE 100		/* default max_queue_size */
-
 #define valPtr(ch,ss)	((char*)basePtr(ch,ss)+(ch)->offset)
 #define basePtr(ch,ss)	(((ch)->sprog->options&OPT_SAFE)?(ss)->var:bufPtr(ch))
 #define bufPtr(ch)	(((ch)->sprog->options&OPT_REENT)?(ch)->sprog->var:0)
@@ -65,7 +63,6 @@ extern void *pvSys;
 #define new(type)		newArray(type,1)
 
 typedef struct channel		CHAN;
-typedef struct queue_entry	QENTRY;
 typedef seqState		STATE;
 typedef struct macro		MACRO;
 typedef struct state_set	SSCB;
@@ -82,9 +79,6 @@ struct channel
 	const char	*varName;	/* variable name */
 	unsigned	count;		/* number of elements in array */
 	unsigned	eventNum;	/* event number */
-	boolean		queued;		/* whether queued via syncQ */
-	unsigned	maxQueueSize;	/* max syncQ queue size (0 => def) */
-	unsigned	queueIndex;	/* syncQ queue index */
 	PVTYPE		*type;		/* request type info */
 	SPROG		*sprog;		/* state program that owns this struct*/
 
@@ -108,6 +102,7 @@ struct channel
 	boolean		gotFirstConnect;
 	boolean		monitored;	/* whether channel is monitored */
 	void		*monid;		/* event id (supplied by PV lib) */
+	QUEUE		queue;		/* queue if queued */
 
 	/* buffer access, only used in safe mode */
 	epicsMutexId	varLock;	/* mutex for un-assigned vars */
@@ -121,14 +116,6 @@ struct pv_type
 	pvType		putType;
 	pvType		getType;
 	size_t		size;
-};
-
-/* Structure for syncQ queue entry */
-struct queue_entry
-{
-	ELLNODE		node;		/* linked list node */
-	CHAN		*ch;		/* ptr to db channel info */
-	pvValue		value;		/* value, time stamp etc */
 };
 
 /* Structure to hold information about a State Set */
@@ -180,6 +167,8 @@ struct program_instance
 	unsigned	firstMonitorCount;
 	unsigned	allFirstConnectAndMonitor;
 	boolean		allDisconnected;
+	QUEUE		*queues;	/* array of syncQ queues */
+	unsigned	numQueues;	/* number of syncQ queues */
 	SSCB		*ss;		/* array of state set control blocks */
 	unsigned	numSS;		/* number of state sets */
 	char		*var;		/* user variable area (or CA buffer in safe mode) */
@@ -192,8 +181,6 @@ struct program_instance
 	INIT_FUNC	*initFunc;	/* init function */
 	ENTRY_FUNC	*entryFunc;	/* entry function */
 	EXIT_FUNC	*exitFunc;	/* exit function */
-	unsigned	numQueues;	/* number of syncQ queues */
-	ELLLIST		*queues;	/* ptr to syncQ queues */
 	void		*pvReqPool;	/* freeList for pv requests */
 
 	int		instance;	/* program instance number */
