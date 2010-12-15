@@ -19,7 +19,7 @@ seq_SRCS += seq_if.c
 seq_SRCS += seq_mac.c
 seq_SRCS += seq_prog.c
 seq_SRCS += seq_qry.c
-seq_SRCS += seqCommands.c
+seq_SRCS += seq_cmd.c
 seq_SRCS += seq_queue.c
 
 # For R3.13 compatibility only
