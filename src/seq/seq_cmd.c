@@ -10,44 +10,56 @@
  *    University of Saskatchewan
  *    Saskatoon, Saskatchewan, CANADA
  *    cls.usask.ca
+ *
+ * Copyright, 2010, Helmholtz-Zentrum Berlin f. Materialien
+ *                  und Energie GmbH, Germany (HZB)
+ * (see file Copyright.HZB included in this distribution)
+ *
  */
 #include "seq.h"
 
 struct sequencerProgram {
     seqProgram *prog;
-    epicsMutexId lock;
     struct program_instance *instances;
     struct sequencerProgram *next;
 };
+
+/* These are the only global variables in the whole seq library. */
 static struct sequencerProgram *seqHead;
+static epicsMutexId seqLock;
 
 /*
  * This routine is called before multitasking has started, so there's
- * no race condition in creating the linked list or the instance lock.
+ * no race condition in creating the linked list or the lock.
  */
 epicsShareFunc void epicsShareAPI seqRegisterSequencerProgram(seqProgram *p)
 {
     struct sequencerProgram *sp;
 
+    seqLock = epicsMutexMustCreate();
     sp = (struct sequencerProgram *)mallocMustSucceed(sizeof *sp, "seqRegisterSequencerProgram");
     sp->prog = p;
     sp->next = seqHead;
-    sp->lock = epicsMutexMustCreate();
     sp->instances = NULL;
     seqHead = sp;
 }
 
-void traverseSequencerPrograms(sequencerProgramTraversee *traversee, void *param)
+int traverseSequencerPrograms(sequencerProgramTraversee *traversee, void *param)
 {
     struct sequencerProgram *sp;
+    int stop = FALSE;
 
+    epicsMutexMustLock(seqLock);
     foreach(sp, seqHead) {
-        int stop;
-        epicsMutexMustLock(sp->lock);
         stop = traversee(&sp->instances, sp->prog, param);
-        epicsMutexUnlock(sp->lock);
-        if (!stop) break;
+        if (stop) break;
     }
+    /* call one last time to indicate that list was exhausted */
+    if (!stop) {
+        stop = traversee(NULL, NULL, param);
+    }
+    epicsMutexUnlock(seqLock);
+    return stop;
 }
 
 /*

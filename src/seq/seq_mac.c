@@ -27,7 +27,7 @@ struct macro
 
 static unsigned seqMacParseName(const char *str);
 static unsigned seqMacParseValue(const char *str);
-static const char *skipBlanks(const char *str);
+static const char *skipBlanks(const char *pchr);
 static MACRO *seqMacTblGet(SPROG *sp, char *name);
 
 /* 
@@ -230,11 +230,11 @@ static unsigned seqMacParseValue(const char *str)
 }
 
 /* skipBlanks() - skip blank characters */
-static const char *skipBlanks(const char *str)
+static const char *skipBlanks(const char *pchr)
 {
-	while (*str == ' ')
-		str++;
-	return str;
+	while (*pchr == ' ')
+		pchr++;
+	return	pchr;
 }
 
 /*

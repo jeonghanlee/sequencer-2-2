@@ -165,7 +165,6 @@ typedef struct {
             (TARGET) = (SOURCE); \
             (UPDATEFLAG) = updated; \
         }
-#define NEW(type) (type*)calloc(1,sizeof(type))
 
 LOCAL seqShowScanPvt* seqShowScanPvtInit(struct link* link)
 {
@@ -175,7 +174,7 @@ LOCAL seqShowScanPvt* seqShowScanPvtInit(struct link* link)
     int              argN  = 0;
     int              i     = 0;
 
-    pvtPt = NEW(seqShowScanPvt);
+    pvtPt = new(seqShowScanPvt);
     if(!pvtPt) return NULL;
 
     pvtPt->updateFlag = 1;

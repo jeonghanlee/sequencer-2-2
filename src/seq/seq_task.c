@@ -11,41 +11,37 @@
 
 	Thread creation and control for sequencer state sets.
 ***************************************************************************/
-
-#define DECLARE_PV_SYS
 #include "seq.h"
 
 /* #define DEBUG errlogPrintf */
 #define DEBUG nothing
 
-#define varPtr(sp,ss)	(((sp)->options & OPT_SAFE) ? (ss)->var : (sp)->var)
-
-/* Function declarations */
-static boolean seq_waitConnect(SPROG *sp, SSCB *ss);
-static void ss_entry(SSCB *ss);
-static void ss_thread_init(SPROG *, SSCB *);
-static void ss_thread_uninit(SPROG *, SSCB *,int);
+static void ss_entry(void *arg);
 static void seq_clearDelay(SSCB *,STATE *);
-static int seq_getTimeout(SSCB *, double *);
+static boolean seq_getTimeout(SSCB *, double *);
 
 /*
  * sequencer() - Sequencer main thread entry point.
  */
-void sequencer (SPROG *sp)	/* ptr to original (global) state program table */
+void sequencer (void *arg)	/* ptr to original (global) state program table */
 {
-	SSCB		*ss = sp->ss;
+	SPROG		*sp = (SPROG *)arg;
 	unsigned	nss;
-	epicsThreadId	tid;
 	size_t		threadLen;
 	char		threadName[THREAD_NAME_SIZE+10];
 
-	/* Retrieve info about this thread */
-	sp->threadId = epicsThreadGetIdSelf();
-	epicsThreadGetName(sp->threadId, threadName, sizeof(threadName));
-	ss->threadId = sp->threadId;
+	/* Get this thread's id */
+	sp->ss->threadId = epicsThreadGetIdSelf();
 
-	/* Add the program to the state program list */
+	/* Add the program to the state program list
+	   and if necessary create pvSys */
 	seqAddProg(sp);
+
+	if (!sp->pvSys)
+	{
+		sp->die = TRUE;
+		goto exit;
+	}
 
 	/* Note that the program init, entry, and exit functions
 	   get the global var buffer sp->var passed,
@@ -53,7 +49,7 @@ void sequencer (SPROG *sp)	/* ptr to original (global) state program table */
 	/* TODO: document this */
 
 	/* Call sequencer init function to initialize variables. */
-	sp->initFunc((USER_VAR *)sp->var);
+	sp->initFunc(sp->var);
 
 	/* Initialize state set variables. In safe mode, copy variable
 	   block to state set buffers.
@@ -66,28 +62,27 @@ void sequencer (SPROG *sp)	/* ptr to original (global) state program table */
 			memcpy(ss->var, sp->var, sp->varSize);
 	}
 
-	/* Attach to PV context of pvSys creator (auxiliary thread) */
-	pvSysAttach(pvSys);
+	/* Attach to PV system */
+	pvSysAttach(sp->pvSys);
 
-	/* Initiate connect & monitor requests to database channels */
-	seq_connect(sp);
-
-	/* If "+c" option, wait for all channels to connect (a failure
-	 * return means that we have been asked to exit) */
-	if (sp->options & OPT_CONN)
-	{
-		if (!seq_waitConnect(sp, ss)) return;
-	}
+	/* Initiate connect & monitor requests to database channels, waiting
+	   for all connections to be established if the option is set. */
+	if (seq_connect(sp, ((sp->options & OPT_CONN) != 0)) != pvStatOK)
+		goto exit;
 
 	/* Call program entry function if defined. */
-	if (sp->entryFunc) sp->entryFunc(ss, (USER_VAR *)sp->var);
+	if (sp->entryFunc) sp->entryFunc(sp->ss, sp->var);
 
-	/* Create each additional state-set task (additional state-set thread
+	/* Create each additional state set task (additional state set thread
 	   names are derived from the first ss) */
+	epicsThreadGetName(sp->ss->threadId, threadName, sizeof(threadName));
 	threadLen = strlen(threadName);
-	for (nss = 1, ss = sp->ss + 1; nss < sp->numSS; nss++, ss++)
+	for (nss = 1; nss < sp->numSS; nss++)
 	{
-		/* Form thread name from program name + state-set number */
+		SSCB		*ss = sp->ss + nss;
+		epicsThreadId	tid;
+
+		/* Form thread name from program name + state set number */
 		sprintf(threadName+threadLen, "_%d", nss);
 
 		/* Spawn the task */
@@ -95,96 +90,156 @@ void sequencer (SPROG *sp)	/* ptr to original (global) state program table */
 			threadName,			/* thread name */
 			sp->threadPriority,		/* priority */
 			sp->stackSize,			/* stack size */
-			(EPICSTHREADFUNC)ss_entry,	/* entry point */
+			ss_entry,			/* entry point */
 			ss);				/* parameter */
 
 		DEBUG("Spawning additional state set thread %p: \"%s\"\n", tid, threadName);
 	}
 
-	/* First state-set jumps directly to entry point */
+	/* First state set jumps directly to entry point */
 	ss_entry(sp->ss);
 
 	/* Call program exit function if defined */
-	if (sp->exitFunc) sp->exitFunc(ss, (USER_VAR *)sp->var);
+	if (sp->exitFunc) sp->exitFunc(sp->ss, sp->var);
+
+	DEBUG("   Wait for other state sets to exit\n");
+	for (nss = 1; nss < sp->numSS; nss++)
+	{
+		SSCB *ss = sp->ss + nss;
+		epicsEventMustWait(ss->dead);
+	}
+
+exit:
+	DEBUG("   Disconnect all channels\n");
+	seq_disconnect(sp);
+	DEBUG("   Remove program instance from list\n");
+	seqDelProg(sp);
+
+	printf("Instance %d of sequencer program \"%s\" terminated\n",
+		sp->instance, sp->progName);
+
+	/* Free all allocated memory */
+	seq_free(sp);
+}
+
+/*
+ * ss_read_buffer_static() - static version of ss_read_buffer.
+ * This is to enable inlining in the for loop in ss_entry.
+ */
+static void ss_read_buffer_static(SSCB *ss, CHAN *ch)
+{
+	SPROG	*sp = ss->sprog;
+	char	*val = valPtr(ch,ss);
+	char	*buf = bufPtr(ch);
+	int	nch = ch - sp->chan;
+	size_t	var_size = ch->type->size * ch->count;
+
+	if (!ss->dirty[nch])
+		return;
+	do {
+		ss->dirty[nch] = FALSE;
+		DEBUG("ss %s: before read %s", ss->ssName, ch->varName);
+		print_channel_value(DEBUG,ch,val);
+		memcpy(val, buf, var_size);
+		DEBUG("ss %s: after read %s", ss->ssName, ch->varName);
+		print_channel_value(DEBUG,ch,val);
+	} while ((ch->wr_active || ss->dirty[nch])
+		&& (epicsThreadSleep(0.0),TRUE));
+		/* Note: the sleep(0) here acts as a yield. */
 }
 
 /*
  * ss_read_buffer() - Only used in safe mode.
  * Lock-free reading of variable buffer.
- * See also ss_write_buffer().
  */
-static void ss_read_buffer(SSCB *ss)
+void ss_read_buffer(SSCB *ss, CHAN *ch)
 {
-	SPROG		*sp = ss->sprog;
-	ptrdiff_t	ss_num = ss - sp->ss;
-	unsigned	var;
+	return ss_read_buffer_static(ss, ch);
+}
 
-	for (var = 0; var < sp->numChans; var++)
+/*
+ * ss_read_all_buffer() - Only used in safe mode.
+ * Lock-free reading of variable buffer.
+ */
+static void ss_read_all_buffer(SPROG *sp, SSCB *ss)
+{
+	unsigned nch;
+
+	for (nch = 0; nch < sp->numChans; nch++)
 	{
-		CHAN	*ch = sp->chan + var;
-		char	*val = (char*)ss->var + ch->offset;
-		char	*buf = (char*)sp->var + ch->offset;
-		boolean *dirty = ch->dirty;
-		size_t	var_size = ch->type->size * ch->dbCount;
-
-		if (!dirty[ss_num])
-			continue;
-		do {
-			dirty[ss_num] = FALSE;
-			memcpy(val, buf, var_size);
-		} while ((ch->wr_active || dirty[ss_num])
-			&& (epicsThreadSleep(0),TRUE));
+		CHAN *ch = sp->chan + nch;
+		/* Call static version so it gets inlined */
+		ss_read_buffer_static(ss, ch);
 	}
 }
 
 /*
  * ss_write_buffer() - Only used in safe mode.
  * Lock-free writing of variable buffer.
- * See also ss_read_buffer().
  */
-void ss_write_buffer(CHAN *ch, void *val)
+void ss_write_buffer(SSCB *pwSS, CHAN *ch, void *val)
 {
 	SPROG	*sp = ch->sprog;
-	char	*buf = (char*)sp->var + ch->offset;
-	boolean *dirty = ch->dirty;
-	size_t	var_size = ch->type->size * ch->dbCount;
-	unsigned ss_num;
+	char	*buf = bufPtr(ch);
+	size_t	var_size = ch->type->size * ch->count;
+	unsigned nss;
+	int	nch = ch - sp->chan;
 
+#define ss_name pwSS ? pwSS->ssName : ""
 	ch->wr_active = TRUE;
+	DEBUG("ss %s: before write %s", ss_name, ch->varName);
+	print_channel_value(DEBUG,ch,buf);
 	memcpy(buf, val, var_size);
-	for (ss_num = 0; ss_num < sp->numSS; ss_num++)
+	DEBUG("ss %s: after write %s", ss_name, ch->varName);
+	print_channel_value(DEBUG,ch,buf);
+	for (nss = 0; nss < sp->numSS; nss++)
 	{
-		dirty[ss_num] = TRUE;
+		SSCB *ss = sp->ss + nss;
+		if (ss != pwSS)
+			ss->dirty[nch] = TRUE;
 	}
 	ch->wr_active = FALSE;
+#undef ss_name
 }
 
 /*
- * ss_entry() - Thread entry point for all state-sets.
- * Provides the main loop for state-set processing.
+ * ss_entry() - Thread entry point for all state sets.
+ * Provides the main loop for state set processing.
  */
-static void ss_entry(SSCB *ss)
+static void ss_entry(void *arg)
 {
+	SSCB		*ss = (SSCB *)arg;
 	SPROG		*sp = ss->sprog;
-	unsigned	nWords = (sp->numEvents + NBITS - 1) / NBITS;
-	USER_VAR	*var = (USER_VAR *)varPtr(sp,ss);
+	USER_VAR	*var;
 
-	/* Initialize this state-set thread */
-	ss_thread_init(sp, ss);
+	if (sp->options & OPT_SAFE)
+		var = ss->var;
+	else
+		var = sp->var;
 
-	/* Attach to PV context of pvSys creator (auxiliary thread); was
-	   already done for the first state set */
+	/* Attach to PV system; was already done for the first state set */
 	if (ss != sp->ss)
 	{
 		ss->threadId = epicsThreadGetIdSelf();
-		pvSysAttach(pvSys);
+		pvSysAttach(sp->pvSys);
 	}
 
+	/* Register this thread with the EPICS watchdog (no callback func) */
+	taskwdInsert(ss->threadId, 0, 0);
+
+	/* In safe mode, update local var buffer with global one before
+	   entering the event loop. Must do this using
+	   ss_read_all_buffer since CA and other state sets could
+	   already post events resp. pvPut. */
+	if (sp->options & OPT_SAFE)
+		ss_read_all_buffer(sp, ss);
 
 	/* Initial state is the first one */
 	ss->currentState = 0;
 	ss->nextState = -1;
 	ss->prevState = -1;
+
+	DEBUG("ss %s: entering main loop\n", ss->ssName);
 
 	/*
 	 * ============= Main loop ==============
@@ -208,6 +263,9 @@ static void ss_entry(SSCB *ss)
 			st->entryFunc(ss, var);
 		}
 
+		/* Flush any outstanding DB requests */
+		pvSysFlush(sp->pvSys);
+
 		seq_clearDelay(ss, st); /* Clear delay list */
 		st->delayFunc(ss, var); /* Set up new delay list */
 
@@ -224,27 +282,19 @@ static void ss_entry(SSCB *ss)
 
 			/* Wake up on PV event, event flag, or expired delay */
 			if (seq_getTimeout(ss, &delay) && delay > 0.0)
-			{
 				epicsEventWaitWithTimeout(ss->syncSemId, delay);
-			}
 			else
-			{
 				epicsEventWait(ss->syncSemId);
-			}
 
 			/* Check whether we have been asked to exit */
-			if (epicsEventTryWait(ss->death1SemId) == epicsEventWaitOK)
-			{
+			if (sp->die)
 				goto exit;
-			}
 
 			/* Copy dirty variable values from CA buffer
 			 * to user (safe mode only).
 			 */
 			if (sp->options & OPT_SAFE)
-			{
-				ss_read_buffer(ss);
-			}
+				ss_read_all_buffer(sp, ss);
 
 			/* Check state change conditions */
 			ev_trig = st->eventFunc(ss, var,
@@ -254,9 +304,9 @@ static void ss_entry(SSCB *ss)
 			if (ev_trig && !(sp->options & OPT_NEWEF))
 			{
 				unsigned i;
-				for (i = 0; i < nWords; i++)
+				for (i = 0; i < NWORDS(sp->numEvFlags); i++)
 				{
-					sp->events[i] &= ~ss->mask[i];
+					sp->evFlags[i] &= ~ss->mask[i];
 				}
 			}
 		} while (!ev_trig);
@@ -271,9 +321,6 @@ static void ss_entry(SSCB *ss)
 			st->exitFunc(ss, var);
 		}
 
-		/* Flush any outstanding DB requests */
-		pvSysFlush(pvSys);
-
 		/* Change to next state */
 		ss->prevState = ss->currentState;
 		ss->currentState = ss->nextState;
@@ -281,87 +328,10 @@ static void ss_entry(SSCB *ss)
 
 	/* Thread exit has been requested */
 exit:
-
-	/* Uninitialize this state-set thread (phase 1) */
-	ss_thread_uninit(sp, ss, 1);
-
-	/* Pass control back (so all state-set threads can complete phase 1
-	 * before embarking on phase 2) */
-	epicsEventSignal(ss->death2SemId);
-
-	/* Wait for request to perform uninitialization (phase 2) */
-	epicsEventMustWait(ss->death3SemId);
-	ss_thread_uninit(sp, ss, 2);
-
-	/* Pass control back and die (i.e. exit) */
-	epicsEventSignal(ss->death4SemId);
-}
-
-/* Initialize a state-set thread */
-static void ss_thread_init(SPROG *sp, SSCB *ss)
-{
-	/* Get this thread's id */
-	ss->threadId = epicsThreadGetIdSelf();
-
-	/* Attach to PV context of pvSys creator (auxiliary thread); was
-	   already done for the first state-set */
-	if (sp->threadId != ss->threadId)
-		pvSysAttach(pvSys);
-
-	/* Register this thread with the EPICS watchdog (no callback func) */
-	taskwdInsert(ss->threadId, 0, (void *)0);
-}
-
-/* Uninitialize a state-set thread */
-static void ss_thread_uninit(SPROG *sp, SSCB *ss, int phase)
-{
-	/* Phase 1: if this is the first state-set, call user exit routine
-	   and disconnect all channels */
-	if (phase == 1 && ss->threadId == sp->threadId)
-	{
-	    USER_VAR *var = (USER_VAR *)varPtr(sp,ss);
-	    DEBUG("   Call exit function\n");
-	    sp->exitFunc(ss, var);
-
-	    DEBUG("   Disconnect all channels\n");
-	    seq_disconnect(sp);
-	}
-
-	/* Phase 2: unregister the thread with the EPICS watchdog */
-	else if (phase == 2)
-	{
-	    DEBUG("   taskwdRemove(%p)\n", ss->threadId);
-	    taskwdRemove(ss->threadId);
-	}
-}
-
-/* Wait for all channels to connect */
-static boolean seq_waitConnect(SPROG *sp, SSCB *ss)
-{
-	epicsStatus	status;
-	double		delay;
-
-	if (sp->numChans == 0)
-		return TRUE;
-	delay = 10.0; /* 10, 20, 30, 40, 40,... sec */
-	while (1)
-	{
-		status = epicsEventWaitWithTimeout(
-			ss->allFirstConnectAndMonitorSemId, delay);
-		if(status==epicsEventWaitOK) break;
-		if (delay < 40.0)
-		{
-			delay += 10.0;
-			errlogPrintf("numMonitoredChans %u firstMonitorCount %u",
-				sp->numMonitoredChans,sp->firstMonitorCount);
-			errlogPrintf(" assignCount %u firstConnectCount %u\n",
-				sp->assignCount,sp->firstConnectCount);
-		}
-		/* Check whether we have been asked to exit */
-		if (epicsEventTryWait(ss->death1SemId) == epicsEventWaitOK)
-			return FALSE;
-	}
-	return TRUE;
+	taskwdRemove(ss->threadId);
+	/* Declare ourselves dead */
+	if (ss != sp->ss)
+		epicsEventSignal(ss->dead);
 }
 
 /*
@@ -394,7 +364,7 @@ static void seq_clearDelay(SSCB *ss, STATE *st)
  * Return whether to time out when waiting for events.
  * If yes, set *pdelay to the timout (in seconds).
  */
-static int seq_getTimeout(SSCB *ss, double *pdelay)
+static boolean seq_getTimeout(SSCB *ss, double *pdelay)
 {
 	unsigned ndelay;
 	boolean	do_timeout = FALSE;
@@ -442,13 +412,11 @@ static int seq_getTimeout(SSCB *ss, double *pdelay)
 }
 
 /*
- * Delete all state-set threads and do general clean-up.
+ * Delete all state set threads and do general clean-up.
  */
 void epicsShareAPI seqStop(epicsThreadId tid)
 {
-	SPROG		*sp;
-	SSCB		*ss;
-	unsigned	nss;
+	SPROG	*sp;
 
 	/* Check that this is indeed a state program thread */
 	sp = seqFindProg(tid);
@@ -457,169 +425,24 @@ void epicsShareAPI seqStop(epicsThreadId tid)
 
 	DEBUG("Stop %s: sp=%p, tid=%p\n", sp->progName, sp,tid);
 
-	/* Ask all state-set threads to exit (phase 1) */
-	DEBUG("   Asking state-set threads to exit (phase 1):\n");
-	for (nss = 0, ss = sp->ss; nss < sp->numSS; nss++, ss++)
-	{
-		/* Just possibly hasn't started yet, so check... */
-		if (ss->threadId == 0)
-			continue;
+	/* Ask all state set threads to exit */
+	DEBUG("   Asking state set threads to exit\n");
+	sp->die = TRUE;
 
-		/* Ask the thread to exit */
-		DEBUG("      tid=%p\n", ss->threadId);
-		epicsEventSignal(ss->death1SemId);
-	}
+	/* Take care that we die even if waiting for initial connect */
+	epicsEventSignal(sp->ready);
 
-	/* Wake up all state-sets */
-	DEBUG("   Waking up all state-sets\n");
+	DEBUG("   Waking up all state sets\n");
 	seqWakeup (sp, 0);
-
-	/* Wait for them all to complete phase 1 of their deaths */
-	DEBUG("   Waiting for state-set threads phase 1 death:\n");
-	for (nss = 0, ss = sp->ss; nss < sp->numSS; nss++, ss++)
-	{
-		if (ss->threadId == 0)
-			continue;
-
-		if (epicsEventWaitWithTimeout(ss->death2SemId,10.0) != epicsEventWaitOK)
-		{
-			errlogPrintf("Timeout waiting for thread %p "
-				     "(\"%s\") death phase 1 (ignored)\n",
-				     ss->threadId, ss->ssName);
-		}
-		else
-		{
-			DEBUG("      tid=%p\n", ss->threadId);
-		}
-	}
-
-	/* Ask all state-set threads to exit (phase 2) */
-	DEBUG("   Asking state-set threads to exit (phase 2):\n");
-	for (nss = 0, ss = sp->ss; nss < sp->numSS; nss++, ss++)
-	{
-		if (ss->threadId == 0)
-			continue;
-
-		DEBUG("      tid=%p\n", ss->threadId);
-		epicsEventSignal(ss->death3SemId);
-	}
-
-	/* Wait for them all to complete phase 2 of their deaths */
-	DEBUG("   Waiting for state-set threads phase 2 death:\n");
-	for (nss = 0, ss = sp->ss; nss < sp->numSS; nss++, ss++)
-	{
-		if (ss->threadId == 0)
-			continue;
-
-		if (epicsEventWaitWithTimeout(ss->death4SemId,10.0) != epicsEventWaitOK)
-		{
-			errlogPrintf("Timeout waiting for thread %p "
-				     "(\"%s\") death phase 2 (ignored)\n",
-				     ss->threadId, ss->ssName);
-		}
-		else
-		{
-			DEBUG("      tid=%p\n", ss->threadId);
-		}
-	}
-
-	/* Remove the state program from the state program list */
-	seqDelProg(sp);
-
-	/* Delete state-set semaphores */
-	for (nss = 0, ss = sp->ss; nss < sp->numSS; nss++, ss++)
-	{
-		if (ss->allFirstConnectAndMonitorSemId != NULL)
-			epicsEventDestroy(ss->allFirstConnectAndMonitorSemId);
-		if (ss->syncSemId != NULL)
-			epicsEventDestroy(ss->syncSemId);
-		if (ss->getSemId != NULL)
-			epicsEventDestroy(ss->getSemId);
-		if (ss->death1SemId != NULL)
-			epicsEventDestroy(ss->death1SemId);
-		if (ss->death2SemId != NULL)
-			epicsEventDestroy(ss->death2SemId);
-		if (ss->death3SemId != NULL)
-			epicsEventDestroy(ss->death3SemId);
-		if (ss->death4SemId != NULL)
-			epicsEventDestroy(ss->death4SemId);
-	}
-
-	/* Delete program-wide semaphores */
-	epicsMutexDestroy(sp->programLock);
-
-	/* Free all allocated memory */
-	seqFree(sp);
-
-	DEBUG("   Done\n");
 }
 
-/* seqFree()--free all allocated memory */
-void seqFree(SPROG *sp)
+void seqCreatePvSys(SPROG *sp)
 {
-	SSCB		*ss;
-	CHAN		*ch;
-	unsigned	nch;
-
-	seqMacFree(sp);
-	for (nch = 0; nch < sp->numChans; nch++)
-	{
-		ch = sp->chan + nch;
-
-		if (ch->dbName != NULL)
-			free(ch->dbName);
-		if (ch->putSemId != NULL)
-			epicsEventDestroy(ch->putSemId);
-	}
-
-	/* Free channel structures */
-	free(sp->chan);
-
-	ss = sp->ss;
-
-	/* Free event words */
-	free(sp->events);
-
-	/* Free SSCBs */
-	free(sp->ss);
-
-	/* Free SPROG */
-	free(sp);
-}
-
-/* 
- * Sequencer auxiliary thread -- loops on pvSysPend().
- */
-void *seqAuxThread(void *tArgs)
-{
-	AUXARGS		*args = (AUXARGS *)tArgs;
-	char		*pvSysName = args->pvSysName;
-	long		debug = args->debug;
-	int		status;
-
-	/* Register this thread with the EPICS watchdog */
-	taskwdInsert(epicsThreadGetIdSelf(), 0, 0);
-
-	/* All state program threads will use a common PV context (subtract
-	   1 from debug level for PV debugging) */
-	status = pvSysCreate(pvSysName, debug>0?debug-1:0, &pvSys);
+	int debug = sp->debug;
+	pvStat status = pvSysCreate(sp->pvSysName,
+		max(0, debug-1), &sp->pvSys);
 	if (status != pvStatOK)
-	{
-		errlogPrintf("seqAuxThread: pvSysCreate() %s failure: %s\n",
-			pvSysName, pvSysGetMess(pvSys));
-		seqAuxThreadId = (epicsThreadId) -1;
-		return NULL;
-	}
-	seqAuxThreadId = epicsThreadGetIdSelf(); /* AFTER pvSysCreate() */
-
-	/* This loop allows for check for connect/disconnect on PVs */
-	for (;;)
-	{
-		pvSysPend(pvSys, 10.0, TRUE); /* returns every 10 sec. */
-	}
-
-	/* Return no result (never exit in any case) */
-	return NULL;
+		errlogPrintf("pvSysCreate(\"%s\") failure\n", sp->pvSysName);
 }
 
 /*

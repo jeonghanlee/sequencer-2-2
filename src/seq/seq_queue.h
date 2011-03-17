@@ -31,7 +31,7 @@ QUEUE seqQueueCreate(unsigned numElems, unsigned elemSize);
 /* A common precondition of the following operations is
    that their QUEUE argument is valid; they do not check
    this.
-   
+
    A QUEUE is valid if it has been received as a
    non-NULL result of calling seqQueueCreate, and if
    seqQueueDelete has not been called for it.

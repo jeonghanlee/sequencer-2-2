@@ -7,5 +7,6 @@ DIRS += simple
 DIRS += johng
 DIRS += validate
 DIRS += demo
+DIRS += race
 
 include $(TOP)/configure/RULES_DIRS

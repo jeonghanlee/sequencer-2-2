@@ -15,9 +15,6 @@ record(seq,"pvPutAsyncSeq") {
     field(DLY1,"2")
     field(DOL1,"1")
     field(LNK1,"pvPutAsyncRes CA")
-    field(DLY2,"2")
-    field(DOL2,"2")
-    field(LNK2,"pvPutAsyncRes CA")
 }
 record(longin,"pvPutAsyncRes") {
 }

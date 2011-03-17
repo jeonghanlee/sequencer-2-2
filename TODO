@@ -1,5 +1,5 @@
 * Make sure that variables assigned to anonymous PVs are only updated
-  before when() clauses if monitored or if they are a pvGet completions.
+  before when() clauses if monitored or if a pvGet completes.
   This is important so we can exchange an anonymous for a named PV and vice
   versa w/o disrupting the program logic.
 

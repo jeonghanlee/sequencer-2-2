@@ -11,10 +11,15 @@
 ***************************************************************************/
 #include "seq.h"
 
-static int wait_rtn(void);
-static void printValue(void *val, unsigned count, int type);
-static SPROG *seqQryFind(epicsThreadId tid);
+static int userInput(void);
+static void printValue(pr_fun *pr, void *val, unsigned count, int type);
+static SSCB *seqQryFind(epicsThreadId tid);
 static void seqShowAll(void);
+
+void print_channel_value(pr_fun *pr, CHAN *ch, void *val)
+{
+	printValue(pr, val, ch->count, ch->type->putType);
+}
 
 /*
  * seqShow() - Query the sequencer for state information.
@@ -23,42 +28,41 @@ static void seqShowAll(void);
  */
 epicsShareFunc void epicsShareAPI seqShow(epicsThreadId tid)
 {
+	SSCB	*ss = seqQryFind(tid);
 	SPROG	*sp;
-	SSCB	*ss;
 	STATE	*st;
 	unsigned nss;
 	double	timeNow, timeElapsed;
 
-	sp = seqQryFind(tid);
-	if (sp == NULL)
-		return;
+	if (ss == NULL) return;
+	sp = ss->sprog;
 
 	/* Print info about state program */
 	printf("State Program: \"%s\"\n", sp->progName);
-	printf("  initial thread id = %p\n", sp->threadId);
 	printf("  thread priority = %d\n", sp->threadPriority);
-	printf("  number of state sets = %u\n", sp->numSS);
-	printf("  number of syncQ queues = %u\n", sp->numQueues);
+	printf("  number of state sets = %d\n", sp->numSS);
+	printf("  number of syncQ queues = %d\n", sp->numQueues);
 	if (sp->numQueues > 0)
 		printf("  queue array address = %p\n",sp->queues);
-	printf("  number of channels = %u\n", sp->numChans);
-	printf("  number of channels assigned = %u\n", sp->assignCount);
-	printf("  number of channels connected = %u\n", sp->connectCount);
+	printf("  number of channels = %d\n", sp->numChans);
+	printf("  number of channels assigned = %d\n", sp->assignCount);
+	printf("  number of channels connected = %d\n", sp->connectCount);
+	printf("  number of channels monitored = %d\n", sp->monitorCount);
 	printf("  options: async=%d, debug=%d, newef=%d, reent=%d, conn=%d, "
 		"main=%d\n",
-	 ((sp->options & OPT_ASYNC) != 0), ((sp->options & OPT_DEBUG) != 0),
-	 ((sp->options & OPT_NEWEF) != 0), ((sp->options & OPT_REENT) != 0),
-	 ((sp->options & OPT_CONN)  != 0), ((sp->options & OPT_MAIN)  != 0));
-	if ((sp->options & OPT_REENT) != 0)
-		printf("  user variables: address = %p, length = %u "
-			"= 0x%x bytes\n",
-			sp->var, sp->varSize, sp->varSize);
+		(sp->options & OPT_ASYNC) != 0, (sp->options & OPT_DEBUG) != 0,
+		(sp->options & OPT_NEWEF) != 0, (sp->options & OPT_REENT) != 0,
+		(sp->options & OPT_CONN)  != 0, (sp->options & OPT_MAIN)  != 0);
+	if (sp->options & OPT_REENT)
+		printf("  user variables: address = %p, length = %u\n",
+			sp->var, sp->varSize);
 	printf("\n");
 
 	/* Print state set info */
-	for (nss = 0, ss = sp->ss; nss < sp->numSS; nss++, ss++)
+	for (nss = 0; nss < sp->numSS; nss++)
 	{
 		unsigned n;
+		SSCB	*ss = sp->ss + nss;
 
 		printf("  State Set: \"%s\"\n", ss->ssName);
 
@@ -69,7 +73,7 @@ epicsShareFunc void epicsShareAPI seqShow(epicsThreadId tid)
 			printf("  thread name = %s;", threadName);
 		}
 
-		printf("  thread id = %p\n", ss->threadId);
+		printf("  Thread id = %p\n", ss->threadId);
 
 		st = ss->states;
 		printf("  First state = \"%s\"\n", st->stateName);
@@ -85,34 +89,51 @@ epicsShareFunc void epicsShareAPI seqShow(epicsThreadId tid)
 		timeElapsed = timeNow - ss->timeEntered;
 		printf("  Elapsed time since state was entered = %.1f "
 			"seconds\n", timeElapsed);
+
+		printf("  Get in progress = [");
+		for (n = 0; n < sp->numChans; n++)
+			printf("%d",!seq_pvGetComplete(ss, n));
+		printf("]\n");
+
+		printf("  Put in progress = [");
+		for (n = 0; n < sp->numChans; n++)
+			printf("%d",!seq_pvPutComplete(ss, n, 0, 0, 0));
+		printf("]\n");
+
 		printf("  Queued time delays:\n");
 		for (n = 0; n < ss->numDelays; n++)
 		{
-			printf("\tdelay[%2d]=%f", n, ss->delay[n]);
+			printf("\tdelay[%d]=%f", n, ss->delay[n]);
 			if (ss->delayExpired[n])
 				printf(" - expired");
 			printf("\n");
 		}
+
+		if (sp->options & OPT_SAFE)
+			printf("  User variables: address = %p, length = %u\n",
+				sp->var, sp->varSize);
 		printf("\n");
 	}
 }
+
 /*
  * seqChanShow() - Show channel information for a state program.
  */
 epicsShareFunc void epicsShareAPI seqChanShow(epicsThreadId tid, const char *str)
 {
+	SSCB	*ss = seqQryFind(tid);
 	SPROG	*sp;
-	CHAN	*ch;
-	int	nch;
-        int	n;
+	int	nch = 0;
+	int	dn = 1;
 	char	tsBfr[50], connQual;
 	int	match, showAll;
 
-	sp = seqQryFind(tid);
-	if(!sp) return;
+	if (ss == NULL) return;
+	sp = ss->sprog;
 
 	printf("State Program: \"%s\"\n", sp->progName);
-	printf("Number of channels=%u\n", sp->numChans);
+	printf("Number of channels=%d\n", sp->numChans);
+	printf("View: State set %s\n", ss->ssName);
 
 	if (str != NULL)
 	{
@@ -126,22 +147,24 @@ epicsShareFunc void epicsShareAPI seqChanShow(epicsThreadId tid, const char *str
 	else
 		connQual = 0;
 
-	ch = sp->chan;
-	for (nch = 0; (unsigned)nch < sp->numChans; )
+	while (dn && (unsigned)nch < sp->numChans)
 	{
+		CHAN *ch = sp->chan + nch;
+		ACHAN *ach = ch->ach;
+
 		if (str != NULL)
 		{
 			/* Check for channel connect qualifier */
 			if (connQual == '+')
-				showAll = ch->connected;
+				showAll = ach && ach->connected;
 			else if (connQual == '-')
-				showAll = ch->assigned && (!ch->connected);
+				showAll = ach && (!ach->connected);
 			else
 				showAll = TRUE;
 
 			/* Check for pattern match if specified */
 			match = (str[0] == 0) ||
-					(strstr(ch->dbName, str) != NULL);
+					(ach && strstr(ach->dbName, str) != NULL);
 			if (!(match && showAll))
 			{
 				ch += 1;
@@ -149,58 +172,48 @@ epicsShareFunc void epicsShareAPI seqChanShow(epicsThreadId tid, const char *str
 				continue; /* skip this channel */
 			}
 		}
-		printf("\n#%d of %u:\n", nch+1, sp->numChans);
-		printf("Channel name: \"%s\"\n", ch->dbName);
-		printf("  Unexpanded (assigned) name: \"%s\"\n", ch->dbAsName);
+		printf("\n#%d of %d:\n", nch+1, sp->numChans);
 		printf("  Variable name: \"%s\"\n", ch->varName);
-		printf("    offset = %d\n", ch->offset);
 		printf("    type = %s\n", ch->type->typeStr);
 		printf("    count = %u\n", ch->count);
-		printValue(bufPtr(ch)+ch->offset, ch->count, ch->type->putType);
+		printf("  Value =");
+		printValue(printf, valPtr(ch,ss), ch->count, ch->type->putType);
 
-		printf("  Monitor flag = %d\n", ch->monFlag);
-		if (ch->monitored)
-			printf("    Monitored\n");
-		else
-			printf("    Not monitored\n");
-
-		if (ch->assigned)
-			printf("  Assigned\n");
+		if (ach)
+			printf("  Assigned to \"%s\"\n", ach->dbName);
 		else
 			printf("  Not assigned\n");
 
-		if(ch->connected)
+		if(ach && ach->connected)
 			printf("  Connected\n");
 		else
 			printf("  Not connected\n");
 
-		if(ch->getComplete)
-			printf("  Last get completed\n");
+		if (ch->monitored)
+			printf("  Monitored\n");
 		else
-			printf("  Get not completed or no get issued\n");
+			printf("  Not monitored\n");
 
-		if(epicsEventTryWait(ch->putSemId))
-			printf("  Last put completed\n");
+		if (ch->efId)
+			printf("  Sync'ed to event flag %u\n", ch->efId);
 		else
-			printf("  Put not completed or no put issued\n");
+			printf("  Not sync'ed\n");
 
-		printf("  Status = %d\n", ch->status);
-		printf("  Severity = %d\n", ch->severity);
-		printf("  Message = %s\n", ch->message != NULL ?
-			ch->message : "");
+		if (ach)
+		{
+			printf("  Status = %d\n", ach->status);
+			printf("  Severity = %d\n", ach->severity);
+			printf("  Message = %s\n", ach->message != NULL ?
+				ach->message : "");
+			/* Print time stamp in text format: "yyyy/mm/dd hh:mm:ss.sss" */
+			epicsTimeToStrftime(tsBfr, sizeof(tsBfr),
+				"%Y/%m/%d %H:%M:%S.%03f", &ach->timeStamp);
+			printf("  Time stamp = %s\n", tsBfr);
+		}
 
-		/* Print time stamp in text format: "yyyy/mm/dd hh:mm:ss.sss" */
-		epicsTimeToStrftime(tsBfr, sizeof(tsBfr),
-			"%Y/%m/%d %H:%M:%S.%03f", &ch->timeStamp);
-		printf("  Time stamp = %s\n", tsBfr);
-
-		n = wait_rtn();
-		if (n == 0)
-			return;
-		nch += n;
-		if (nch < 0)
-			nch = 0;
-		ch = sp->chan + nch;
+		dn = userInput();
+		nch = max(0, nch + dn);
+		assert(nch >= 0);
 	}
 }
 /*
@@ -217,44 +230,49 @@ struct seqStats
 
 static int seqcarCollect(SPROG *sp, void *param)
 {
-	struct seqStats *pstats = (struct seqStats *) param;
-	CHAN	*ch = sp->chan;
-	unsigned nch;
-	int	level = pstats->level;
-	int 	printedProgName = 0;
+	struct seqStats	*pstats = (struct seqStats *) param;
+	unsigned	nch;
+	int		level = pstats->level;
+	int 		printedProgName = 0;
+
 	pstats->nProgs++;
 	for (nch = 0; nch < sp->numChans; nch++)
 	{
-		if (ch->assigned) pstats->nChans++;
-		if (ch->connected) pstats->nConn++;
+		CHAN *ch = sp->chan + nch;
+		ACHAN *ach = ch->ach;
+
+		if (ach) pstats->nChans++;
+		if (ach && ach->connected) pstats->nConn++;
 		if (level > 1 ||
-		    (level == 1 && !ch->connected))
-		    {
+			(level == 1 && ach && !ach->connected))
+		{
 			if (!printedProgName)
 			{
 				printf("  Program \"%s\"\n", sp->progName);
 				printedProgName = 1;
 			}
-			printf("    Variable \"%s\" %sconnected to PV \"%s\"\n",
-				ch->varName,
-				ch->connected ? "" : "not ",
-				ch->dbName);
+			if (ach)
+				printf("    Variable \"%s\" %sconnected to PV \"%s\"\n",
+					ch->varName,
+					ach->connected ? "" : "not ",
+					ach->dbName);
+			else
+				printf("    Variable \"%s\" not assigned to PV\n",
+					ch->varName);
 		}
-		ch++;
 	}
 	return FALSE;	/* continue traversal */
 }
 
 epicsShareFunc void epicsShareAPI seqcar(int level)
 {
-	struct seqStats stats = {0, 0, 0, 0};
-	int diss;
+	struct seqStats	stats = {0, 0, 0, 0};
+
 	stats.level = level;
 	seqTraverseProg(seqcarCollect, (void *) &stats);
-	diss = stats.nChans - stats.nConn;
 	printf("Total programs=%d, channels=%d, connected=%d, disconnected=%d\n",
-		stats.nProgs, stats.nChans, stats.nConn, diss);
-	return;
+		stats.nProgs, stats.nChans, stats.nConn,
+		stats.nChans - stats.nConn);
 }
 
 #if 0
@@ -272,16 +290,15 @@ epicsShareFunc void epicsShareAPI seqcaStats(int *pchans, int *pdiscon)
  */
 epicsShareFunc void epicsShareAPI seqQueueShow(epicsThreadId tid)
 {
+	SSCB	*ss = seqQryFind(tid);
 	SPROG	*sp;
 	int	n = 0;
 	int	dn = 1;
 
-	sp = seqQryFind(tid);
-	if(!sp) return;
-
+	if (ss == NULL) return;
+	sp = ss->sprog;
 	printf("State Program: \"%s\"\n", sp->progName);
 	printf("Number of queues = %d\n", sp->numQueues);
-
 	while (dn && (unsigned)n < sp->numQueues)
 	{
 		QUEUE	queue = sp->queues[n];
@@ -290,69 +307,37 @@ epicsShareFunc void epicsShareAPI seqQueueShow(epicsThreadId tid)
 			seqQueueNumElems(queue),
 			seqQueueUsed(queue),
 			seqQueueElemSize(queue));
-#if 0
-		for (entry = (QENTRY *) ellFirst(queue), i = 1;
-		     entry != NULL;
-		     entry = (QENTRY *) ellNext(&entry->node), i++)
-		{
-			CHAN	*ch = entry->ch;
-			pvValue	*access = &entry->value;
-			void	*val = pv_value_ptr(access, ch->type->getType);
-			char	tsBfr[50];
-
-			printf("\nEntry #%d: channel name: \"%s\"\n",
-							    i, ch->dbName);
-			printf("  Variable name: \"%s\"\n", ch->varName);
-			printValue(val, 1, ch->type->putType);
-							/* was ch->count */
-			printf("  Status = %d\n",
-					access->timeStringVal.status);
-			printf("  Severity = %d\n",
-					access->timeStringVal.severity);
-
-			/* Print time stamp in text format:
-			   "yyyy/mm/dd hh:mm:ss.sss" */
-			epicsTimeToStrftime(tsBfr, sizeof(tsBfr), "%Y/%m/%d "
-				"%H:%M:%S.%03f", &access->timeStringVal.stamp);
-			printf("  Time stamp = %s\n", tsBfr);
-		}
-#endif
-
-		dn = wait_rtn();
-		if (n == 0)
-			return;
+		dn = userInput();
 		n = max(0, n + dn);
 		assert(n >= 0);
 	}
 }
 
-/* Read from console until a RETURN is detected */
-static int wait_rtn(void)
+/* Read from console until a RETURN is detected.
+   The return value <n> value means:
+   n == 0: quit
+   n > 0 : move forward n items
+   n < 0 : move backward n items
+*/
+static int userInput(void)
 {
-	char	bfr[10];
-	int	i, n;
+	char	buffer[10];
+	int	n;
 
 	printf("Next? (+/- skip count)\n");
-	for (i = 0;  i < 10; i++)
-	{
-		int c = getchar();
-		if (c == EOF)
-			break;
-		if ((bfr[i] = (char)c) == '\n')
-			break;
-	}
-	bfr[i] = 0;
-	if (bfr[0] == 'q')
+	if (fgets(buffer, 10, stdin) == NULL)
+		return 0;
+	if (buffer[0] == 'q')
 		return 0; /* quit */
 
-	n = atoi(bfr);
+	n = atoi(buffer);
 	if (n == 0)
 		n = 1;
 	return n;
 }
 
 /* Print the current internal value of a database channel */
-static void printValue(void *val, unsigned count, int type)
+static void printValue(pr_fun *pr, void *val, unsigned count, int type)
 {
 	char	*c = (char *)val;
 	short	*s = (short *)val;
@@ -367,86 +352,78 @@ static void printValue(void *val, unsigned count, int type)
 		switch (type)
 		{
 		case pvTypeSTRING:
-			printf(" \"%.*s\"", MAX_STRING_SIZE, *t++);
+			pr(" \"%.*s\"", MAX_STRING_SIZE, *t++);
 			break;
 		case pvTypeCHAR:
-			printf(" %d", *c++);
+			pr(" %d", *c++);
 			break;
 		case pvTypeSHORT:
-			printf(" %d", *s++);
+			pr(" %d", *s++);
 			break;
 		case pvTypeLONG:
-			printf(" %ld", *l++);
+			pr(" %ld", *l++);
 			break;
 		case pvTypeFLOAT:
-			printf(" %g", *f++);
+			pr(" %g", *f++);
 			break;
 		case pvTypeDOUBLE:
-			printf(" %g", *d++);
+			pr(" %g", *d++);
 			break;
 		}
 	}
-	printf("\n");
+	pr("\n");
 }
 
 /* Find a state program associated with a given thread id */
-static SPROG *seqQryFind(epicsThreadId tid)
+static SSCB *seqQryFind(epicsThreadId tid)
 {
-	SPROG	*sp;
+	SSCB *ss;
 
-	if (tid == 0)
+	ss = seqFindStateSet(tid);
+	if (ss == NULL)
 	{
+		if (tid)
+			printf("No program instance is running thread %p.\n", tid);
 		seqShowAll();
-		return NULL;
 	}
-
-	/* Find a state program that has this thread id */
-	sp = seqFindProg(tid);
-	if (sp == NULL)
-	{
-		printf("No state program exists for thread id %ld\n", (long)tid);
-		return NULL;
-	}
-
-	return sp;
+	return ss;
 }
-
-static int	seqProgCount;
 
 /* This routine is called by seqTraverseProg() for seqShowAll() */
 static int seqShowSP(SPROG *sp, void *parg)
 {
-	SSCB	*ss;
-	unsigned nss;
-	const char *progName;
-	char	threadName[THREAD_NAME_SIZE];
+	unsigned	nss;
+	const char	*progName;
+	char		threadName[THREAD_NAME_SIZE];
+	int		*pprogCount = (int *)parg;
 
-	if (seqProgCount++ == 0)
-		printf("Program Name     Thread ID  Thread Name      SS Name\n\n");
-
+	if ((*pprogCount)++ == 0)
+		printf("Program Name     Thread ID  Thread Name      SS Name\n");
+		printf("------------     ---------  -----------      -------\n");
 	progName = sp->progName;
-	for (nss = 0, ss = sp->ss; nss < sp->numSS; nss++, ss++)
+	for (nss = 0; nss < sp->numSS; nss++)
 	{
+		SSCB *ss = sp->ss + nss;
+
 		if (ss->threadId == 0)
 			strcpy(threadName,"(no thread)");
 		else
 			epicsThreadGetName(ss->threadId, threadName,
 				      sizeof(threadName));
-		printf("%-16s %-10p %-16s %-16s\n", progName,
+		printf("%-16s %-8p  %-16s %-16s\n", progName,
 			ss->threadId, threadName, ss->ssName );
 		progName = "";
 	}
-	printf("\n");
 	return FALSE;	/* continue traversal */
 }
 
 /* Print a brief summary of all state programs */
 static void seqShowAll(void)
 {
+	int progCount = 0;
 
-	seqProgCount = 0;
-	seqTraverseProg(seqShowSP, 0);
-	if (seqProgCount == 0)
+	seqTraverseProg(seqShowSP, &progCount);
+	if (progCount == 0)
 		printf("No active state programs\n");
 }
 

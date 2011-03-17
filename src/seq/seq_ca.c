@@ -1,4 +1,4 @@
-/*	Process Variable (was CA) interface for sequencer.
+/*	Process Variable interface for sequencer.
  *
  *	Author:  Andy Kozubal
  *	Date:    July, 1991
@@ -33,75 +33,101 @@
 /* #define DEBUG errlogPrintf */
 #define DEBUG nothing
 
+/*
+ * Event type (extra argument passed to proc_db_events().
+ */
+enum event_type {
+	GET_COMPLETE,
+	PUT_COMPLETE,
+	MON_COMPLETE
+};
 
-#include "seq.h"
+static const char *event_type_name[] = {
+	"get",
+	"put",
+	"mon"
+};
 
 static void proc_db_events(pvValue *value, pvType type,
-	CHAN *ch, SSCB *ss, long complete_type);
+	CHAN *ch, SSCB *ss, enum event_type evtype, pvStat status);
 static void proc_db_events_queued(SPROG *sp, CHAN *ch, pvValue *value);
 
 /*
- * seq_connect() - Connect to all database channels.
+ * seq_connect() - Initiate connect & monitor requests to PVs.
+ * If wait is TRUE, wait for all connections to be established.
  */
-pvStat seq_connect(SPROG *sp)
+pvStat seq_connect(SPROG *sp, boolean wait)
 {
-	CHAN		*ch;
-        pvStat		status;
+	pvStat		status;
 	unsigned	nch;
+	int		delay = 10;
+	boolean		ready = FALSE;
 
-	for (nch = 0, ch = sp->chan; nch < sp->numChans; nch++, ch++)
+	for (nch = 0; nch < sp->numChans; nch++)
 	{
-		if (ch->dbName == NULL || ch->dbName[0] == 0)
-			continue; /* skip records without pv names */
-		sp->assignCount += 1; /* keep track of number of *assigned* channels */
-		if (ch->monFlag) sp->numMonitoredChans++;/*do it before pvVarCreate*/
+		CHAN *ch = sp->chan + nch;
+
+		if (ch->ach == NULL)
+			continue;		/* skip anonymous pvs */
+		sp->assignCount += 1;
+		if (ch->monitored)
+			sp->monitorCount++;	/* do it before pvVarCreate */
 	}
+
 	/*
-	 * For each channel: connect to db & issue monitor (if monFlag is TRUE).
+	 * For each channel: create pv object, then subscribe if monitored.
 	 */
-	for (nch = 0, ch = sp->chan; nch < sp->numChans; nch++, ch++)
+	for (nch = 0; nch < sp->numChans; nch++)
 	{
-		if (ch->dbName == NULL || ch->dbName[0] == 0)
+		CHAN *ch = sp->chan + nch;
+		ACHAN *ach = ch->ach;
+
+		if (ach == NULL)
 			continue; /* skip records without pv names */
 		DEBUG("seq_connect: connect %s to %s\n", ch->varName,
-			ch->dbName);
+			ach->dbName);
 		/* Connect to it */
 		status = pvVarCreate(
-			pvSys,			/* PV system context */
-			ch->dbName,		/* PV name */
-			seq_conn_handler,	/* connection handler routine */
-			ch,			/* private data is CHAN struc */
-			0,			/* debug level (inherited) */
-			&ch->pvid );		/* ptr to PV id */
+				sp->pvSys,		/* PV system context */
+				ch->ach->dbName,	/* PV name */
+				seq_conn_handler,	/* connection handler routine */
+				ch,			/* private data is CHAN struc */
+				0,			/* debug level (inherited) */
+				&ach->pvid);		/* ptr to PV id */
 		if (status != pvStatOK)
 		{
 			errlogPrintf("seq_connect: pvVarCreate() %s failure: "
-				"%s\n", ch->dbName, pvVarGetMess(ch->pvid));
-			return status;
-		}
-		ch->assigned = TRUE;
-		/* Clear monitor indicator */
-		ch->monitored = FALSE;
-
-		/*
-		 * Issue monitor request
-		 */
-		if (ch->monFlag)
-		{
-			seq_pvMonitor(sp->ss, nch);
+				"%s\n", ach->dbName, pvVarGetMess(ach->pvid));
+			continue;
 		}
 	}
-	sp->allDisconnected = FALSE;
-	pvSysFlush(pvSys);
+	pvSysFlush(sp->pvSys);
+
+	if (wait)
+	{
+		do {
+			/* Check whether we have been asked to exit */
+			if (sp->die)
+				return pvStatERROR;
+
+			epicsMutexMustLock(sp->programLock);
+			ready = sp->connectCount == sp->assignCount;
+			epicsMutexUnlock(sp->programLock);
+
+			if (!ready) {
+				epicsEventWaitStatus status = epicsEventWaitWithTimeout(
+					sp->ready, (double)delay);
+				if (status == epicsEventWaitError || sp->die)
+					return pvStatERROR;
+				if (delay < 60) delay += 10;
+				errlogPrintf("%s[%d]: assignCount=%d, connectCount=%d, monitorCount=%d\n",
+					sp->progName, sp->instance,
+					sp->assignCount, sp->connectCount, sp->monitorCount);
+			}
+		} while (!ready);
+	}
 	return pvStatOK;
 }
-
-/*
- * Event completion type (extra argument passed to proc_db_events().
- */
-#define	GET_COMPLETE 0
-#define	PUT_COMPLETE 1
-#define	MON_COMPLETE 2
 
 /*
  * seq_get_handler() - Sequencer callback handler.
@@ -110,13 +136,14 @@ pvStat seq_connect(SPROG *sp)
 epicsShareFunc void seq_get_handler(
 	void *var, pvType type, int count, pvValue *value, void *arg, pvStat status)
 {
-	PVREQ *req = (PVREQ *)arg;
-	CHAN *ch = req->ch;
-	SPROG *sp = ch->sprog;
+	PVREQ	*rQ = (PVREQ *)arg;
+	CHAN	*ch = rQ->ch;
+	SPROG	*sp = ch->sprog;
 
+	assert(ch->ach != NULL);
 	freeListFree(sp->pvReqPool, arg);
 	/* Process event handling in each state set */
-	proc_db_events(value, type, ch, req->ss, GET_COMPLETE);
+	proc_db_events(value, type, ch, rQ->ss, GET_COMPLETE, status);
 }
 
 /*
@@ -126,13 +153,14 @@ epicsShareFunc void seq_get_handler(
 epicsShareFunc void seq_put_handler(
 	void *var, pvType type, int count, pvValue *value, void *arg, pvStat status)
 {
-	PVREQ *req = (PVREQ *)arg;
-	CHAN *ch = req->ch;
-	SPROG *sp = ch->sprog;
+	PVREQ	*rQ = (PVREQ *)arg;
+	CHAN	*ch = rQ->ch;
+	SPROG	*sp = ch->sprog;
 
+	assert(ch->ach != NULL);
 	freeListFree(sp->pvReqPool, arg);
 	/* Process event handling in each state set */
-	proc_db_events(value, type, ch, req->ss, PUT_COMPLETE);
+	proc_db_events(value, type, ch, rQ->ss, PUT_COMPLETE, status);
 }
 
 /*
@@ -141,25 +169,24 @@ epicsShareFunc void seq_put_handler(
 epicsShareFunc void seq_mon_handler(
 	void *var, pvType type, int count, pvValue *value, void *arg, pvStat status)
 {
-	CHAN *ch = (CHAN *)arg;
-	SPROG *sp = ch->sprog;
+	CHAN	*ch = (CHAN *)arg;
+	SPROG	*sp = ch->sprog;
+	ACHAN	*ach = ch->ach;
 
+	assert(ach != NULL);
 	/* Process event handling in each state set */
-	proc_db_events(value, type, ch, sp->ss, MON_COMPLETE);
-	if(!ch->gotFirstMonitor)
+	proc_db_events(value, type, ch, sp->ss, MON_COMPLETE, status);
+	if (!ach->gotOneMonitor)
 	{
-		ch->gotFirstMonitor = 1;
+		ach->gotOneMonitor = TRUE;
+		epicsMutexMustLock(sp->programLock);
 		sp->firstMonitorCount++;
-		if((sp->firstMonitorCount==sp->numMonitoredChans)
-			&& (sp->firstConnectCount==sp->assignCount))
+		if (sp->firstMonitorCount == sp->monitorCount
+			&& sp->connectCount == sp->assignCount)
 		{
-			SSCB *ss;
-			unsigned nss;
-			for(nss=0, ss=sp->ss; nss<sp->numSS; nss++,ss++)
-			{
-				epicsEventSignal(ss->allFirstConnectAndMonitorSemId);
-			}
+			epicsEventSignal(sp->ready);
 		}
+		epicsMutexUnlock(sp->programLock);
 	}
 }
 
@@ -169,15 +196,18 @@ static void proc_db_events(
 	pvType	type,
 	CHAN	*ch,
 	SSCB	*ss,		/* originator, for put and get */
-	long	complete_type)
+	enum event_type evtype,
+	pvStat	status)
 {
 	SPROG	*sp = ch->sprog;
+	ACHAN	*ach = ch->ach;
 
-	DEBUG("proc_db_events: var=%s, pv=%s, type=%s\n", ch->varName,
-		ch->dbName, complete_type==0?"get":complete_type==1?"put":"mon");
+	assert(ach != NULL);
+	DEBUG("proc_db_events: var=%s, pv=%s, type=%s, status=%d\n", ch->varName,
+		ach->dbName, event_type_name[evtype], status);
 
 	/* If monitor on var queued via syncQ, branch to alternative routine */
-	if (ch->queue && complete_type == MON_COMPLETE)
+	if (ch->queue && evtype == MON_COMPLETE)
 	{
 		proc_db_events_queued(sp, ch, value);
 		return;
@@ -187,35 +217,23 @@ static void proc_db_events(
 	   for put completion only) */
 	if (value != NULL)
 	{
-		void *val = pv_value_ptr(value, type);
+		void *val = pv_value_ptr(value,type);
 
 		/* Write value to CA buffer (lock-free) */
-		ss_write_buffer(ch, val);
-		if (pv_is_time_type(type))
-		{
-			ch->status = *pv_status_ptr(value, type);
-			ch->severity = *pv_severity_ptr(value, type);
-			ch->timeStamp = *pv_stamp_ptr(value, type);
-		}
-		/* Copy error message (only when severity indicates error) */
-		if (ch->severity != pvSevrNONE)
-		{
-			const char *pmsg = pvVarGetMess(ch->pvid);
-			if (!pmsg) pmsg = "unknown";
-			ch->message = pmsg;
-		}
-	}
+		ss_write_buffer(0, ch, val);
 
-	/* Indicate completed pvGet() or pvPut()  */
-	switch (complete_type)
-	{
-	    case GET_COMPLETE:
-		ch->getComplete[ssNum(ss)] = TRUE;
-		break;
-	    case PUT_COMPLETE:
-		break;
-	    default:
-		break;
+		/* Copy status, severity and time stamp */
+		ach->status = *pv_status_ptr(value,type);
+		ach->severity = *pv_severity_ptr(value,type);
+		ach->timeStamp = *pv_stamp_ptr(value,type);
+
+		/* Copy error message (only when severity indicates error) */
+		if (ach->severity != pvSevrNONE)
+		{
+			const char *pmsg = pvVarGetMess(ach->pvid);
+			if (!pmsg) pmsg = "unknown";
+			ach->message = pmsg;
+		}
 	}
 
 	/* Wake up each state set that uses this channel in an event */
@@ -224,16 +242,16 @@ static void proc_db_events(
 	/* If there's an event flag associated with this channel, set it */
 	/* TODO: check if correct/documented to do this for non-monitor completions */
 	if (ch->efId > 0)
-		seq_efSet(ss, ch->efId);
+		seq_efSet(sp->ss, ch->efId);
 
-	/* Give semaphore for completed synchronous pvGet() and pvPut() */
-	switch (complete_type)
+	/* Signal completion */
+	switch (evtype)
 	{
 	    case GET_COMPLETE:
-		epicsEventSignal(ss->getSemId);
+		epicsEventSignal(ss->getSemId[chNum(ch)]);
 		break;
 	    case PUT_COMPLETE:
-		epicsEventSignal(ch->putSemId);
+		epicsEventSignal(ss->putSemId[chNum(ch)]);
 		break;
 	    default:
 		break;
@@ -246,7 +264,7 @@ static void proc_db_events_queued(SPROG *sp, CHAN *ch, pvValue *value)
 	boolean	full;
 
 	DEBUG("proc_db_events_queued: var=%s, pv=%s, queue=%p, used(max)=%d(%d)\n",
-		ch->varName, ch->dbName,
+		ch->varName, ch->ach->dbName,
 		ch->queue, seqQueueUsed(ch->queue), seqQueueNumElems(ch->queue));
 	/* Copy whole message into queue; no lock needed because only one writer */
 	full = seqQueuePut(ch->queue, value);
@@ -255,7 +273,7 @@ static void proc_db_events_queued(SPROG *sp, CHAN *ch, pvValue *value)
 		errlogSevPrintf(errlogMinor,
 		  "monitor event for variable %s (pv %s): "
 		  "last queue element overwritten (queue is full)\n",
-		  ch->varName, ch->dbName
+		  ch->varName, ch->ach->dbName
 		);
 	}
 	/* Set event flag; note: it doesn't matter which state set we pass. */
@@ -265,125 +283,132 @@ static void proc_db_events_queued(SPROG *sp, CHAN *ch, pvValue *value)
 }
 
 /* Disconnect all database channels */
-pvStat seq_disconnect(SPROG *sp)
+epicsShareFunc void seq_disconnect(SPROG *sp)
 {
-	CHAN	*ch;
 	unsigned nch;
-	SPROG	*mySP; /* will be NULL if this is not a sequencer thread */
 
-	/* Did we already disconnect? */
-	if (sp->allDisconnected)
-		return pvStatOK;
 	DEBUG("seq_disconnect: sp = %p\n", sp);
 
-	/* Attach to PV context of pvSys creator (auxiliary thread) */
-	mySP = seqFindProg(epicsThreadGetIdSelf());
-	if (mySP == NULL)
+	epicsMutexMustLock(sp->programLock);
+	for (nch = 0; nch < sp->numChans; nch++)
 	{
-#ifdef	DEBUG_DISCONNECT
-		errlogPrintf("seq_disconnect: pvSysAttach(pvSys)\n");
-#endif	/*DEBUG_DISCONNECT*/
-		/* not a sequencer thread */
-		pvSysAttach(pvSys);
-	}
-
-	ch = sp->chan;
-#ifdef	DEBUG_DISCONNECT
-	errlogPrintf("seq_disconnect: sp = %p, ch = %p\n", sp, ch);
-#endif	/*DEBUG_DISCONNECT*/
-
-	for (nch = 0; nch < sp->numChans; nch++, ch++)
-	{
+		CHAN	*ch = sp->chan + nch;
 		pvStat	status;
+		ACHAN	*ach = ch->ach;
 
-		if (!ch->assigned)
+		if (!ach)
 			continue;
 		DEBUG("seq_disconnect: disconnect %s from %s\n",
- 			ch->varName, ch->dbName);
+ 			ch->varName, ach->dbName);
 		/* Disconnect this PV */
-		status = pvVarDestroy(ch->pvid);
+		status = pvVarDestroy(ach->pvid);
 		if (status != pvStatOK)
 		    errlogPrintf("seq_disconnect: pvVarDestroy() %s failure: "
-				"%s\n", ch->dbName, pvVarGetMess(ch->pvid));
+				"%s\n", ach->dbName, pvVarGetMess(ach->pvid));
 
 		/* Clear monitor & connect indicators */
-		ch->monitored = FALSE;
-		ch->connected = FALSE;
+		ach->connected = FALSE;
+		sp->connectCount -= 1;
 	}
+	epicsMutexUnlock(sp->programLock);
 
-	sp->allDisconnected = TRUE;
+	pvSysFlush(sp->pvSys);
+}
 
-	pvSysFlush(pvSys);
+pvStat seq_monitor(CHAN *ch, boolean on)
+{
+	ACHAN	*ach = ch->ach;
+	pvStat	status;
 
-	return pvStatOK;
+	assert(ch);
+	assert(ach);
+	if (on == (ach->monid != NULL))			/* already done */
+		return pvStatOK;
+	if (on)
+		status = pvVarMonitorOn(
+				ach->pvid,		/* pvid */
+				ch->type->getType,	/* requested type */
+				(int)ch->count,		/* element count */
+				seq_mon_handler,	/* function to call */
+				ch,			/* user arg (channel struct) */
+				&ach->monid);		/* where to put event id */
+	else
+		status = pvVarMonitorOff(ach->pvid, ach->monid);
+	if (status != pvStatOK)
+		errlogPrintf("seq_monitor: pvVarMonitor%s(%s) failure: %s\n",
+			on?"On":"Off", ach->dbName, pvVarGetMess(ach->pvid));
+	else if (!on)
+		ach->monid = NULL;
+	return status;
 }
 
 /*
  * seq_conn_handler() - Sequencer connection handler.
  * Called each time a connection is established or broken.
  */
-void seq_conn_handler(void *var,int connected)
+void seq_conn_handler(void *var, int connected)
 {
-	CHAN	*ch;
-	SPROG	*sp;
+	CHAN	*ch = (CHAN *)pvVarGetPrivate(var);
+	SPROG	*sp = ch->sprog;
+	ACHAN	*ach = ch->ach;
 
-	/* Private data is db ptr (specified at pvVarCreate()) */
-	ch = (CHAN *)pvVarGetPrivate(var);
+	epicsMutexMustLock(sp->programLock);
 
-	/* State program that owns this db entry */
-	sp = ch->sprog;
-
-	/* If PV not connected */
+	assert(ach != NULL);
 	if (!connected)
 	{
-		DEBUG("%s disconnected from %s\n", ch->varName, ch->dbName);
-		if (ch->connected)
+		DEBUG("%s disconnected from %s\n", ch->varName, ach->dbName);
+		if (ach->connected)
 		{
-			ch->connected = FALSE;
+			ach->connected = FALSE;
 			sp->connectCount--;
-			ch->monitored = FALSE;
-		}
-		else
-		{
-			errlogPrintf("%s disconnected but already disconnected %s\n",
-				ch->varName, ch->dbName);
-		}
-	}
-	else	/* PV connected */
-	{
-		DEBUG("%s connected to %s\n", ch->varName,ch->dbName);
-		if (!ch->connected)
-		{
-			ch->connected = TRUE;
-			sp->connectCount++;
-			if (ch->monFlag)
-				ch->monitored = TRUE;
-			ch->dbCount = (unsigned)pvVarGetCount(var);
-			if (ch->dbCount > ch->count)
-				ch->dbCount = ch->count;
-		}
-		else
-		{
-			printf("%s connected but already connected %s\n",
-				ch->varName,ch->dbName);
-		}
-		if(!ch->gotFirstConnect)
-		{
-			ch->gotFirstConnect = 1;
-			sp->firstConnectCount++;
-			if((sp->firstMonitorCount==sp->numMonitoredChans)
-				&& (sp->firstConnectCount==sp->assignCount))
+
+			if (ch->monitored)
 			{
-				SSCB *ss;
-				unsigned nss;
-				for(nss=0, ss=sp->ss; nss<sp->numSS; nss++,ss++)
-				{
-					epicsEventSignal(ss->allFirstConnectAndMonitorSemId);
-				}
+				seq_monitor(ch, FALSE);
 			}
 		}
+		else
+		{
+			errlogPrintf("%s disconnect event but already disconnected %s\n",
+				ch->varName, ach->dbName);
+		}
 	}
+	else	/* connected */
+	{
+		DEBUG("%s connected to %s\n", ch->varName, ach->dbName);
+		if (!ach->connected)
+		{
+			int dbCount;
+			ach->connected = TRUE;
+			sp->connectCount++;
+			if (sp->firstMonitorCount == sp->monitorCount
+				&& sp->connectCount == sp->assignCount)
+			{
+				epicsEventSignal(sp->ready);
+			}
+			dbCount = pvVarGetCount(var);
+			assert(dbCount >= 0);
+			ach->dbCount = min(ch->count, (unsigned)dbCount);
 
-	/* Wake up each state set that is waiting for event processing */
+			if (ch->monitored)
+			{
+				seq_monitor(ch, TRUE);
+			}
+		}
+		else
+		{
+			errlogPrintf("%s connect event but already connected %s\n",
+				ch->varName, ach->dbName);
+		}
+	}
+	epicsMutexUnlock(sp->programLock);
+
+	/* Wake up each state set that is waiting for event processing.
+	   Why each one? Because pvConnectCount and pvMonitorCount should
+	   act like monitored anonymous channels. Any state set might be
+	   using these functions inside a when-condition and it is expected
+	   that such conditions get checked whenever these counts change.
+	   This is really a crude solution. */
 	seqWakeup(sp, 0);
 }
