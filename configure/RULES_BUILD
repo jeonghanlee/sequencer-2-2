@@ -43,22 +43,27 @@ else
  endif
 endif
 
+# preserve compatibility to base versions before 3.14.12
+ifndef ECHO
+ ECHO := $(if $(findstring s,$(MAKEFLAGS)),\#,@echo)
+endif
+
 
 #--------------------------------------------------
 # Rules
 
 %.i: ../%.st
-	@echo "preprocessing $<"
+	$(ECHO) "preprocessing $<"
 	@$(RM) $@
 	$(PREPROCESS.cpp)
 
 %.c: %.i $(SNC)
-	@echo "converting $<"
+	$(ECHO) "converting $<"
 	$(SNC) $(TARGET_SNCFLAGS) $(SNCFLAGS) $(USR_SNCFLAGS) $< -o $(@F).tmp
 	$(MV) $(@F).tmp $@
 
 %.c: ../%.stt $(SNC)
-	@echo "converting $< "
+	$(ECHO) "converting $< "
 	$(SNC) $(TARGET_SNCFLAGS) $(SNCFLAGS) $(USR_SNCFLAGS) $< -o $(@F).tmp
 	$(MV) $(@F).tmp $@
 
