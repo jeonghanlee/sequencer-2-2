@@ -443,8 +443,8 @@ epicsShareFunc boolean epicsShareAPI seq_pvPutComplete(
 		}
 	}
 
-	DEBUG("pvPutComplete: varId=%ld, length=%ld, anyDone=%ld, "
-		"allDone=%ld\n", varId, length, anyDone, allDone);
+	DEBUG("pvPutComplete: varId=%u, length=%u, anyDone=%u, allDone=%u\n",
+		varId, length, anyDone, allDone);
 
 	return any?anyDone:allDone;
 }
@@ -885,7 +885,7 @@ epicsShareFunc boolean epicsShareAPI seq_delay(SS_ID ss, DELAY_ID delayId)
 		ss->delayExpired[delayId] = TRUE; /* mark as expired */
 		expired = TRUE;
 	}
-	DEBUG("seq_delay(%s,%ld): %g seconds, %s\n", ss->ssName, delayId,
+	DEBUG("seq_delay(%s,%u): %g seconds, %s\n", ss->ssName, delayId,
 		ss->delay[delayId], expired ? "expired": "unexpired");
 	return expired;
 }
@@ -895,7 +895,7 @@ epicsShareFunc boolean epicsShareAPI seq_delay(SS_ID ss, DELAY_ID delayId)
  */
 epicsShareFunc void epicsShareAPI seq_delayInit(SS_ID ss, DELAY_ID delayId, double delay)
 {
-	DEBUG("seq_delayInit(%s,%ld,%g): numDelays=%d, maxNumDelays=%d\n",
+	DEBUG("seq_delayInit(%s,%u,%g): numDelays=%d, maxNumDelays=%d\n",
 		ss->ssName, delayId, delay, ss->numDelays, ss->maxNumDelays);
 	assert(delayId <= ss->numDelays);
 	assert(ss->numDelays < ss->maxNumDelays);
