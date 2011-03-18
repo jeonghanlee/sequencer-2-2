@@ -62,6 +62,8 @@ development version by checking out the `darcs`_ repository::
 
    darcs get http://www-csr.bessy.de/control/SoftDist/sequencer/repo/ seq-head
 
+You can also look at the repo using the `repository browser`_.
+
 See `Contribute`_ for a short description how to record and send
 patches.
 
@@ -83,6 +85,7 @@ patches.
 .. _2.0.0: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2.0.0.tar.gz
 .. _1.9.5: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-1.9.5.tar.gz
 .. _1.9.4: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-1.9.4.tar.gz
+.. _repository browser: http://www-csr.bessy.de/cgi-bin/darcsweb.cgi?r=sequencer;a=summary
 
 Unpack
 ------
