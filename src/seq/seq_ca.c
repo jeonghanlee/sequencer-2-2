@@ -324,6 +324,7 @@ pvStat seq_monitor(CHAN *ch, boolean on)
 	assert(ach);
 	if (on == (ach->monid != NULL))			/* already done */
 		return pvStatOK;
+	DEBUG("calling pvVarMonitor%s(%p)\n", on?"On":"Off", ach->pvid);
 	if (on)
 		status = pvVarMonitorOn(
 				ach->pvid,		/* pvid */
@@ -355,6 +356,16 @@ void seq_conn_handler(void *var, int connected)
 	epicsMutexMustLock(sp->programLock);
 
 	assert(ach != NULL);
+
+	/* Note that CA may call this while pvVarCreate is still running,
+	   so ach->pvid may not yet be initialized. Since the call
+	   to seq_monitor below uses it we have to prepone initialization
+	   at this point.
+	  */
+	if (!ach->pvid)
+		ach->pvid = var;
+
+	assert(ach->pvid == var);
 	if (!connected)
 	{
 		DEBUG("%s disconnected from %s\n", ch->varName, ach->dbName);
