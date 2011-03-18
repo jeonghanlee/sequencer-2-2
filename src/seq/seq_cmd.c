@@ -97,7 +97,7 @@ static void seqCallFunc(const iocshArgBuf *args)
         printf("No sequencer specified.\n");
         return;
     }
-    if (stackSize <= 0) {
+    if (stackSize < 0) {
         errlogPrintf("3rd argument of seq must be a positive integer");
         return;
     }
