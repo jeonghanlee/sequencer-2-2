@@ -22,89 +22,75 @@
 
 static const int impossible = 0;
 
-enum {
-	C_NONE, C_TRUE, C_FALSE, C_SYNC, C_ASYNC, C_CODE_LAST
+struct const_symbol
+{
+	const char	*name;
+	int		value;
 };
 
-static char *const_code_str[] = {
-	NULL, "TRUE", "FALSE", "SYNC", "ASYNC", NULL
+static struct const_symbol const_symbols[] =
+{
+	{"TRUE",	1},
+	{"FALSE",	0},
+	{"SYNC",	2},
+	{"ASYNC",	1},
+	{NULL,		0}
 };
 
 enum
 {
-	F_NONE,
-	F_DELAY,
-	F_EFCLEAR,
-	F_EFSET,
-	F_EFTEST,
-	F_EFTESTANDCLEAR,
-	F_MACVALUEGET,
-	F_OPTGET,
-	F_PVASSIGN,
-	F_PVASSIGNCOUNT,
-	F_PVASSIGNED,
-	F_PVCHANNELCOUNT,
-	F_PVCONNECTCOUNT,
-	F_PVCONNECTED,
-	F_PVCOUNT,
-	F_PVDISCONNECT,
-	F_PVFLUSH,
-	F_PVFLUSHQ,
-	F_PVFREEQ,
-	F_PVGET,
-	F_PVGETCOMPLETE,
-	F_PVGETQ,
-	F_PVINDEX,
-	F_PVMESSAGE,
-	F_PVMONITOR,
-	F_PVNAME,
-	F_PVPUT,
-	F_PVPUTCOMPLETE,
-	F_PVSEVERITY,
-	F_PVSTATUS,
-	F_PVSTOPMONITOR,
-	F_PVSYNC,
-	F_PVTIMESTAMP,
-	F_SEQLOG,
-	F_CODE_LAST
+	FT_DELAY,
+	FT_EVENT,
+	FT_PV,
+	FT_OTHER
 };
 
-static char *fcode_str[] = {
-	NULL,
-	"delay",
-	"efClear",
-	"efSet",
-	"efTest",
-	"efTestAndClear",
-	"macValueGet",
-	"optGet",
-	"pvAssign",
-	"pvAssignCount",
-	"pvAssigned",
-	"pvChannelCount",
-	"pvConnectCount",
-	"pvConnected",
-	"pvCount",
-	"pvDisconnect",
-	"pvFlush",
-	"pvFlushQ",
-	"pvFreeQ",
-	"pvGet",
-	"pvGetComplete",
-	"pvGetQ",
-	"pvIndex",
-	"pvMessage",
-	"pvMonitor",
-	"pvName",
-	"pvPut",
-	"pvPutComplete",
-	"pvSeverity",
-	"pvStatus",
-	"pvStopMonitor",
-	"pvSync",
-	"pvTimeStamp",
-	"seqLog",
-	NULL
+struct func_symbol
+{
+	const char	*name;
+	uint		type:2;
+	uint		add_length:1;
+	uint		default_args:2;
+	uint		ef_action_only:1;
+	uint		ef_args:1;
+};
+
+static struct func_symbol func_symbols[] =
+{
+	{"delay",		FT_DELAY,	FALSE,	0,	FALSE,	FALSE},
+	{"efClear",		FT_EVENT,	FALSE,	0,	TRUE,	FALSE},
+	{"efSet",		FT_EVENT,	FALSE,	0,	TRUE,	FALSE},
+	{"efTest",		FT_EVENT,	FALSE,	0,	FALSE,	FALSE},
+	{"efTestAndClear",	FT_EVENT,	FALSE,	0,	FALSE,	FALSE},
+	{"macValueGet",		FT_OTHER,	FALSE,	0,	FALSE,	FALSE},
+	{"optGet",		FT_OTHER,	FALSE,	0,	FALSE,	FALSE},
+	{"pvAssign",		FT_PV,		FALSE,	0,	FALSE,	FALSE},
+	{"pvAssignCount",	FT_OTHER,	FALSE,	0,	FALSE,	FALSE},
+	{"pvAssigned",		FT_PV,		FALSE,	0,	FALSE,	FALSE},
+	{"pvChannelCount",	FT_OTHER,	FALSE,	0,	FALSE,	FALSE},
+	{"pvConnectCount",	FT_OTHER,	FALSE,	0,	FALSE,	FALSE},
+	{"pvConnected",		FT_PV,		FALSE,	0,	FALSE,	FALSE},
+	{"pvCount",		FT_PV,		FALSE,	0,	FALSE,	FALSE},
+	{"pvDisconnect",	FT_PV,		FALSE,	0,	FALSE,	FALSE},
+	{"pvFlush",		FT_OTHER,	FALSE,	0,	FALSE,	FALSE},
+	{"pvFlushQ",		FT_PV,		FALSE,	0,	FALSE,	FALSE},
+	{"pvFreeQ",		FT_PV,		FALSE,	0,	FALSE,	FALSE},
+	{"pvGet",		FT_PV,		FALSE,	1,	FALSE,	FALSE},
+	{"pvGetComplete",	FT_PV,		FALSE,	0,	FALSE,	FALSE},
+	{"pvGetQ",		FT_PV,		FALSE,	0,	FALSE,	FALSE},
+	{"pvIndex",		FT_PV,		FALSE,	0,	FALSE,	FALSE},
+	{"pvMessage",		FT_PV,		FALSE,	0,	FALSE,	FALSE},
+	{"pvMonitor",		FT_PV,		FALSE,	0,	FALSE,	FALSE},
+	{"pvName",		FT_PV,		FALSE,	0,	FALSE,	FALSE},
+	{"pvPut",		FT_PV,		FALSE,	1,	FALSE,	FALSE},
+	{"pvPutComplete",	FT_PV,		TRUE,	2,	FALSE, 	FALSE},
+	{"pvSeverity",		FT_PV,		FALSE,	0,	FALSE,	FALSE},
+	{"pvStatus",		FT_PV,		FALSE,	0,	FALSE,	FALSE},
+	{"pvStopMonitor",	FT_PV,		FALSE,	0,	FALSE,	FALSE},
+	{"pvSync",		FT_PV,		FALSE,	0,	FALSE,	TRUE },
+	{"pvTimeStamp",		FT_PV,		FALSE,	0,	FALSE,	FALSE},
+	{"seqLog",		FT_OTHER,	FALSE,	0,	FALSE,	FALSE},
+	{NULL,			FT_OTHER,	FALSE,	0,	FALSE,	FALSE}
 };
 
 static void gen_local_var_decls(Expr *scope, int level);
@@ -125,11 +111,11 @@ static void gen_event_body(Expr *xp);
 static void gen_action_body(Expr *xp);
 static int gen_delay(Expr *ep, Expr *scope, void *parg);
 static void gen_expr(int context, Expr *ep, int level);
-static void gen_ef_func(int context, Expr *ep, char *fname, int func_code);
+static void gen_ef_func(int context, Expr *ep, const char *func_name, uint ef_action_only);
 static void gen_pv_func(int context, Expr *ep,
-	char *fname, int func_code, int add_length, int num_params);
-static int special_func(int context, Expr *ep);
-static int special_const(int context,	Expr *ep);
+	const char *func_name, uint add_length, uint num_params, uint ef_args);
+static int gen_builtin_func(int context, Expr *ep);
+static int gen_builtin_const(int context, Expr *ep);
 
 static void gen_prog_func(
 	Expr *prog,
@@ -144,7 +130,8 @@ static void gen_prog_init_func(Expr *prog, int opt_reent);
  * they appear. For instance, the state change command is only
  * allowed in transition action context (C_TRANS).
  */
-enum expr_context {
+enum expr_context
+{
 	C_COND,		/* when() condition */
 	C_TRANS,	/* state transition actions */
 	C_ENTRY,	/* entry block */
@@ -161,40 +148,36 @@ static SymTable global_sym_table;
 
 static void register_special_funcs(void)
 {
-	int fcode;
+	struct func_symbol *sym;
 
-	for (fcode = F_CODE_LAST-1; fcode_str[fcode] != NULL; fcode--)
+	for (sym = func_symbols; sym->name; sym++)
 	{
-		/* use address of fcode_str array as the symbol type */
-		sym_table_insert(global_sym_table, fcode_str[fcode], fcode_str, (void*)fcode);
+		/* use address of func_symbols array as the symbol type */
+		sym_table_insert(global_sym_table, sym->name, func_symbols, sym);
 	}
 }
 
-static int func_name_to_code(char *fname)
+static struct func_symbol *lookup_func(const char *func_name)
 {
-	int fcode = (int)sym_table_lookup(global_sym_table, fname, fcode_str);
-
-	assert(fcode == 0 || strcmp(fname, fcode_str[fcode]) == 0);
-	return fcode;
+	return (struct func_symbol *)sym_table_lookup(
+		global_sym_table, func_name, func_symbols);
 }
 
 static void register_special_consts(void)
 {
-	int const_code;
+	struct const_symbol *sym;
 
-	for (const_code = C_CODE_LAST-1; const_code_str[const_code] != NULL; const_code--)
+	for (sym = const_symbols; sym->name; sym++)
 	{
-		/* use address of const_code_str array as the symbol type */
-		sym_table_insert(global_sym_table, const_code_str[const_code], const_code_str, (void*)const_code);
+		/* use address of const_symbols array as the symbol type */
+		sym_table_insert(global_sym_table, sym->name, const_symbols, sym);
 	}
 }
 
-static int const_name_to_code(char *const_name)
+static struct const_symbol *lookup_const(const char *const_name)
 {
-	int const_code = (int)sym_table_lookup(global_sym_table, const_name, const_code_str);
-
-	assert(const_code == 0 || strcmp(const_name, const_code_str[const_code]) == 0);
-	return const_code;
+	return (struct const_symbol *)sym_table_lookup(
+		global_sym_table, const_name, const_symbols);
 }
 
 void init_gen_ss_code(Program *program)
@@ -488,7 +471,7 @@ static void gen_event_body(Expr *xp)
 
 static void gen_var_access(Var *vp)
 {
-	char *pre = global_opt_reent ? "pVar->" : "";
+	const char *pre = global_opt_reent ? "pVar->" : "";
 
 	assert(vp);
 	assert(vp->scope);
@@ -626,7 +609,7 @@ static void gen_expr(
 		printf("]");
 		break;
 	case E_CONST:
-		if (special_const(context, ep))
+		if (gen_builtin_const(context, ep))
 			break;
 		printf("%s", ep->value);
 		break;
@@ -634,10 +617,8 @@ static void gen_expr(
 		printf("\"%s\"", ep->value);
 		break;
 	case E_DELAY:
-		printf("seq_delay(ssId, %d)", ep->extra.e_delay);
-		break;
 	case E_FUNC:
-		if (special_func(context, ep))
+		if (gen_builtin_func(context, ep))
 			break;
 		printf("%s(", ep->value);
 		foreach (cep, ep->func_args)
@@ -697,122 +678,69 @@ static void gen_expr(
 	}
 }
 
-static int special_const(int context,	Expr *ep)
+static int gen_builtin_const(int context, Expr *ep)
 {
-	int n_const;
-	char *const_name = ep->value;
-	int const_code = const_name_to_code(const_name);
-	switch(const_code)
-	{
-		case C_TRUE:	n_const = 1; break;
-		case C_FALSE:	n_const = 0; break;
-		case C_ASYNC:	n_const = 1; break;
-		case C_SYNC:	n_const = 2; break;
-		default:	return FALSE;
-	}
-	printf("%d", n_const);
+	char	*const_name = ep->value;
+	struct const_symbol *sym = lookup_const(const_name);
+
+	if (sym == NULL)
+		return FALSE;
+	printf("%d", sym->value);
 	return TRUE;
 }
 
-/* Process special function (returns TRUE if this is a special function)
-	Checks for one of the following special functions:
-	 - event flag functions, e.g. efSet()
-	 - process variable functions, e.g. pvPut()
-	 - delay()
-	 - macValueGet()
-	 - seqLog()
-*/
-static int special_func(int context,	Expr *ep)
+/* Generate builtin function call */
+static int gen_builtin_func(int context, Expr *ep)
 {
-	char	*fname;		/* function name */
-	Expr	*ap;		/* arguments */
-	int	func_code;
+	char	*func_name = ep->value;	/* function name */
+	Expr	*ap;			/* argument expr */
 
-	fname = ep->value;
-	func_code = func_name_to_code(fname);
-	if (func_code == F_NONE)
+	func_name = ep->value;
+	struct func_symbol *sym = lookup_func(func_name);
+	if (sym == NULL)
 		return FALSE;	/* not a special function */
 
 #ifdef	DEBUG
-	report("special_func: code=%d, name=%s\n", func_code, fname);
+	report("gen_builtin_func: name=%s, type=%u, add_length=%u, "
+		"default_args=%u, ef_action_only=%u, ef_args=%u\n",
+		func_name, sym->type, sym->add_length, sym->default_args,
+		sym->ef_action_only, sym->ef_args);
 #endif
-	switch (func_code)
+	/* All builtin functions require ssId as 1st parameter */
+	printf("seq_%s(ssId", func_name);
+	switch (sym->type)
 	{
-	case F_DELAY:
-		return TRUE;
-
-	case F_EFSET:
-	case F_EFTEST:
-	case F_EFCLEAR:
-	case F_EFTESTANDCLEAR:
+	case FT_DELAY:
+		printf(", %d)", ep->extra.e_delay);
+		break;
+	case FT_EVENT:
 		/* Event flag functions */
-		gen_ef_func(context, ep, fname, func_code);
-		return TRUE;
-
-	case F_PVASSIGN:
-	case F_PVASSIGNED:
-	case F_PVCONNECTED:
-	case F_PVCOUNT:
-	case F_PVDISCONNECT:
-	case F_PVFLUSHQ:
-	case F_PVFREEQ:
-	case F_PVGETCOMPLETE:
-	case F_PVGETQ:
-	case F_PVINDEX:
-	case F_PVMESSAGE:
-	case F_PVMONITOR:
-	case F_PVNAME:
-	case F_PVSEVERITY:
-	case F_PVSTATUS:
-	case F_PVSTOPMONITOR:
-	case F_PVSYNC:
-	case F_PVTIMESTAMP:
-		/* PV functions requiring a channel id and no default args */
-		gen_pv_func(context, ep, fname, func_code, FALSE, 0);
-		return TRUE;
-
-	case F_PVPUT:
-	case F_PVGET:
-		/* PV functions requiring a channel id and
-		   defaulted last 1 parameter */
-		gen_pv_func(context, ep, fname, func_code, FALSE, 1);
-		return TRUE;
-
-	case F_PVPUTCOMPLETE:
-		/* PV functions requiring a channel id, an (implicit) array
-		   length and defaulted last 2 parameters */
-		gen_pv_func(context, ep, fname, func_code, TRUE, 2);
-		return TRUE;
-
-	case F_MACVALUEGET:
-	case F_OPTGET:
-	case F_PVASSIGNCOUNT:
-	case F_PVCHANNELCOUNT:
-	case F_PVCONNECTCOUNT:
-	case F_PVFLUSH:
-	case F_SEQLOG:
-		/* Any function that requires adding ssID as 1st parameter. */
-		printf("seq_%s(ssId", fname);
-		/* now fill in user-supplied parameters */
+		gen_ef_func(context, ep, func_name, sym->ef_action_only);
+		break;
+	case FT_PV:
+		gen_pv_func(context, ep, func_name, sym->add_length,
+			sym->default_args, sym->ef_args);
+		break;
+	case FT_OTHER:
+		/* just fill in user-supplied parameters */
 		foreach (ap, ep->func_args)
 		{
 			printf(", ");
 			gen_expr(context, ap, 0);
 		}
 		printf(")");
-		return TRUE;
-
+		break;
 	default:
-		/* Not a special function */
-		return FALSE;
+		assert(impossible);
 	}
+	return TRUE;
 }
 
 /* Check an event flag argument */
 static void gen_ef_arg(
-	char	*fname,		/* function name */
-	Expr	*ap,		/* argument expression */
-	int	index		/* argument index */
+	const char	*func_name,	/* function name */
+	Expr		*ap,		/* argument expression */
+	int		index		/* argument index */
 )
 {
 	Var	*vp;
@@ -822,7 +750,7 @@ static void gen_ef_arg(
 	{
 		error_at_expr(ap,
 		  "argument %d to built-in function %s must be an event flag\n",
-		  index, fname);
+		  index, func_name);
 		return;
 	}
 	vp = ap->extra.e_var;
@@ -830,7 +758,7 @@ static void gen_ef_arg(
 	if (vp->type->tag != V_EVFLAG)
 	{
 		error_at_expr(ap,
-		  "argument to built-in function %s must be an event flag\n", fname);
+		  "argument to built-in function %s must be an event flag\n", func_name);
 		return;
 	}
 	gen_var_access(vp);
@@ -838,30 +766,30 @@ static void gen_ef_arg(
 
 /* Generate code for all event flag functions */
 static void gen_ef_func(
-	int	context,
-	Expr	*ep,		/* function call expression */
-	char	*fname,		/* function name */
-	int	func_code	/* function code */
+	int		context,
+	Expr		*ep,		/* function call expression */
+	const char	*func_name,	/* function name */
+	uint		action_only	/* not allowed in cond */
 )
 {
-	Expr	*ap;
+	Expr	*ap;			/* argument expression */
 
 	ap = ep->func_args;
 
-	if ((func_code == F_EFSET || func_code == F_EFCLEAR) && context == C_COND)
+	if (action_only && context == C_COND)
 	{
 		error_at_expr(ep,
-		  "calling %s is not allowed inside a when condition\n", fname);
+		  "calling %s is not allowed inside a when condition\n", func_name);
 		return;
 	}
 	if (!ap)
 	{
 		error_at_expr(ep,
-		  "built-in function %s requires an argument\n", fname);
+		  "built-in function %s requires an argument\n", func_name);
 		return;
 	}
-	printf("seq_%s(ssId, ", fname);
-	gen_ef_arg(fname, ap, 1);
+	printf(", ");
+	gen_ef_arg(func_name, ap, 1);
 	printf(")");
 }
 
@@ -870,24 +798,24 @@ static void gen_ef_func(
    "add_length" => the array length (1 if not an array) follows the channel id 
    "num_params > 0" => add default (zero) parameters up to the spec. number */
 static void gen_pv_func(
-	int	context,
-	Expr	*ep,		/* function call expression */
-	char	*fname,		/* function name */
-	int	func_code,	/* function code */
-	int	add_length,	/* add array length after channel id */
-	int	num_params	/* number of params to add (if omitted) */
+	int		context,
+	Expr		*ep,		/* function call expression */
+	const char	*func_name,	/* function name */
+	uint		add_length,	/* add array length after channel id */
+	uint		num_params,	/* number of params to add (if omitted) */
+	uint		ef_args		/* extra args are event flags */
 )
 {
 	Expr	*ap, *subscr = 0;
 	Var	*vp = NULL;
-	int	num_extra_parms = 0;
+	uint	num_extra_parms = 0;
 
 	ap = ep->func_args;
 	/* first parameter is always */
 	if (ap == 0)
 	{
 		error_at_expr(ep,
-			"function '%s' requires a parameter\n", fname);
+			"function '%s' requires a parameter\n", func_name);
 		return;
 	}
 
@@ -909,25 +837,25 @@ static void gen_pv_func(
 	{
 		error_at_expr(ep,
 		  "parameter 1 to '%s' must be a variable or subscripted variable\n",
-		  fname);
+		  func_name);
 		return;
 	}
 
 #ifdef	DEBUG
 	report("gen_pv_func: fun=%s, var=%s\n", ep->value, vp->name);
 #endif
-	printf("seq_%s(ssId, ", fname);
+	printf(", ");
 	if (vp->assign == M_NONE)
 	{
 		error_at_expr(ep,
-			"parameter 1 to '%s' was not assigned to a pv\n", fname);
+			"parameter 1 to '%s' was not assigned to a pv\n", func_name);
 		printf("?/*%s*/", vp->name);
 	}
 	else if (ap->type == E_SUBSCR && vp->assign != M_MULTI)
 	{
 		error_at_expr(ep,
 			"parameter 1 to '%s' is subscripted but the variable "
-			"it refers to has not been assigned to multiple pvs\n", fname);
+			"it refers to has not been assigned to multiple pvs\n", func_name);
 		printf("%d/*%s*/", vp->index, vp->name);
 	}
 	else
@@ -963,9 +891,9 @@ static void gen_pv_func(
 	{
 		num_extra_parms++;
 		printf(", ");
-		if (func_code == F_PVSYNC)
+		if (ef_args)
 		{
-			gen_ef_arg(fname, ap, num_extra_parms+1);
+			gen_ef_arg(func_name, ap, num_extra_parms+1);
 		}
 		else
 		{
