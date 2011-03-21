@@ -455,11 +455,10 @@ epicsShareFunc boolean epicsShareAPI seq_pvPutComplete(
  */
 epicsShareFunc pvStat epicsShareAPI seq_pvAssign(SS_ID ss, VAR_ID varId, const char *pvName)
 {
-	SPROG		*sp = ss->sprog;
-	CHAN		*ch = sp->chan + varId;
-	pvStat		status = pvStatOK;
-	unsigned	nchar;
-	ACHAN		*ach = ch->ach;
+	SPROG	*sp = ss->sprog;
+	CHAN	*ch = sp->chan + varId;
+	pvStat	status = pvStatOK;
+	ACHAN	*ach = ch->ach;
 
 	if (!pvName) pvName = "";
 
@@ -478,9 +477,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvAssign(SS_ID ss, VAR_ID varId, const c
 		free(ach->dbName);
 	}
 
-	nchar = strlen(pvName);
-
-	if (nchar == 0)
+	if (pvName[0] == 0)
 	{
 		free(ach);
 		ch->ach = NULL;

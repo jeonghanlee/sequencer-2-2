@@ -73,7 +73,7 @@ epicsShareFunc void epicsShareAPI seq(
 	if (stackSize == 0)
 		stackSize = epicsThreadGetStackSize(THREAD_STACK_SIZE);
 	str = seqMacValGet(sp, "stack");
-	if (str != NULL && strlen(str) > 0)
+	if (str != NULL && str[0] != '\0')
 	{
 		sscanf(str, "%ud", &stackSize);
 	}
@@ -84,29 +84,29 @@ epicsShareFunc void epicsShareAPI seq(
 
 	/* Specify thread name */
 	str = seqMacValGet(sp, "name");
-	if (str != NULL && strlen(str) > 0)
+	if (str != NULL && str[0] != '\0')
 		threadName = str;
 	else
 		threadName = sp->progName;
 
 	/* Specify PV system name (defaults to CA) */
 	str = seqMacValGet(sp, "pvsys");
-	if (str != NULL && strlen(str) > 0)
+	if (str != NULL && str[0] != '\0')
 		sp->pvSysName = str;
 	else
 		sp->pvSysName = "ca";
 
 	/* Determine debug level (currently only used for PV-level debugging) */
 	str = seqMacValGet(sp, "debug");
-	if (str != NULL && strlen(str) > 0)
-		sp->debug = atol(str);
+	if (str != NULL && str[0] != '\0')
+		sp->debug = atoi(str);
 	else
 		sp->debug = 0;
 
 	/* Specify thread priority */
 	sp->threadPriority = THREAD_PRIORITY;
 	str = seqMacValGet(sp, "priority");
-	if (str != NULL && strlen(str) > 0)
+	if (str != NULL && str[0] != '\0')
 	{
 		sscanf(str, "%ud", &(sp->threadPriority));
 	}
