@@ -55,7 +55,7 @@ epicsShareFunc void epicsShareAPI seqShow(epicsThreadId tid)
 		(sp->options & OPT_CONN)  != 0, (sp->options & OPT_MAIN)  != 0);
 	if (sp->options & OPT_REENT)
 		printf("  user variables: address = %p, length = %u\n",
-			sp->var, sp->varSize);
+			sp->var, (unsigned)sp->varSize);
 	printf("\n");
 
 	/* Print state set info */
@@ -111,7 +111,7 @@ epicsShareFunc void epicsShareAPI seqShow(epicsThreadId tid)
 
 		if (sp->options & OPT_SAFE)
 			printf("  User variables: address = %p, length = %u\n",
-				sp->var, sp->varSize);
+				sp->var, (unsigned)sp->varSize);
 		printf("\n");
 	}
 }
@@ -303,7 +303,7 @@ epicsShareFunc void epicsShareAPI seqQueueShow(epicsThreadId tid)
 	{
 		QUEUE	queue = sp->queues[n];
 
-		printf("  Queue #%d: numElems=%d, used=%d, elemSize=%d\n", n,
+		printf("  Queue #%d: numElems=%lu, used=%lu, elemSize=%lu\n", n,
 			seqQueueNumElems(queue),
 			seqQueueUsed(queue),
 			seqQueueElemSize(queue));

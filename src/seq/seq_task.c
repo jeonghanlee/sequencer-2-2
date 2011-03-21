@@ -131,7 +131,7 @@ static void ss_read_buffer_static(SSCB *ss, CHAN *ch)
 	SPROG	*sp = ss->sprog;
 	char	*val = valPtr(ch,ss);
 	char	*buf = bufPtr(ch);
-	int	nch = ch - sp->chan;
+	int	nch = (int)(ch - sp->chan);
 	size_t	var_size = ch->type->size * ch->count;
 
 	if (!ss->dirty[nch])
@@ -183,7 +183,7 @@ void ss_write_buffer(SSCB *pwSS, CHAN *ch, void *val)
 	char	*buf = bufPtr(ch);
 	size_t	var_size = ch->type->size * ch->count;
 	unsigned nss;
-	int	nch = ch - sp->chan;
+	int	nch = (int)(ch - sp->chan);
 
 #define ss_name pwSS ? pwSS->ssName : ""
 	ch->wr_active = TRUE;
