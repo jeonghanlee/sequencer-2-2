@@ -8,5 +8,6 @@ DIRS += johng
 DIRS += validate
 DIRS += demo
 DIRS += race
+DIRS += unit
 
 include $(TOP)/configure/RULES_DIRS
