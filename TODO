@@ -51,3 +51,5 @@
       pv {"n1", "n2"} int x[2];       /* multiple(2) named scalar pvs */
       pv {} int x[2][100];            /* multiple(2) anonymous array[100] pvs */
       pv {"n1", "n2"} int x[2][100];  /* multiple(2) named array[100] pvs */
+
+* More tests, especially unit tests.
