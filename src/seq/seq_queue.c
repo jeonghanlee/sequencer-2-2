@@ -4,119 +4,177 @@
 #include "seq.h"
 
 struct seqQueue {
-    int     nextPut;    /* count elements, not bytes */
-    int     nextGet;    /* count elements, not bytes */
-    int     numElems;
-    int     elemSize;
-    char    *buffer;
+    size_t          wr;
+    size_t          rd;
+    size_t          numElems;
+    size_t          elemSize;
+    boolean         overflow;
+    epicsMutexId    mutex;
+    char            *buffer;
 };
 
-QUEUE seqQueueCreate(unsigned numElems, unsigned elemSize)
+boolean seqQueueInvariant(QUEUE q)
+{
+    return (q != NULL)
+        && q->elemSize > 0
+        && q->numElems > 0
+        && q->numElems <= seqQueueMaxNumElems
+        && q->rd < q->numElems
+        && q->wr < q->numElems;
+}
+
+QUEUE seqQueueCreate(size_t numElems, size_t elemSize)
 {
     QUEUE q = (QUEUE)calloc(1,sizeof(struct seqQueue));
-    if (!q) {
-        errlogSevPrintf(errlogFatal, "queueCreate: out of memory\n");
+
+    /* check arguments to establish invariants */
+    if (numElems == 0) {
+        errlogSevPrintf(errlogFatal, "seqQueueCreate: numElems must be positive\n");
         return 0;
     }
-    assert(elemSize <= INT_MAX);
-    q->elemSize = (int)elemSize;
-    assert(numElems <= INT_MAX);
-    q->numElems = (int)numElems;
+    if (elemSize == 0) {
+        errlogSevPrintf(errlogFatal, "seqQueueCreate: elemSize must be positive\n");
+        return 0;
+    }
+    if (numElems > seqQueueMaxNumElems) {
+        errlogSevPrintf(errlogFatal, "seqQueueCreate: numElems too large\n");
+        return 0;
+    }
+    if (!q) {
+        errlogSevPrintf(errlogFatal, "seqQueueCreate: out of memory\n");
+        return 0;
+    }
     q->buffer = (char *)calloc(numElems, elemSize);
     if (!q->buffer) {
-        errlogSevPrintf(errlogFatal, "queueCreate: out of memory\n");
+        errlogSevPrintf(errlogFatal, "seqQueueCreate: out of memory\n");
+        free(q);
         return 0;
     }
-    q->nextGet = q->nextPut = 0;
+    q->mutex = epicsMutexCreate();
+    if (!q->mutex) {
+        errlogSevPrintf(errlogFatal, "seqQueueCreate: out of memory\n");
+        free(q->buffer);
+        free(q);
+        return 0;
+    }
+    q->elemSize = elemSize;
+    q->numElems = numElems;
+    q->overflow = FALSE;
+    q->rd = q->wr = 0;
     return q;
 }
 
 void seqQueueDestroy(QUEUE q)
 {
+    epicsMutexDestroy(q->mutex);
     free(q->buffer);
     free(q);
 }
 
 boolean seqQueueGet(QUEUE q, void *value)
 {
-    int nextGet = q->nextGet;
-    int nextPut = q->nextPut;
-    int numElems = q->numElems;
-    int elemSize = q->elemSize;
-    int empty = (nextGet == nextPut);
+    return seqQueueGetF(q, memcpy, value);
+}
 
-    if (!empty) {
-        memcpy(value, q->buffer + nextGet * elemSize, (unsigned)elemSize);
-        nextGet++;
-        q->nextGet = (nextGet == numElems) ? 0 : nextGet;
+boolean seqQueueGetF(QUEUE q, seqQueueFunc *f, void *arg)
+{
+    if (q->wr == q->rd) {
+        if (!q->overflow) {
+            return TRUE;
+        }
+        epicsMutexLock(q->mutex);
+        f(arg, q->buffer + q->rd * q->elemSize, q->elemSize);
+        /* check again, a put might have intervened */
+        if (q->wr == q->rd && q->overflow)
+            q->overflow = FALSE;
+        else
+            q->rd = (q->rd + 1) % q->numElems;
+        epicsMutexUnlock(q->mutex);
+    } else {
+        f(arg, q->buffer + q->rd * q->elemSize, q->elemSize);
+        q->rd = (q->rd + 1) % q->numElems;
     }
-    return empty;
+    return FALSE;
 }
 
 boolean seqQueuePut(QUEUE q, const void *value)
 {
-    int nextGet = q->nextGet;
-    int nextPut = q->nextPut;
-    int numElems = q->numElems;
-    int elemSize = q->elemSize;
-    int nextNextPut = (nextPut == numElems - 1) ? 0 : (nextPut + 1);
-    int full = (nextNextPut == nextGet);
+    return seqQueuePutF(q, memcpy, value);
+}
 
-    memcpy(q->buffer + nextPut * elemSize, value, (unsigned)elemSize);
-    if (!full) {
-        q->nextPut = nextNextPut;
+boolean seqQueuePutF(QUEUE q, seqQueueFunc *f, const void *arg)
+{
+    boolean r = FALSE;
+
+    if (q->overflow || (q->wr + 1) % q->numElems == q->rd) {
+        epicsMutexLock(q->mutex);
+        if ((q->wr + 1) % q->numElems == q->rd) {
+            if (q->overflow) {
+                r = TRUE;   /* we will overwrite the last element */
+            }
+            q->overflow = TRUE;
+        } else if (q->overflow) {
+            /* we had a get since the last put, so
+               can now eliminate overflow flag and instead
+               increment the write pointer */
+            q->wr = (q->wr + 1) % q->numElems;
+            if ((q->wr + 1) % q->numElems != q->rd) {
+                q->overflow = FALSE;
+            }
+        }
+        f(q->buffer + q->wr * q->elemSize, arg, q->elemSize);
+        if (!q->overflow) {
+            q->wr = (q->wr + 1) % q->numElems;
+        }
+        epicsMutexUnlock(q->mutex);
+    } else {
+        f(q->buffer + q->wr * q->elemSize, arg, q->elemSize);
+        q->wr = (q->wr + 1) % q->numElems;
     }
-    return full;
+    return r;
 }
 
 void seqQueueFlush(QUEUE q)
 {
-    q->nextGet = q->nextPut;
+    epicsMutexLock(q->mutex);
+    q->rd = q->wr;
+    q->overflow = FALSE;
+    epicsMutexUnlock(q->mutex);
 }
 
-boolean seqQueueFree(const QUEUE q)
+static size_t used(const QUEUE q)
 {
-    int n;
-
-    n = q->nextGet - q->nextPut - 1;
-    if (n < 0)
-        n += q->numElems;
-    return n;
+    return (q->numElems + q->wr - q->rd) % q->numElems + (q->overflow ? 1 : 0);
 }
 
-boolean seqQueueUsed(const QUEUE q)
+size_t seqQueueFree(const QUEUE q)
 {
-    int n;
-
-    n = q->nextPut - q->nextGet;
-    if (n < 0)
-        n += q->numElems;
-    return n;
+    return q->numElems - used(q);
 }
 
-unsigned seqQueueNumElems(const QUEUE q)
+size_t seqQueueUsed(const QUEUE q)
 {
-    assert(q->numElems >= 0);
-    return (unsigned)q->numElems;
-}
-
-unsigned seqQueueElemSize(const QUEUE q)
-{
-    assert(q->elemSize >= 0);
-    return (unsigned)q->elemSize;
+    return used(q);
 }
 
 boolean seqQueueIsEmpty(const QUEUE q)
 {
-    return (q->nextPut == q->nextGet);
+    return q->wr == q->rd && !q->overflow;
 }
 
 boolean seqQueueIsFull(const QUEUE q)
 {
-    int n;
+    return (q->wr + 1) % q->numElems == q->rd && q->overflow;
+}
 
-    n = (q->nextPut - q->nextGet) + 1;
-    return (n == 0 || n == q->numElems);
+size_t seqQueueNumElems(const QUEUE q)
+{
+    return q->numElems;
+}
+
+size_t seqQueueElemSize(const QUEUE q)
+{
+    return q->elemSize;
 }
 
 /* avoid nothing define but not used warnings */
