@@ -788,6 +788,32 @@ epicsShareFunc boolean epicsShareAPI seq_efTestAndClear(SS_ID ss, EV_ID ev_flag)
 	return isSet;
 }
 
+struct getq_cp_arg {
+	CHAN	*ch;
+	void	*var;
+	PVMETA	*meta;
+};
+
+static void *getq_cp(void *dest, const void *value, size_t elemSize)
+{
+	struct getq_cp_arg *arg = (struct getq_cp_arg *)dest;
+	CHAN	*ch = arg->ch;
+	ACHAN	*ach = ch->ach;
+	PVMETA	*meta = arg->meta;
+	void	*var = arg->var;
+	pvType	type = ch->type->getType;
+	if (ach)
+	{
+		assert(pv_is_time_type(type));
+		/* Copy status, severity and time stamp */
+		meta->status = *pv_status_ptr(value,type);
+		meta->severity = *pv_severity_ptr(value,type);
+		meta->timeStamp = *pv_stamp_ptr(value,type);
+		memcpy(var, pv_value_ptr(value,type), ch->type->size * ch->count);
+	}
+	return NULL;
+}
+
 /*
  * seq_pvGetQ() - Get queued DB value.
  */
@@ -812,13 +838,16 @@ epicsShareFunc boolean epicsShareAPI seq_pvGetQ(SS_ID ss, VAR_ID varId)
 	/* If set, queue should be non-empty */
 	if (isSet)
 	{
+#if 0
 		pvType	type = ch->type->getType;
 		char	buffer[pv_size_n(type, ch->count)];
 		pvValue	*value = (pvValue *)buffer;
+#endif
+		struct getq_cp_arg arg = {ch, var, meta};
 		QUEUE	queue = ch->queue;
 		boolean	empty;
 
-		empty = seqQueueGet(queue, value);
+		empty = seqQueueGetF(queue, getq_cp, &arg);
 		if (empty)
 		{
 			errlogSevPrintf(errlogMajor,
@@ -828,12 +857,14 @@ epicsShareFunc boolean epicsShareAPI seq_pvGetQ(SS_ID ss, VAR_ID varId)
 		{
 			if (ach)
 			{
+#if 0
 				assert(pv_is_time_type(type));
 				/* Copy status, severity and time stamp */
 				meta->status = *pv_status_ptr(value,type);
 				meta->severity = *pv_severity_ptr(value,type);
 				meta->timeStamp = *pv_stamp_ptr(value,type);
 				memcpy(var, pv_value_ptr(value,type), ch->type->size * ch->count);
+#endif
 				/* If queue is now empty, clear the event flag */
 				if (seqQueueIsEmpty(queue))
 					bitClear(sp->evFlags, ev_flag);
