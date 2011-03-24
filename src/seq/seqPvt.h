@@ -41,6 +41,9 @@
 #define ssNum(ss)		((ss)-(ss)->sprog->ss)
 #define chNum(ch)		((ch)-(ch)->sprog->chan)
 
+#define metaIx(ch,ss)		(((ch)->sprog->options&OPT_SAFE)?ssNum(ss):0)
+#define metaPtr(ch,ss)		((ch)->ach->metaData+metaIx(ch,ss))
+
 /* Generic iteration on lists */
 #define foreach(e,l)		for (e = l; e != 0; e = e->next)
 
@@ -65,6 +68,7 @@ typedef struct state_set	SSCB;
 typedef struct program_instance	SPROG;
 typedef struct pvreq		PVREQ;
 typedef const struct pv_type	PVTYPE;
+typedef struct pv_meta_data	PVMETA;
 
 /* Structure to hold information about database channels */
 struct channel
@@ -95,6 +99,15 @@ struct pv_type
 	size_t		size;
 };
 
+/* Meta data received from pv layer per request/monitor */
+struct pv_meta_data
+{
+	epicsTimeStamp	timeStamp;	/* time stamp */
+	pvStat		status;		/* status code */
+	pvSevr		severity;	/* severity code */
+	const char	*message;	/* error message */
+};
+
 struct assigned_channel
 {
 	char		*dbName;	/* channel name after macro expansion */
@@ -103,11 +116,9 @@ struct assigned_channel
 	boolean		connected;	/* whether channel is connected */
 	void		*monid;		/* monitor id (supplied by PV lib) */
 	boolean		gotOneMonitor;	/* whether got at least one monitor */
-	/* data received from pv layer per request/monitor */
-	epicsTimeStamp	timeStamp;	/* time stamp */
-	pvStat		status;		/* last db access status code */
-	pvSevr		severity;	/* last db access severity code */
-	const char	*message;	/* last db access error message */
+	PVMETA		*metaData;	/* array of meta data from last access,
+					   one for each state set (safe mode)
+					   or just one (unsafe mode) */
 };
 
 /* Structure to hold information about a State Set */

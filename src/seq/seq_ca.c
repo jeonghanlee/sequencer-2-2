@@ -218,21 +218,22 @@ static void proc_db_events(
 	if (value != NULL)
 	{
 		void *val = pv_value_ptr(value,type);
+                PVMETA *meta = metaPtr(ch,ss);
 
 		/* Write value to CA buffer (lock-free) */
 		ss_write_buffer(0, ch, val);
 
 		/* Copy status, severity and time stamp */
-		ach->status = *pv_status_ptr(value,type);
-		ach->severity = *pv_severity_ptr(value,type);
-		ach->timeStamp = *pv_stamp_ptr(value,type);
+		meta->status = *pv_status_ptr(value,type);
+		meta->severity = *pv_severity_ptr(value,type);
+		meta->timeStamp = *pv_stamp_ptr(value,type);
 
 		/* Copy error message (only when severity indicates error) */
-		if (ach->severity != pvSevrNONE)
+		if (meta->severity != pvSevrNONE)
 		{
 			const char *pmsg = pvVarGetMess(ach->pvid);
 			if (!pmsg) pmsg = "unknown";
-			ach->message = pmsg;
+			meta->message = pmsg;
 		}
 	}
 

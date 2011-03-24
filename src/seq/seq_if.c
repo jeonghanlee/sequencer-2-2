@@ -45,6 +45,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvGet(SS_ID ss, VAR_ID varId, enum compT
 	PVREQ		*req;
 	epicsEventId	getSem = ss->getSemId[varId];
 	ACHAN		*ach = ch->ach;
+	PVMETA		*meta = metaPtr(ch,ss);
 	double		tmo = 10.0;
 
 	if ((sp->options & OPT_SAFE) && !ach)
@@ -69,10 +70,10 @@ epicsShareFunc pvStat epicsShareAPI seq_pvGet(SS_ID ss, VAR_ID varId, enum compT
 	/* Check for channel connected */
 	if (!ach->connected)
 	{
-		ach->status = pvStatDISCONN;
-		ach->severity = pvSevrINVALID;
-		ach->message = "disconnected";
-		return ach->status;
+		meta->status = pvStatDISCONN;
+		meta->severity = pvSevrINVALID;
+		meta->message = "disconnected";
+		return meta->status;
 	}
 
 	if (compType == SYNC)
@@ -133,9 +134,9 @@ epicsShareFunc pvStat epicsShareAPI seq_pvGet(SS_ID ss, VAR_ID varId, enum compT
 			req);			/* user arg */
 	if (status != pvStatOK)
 	{
-		ach->status = pvStatERROR;
-		ach->severity = pvSevrMAJOR;
-		ach->message = "get failure";
+		meta->status = pvStatERROR;
+		meta->severity = pvSevrMAJOR;
+		meta->message = "get failure";
 		errlogPrintf("seq_pvGet: pvVarGetCallback() %s failure: %s\n",
 			ach->dbName, pvVarGetMess(ach->pvid));
 		return status;
@@ -150,15 +151,15 @@ epicsShareFunc pvStat epicsShareAPI seq_pvGet(SS_ID ss, VAR_ID varId, enum compT
 		case epicsEventWaitOK:
 			break;
 		case epicsEventWaitTimeout:
-			ach->status = pvStatTIMEOUT;
-			ach->severity = pvSevrMAJOR;
-			ach->message = "get completion timeout";
-			return ach->status;
+			meta->status = pvStatTIMEOUT;
+			meta->severity = pvSevrMAJOR;
+			meta->message = "get completion timeout";
+			return meta->status;
 		case epicsEventWaitError:
-			ach->status = pvStatERROR;
-			ach->severity = pvSevrMAJOR;
-			ach->message = "get completion failure";
-			return ach->status;
+			meta->status = pvStatERROR;
+			meta->severity = pvSevrMAJOR;
+			meta->message = "get completion failure";
+			return meta->status;
 		}
 		epicsEventSignal(getSem);
 	}
@@ -244,6 +245,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvPut(SS_ID ss, VAR_ID varId, enum compT
 	char	*var = valPtr(ch,ss);	/* ptr to value */
 	PVREQ	*req;
 	ACHAN	*ach = ch->ach;
+	PVMETA	*meta = metaPtr(ch,ss);
 	epicsEventId	putSem = ss->putSemId[varId];
 	double	tmo = 10.0;
 
@@ -267,10 +269,10 @@ epicsShareFunc pvStat epicsShareAPI seq_pvPut(SS_ID ss, VAR_ID varId, enum compT
 	/* Check for channel connected */
 	if (!ach->connected)
 	{
-		ach->status = pvStatDISCONN;
-		ach->severity = pvSevrINVALID;
-		ach->message = "disconnected";
-		return ach->status;
+		meta->status = pvStatDISCONN;
+		meta->severity = pvSevrINVALID;
+		meta->message = "disconnected";
+		return meta->status;
 	}
 
 	/* Determine whether to perform synchronous, asynchronous, or
@@ -307,10 +309,10 @@ epicsShareFunc pvStat epicsShareAPI seq_pvPut(SS_ID ss, VAR_ID varId, enum compT
 		case epicsEventWaitOK:
 			break;
 		case epicsEventWaitTimeout:
-			ach->status = pvStatERROR;
-			ach->severity = pvSevrMAJOR;
-			ach->message = "already one put pending";
-			status = ach->status;
+			meta->status = pvStatERROR;
+			meta->severity = pvSevrMAJOR;
+			meta->message = "already one put pending";
+			status = meta->status;
 			errlogSevPrintf(errlogFatal,
 				"pvPut(ss %s, var %s, pv %s): user error "
 				"(there is already a put pending for this variable/"
@@ -372,16 +374,16 @@ epicsShareFunc pvStat epicsShareAPI seq_pvPut(SS_ID ss, VAR_ID varId, enum compT
 		case epicsEventWaitOK:
 			break;
 		case epicsEventWaitTimeout:
-			ach->status = pvStatTIMEOUT;
-			ach->severity = pvSevrMAJOR;
-			ach->message = "put completion timeout";
-			status = ach->status;
+			meta->status = pvStatTIMEOUT;
+			meta->severity = pvSevrMAJOR;
+			meta->message = "put completion timeout";
+			status = meta->status;
 			break;
 		case epicsEventWaitError:
-			ach->status = pvStatERROR;
-			ach->severity = pvSevrMAJOR;
-			ach->message = "put completion failure";
-			status = ach->status;
+			meta->status = pvStatERROR;
+			meta->severity = pvSevrMAJOR;
+			meta->message = "put completion failure";
+			status = meta->status;
 			break;
 		}
 		epicsEventSignal(putSem);
@@ -649,8 +651,9 @@ epicsShareFunc char *epicsShareAPI seq_pvName(SS_ID ss, VAR_ID varId)
  */
 epicsShareFunc pvStat epicsShareAPI seq_pvStatus(SS_ID ss, VAR_ID varId)
 {
-	CHAN *ch = ss->sprog->chan + varId;
-	return ch->ach ? ch->ach->status : pvStatOK;
+	CHAN	*ch = ss->sprog->chan + varId;
+	PVMETA	*meta = metaPtr(ch,ss);
+	return ch->ach ? meta->status : pvStatOK;
 }
 
 /*
@@ -658,8 +661,9 @@ epicsShareFunc pvStat epicsShareAPI seq_pvStatus(SS_ID ss, VAR_ID varId)
  */
 epicsShareFunc pvSevr epicsShareAPI seq_pvSeverity(SS_ID ss, VAR_ID varId)
 {
-	CHAN *ch = ss->sprog->chan + varId;
-	return ch->ach ? ch->ach->severity : pvSevrOK;
+	CHAN	*ch = ss->sprog->chan + varId;
+	PVMETA	*meta = metaPtr(ch,ss);
+	return ch->ach ? meta->severity : pvSevrOK;
 }
 
 /*
@@ -667,8 +671,9 @@ epicsShareFunc pvSevr epicsShareAPI seq_pvSeverity(SS_ID ss, VAR_ID varId)
  */
 epicsShareFunc const char *epicsShareAPI seq_pvMessage(SS_ID ss, VAR_ID varId)
 {
-	CHAN *ch = ss->sprog->chan + varId;
-	return ch->ach ? ch->ach->message : "";
+	CHAN	*ch = ss->sprog->chan + varId;
+	PVMETA	*meta = metaPtr(ch,ss);
+	return ch->ach ? meta->message : "";
 }
 
 /*
@@ -684,9 +689,12 @@ epicsShareFunc VAR_ID epicsShareAPI seq_pvIndex(SS_ID ss, VAR_ID varId)
  */
 epicsShareFunc epicsTimeStamp epicsShareAPI seq_pvTimeStamp(SS_ID ss, VAR_ID varId)
 {
-	CHAN *ch = ss->sprog->chan + varId;
+	CHAN	*ch = ss->sprog->chan + varId;
+	PVMETA	*meta = metaPtr(ch,ss);
 	if (ch->ach)
-		return ch->ach->timeStamp;
+	{
+		return meta->timeStamp;
+	}
 	else
 	{
 		epicsTimeStamp ts;
@@ -791,6 +799,7 @@ epicsShareFunc boolean epicsShareAPI seq_pvGetQ(SS_ID ss, VAR_ID varId)
 	EV_ID	ev_flag = ch->efId;
 	boolean	isSet;
 	ACHAN	*ach = ch->ach;
+	PVMETA	*meta = metaPtr(ch,ss);
 
 	epicsMutexMustLock(sp->programLock);
 
@@ -821,9 +830,9 @@ epicsShareFunc boolean epicsShareAPI seq_pvGetQ(SS_ID ss, VAR_ID varId)
 			{
 				assert(pv_is_time_type(type));
 				/* Copy status, severity and time stamp */
-				ach->status = *pv_status_ptr(value,type);
-				ach->severity = *pv_severity_ptr(value,type);
-				ach->timeStamp = *pv_stamp_ptr(value,type);
+				meta->status = *pv_status_ptr(value,type);
+				meta->severity = *pv_severity_ptr(value,type);
+				meta->timeStamp = *pv_stamp_ptr(value,type);
 				memcpy(var, pv_value_ptr(value,type), ch->type->size * ch->count);
 				/* If queue is now empty, clear the event flag */
 				if (seqQueueIsEmpty(queue))

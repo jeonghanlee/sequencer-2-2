@@ -253,6 +253,10 @@ static void init_chan(SPROG *sp, CHAN *ch, seqChan *seqChan)
 		{
 			ACHAN	*ach = new(ACHAN);
 			ach->dbName = epicsStrDup(name_buffer);
+			if (sp->options & OPT_SAFE)
+				ach->metaData = newArray(PVMETA, sp->numSS);
+			else
+				ach->metaData = new(PVMETA);
 			ch->ach = ach;
 		}
 		DEBUG("  assigned name=%s, expanded name=%s\n",
@@ -375,6 +379,8 @@ void seq_free(SPROG *sp)
 
 		if (ch->ach)
 		{
+			if (ch->ach->metaData)
+				free(ch->ach->metaData);
 			if (ch->ach->dbName != NULL)
 				free(ch->ach->dbName);
 			free(ch->ach);

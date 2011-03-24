@@ -201,13 +201,14 @@ epicsShareFunc void epicsShareAPI seqChanShow(epicsThreadId tid, const char *str
 
 		if (ach)
 		{
-			printf("  Status = %d\n", ach->status);
-			printf("  Severity = %d\n", ach->severity);
-			printf("  Message = %s\n", ach->message != NULL ?
-				ach->message : "");
+			PVMETA	*meta = metaPtr(ch,ss);
+			printf("  Status = %d\n", meta->status);
+			printf("  Severity = %d\n", meta->severity);
+			printf("  Message = %s\n", meta->message != NULL ?
+				meta->message : "");
 			/* Print time stamp in text format: "yyyy/mm/dd hh:mm:ss.sss" */
 			epicsTimeToStrftime(tsBfr, sizeof(tsBfr),
-				"%Y/%m/%d %H:%M:%S.%03f", &ach->timeStamp);
+				"%Y/%m/%d %H:%M:%S.%03f", &meta->timeStamp);
 			printf("  Time stamp = %s\n", tsBfr);
 		}
 
