@@ -28,6 +28,7 @@ PROD += pvSync
 PROD += pvPutAsync
 PROD += array
 PROD += stop
+PROD += userfunc
 
 #PROD += ctest
 

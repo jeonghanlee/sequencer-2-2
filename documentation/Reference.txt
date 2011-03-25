@@ -1381,7 +1381,7 @@ one or more user-supplied functions. For example::
   ...
   /* last SNL statement */
   %{
-    LOCAL float smooth (pArray, numElem)
+    static float smooth (pArray, numElem)
     { ... }
   }%
 
@@ -1393,19 +1393,25 @@ Calling pvGet etc. from C
 
 The built-in SNL functions such as :c:func:`pvGet` cannot be directly used
 in user-supplied functions. However, most of the built-in functions
-have a C language equivalent, which begin with the prefix ``seq_``
-(e.g. ``pvGet`` becomes ``seq_pvGet``). These C functions must pass a
-parameter identifying the calling state program, and if a process
+have a C language equivalent with teh same name, except that the prefix ``seq_``
+is added (e.g. ``pvGet`` becomes ``seq_pvGet``). These C functions expect an
+additional first argument identifying the calling state set, which is
+available in action code under the name ``ssId``. If a process
 variable name is required, the index of that variable must
-be supplied. This index is obtained via the :c:func:`pvIndex` function.
-Furthermore, if the code is complied with the :option:`+r` option, the
-database variables must be referenced as a structure element as
-described in `Variable Modification for Reentrant Option`_
-(this isn't a problem if individual SNL variables are passed as
-parameters to C code, because the compiler will do the work).
-Examination of the intermediate C code that the compiler produces
-will indicate how to use the built-in functions and database
-variables.
+be supplied. This index is obtained via the :c:func:`pvIndex` function
+(which must be called from SNL code, not C code, to work).
+
+If the program is compiled with the :option:`+r` option, user functions
+cannot directly access SNL variables, not even global ones. Instead,
+variables (or their address) should be passed to user functions as
+arguments. Alternatively, you can pass the ``pVar`` variable of type
+``USER_VAR*`` and access SNL variables as structure members of ``pVar``.
+See next section for details and an example.
+
+The prototypes for the C functions corresponding to the built-in SNL functions
+as well as additional supporting macros and type definitions can be found
+in the header file ``seqCom.h``. This header file is always included by
+the generated C code.
 
 .. _reentrant option:
 
@@ -1425,7 +1431,7 @@ The C file will contain the following declaration::
   struct UserVar {
     int sw1;
     float v5;
-    short wf2[1025];
+    short wf2[1024];
   };
 
 The sequencer allocates the structure area at run time and passes a
@@ -1446,6 +1452,35 @@ statements, but you will have to handle escaped C code yourself.
    ``UserVar`` struct. You can operate on its members in any way you like,
    including taking the address of variables and passing them to C
    functions.
+
+Here is a stupid example of a C function that does a pvGet, increments the
+variable, and then does a pvPut::
+
+   program userfunc
+
+   option +r;
+
+   %{
+   static void incr(SS_ID ssId, int *pv, VAR_ID v)
+   {
+       seq_pvGet(ssId, v, SYNC);
+       *pv += 1;
+       seq_pvPut(ssId, v, SYNC);
+   }
+   }%
+
+   int i;
+   assign i to "counter";
+
+   foreign pVar, ssId;
+
+   ss myss {
+       state doit {
+           when (delay(1)) {
+               incr(ssId, &i, pvIndex(i));
+           } state doit
+       }
+   }
 
 
 Syntax Summary
