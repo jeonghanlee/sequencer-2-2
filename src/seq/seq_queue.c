@@ -25,7 +25,7 @@ boolean seqQueueInvariant(QUEUE q)
 
 QUEUE seqQueueCreate(size_t numElems, size_t elemSize)
 {
-    QUEUE q = (QUEUE)calloc(1,sizeof(struct seqQueue));
+    QUEUE q = new(struct seqQueue);
 
     /* check arguments to establish invariants */
     if (numElems == 0) {
