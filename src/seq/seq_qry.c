@@ -304,10 +304,10 @@ epicsShareFunc void epicsShareAPI seqQueueShow(epicsThreadId tid)
 	{
 		QUEUE	queue = sp->queues[n];
 
-		printf("  Queue #%d: numElems=%lu, used=%lu, elemSize=%lu\n", n,
-			seqQueueNumElems(queue),
-			seqQueueUsed(queue),
-			seqQueueElemSize(queue));
+		printf("  Queue #%d: numElems=%u, used=%u, elemSize=%u\n", n,
+			(unsigned)seqQueueNumElems(queue),
+			(unsigned)seqQueueUsed(queue),
+			(unsigned)seqQueueElemSize(queue));
 		dn = userInput();
 		n = max(0, n + dn);
 		assert(n >= 0);
