@@ -19,8 +19,15 @@ evflag *efp;    /* error: pointer to event flag */
 /* declare the variable and the tag to avoid warnings */
 foreign rv, x;
 
+%%TS_STAMP ts;
+foreign ts;
+
+int var;
+assign var;
+
 entry {
     printf("%d\n", rv.x);
+    ts = pvTimeStamp(var);
 }
 
 ss one {
