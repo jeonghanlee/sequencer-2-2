@@ -8,6 +8,13 @@ monitor s;
 evflag ef_s;
 syncq s to ef_s 5;
 
+/* just to validate default queue size */
+string x;
+assign x to "syncq";
+monitor x;
+evflag ef_x;
+syncq x to ef_x;
+
 int n = 0;
 assign n;
 

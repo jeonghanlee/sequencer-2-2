@@ -62,7 +62,7 @@ extern "C" {
 
 #define NO_EVENT_FLAG		0	/* argument to pvSync to remove sync */
 
-#define MAX_QUEUE_SIZE		100	/* default maximum queue size (elements) */
+#define DEFAULT_QUEUE_SIZE	100	/* default queue size (elements) */
 
 /* I/O completion type (extra argument passed to seq_pvGet() and seq_pvPut()) */
 enum compType {
