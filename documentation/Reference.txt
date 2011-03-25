@@ -474,7 +474,7 @@ Option
 
 Option values must include the "+" or "-" sign. Example::
 
-  option +r; /* make code reentrant */
+   option +r; /* make code reentrant */
 
 The same syntax is used for global options and state options. The
 interpretation, however, is different:
@@ -846,9 +846,9 @@ pvPut
 ^^^^^
 
 .. c:function::
-  pvStat pvPut(assigned_var)
-  pvStat pvPut(assigned_var, SYNC)
-  pvStat pvPut(assigned_var, ASYNC)
+   pvStat pvPut(assigned_var)
+   pvStat pvPut(assigned_var, SYNC)
+   pvStat pvPut(assigned_var, ASYNC)
 
 Puts (or writes) the value of an SNL variable to the underlying process
 variable. Returns the status from the PV layer (e.g. ``pvStatOK`` for
@@ -888,20 +888,23 @@ are equivalent. Whereas in ::
 
 the second pvPut fails.
 
-In safe mode, :c:func:`pvPut` can be used with anonymous PVs (variables assigned
+In :ref:`safe mode`, :c:func:`pvPut` can be used with anonymous PVs (variables assigned
 to "") to communicate between state sets. This makes sense only with global
 variables as only those can be referenced in more than one state set. The
-behaviour for anonymous PVs exactly mirrors that of named PVs. Note, however, that
-for anonymous PVs completion is always immediate, so the ``SYNC`` and ``ASYNC``
-options are not very useful.
+behaviour for anonymous PVs exactly mirrors that of named PVs, including the fact
+that the new value will not be seen by other state sets until they issue a pvGet,
+or, if the variable is monitored, until they wait for an event in a :token:`when`
+clause.
+Note that for anonymous PVs completion is always immediate, so the ``SYNC`` and
+``ASYNC`` options are not very useful.
 
 pvPutComplete
 ^^^^^^^^^^^^^
 
 .. c:function::
-  boolean pvPutComplete(assigned_var)
-  boolean pvPutComplete(assigned_var, boolean any)
-  boolean pvPutComplete(assigned_var, boolean any, boolean *pComplete)
+   boolean pvPutComplete(assigned_var)
+   boolean pvPutComplete(assigned_var, boolean any)
+   boolean pvPutComplete(assigned_var, boolean any, boolean *pComplete)
 
 Returns whether the last asynchronous :c:func:`pvPut` to this process
 variable has completed.
@@ -921,9 +924,9 @@ pvGet
 ^^^^^
 
 .. c:function::
-  pvStat pvGet(assigned_var)
-  pvStat pvGet(assigned_var, SYNC)
-  pvStat pvGet(assigned_var, ASYNC)
+   pvStat pvGet(assigned_var)
+   pvStat pvGet(assigned_var, SYNC)
+   pvStat pvGet(assigned_var, ASYNC)
 
 Gets (or reads) the value of an SNL variable from the underlying process
 variable. Returns the status from the PV layer (e.g.
@@ -938,40 +941,54 @@ The optional ``SYNC`` and ``ASYNC`` arguments override the compile option.
 specified; ``ASYNC`` doesn't block and so gives default behavior if
 :option:`+a` was specified.
 
+In :ref:`safe mode`, :c:func:`pvGet` can be used with anonymous PVs (variables assigned
+to "") to communicate between state sets. In order to mirror the behaviour of
+named PVs, if ``ASYNC`` is specified, then the variable will not be updated
+until a pvGetComplete is executed from the same state set, or, if the
+variable is monitored, until the state set waits for events in a :token:`when`
+clause.
+
+.. todo:: Needs to be implemented, right now ASYNC behaves the same as SYNC
+   for anonymous PVs.
+
 pvGetComplete
 ^^^^^^^^^^^^^
 
 .. c:function::
-  boolean pvGetComplete(assigned_var)
+   boolean pvGetComplete(assigned_var)
 
 Returns whether the last get of this process variable has completed,
 i.e. the value in the variable is current. This call is appropriate only if
 the asynchronous (:option:`+a`) compile option is specified or
 :c:func:`pvGet` 's optional ``ASYNC`` argument was used.
 
-In safe mode, the update of the variable with the value from the PV layer
+In :ref:`safe mode`, the update of the variable with the value from the PV layer
 happens as a side effect of this call (if TRUE is returned).
+
+.. todo:: Implement this.
 
 Unlike :c:func:`pvPutComplete`, :c:func:`pvGetComplete` doesn't support
 arrays.
 
-..todo:: check if this is correct; i think it is not.
+.. todo:: check if this is correct; i think it is not.
 
 pvGetQ
 ^^^^^^
 
 .. c:function::
-  boolean pvGetQ(queued_var)
+   boolean pvGetQ(queued_var)
 
 If the queue associated with this variable is not empty, remove its first
 (oldest) value and update the variable with it. Returns whether there was
-an element in the queue (and the variable got updated).
+an element in the queue (and the variable got updated). Note that in safe
+mode only the state set local copy of the variable gets updated, other
+state sets are not affected at all.
 
 pvFreeQ
 ^^^^^^^
 
 .. c:function::
-  void pvFreeQ(queued_var)
+   void pvFreeQ(queued_var)
 
 Deletes all entries from a queued variable's queue and
 clears the associated event flag. Since version 2.1 queue
@@ -982,7 +999,7 @@ pvFlushQ
 ^^^^^^^^
 
 .. c:function::
-  void pvFlushQ(queued_var)
+   void pvFlushQ(queued_var)
 
 Flush the queue associated with this variable, so it is empty afterwards.
 This function is new in version 2.1. and is an alias for :c:func:`pvFreeQ`.
@@ -991,12 +1008,12 @@ pvAssign
 ^^^^^^^^
 
 .. c:function::
-  pvStat pvAssign(assigned_var, process_variable_name)
+   pvStat pvAssign(assigned_var, process_variable_name)
 
 Assigns or re-assigns the SNL variable ``var`` to
 ``process_variable_name``. If ``process_variable_name`` is an empty
 string then ``assigned_var`` is de-assigned (not associated with any process
-variable). In safe mode, it causes assignment to an anonymous PV.
+variable). In :ref:`safe mode`, it causes assignment to an anonymous PV.
 
 As usual, ``assigned_var`` can also be an array element.
 
@@ -1019,7 +1036,7 @@ pvMonitor
 ^^^^^^^^^
 
 .. c:function::
-  pvStat pvMonitor(assigned_var)
+   pvStat pvMonitor(assigned_var)
 
 Initiates a monitor on the underlying process variable.
 
@@ -1029,7 +1046,7 @@ pvStopMonitor
 ^^^^^^^^^^^^^
 
 .. c:function::
-  pvStat pvStopMonitor(assigned_var)
+   pvStat pvStopMonitor(assigned_var)
 
 Terminates a monitor on the underlying process variable.
 
@@ -1037,7 +1054,7 @@ pvSync
 ^^^^^^
 
 .. c:function::
-  void pvSync(assigned_var, event_flag)
+   void pvSync(assigned_var, event_flag)
 
 Synchronizes a variable with an event flag, or removes such a
 synchronization if ``event_flag`` is zero.
@@ -1048,74 +1065,100 @@ pvCount
 ^^^^^^^
 
 .. c:function::
-  unsigned pvCount(assigned_var)
+   unsigned pvCount(assigned_var)
 
-Returns the element count associated with the process variable.
+Returns the element count associated with the process variable. This value
+is independent of the array size (if the variable is an array), it can be
+smaller or larger.
 
 pvStatus
 ^^^^^^^^
 
 .. c:function::
-  pvStat pvStatus(assigned_var)
+   pvStat pvStatus(assigned_var)
 
-Returns the current alarm status for the process variable (e.g.
-``pvStatHIHI`` , see :ref:`pvStat`). The status and severity are only valid
-after either a :c:func:`pvGet` call has completed or a monitor has been
-delivered.
+Returns the current alarm status (e.g. ``pvStatHIHI``, see :ref:`pvStat`)
+of the underlying PV
+or indicates failure of a previous PV operation.
+
+The status, severity, and message returned by :c:func:`pvStatus`,
+:c:func:`pvSeverity`, and :c:func:`pvMessage` reflect either the underlying
+PV's properties (if a pvPut or pvGet operation completed, or the variable is
+monitored), or else indicate a failure to initiate one of these operations.
 
 pvSeverity
 ^^^^^^^^^^
 
 .. c:function::
-  pvSevr pvSeverity(assigned_var)
+   pvSevr pvSeverity(assigned_var)
 
-Returns the current alarm severity (e.g.
-e.g.pvSevrMAJORe.g.). The notes above apply
+Returns the current alarm severity (e.g. pvSevrMAJOR) of the underlying PV
+or indicates failure of a previous PV operation.
+
+pvMessage
+^^^^^^^^^
+
+.. c:function::
+   const char *pvMessage(assigned_var)
+
+Returns the current error message of the variable, or "" (the empty string)
+if none is available.
 
 pvTimeStamp
 ^^^^^^^^^^^
 
 .. c:function::
-  TS_STAMP pvTimeStamp(assigned_var)
+   TS_STAMP pvTimeStamp(assigned_var)
 
-Returns the time stamp for the last :c:func`pvGet` or monitor
-of this variable. The compiler does recognize type TS_STAMP.
+Returns the time stamp for the last :c:func`pvGet` completion or monitor
+event for this variable. The SNL compiler does not recognize type TS_STAMP.
 Therefore, variable declarations for this type should be in escaped
 C code. This will generate a compiler warning, which can be
-ignored.
+ignored or fixed by adding a "foreign" declaration (see `Foreign Entities`_).
+
+Example::
+
+   %%TS_STAMP ts;
+   foreign ts;
+
+   int var;
+   assign var;
+
+   entry {
+       ts = pvTimeStamp(var);
+   }
 
 pvAssigned
 ^^^^^^^^^^
 
 .. c:function::
-  boolean pvAssigned(assigned_var)
+   boolean pvAssigned(assigned_var)
 
-Returns whether the SNL variable is currently
-assigned to a process variable.
+Returns whether the SNL variable is currently assigned to a process variable.
+Note that this function returns ``FALSE`` for anonymous PVs.
 
 pvConnected
 ^^^^^^^^^^^
 
 .. c:function::
-  boolean pvConnected(assigned_var)
+   boolean pvConnected(assigned_var)
 
-Returns whether the underlying process
-variable is currently connected.
+Returns whether the underlying process variable is currently connected.
 
 pvIndex
 ^^^^^^^
 
 .. c:function::
-  unsigned pvIndex(assigned_var)
+   unsigned pvIndex(assigned_var)
 
-Returns the index associated with a process
-variable. See `User Functions within the State Program`_.
+Returns the index associated with a variable. See
+`User Functions within the State Program`_ for how to use this function.
 
 pvFlush
 ^^^^^^^
 
 .. c:function::
-  void pvFlush()
+   void pvFlush()
 
 Causes the PV layer to flush its send buffer. This is only
 necessary if you need to make sure that CA operations are
@@ -1131,7 +1174,7 @@ pvChannelCount
 ^^^^^^^^^^^^^^
 
 .. c:function::
-  unsigned pvChannelCount()
+   unsigned pvChannelCount()
 
 Returns the total number of process variables
 associated with the state program.
@@ -1140,7 +1183,7 @@ pvAssignCount
 ^^^^^^^^^^^^^
 
 .. c:function::
-  unsigned pvAssignCount()
+   unsigned pvAssignCount()
 
 Returns the total number of SNL variables in this
 program that are assigned to underlying process variables.
@@ -1157,7 +1200,7 @@ pvConnectCount
 ^^^^^^^^^^^^^^
 
 .. c:function::
-  unsigned pvConnectCount()
+   unsigned pvConnectCount()
 
 Returns the total number of underlying process
 variables that are connected.
@@ -1171,7 +1214,7 @@ efSet
 ^^^^^
 
 .. c:function::
-  void efSet(event_flag)
+   void efSet(event_flag)
 
 Sets the event flag and causes evaluation of the :token:`when`
 clauses for all state sets that are pending on this event flag.
@@ -1180,7 +1223,7 @@ efTest
 ^^^^^^
 
 .. c:function::
-  boolean efTest(event_flag)
+   boolean efTest(event_flag)
 
 Returns whether the event flag was set.
 
@@ -1188,7 +1231,7 @@ efClear
 ^^^^^^^
 
 .. c:function::
-  boolean efClear(event_flag)
+   boolean efClear(event_flag)
 
 Clears the event flag and returns whether the event flag was set.
 Also and causes evaluation of the :token:`when` clauses for all
@@ -1199,7 +1242,7 @@ efTestAndClear
 ^^^^^^^^^^^^^^
 
 .. c:function::
-  boolean efTestAndClear(event_flag)
+   boolean efTestAndClear(event_flag)
 
 Clears the event flag and returns whether the event
 flag was set. It is intended for use within a :token:`when` clause.
@@ -1208,7 +1251,7 @@ macValueGet
 ^^^^^^^^^^^
 
 .. c:function::
-  char* macValueGet(char *macro_name)
+   char* macValueGet(char *macro_name)
 
 Returns a pointer to a string that is the value for
 the specified macro name. If the macro does not exist, it returns
@@ -1289,12 +1332,12 @@ similar to an external 'real' PV. The variant ``assign var;`` of the
 
 For instance, with the declaration ::
 
-  int var;
-  assign var;
+   int var;
+   assign var;
 
 the action statement ::
 
-  pvPut(var)
+   pvPut(var)
 
 makes the value of ``var`` available to other state sets. They will,
 however, not see the new value until they issue either a (synchronous)
@@ -1303,12 +1346,12 @@ change conditions are evaluated.
 
 The action ::
 
-  pvGet(var, SYNC)
+   pvGet(var, SYNC)
 
 updates ``var`` immediately with whatever has been written to it
 previously via :c:func:`pvPut` by some other state set. Whereas ::
 
-  pvGet(var, ASYNC)
+   pvGet(var, ASYNC)
 
 has no immediate effect on the variable ``var``. Instead, ``var``
 will be updated only if the code calls :c:func:`pvGetComplete`
@@ -1330,11 +1373,12 @@ Apart from the :token:`sync` and :token:`syncq` features, an event flag
 behaves like an anonymous PV of boolean type with a monitor. We could
 have defined (pseudo code)::
 
-  efSet(e)          { e = TRUE; pvPut(e); }
-  efClear(e)        { e = FALSE; pvPut(e); }
-  efTest(e)         { pvGet(e,SYNC); return e; }
-  efTestAndClear(e) { pvGet(e,SYNC);
-    if(e) { efClear(e); return TRUE} else return FALSE; }
+   efSet(e)          { e = TRUE; pvPut(e); }
+   efClear(e)        { e = FALSE; pvPut(e); }
+   efTest(e)         { pvGet(e,SYNC); return e; }
+   efTestAndClear(e) { pvGet(e,SYNC);
+                       if(e) { efClear(e); return TRUE}
+                       else return FALSE; }
 
 
 C Compatibility Features
@@ -1377,13 +1421,13 @@ User Functions within the State Program
 The last state set may be followed by C code, usually containing
 one or more user-supplied functions. For example::
 
-  program example
-  ...
-  /* last SNL statement */
-  %{
-    static float smooth (pArray, numElem)
-    { ... }
-  }%
+   program example
+   ...
+   /* last SNL statement */
+   %{
+       static float smooth (pArray, numElem)
+       { ... }
+   }%
 
 There is little reason to do this, since a state program can of
 course be linked against C libraries.
@@ -1422,27 +1466,27 @@ If the reentrant option (:option:`+r`) is specified to SNC then all
 variables are made part of a structure. Suppose we have the
 following top-level declarations in the SNL program::
 
-  int sw1;
-  float v5;
-  short wf2[1024];
+   int sw1;
+   float v5;
+   short wf2[1024];
 
 The C file will contain the following declaration::
 
-  struct UserVar {
-    int sw1;
-    float v5;
-    short wf2[1024];
-  };
+   struct UserVar {
+       int sw1;
+       float v5;
+       short wf2[1024];
+   };
 
 The sequencer allocates the structure area at run time and passes a
 pointer to this structure into the state program. This structure
 has the following type::
 
-  struct UserVar *pVar;
+   struct UserVar *pVar;
 
 Reference to variable ``sw1`` is made as ::
 
-  pVar->sw1
+   pVar->sw1
 
 This conversion is automatically performed by the SNC for all SNL
 statements, but you will have to handle escaped C code yourself.
