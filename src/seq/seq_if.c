@@ -883,7 +883,7 @@ epicsShareFunc boolean epicsShareAPI seq_pvGetQ(SS_ID ss, VAR_ID varId)
  */
 epicsShareFunc void epicsShareAPI seq_pvFreeQ(SS_ID ss, VAR_ID varId)
 {
-	seq_pvFreeQ(ss, varId);
+	seq_pvFlushQ(ss, varId);
 }
 
 /*
