@@ -251,16 +251,16 @@ static void init_chan(SPROG *sp, CHAN *ch, seqChan *seqChan)
 		seqMacEval(sp, seqChan->dbAsName, name_buffer, sizeof(name_buffer));
 		if (name_buffer[0])
 		{
-			ACHAN	*ach = new(ACHAN);
-			ach->dbName = epicsStrDup(name_buffer);
+			DBCHAN	*dbch = new(DBCHAN);
+			dbch->dbName = epicsStrDup(name_buffer);
 			if (sp->options & OPT_SAFE)
-				ach->metaData = newArray(PVMETA, sp->numSS);
+				dbch->metaData = newArray(PVMETA, sp->numSS);
 			else
-				ach->metaData = new(PVMETA);
-			ch->ach = ach;
+				dbch->metaData = new(PVMETA);
+			ch->dbch = dbch;
 		}
 		DEBUG("  assigned name=%s, expanded name=%s\n",
-			seqChan->dbAsName, ch->ach->dbName);
+			seqChan->dbAsName, ch->dbch->dbName);
 	}
 	else
 		DEBUG("  pv name=<anonymous>\n");
@@ -377,13 +377,13 @@ void seq_free(SPROG *sp)
 	{
 		CHAN *ch = sp->chan + nch;
 
-		if (ch->ach)
+		if (ch->dbch)
 		{
-			if (ch->ach->metaData)
-				free(ch->ach->metaData);
-			if (ch->ach->dbName != NULL)
-				free(ch->ach->dbName);
-			free(ch->ach);
+			if (ch->dbch->metaData)
+				free(ch->dbch->metaData);
+			if (ch->dbch->dbName != NULL)
+				free(ch->dbch->dbName);
+			free(ch->dbch);
 		}
 	}
 	free(sp->chan);

@@ -42,7 +42,7 @@
 #define chNum(ch)		((ch)-(ch)->sprog->chan)
 
 #define metaIx(ch,ss)		(((ch)->sprog->options&OPT_SAFE)?ssNum(ss):0)
-#define metaPtr(ch,ss)		((ch)->ach->metaData+metaIx(ch,ss))
+#define metaPtr(ch,ss)		((ch)->dbch->metaData+metaIx(ch,ss))
 
 /* Generic iteration on lists */
 #define foreach(e,l)		for (e = l; e != 0; e = e->next)
@@ -60,7 +60,7 @@
 #define newArray(type,count)	(type *)calloc(count, sizeof(type))
 #define new(type)		newArray(type,1)
 
-typedef struct assigned_channel	ACHAN;
+typedef struct db_channel	DBCHAN;
 typedef struct channel		CHAN;
 typedef seqState		STATE;
 typedef struct macro		MACRO;
@@ -70,7 +70,7 @@ typedef struct pvreq		PVREQ;
 typedef const struct pv_type	PVTYPE;
 typedef struct pv_meta_data	PVMETA;
 
-/* Structure to hold information about database channels */
+/* Channel, i.e. an assigned variable */
 struct channel
 {
 	/* static channel data (assigned once on startup) */
@@ -82,13 +82,13 @@ struct channel
 	SPROG		*sprog;		/* state program that owns this struct*/
 
 	/* dynamic channel data (assigned at runtime) */
-	ACHAN		*ach;		/* channel "assigned" to a real pv */
+	DBCHAN		*dbch;		/* channel assigned to a named db pv */
 	EV_ID		efId;		/* event flag id if synced */
 	QUEUE		queue;		/* queue if queued */
 	boolean		monitored;	/* whether channel is monitored */
 	/* buffer access, only used in safe mode */
 	epicsMutexId	varLock;	/* mutex for put to anonymous pvs */
-	boolean		wr_active;	/* buffer is currently being written */
+	boolean		busy;		/* buffer is currently being written */
 };
 
 struct pv_type
@@ -108,7 +108,8 @@ struct pv_meta_data
 	const char	*message;	/* error message */
 };
 
-struct assigned_channel
+/* Channel assigned to a named (database) pv */
+struct db_channel
 {
 	char		*dbName;	/* channel name after macro expansion */
 	void		*pvid;		/* PV (process variable) id */
@@ -121,7 +122,6 @@ struct assigned_channel
 					   or just one (unsafe mode) */
 };
 
-/* Structure to hold information about a State Set */
 struct state_set
 {
 	/* static state set data (assigned once on startup) */
@@ -152,9 +152,6 @@ struct state_set
 	USER_VAR	*var;		/* variable value block (safe mode) */
 };
 
-/* All information about a state program.
-   The address of this structure is passed to the run-time sequencer.
- */
 struct program_instance
 {
 	/* static program data (assigned once on startup) */

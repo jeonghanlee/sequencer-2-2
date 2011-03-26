@@ -143,7 +143,7 @@ static void ss_read_buffer_static(SSCB *ss, CHAN *ch)
 		memcpy(val, buf, var_size);
 		DEBUG("ss %s: after read %s", ss->ssName, ch->varName);
 		print_channel_value(DEBUG,ch,val);
-	} while ((ch->wr_active || ss->dirty[nch])
+	} while ((ch->busy || ss->dirty[nch])
 		&& (epicsThreadSleep(0.0),TRUE));
 		/* Note: the sleep(0) here acts as a yield. */
 }
@@ -186,7 +186,7 @@ void ss_write_buffer(SSCB *pwSS, CHAN *ch, void *val)
 	int	nch = (int)(ch - sp->chan);
 
 #define ss_name pwSS ? pwSS->ssName : ""
-	ch->wr_active = TRUE;
+	ch->busy = TRUE;
 	DEBUG("ss %s: before write %s", ss_name, ch->varName);
 	print_channel_value(DEBUG,ch,buf);
 	memcpy(buf, val, var_size);
@@ -198,7 +198,7 @@ void ss_write_buffer(SSCB *pwSS, CHAN *ch, void *val)
 		if (ss != pwSS)
 			ss->dirty[nch] = TRUE;
 	}
-	ch->wr_active = FALSE;
+	ch->busy = FALSE;
 #undef ss_name
 }
 

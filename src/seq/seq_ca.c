@@ -67,7 +67,7 @@ pvStat seq_connect(SPROG *sp, boolean wait)
 	{
 		CHAN *ch = sp->chan + nch;
 
-		if (ch->ach == NULL)
+		if (ch->dbch == NULL)
 			continue;		/* skip anonymous pvs */
 		sp->assignCount += 1;
 		if (ch->monitored)
@@ -80,24 +80,24 @@ pvStat seq_connect(SPROG *sp, boolean wait)
 	for (nch = 0; nch < sp->numChans; nch++)
 	{
 		CHAN *ch = sp->chan + nch;
-		ACHAN *ach = ch->ach;
+		DBCHAN *dbch = ch->dbch;
 
-		if (ach == NULL)
+		if (dbch == NULL)
 			continue; /* skip records without pv names */
 		DEBUG("seq_connect: connect %s to %s\n", ch->varName,
-			ach->dbName);
+			dbch->dbName);
 		/* Connect to it */
 		status = pvVarCreate(
 				sp->pvSys,		/* PV system context */
-				ch->ach->dbName,	/* PV name */
+				ch->dbch->dbName,	/* PV name */
 				seq_conn_handler,	/* connection handler routine */
 				ch,			/* private data is CHAN struc */
 				0,			/* debug level (inherited) */
-				&ach->pvid);		/* ptr to PV id */
+				&dbch->pvid);		/* ptr to PV id */
 		if (status != pvStatOK)
 		{
 			errlogPrintf("seq_connect: pvVarCreate() %s failure: "
-				"%s\n", ach->dbName, pvVarGetMess(ach->pvid));
+				"%s\n", dbch->dbName, pvVarGetMess(dbch->pvid));
 			continue;
 		}
 	}
@@ -140,7 +140,7 @@ epicsShareFunc void seq_get_handler(
 	CHAN	*ch = rQ->ch;
 	SPROG	*sp = ch->sprog;
 
-	assert(ch->ach != NULL);
+	assert(ch->dbch != NULL);
 	freeListFree(sp->pvReqPool, arg);
 	/* Process event handling in each state set */
 	proc_db_events(value, type, ch, rQ->ss, GET_COMPLETE, status);
@@ -157,7 +157,7 @@ epicsShareFunc void seq_put_handler(
 	CHAN	*ch = rQ->ch;
 	SPROG	*sp = ch->sprog;
 
-	assert(ch->ach != NULL);
+	assert(ch->dbch != NULL);
 	freeListFree(sp->pvReqPool, arg);
 	/* Process event handling in each state set */
 	proc_db_events(value, type, ch, rQ->ss, PUT_COMPLETE, status);
@@ -171,14 +171,14 @@ epicsShareFunc void seq_mon_handler(
 {
 	CHAN	*ch = (CHAN *)arg;
 	SPROG	*sp = ch->sprog;
-	ACHAN	*ach = ch->ach;
+	DBCHAN	*dbch = ch->dbch;
 
-	assert(ach != NULL);
+	assert(dbch != NULL);
 	/* Process event handling in each state set */
 	proc_db_events(value, type, ch, sp->ss, MON_COMPLETE, status);
-	if (!ach->gotOneMonitor)
+	if (!dbch->gotOneMonitor)
 	{
-		ach->gotOneMonitor = TRUE;
+		dbch->gotOneMonitor = TRUE;
 		epicsMutexMustLock(sp->programLock);
 		sp->firstMonitorCount++;
 		if (sp->firstMonitorCount == sp->monitorCount
@@ -200,11 +200,11 @@ static void proc_db_events(
 	pvStat	status)
 {
 	SPROG	*sp = ch->sprog;
-	ACHAN	*ach = ch->ach;
+	DBCHAN	*dbch = ch->dbch;
 
-	assert(ach != NULL);
+	assert(dbch != NULL);
 	DEBUG("proc_db_events: var=%s, pv=%s, type=%s, status=%d\n", ch->varName,
-		ach->dbName, event_type_name[evtype], status);
+		dbch->dbName, event_type_name[evtype], status);
 
 	/* If monitor on var queued via syncQ, branch to alternative routine */
 	if (ch->queue && evtype == MON_COMPLETE)
@@ -231,7 +231,7 @@ static void proc_db_events(
 		/* Copy error message (only when severity indicates error) */
 		if (meta->severity != pvSevrNONE)
 		{
-			const char *pmsg = pvVarGetMess(ach->pvid);
+			const char *pmsg = pvVarGetMess(dbch->pvid);
 			if (!pmsg) pmsg = "unknown";
 			meta->message = pmsg;
 		}
@@ -265,7 +265,7 @@ static void proc_db_events_queued(SPROG *sp, CHAN *ch, pvValue *value)
 	boolean	full;
 
 	DEBUG("proc_db_events_queued: var=%s, pv=%s, queue=%p, used(max)=%d(%d)\n",
-		ch->varName, ch->ach->dbName,
+		ch->varName, ch->dbch->dbName,
 		ch->queue, seqQueueUsed(ch->queue), seqQueueNumElems(ch->queue));
 	/* Copy whole message into queue; no lock needed because only one writer */
 	full = seqQueuePut(ch->queue, value);
@@ -274,7 +274,7 @@ static void proc_db_events_queued(SPROG *sp, CHAN *ch, pvValue *value)
 		errlogSevPrintf(errlogMinor,
 		  "monitor event for variable %s (pv %s): "
 		  "last queue element overwritten (queue is full)\n",
-		  ch->varName, ch->ach->dbName
+		  ch->varName, ch->dbch->dbName
 		);
 	}
 	/* Set event flag; note: it doesn't matter which state set we pass. */
@@ -295,20 +295,20 @@ epicsShareFunc void seq_disconnect(SPROG *sp)
 	{
 		CHAN	*ch = sp->chan + nch;
 		pvStat	status;
-		ACHAN	*ach = ch->ach;
+		DBCHAN	*dbch = ch->dbch;
 
-		if (!ach)
+		if (!dbch)
 			continue;
 		DEBUG("seq_disconnect: disconnect %s from %s\n",
- 			ch->varName, ach->dbName);
+ 			ch->varName, dbch->dbName);
 		/* Disconnect this PV */
-		status = pvVarDestroy(ach->pvid);
+		status = pvVarDestroy(dbch->pvid);
 		if (status != pvStatOK)
 		    errlogPrintf("seq_disconnect: pvVarDestroy() %s failure: "
-				"%s\n", ach->dbName, pvVarGetMess(ach->pvid));
+				"%s\n", dbch->dbName, pvVarGetMess(dbch->pvid));
 
 		/* Clear monitor & connect indicators */
-		ach->connected = FALSE;
+		dbch->connected = FALSE;
 		sp->connectCount -= 1;
 	}
 	epicsMutexUnlock(sp->programLock);
@@ -318,29 +318,29 @@ epicsShareFunc void seq_disconnect(SPROG *sp)
 
 pvStat seq_monitor(CHAN *ch, boolean on)
 {
-	ACHAN	*ach = ch->ach;
+	DBCHAN	*dbch = ch->dbch;
 	pvStat	status;
 
 	assert(ch);
-	assert(ach);
-	if (on == (ach->monid != NULL))			/* already done */
+	assert(dbch);
+	if (on == (dbch->monid != NULL))			/* already done */
 		return pvStatOK;
-	DEBUG("calling pvVarMonitor%s(%p)\n", on?"On":"Off", ach->pvid);
+	DEBUG("calling pvVarMonitor%s(%p)\n", on?"On":"Off", dbch->pvid);
 	if (on)
 		status = pvVarMonitorOn(
-				ach->pvid,		/* pvid */
+				dbch->pvid,		/* pvid */
 				ch->type->getType,	/* requested type */
 				(int)ch->count,		/* element count */
 				seq_mon_handler,	/* function to call */
 				ch,			/* user arg (channel struct) */
-				&ach->monid);		/* where to put event id */
+				&dbch->monid);		/* where to put event id */
 	else
-		status = pvVarMonitorOff(ach->pvid, ach->monid);
+		status = pvVarMonitorOff(dbch->pvid, dbch->monid);
 	if (status != pvStatOK)
 		errlogPrintf("seq_monitor: pvVarMonitor%s(%s) failure: %s\n",
-			on?"On":"Off", ach->dbName, pvVarGetMess(ach->pvid));
+			on?"On":"Off", dbch->dbName, pvVarGetMess(dbch->pvid));
 	else if (!on)
-		ach->monid = NULL;
+		dbch->monid = NULL;
 	return status;
 }
 
@@ -352,27 +352,27 @@ void seq_conn_handler(void *var, int connected)
 {
 	CHAN	*ch = (CHAN *)pvVarGetPrivate(var);
 	SPROG	*sp = ch->sprog;
-	ACHAN	*ach = ch->ach;
+	DBCHAN	*dbch = ch->dbch;
 
 	epicsMutexMustLock(sp->programLock);
 
-	assert(ach != NULL);
+	assert(dbch != NULL);
 
 	/* Note that CA may call this while pvVarCreate is still running,
-	   so ach->pvid may not yet be initialized. Since the call
+	   so dbch->pvid may not yet be initialized. Since the call
 	   to seq_monitor below uses it we have to prepone initialization
 	   at this point.
 	  */
-	if (!ach->pvid)
-		ach->pvid = var;
+	if (!dbch->pvid)
+		dbch->pvid = var;
 
-	assert(ach->pvid == var);
+	assert(dbch->pvid == var);
 	if (!connected)
 	{
-		DEBUG("%s disconnected from %s\n", ch->varName, ach->dbName);
-		if (ach->connected)
+		DEBUG("%s disconnected from %s\n", ch->varName, dbch->dbName);
+		if (dbch->connected)
 		{
-			ach->connected = FALSE;
+			dbch->connected = FALSE;
 			sp->connectCount--;
 
 			if (ch->monitored)
@@ -383,16 +383,16 @@ void seq_conn_handler(void *var, int connected)
 		else
 		{
 			errlogPrintf("%s disconnect event but already disconnected %s\n",
-				ch->varName, ach->dbName);
+				ch->varName, dbch->dbName);
 		}
 	}
 	else	/* connected */
 	{
-		DEBUG("%s connected to %s\n", ch->varName, ach->dbName);
-		if (!ach->connected)
+		DEBUG("%s connected to %s\n", ch->varName, dbch->dbName);
+		if (!dbch->connected)
 		{
 			int dbCount;
-			ach->connected = TRUE;
+			dbch->connected = TRUE;
 			sp->connectCount++;
 			if (sp->firstMonitorCount == sp->monitorCount
 				&& sp->connectCount == sp->assignCount)
@@ -401,7 +401,7 @@ void seq_conn_handler(void *var, int connected)
 			}
 			dbCount = pvVarGetCount(var);
 			assert(dbCount >= 0);
-			ach->dbCount = min(ch->count, (unsigned)dbCount);
+			dbch->dbCount = min(ch->count, (unsigned)dbCount);
 
 			if (ch->monitored)
 			{
@@ -411,7 +411,7 @@ void seq_conn_handler(void *var, int connected)
 		else
 		{
 			errlogPrintf("%s connect event but already connected %s\n",
-				ch->varName, ach->dbName);
+				ch->varName, dbch->dbName);
 		}
 	}
 	epicsMutexUnlock(sp->programLock);

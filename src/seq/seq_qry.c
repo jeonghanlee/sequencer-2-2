@@ -150,21 +150,21 @@ epicsShareFunc void epicsShareAPI seqChanShow(epicsThreadId tid, const char *str
 	while (dn && (unsigned)nch < sp->numChans)
 	{
 		CHAN *ch = sp->chan + nch;
-		ACHAN *ach = ch->ach;
+		DBCHAN *dbch = ch->dbch;
 
 		if (str != NULL)
 		{
 			/* Check for channel connect qualifier */
 			if (connQual == '+')
-				showAll = ach && ach->connected;
+				showAll = dbch && dbch->connected;
 			else if (connQual == '-')
-				showAll = ach && (!ach->connected);
+				showAll = dbch && (!dbch->connected);
 			else
 				showAll = TRUE;
 
 			/* Check for pattern match if specified */
 			match = (str[0] == 0) ||
-					(ach && strstr(ach->dbName, str) != NULL);
+					(dbch && strstr(dbch->dbName, str) != NULL);
 			if (!(match && showAll))
 			{
 				ch += 1;
@@ -179,12 +179,12 @@ epicsShareFunc void epicsShareAPI seqChanShow(epicsThreadId tid, const char *str
 		printf("  Value =");
 		printValue(printf, valPtr(ch,ss), ch->count, ch->type->putType);
 
-		if (ach)
-			printf("  Assigned to \"%s\"\n", ach->dbName);
+		if (dbch)
+			printf("  Assigned to \"%s\"\n", dbch->dbName);
 		else
 			printf("  Not assigned\n");
 
-		if(ach && ach->connected)
+		if(dbch && dbch->connected)
 			printf("  Connected\n");
 		else
 			printf("  Not connected\n");
@@ -199,7 +199,7 @@ epicsShareFunc void epicsShareAPI seqChanShow(epicsThreadId tid, const char *str
 		else
 			printf("  Not sync'ed\n");
 
-		if (ach)
+		if (dbch)
 		{
 			PVMETA	*meta = metaPtr(ch,ss);
 			printf("  Status = %d\n", meta->status);
@@ -240,23 +240,23 @@ static int seqcarCollect(SPROG *sp, void *param)
 	for (nch = 0; nch < sp->numChans; nch++)
 	{
 		CHAN *ch = sp->chan + nch;
-		ACHAN *ach = ch->ach;
+		DBCHAN *dbch = ch->dbch;
 
-		if (ach) pstats->nChans++;
-		if (ach && ach->connected) pstats->nConn++;
+		if (dbch) pstats->nChans++;
+		if (dbch && dbch->connected) pstats->nConn++;
 		if (level > 1 ||
-			(level == 1 && ach && !ach->connected))
+			(level == 1 && dbch && !dbch->connected))
 		{
 			if (!printedProgName)
 			{
 				printf("  Program \"%s\"\n", sp->progName);
 				printedProgName = 1;
 			}
-			if (ach)
+			if (dbch)
 				printf("    Variable \"%s\" %sconnected to PV \"%s\"\n",
 					ch->varName,
-					ach->connected ? "" : "not ",
-					ach->dbName);
+					dbch->connected ? "" : "not ",
+					dbch->dbName);
 			else
 				printf("    Variable \"%s\" not assigned to PV\n",
 					ch->varName);
