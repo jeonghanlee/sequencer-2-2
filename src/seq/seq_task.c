@@ -141,6 +141,11 @@ static void ss_read_buffer_static(SSCB *ss, CHAN *ch)
 		DEBUG("ss %s: before read %s", ss->ssName, ch->varName);
 		print_channel_value(DEBUG,ch,val);
 		memcpy(val, buf, var_size);
+		if (ch->dbch) {
+			int nss = (int)(ss - sp->ss);
+			/* structure copy */
+			ch->dbch->ssMetaData[nss] = ch->dbch->metaData;
+		}
 		DEBUG("ss %s: after read %s", ss->ssName, ch->varName);
 		print_channel_value(DEBUG,ch,val);
 	} while ((ch->busy || ss->dirty[nch])
@@ -177,7 +182,7 @@ static void ss_read_all_buffer(SPROG *sp, SSCB *ss)
  * ss_write_buffer() - Only used in safe mode.
  * Lock-free writing of variable buffer.
  */
-void ss_write_buffer(SSCB *pwSS, CHAN *ch, void *val)
+void ss_write_buffer(SSCB *pwSS, CHAN *ch, void *val, PVMETA *meta)
 {
 	SPROG	*sp = ch->sprog;
 	char	*buf = bufPtr(ch);
@@ -190,6 +195,10 @@ void ss_write_buffer(SSCB *pwSS, CHAN *ch, void *val)
 	DEBUG("ss %s: before write %s", ss_name, ch->varName);
 	print_channel_value(DEBUG,ch,buf);
 	memcpy(buf, val, var_size);
+	if (ch->dbch && meta) {
+		/* structure copy */
+		ch->dbch->metaData = *meta;
+	}
 	DEBUG("ss %s: after write %s", ss_name, ch->varName);
 	print_channel_value(DEBUG,ch,buf);
 	for (nss = 0; nss < sp->numSS; nss++)

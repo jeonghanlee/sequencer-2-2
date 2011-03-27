@@ -202,6 +202,7 @@ static void anonymous_put(SS_ID ss, CHAN *ch)
 		size_t size = ch->type->size;
 		char value[pv_size_n(type, ch->count)];
 		int full;
+
 		DEBUG("seq_pvPut: type=%d, size=%d, count=%d, value=%p, val_ptr=%p, buf_size=%d, q=%p\n",
 			type, size, ch->count, value, pv_value_ptr(value, type),
 			pv_size_n(type, ch->count), queue);
@@ -222,7 +223,7 @@ static void anonymous_put(SS_ID ss, CHAN *ch)
 	/* check if monitored to mirror behaviour for named PVs */
 	else if (ch->monitored)
 	{
-		ss_write_buffer(ss, ch, var);
+		ss_write_buffer(ss, ch, var, 0);
 	}
 	/* Must give varLock before calling seq_efSet, else (possible) deadlock! */
 	epicsMutexUnlock(ch->varLock);
@@ -798,11 +799,10 @@ static void *getq_cp(void *dest, const void *value, size_t elemSize)
 {
 	struct getq_cp_arg *arg = (struct getq_cp_arg *)dest;
 	CHAN	*ch = arg->ch;
-	DBCHAN	*dbch = ch->dbch;
 	PVMETA	*meta = arg->meta;
 	void	*var = arg->var;
 	pvType	type = ch->type->getType;
-	if (dbch)
+	if (ch->dbch)
 	{
 		assert(pv_is_time_type(type));
 		/* Copy status, severity and time stamp */
@@ -838,11 +838,6 @@ epicsShareFunc boolean epicsShareAPI seq_pvGetQ(SS_ID ss, VAR_ID varId)
 	/* If set, queue should be non-empty */
 	if (isSet)
 	{
-#if 0
-		pvType	type = ch->type->getType;
-		char	buffer[pv_size_n(type, ch->count)];
-		pvValue	*value = (pvValue *)buffer;
-#endif
 		struct getq_cp_arg arg = {ch, var, meta};
 		QUEUE	queue = ch->queue;
 		boolean	empty;
@@ -853,22 +848,10 @@ epicsShareFunc boolean epicsShareAPI seq_pvGetQ(SS_ID ss, VAR_ID varId)
 			errlogSevPrintf(errlogMajor,
 				"pvGetQ: event flag set but queue is empty\n");
 		}
-		else
+		else if (dbch)
 		{
-			if (dbch)
-			{
-#if 0
-				assert(pv_is_time_type(type));
-				/* Copy status, severity and time stamp */
-				meta->status = *pv_status_ptr(value,type);
-				meta->severity = *pv_severity_ptr(value,type);
-				meta->timeStamp = *pv_stamp_ptr(value,type);
-				memcpy(var, pv_value_ptr(value,type), ch->type->size * ch->count);
-#endif
-				/* If queue is now empty, clear the event flag */
-				if (seqQueueIsEmpty(queue))
-					bitClear(sp->evFlags, ev_flag);
-			}
+			/* If queue is now empty, clear the event flag */
+			if (seqQueueIsEmpty(queue)) bitClear(sp->evFlags, ev_flag);
 		}
 	}
 	epicsMutexUnlock(sp->programLock);

@@ -45,6 +45,7 @@ epicsShareFunc void epicsShareAPI seqShow(epicsThreadId tid)
 	if (sp->numQueues > 0)
 		printf("  queue array address = %p\n",sp->queues);
 	printf("  number of channels = %d\n", sp->numChans);
+	/* Note: need not take programLock since read-ony */
 	printf("  number of channels assigned = %d\n", sp->assignCount);
 	printf("  number of channels connected = %d\n", sp->connectCount);
 	printf("  number of channels monitored = %d\n", sp->monitorCount);
@@ -182,7 +183,7 @@ epicsShareFunc void epicsShareAPI seqChanShow(epicsThreadId tid, const char *str
 		if (dbch)
 			printf("  Assigned to \"%s\"\n", dbch->dbName);
 		else
-			printf("  Not assigned\n");
+			printf("  Anonymous\n");
 
 		if(dbch && dbch->connected)
 			printf("  Connected\n");

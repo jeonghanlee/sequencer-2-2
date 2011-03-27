@@ -254,9 +254,7 @@ static void init_chan(SPROG *sp, CHAN *ch, seqChan *seqChan)
 			DBCHAN	*dbch = new(DBCHAN);
 			dbch->dbName = epicsStrDup(name_buffer);
 			if (sp->options & OPT_SAFE)
-				dbch->metaData = newArray(PVMETA, sp->numSS);
-			else
-				dbch->metaData = new(PVMETA);
+				dbch->ssMetaData = newArray(PVMETA, sp->numSS);
 			ch->dbch = dbch;
 		}
 		DEBUG("  assigned name=%s, expanded name=%s\n",
@@ -379,8 +377,8 @@ void seq_free(SPROG *sp)
 
 		if (ch->dbch)
 		{
-			if (ch->dbch->metaData)
-				free(ch->dbch->metaData);
+			if (ch->dbch->ssMetaData)
+				free(ch->dbch->ssMetaData);
 			if (ch->dbch->dbName != NULL)
 				free(ch->dbch->dbName);
 			free(ch->dbch);

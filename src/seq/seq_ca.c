@@ -69,6 +69,8 @@ pvStat seq_connect(SPROG *sp, boolean wait)
 
 		if (ch->dbch == NULL)
 			continue;		/* skip anonymous pvs */
+		/* Note: need not take programLock because state sets not yet
+		   running and CA channels not yet created */
 		sp->assignCount += 1;
 		if (ch->monitored)
 			sp->monitorCount++;	/* do it before pvVarCreate */
@@ -213,28 +215,28 @@ static void proc_db_events(
 		return;
 	}
 
-	/* Copy value returned into user variable (can get NULL value pointer
-	   for put completion only) */
+	/* Copy value and meta data into user variable CA buffer
+	   (can get NULL value pointer for put completion only) */
 	if (value != NULL)
 	{
 		void *val = pv_value_ptr(value,type);
-                PVMETA *meta = metaPtr(ch,ss);
+                PVMETA meta = {
+			*pv_stamp_ptr(value,type),
+			*pv_status_ptr(value,type),
+			*pv_severity_ptr(value,type),
+			0
+		};
 
-		/* Write value to CA buffer (lock-free) */
-		ss_write_buffer(0, ch, val);
-
-		/* Copy status, severity and time stamp */
-		meta->status = *pv_status_ptr(value,type);
-		meta->severity = *pv_severity_ptr(value,type);
-		meta->timeStamp = *pv_stamp_ptr(value,type);
-
-		/* Copy error message (only when severity indicates error) */
-		if (meta->severity != pvSevrNONE)
+		/* Set error message only when severity indicates error */
+		if (meta.severity != pvSevrNONE)
 		{
 			const char *pmsg = pvVarGetMess(dbch->pvid);
 			if (!pmsg) pmsg = "unknown";
-			meta->message = pmsg;
+			meta.message = pmsg;
 		}
+
+		/* Write value and meta data to CA buffers (lock-free) */
+		ss_write_buffer(0, ch, val, &meta);
 	}
 
 	/* Wake up each state set that uses this channel in an event */

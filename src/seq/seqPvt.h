@@ -42,7 +42,7 @@
 #define chNum(ch)		((ch)-(ch)->sprog->chan)
 
 #define metaIx(ch,ss)		(((ch)->sprog->options&OPT_SAFE)?ssNum(ss):0)
-#define metaPtr(ch,ss)		((ch)->dbch->metaData+metaIx(ch,ss))
+#define metaPtr(ch,ss)		(((ch)->sprog->options&OPT_SAFE)?((ch)->dbch->ssMetaData+ssNum(ss)):(&(ch)->dbch->metaData))
 
 /* Generic iteration on lists */
 #define foreach(e,l)		for (e = l; e != 0; e = e->next)
@@ -117,9 +117,9 @@ struct db_channel
 	boolean		connected;	/* whether channel is connected */
 	void		*monid;		/* monitor id (supplied by PV lib) */
 	boolean		gotOneMonitor;	/* whether got at least one monitor */
-	PVMETA		*metaData;	/* array of meta data from last access,
-					   one for each state set (safe mode)
-					   or just one (unsafe mode) */
+	PVMETA		metaData;	/* meta data from last access (ca buffer) */
+	PVMETA		*ssMetaData;	/* array of meta data,
+					   one for each state set (safe mode) */
 };
 
 struct state_set
@@ -187,6 +187,7 @@ struct program_instance
 	unsigned	monitorCount;	/* number of channels monitored */
 	unsigned	firstMonitorCount; /* number of channels that received
 					   at least one monitor event */
+
 	void		*pvReqPool;	/* freeList for pv requests (has own lock) */
 	boolean		die;		/* flag set when seqStop is called */
 	epicsEventId	ready;		/* all channels connected & got 1st monitor */
@@ -210,7 +211,7 @@ struct pvreq
 
 /* seq_task.c */
 void sequencer (void *arg);
-void ss_write_buffer(SSCB *pwSS, CHAN *ch, void *val);
+void ss_write_buffer(SSCB *pwSS, CHAN *ch, void *val, PVMETA *meta);
 void ss_read_buffer(SSCB *ss, CHAN *ch);
 void seqWakeup(SPROG *sp, unsigned eventNum);
 void seqCreatePvSys(SPROG *sp);
