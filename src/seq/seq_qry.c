@@ -126,7 +126,7 @@ epicsShareFunc void epicsShareAPI seqChanShow(epicsThreadId tid, const char *str
 	SPROG	*sp;
 	int	nch = 0;
 	int	dn = 1;
-	char	tsBfr[50], connQual;
+	char	connQual;
 	int	match, showAll;
 
 	if (ss == NULL) return;
@@ -203,13 +203,17 @@ epicsShareFunc void epicsShareAPI seqChanShow(epicsThreadId tid, const char *str
 		if (dbch)
 		{
 			PVMETA	*meta = metaPtr(ch,ss);
+			char	timeFormatStr[30] = "%Y-%m-%d %H:%M:%S.%06f";
+			char	tsBfr[28];
+
 			printf("  Status = %d\n", meta->status);
 			printf("  Severity = %d\n", meta->severity);
 			printf("  Message = %s\n", meta->message != NULL ?
 				meta->message : "");
+
 			/* Print time stamp in text format: "yyyy/mm/dd hh:mm:ss.sss" */
 			epicsTimeToStrftime(tsBfr, sizeof(tsBfr),
-				"%Y/%m/%d %H:%M:%S.%03f", &meta->timeStamp);
+				timeFormatStr, &meta->timeStamp);
 			printf("  Time stamp = %s\n", tsBfr);
 		}
 
