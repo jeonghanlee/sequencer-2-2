@@ -41,7 +41,6 @@
 #define ssNum(ss)		((ss)-(ss)->sprog->ss)
 #define chNum(ch)		((ch)-(ch)->sprog->chan)
 
-#define metaIx(ch,ss)		(((ch)->sprog->options&OPT_SAFE)?ssNum(ss):0)
 #define metaPtr(ch,ss)		(((ch)->sprog->options&OPT_SAFE)?((ch)->dbch->ssMetaData+ssNum(ss)):(&(ch)->dbch->metaData))
 
 /* Generic iteration on lists */
@@ -136,7 +135,6 @@ struct state_set
 	int		currentState;	/* current state index */
 	int		nextState;	/* next state index */
 	int		prevState;	/* previous state index */
-	int		transNum;	/* highest prio trans. # triggered */
 	const bitMask	*mask;		/* current event mask */
 	unsigned	numDelays;	/* number of delays activated */
 	double		*delay;		/* queued delay values in secs (array) */

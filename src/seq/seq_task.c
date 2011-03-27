@@ -255,7 +255,8 @@ static void ss_entry(void *arg)
 	 */
 	while (TRUE)
 	{
-		boolean ev_trig;
+		boolean	ev_trig;
+		int	transNum = 0;	/* highest prio trans. # triggered */
 
 		/* Set state to current state */
 		STATE *st = ss->states + ss->currentState;
@@ -307,7 +308,7 @@ static void ss_entry(void *arg)
 
 			/* Check state change conditions */
 			ev_trig = st->eventFunc(ss, var,
-				&ss->transNum, &ss->nextState);
+				&transNum, &ss->nextState);
 
 			/* Clear all event flags (old ef mode only) */
 			if (ev_trig && !(sp->options & OPT_NEWEF))
@@ -321,7 +322,7 @@ static void ss_entry(void *arg)
 		} while (!ev_trig);
 
 		/* Execute the state change action */
-		st->actionFunc(ss, var, ss->transNum, &ss->nextState);
+		st->actionFunc(ss, var, transNum, &ss->nextState);
 
 		/* If changing state, do exit actions */
 		if (st->exitFunc && (ss->currentState != ss->nextState
