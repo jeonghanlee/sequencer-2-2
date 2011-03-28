@@ -345,10 +345,7 @@ static int iter_event_mask_scalar(Expr *ep, Expr *scope, void *parg)
 	assert(vp != 0);
 
 	/* this subroutine handles only the scalar variables and event flags */
-#if 0
-	if (vp->class != VC_SCALAR && vp->class != VC_EVFLAG)
-#endif
-	if (vp->type->tag < V_CHAR || vp->type->tag >= V_POINTER)
+	if (vp->type->tag < V_EVFLAG || vp->type->tag >= V_POINTER)
 		return FALSE;		/* no children anyway */
 
 	/* event flag? */
