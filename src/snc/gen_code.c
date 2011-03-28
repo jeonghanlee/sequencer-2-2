@@ -87,33 +87,8 @@ void generate_code(Program *p)
 /* Generate main program */
 static void gen_main(char *prog_name)
 {
-	printf("\n/* Main program */\n");
-	printf("#include \"epicsThread.h\"\n");
-	printf("#include \"iocsh.h\"\n");
-	printf("\n");
-	printf("int main(int argc,char *argv[]) {\n");
-	printf("    char * macro_def;\n");
-	printf("    int callIocsh = TRUE;\n");
-	printf("\n");
-	printf("    if(argc>1 && strcmp(argv[1],\"-s\")==0) {\n");
-	printf("        callIocsh = TRUE;\n");
-	printf("        --argc; ++argv;\n");
-	printf("    }\n");
-	printf("    if(argc>1 && strcmp(argv[1],\"-S\")==0) {\n");
-	printf("        --argc; ++argv;\n");
-	printf("        callIocsh = FALSE;\n");
-	printf("    }\n");
-	printf("    macro_def = (argc>1)?argv[1]:NULL;\n");
-	printf("    seqRegisterSequencerProgram(&%s);\n", prog_name);
-	printf("    seq(&%s, macro_def, 0);\n", prog_name);
-	printf("    if(callIocsh) {\n");
-	printf("        seqRegisterSequencerCommands();\n");
-	printf("        iocsh(0);\n");
-	printf("    } else {\n");
-	printf("        epicsThreadExitMain();\n");
-	printf("    }\n");
-	printf("    return(0);\n");
-	printf("}\n");
+	printf("\n#define PROG_NAME %s\n", prog_name);
+	printf("#include \"seqMain.c\"\n");
 }
 
 /* Generate preamble (includes, defines, etc.) */

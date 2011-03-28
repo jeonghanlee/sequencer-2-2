@@ -3,6 +3,8 @@ include $(TOP)/configure/CONFIG
 #----------------------------------------
 #  ADD MACRO DEFINITIONS AFTER THIS LINE
 
+INC += seqMain.c
+
 #  Internal debug control
 #USR_CPPFLAGS = -DDEBUG
 
