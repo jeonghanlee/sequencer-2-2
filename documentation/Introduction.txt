@@ -199,6 +199,9 @@ ad hoc way variable types were handled before. The new code is not *that*
 much more complicated and it is certainly easier to extend with new
 features.
 
+The main procedure (:option:`+m`) is no longer hard-coded, so you can easily
+provide your own version. See :ref:`Building a Stand-alone Program`.
+
 Lofts of minor fixes.
 
 In the sequencer library interface, bitMask is now a synonym for unsigned,
