@@ -965,8 +965,6 @@ the asynchronous (:option:`+a`) compile option is specified or
 In :ref:`safe mode`, the update of the variable with the value from the PV layer
 happens as a side effect of this call (if TRUE is returned).
 
-.. todo:: Implement this.
-
 Unlike :c:func:`pvPutComplete`, :c:func:`pvGetComplete` doesn't support
 arrays.
 

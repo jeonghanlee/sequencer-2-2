@@ -173,11 +173,16 @@ epicsShareFunc pvStat epicsShareAPI seq_pvGet(SS_ID ss, VAR_ID varId, enum compT
 epicsShareFunc boolean epicsShareAPI seq_pvGetComplete(SS_ID ss, VAR_ID varId)
 {
 	epicsEventId	getSem = ss->getSemId[varId];
+	SPROG		*sp = ss->sprog;
+	CHAN		*ch = sp->chan + varId;
 
 	switch (epicsEventTryWait(getSem))
 	{
 	case epicsEventWaitOK:
 		epicsEventSignal(getSem);
+		/* in safe mode, copy value and meta data from CA buffer to ss local buffer */
+		if (sp->options & OPT_SAFE)
+			ss_read_buffer(ss,ch);
 		return TRUE;
 	case epicsEventWaitTimeout:
 		return FALSE;
