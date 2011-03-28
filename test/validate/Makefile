@@ -33,9 +33,23 @@ PROD += userfunc
 #PROD += ctest
 
 #  Libraries
+PROD_LIBS += softIoc
 PROD_LIBS += seq
 PROD_LIBS += pv
 PROD_LIBS += $(EPICS_BASE_IOC_LIBS)
+
+LIBRARY += softIoc
+
+DBD += softIoc.dbd
+softIoc_DBD += base.dbd
+softIoc_DBD += dlload.dbd
+softIoc_DBD += system.dbd
+
+softIoc_SRCS += softIoc_registerRecordDeviceDriver.cpp
+
+DB_INSTALLS += syncq.db
+DB_INSTALLS += pvPutAsync.db
+DB_INSTALLS += userfunc.db
 
 include $(TOP)/configure/RULES
 #----------------------------------------
