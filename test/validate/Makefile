@@ -35,17 +35,17 @@ PROD += eftest
 #PROD += ctest
 
 #  Libraries
-PROD_LIBS += softIoc
+PROD_LIBS += seqSoftIoc
 PROD_LIBS += seq
 PROD_LIBS += pv
 PROD_LIBS += $(EPICS_BASE_IOC_LIBS)
 
-LIBRARY += softIoc
+LIBRARY += seqSoftIoc
 
-DBD += softIoc.dbd
-softIoc_DBD += base.dbd
+DBD += seqSoftIoc.dbd
+seqSoftIoc_DBD += base.dbd
 
-softIoc_SRCS += softIoc_registerRecordDeviceDriver.cpp
+seqSoftIoc_SRCS += seqSoftIoc_registerRecordDeviceDriver.cpp
 
 DB_INSTALLS += syncq.db
 DB_INSTALLS += pvGetComplete.db

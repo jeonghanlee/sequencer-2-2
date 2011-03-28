@@ -14,12 +14,12 @@
 
 /* Usage:
  *  <test-program>
- *      [-D softIoc.dbd] [-h] [-S] [-s] [-a ascf]
+ *      [-D seqSoftIoc.dbd] [-h] [-S] [-s] [-a ascf]
  *	[-m macro=value,macro2=value2] [-d <test-program>.db]
  *	[st.cmd]
  *
  *  If used the -D option must come first, and specify the
- *  path to the softIoc.dbd file.  The compile-time install
+ *  path to the seqSoftIoc.dbd file.  The compile-time install
  *  location is saved in the binary as a default.
  *
  *  Usage information will be printed if -h is given, then
@@ -65,18 +65,18 @@
 #include "iocInit.h"
 #include "iocsh.h"
 
-extern int softIoc_registerRecordDeviceDriver(struct dbBase *pdbbase);
+extern int seqSoftIoc_registerRecordDeviceDriver(struct dbBase *pdbbase);
 
-#define DBD_FILE "dbd/softIoc.dbd"
+#define DBD_FILE "dbd/seqSoftIoc.dbd"
 
 const char *arg0;
 const char *base_dbd = DBD_FILE;
 
 static void usage(int status) {
-    printf("Usage: %s [-D softIoc.dbd] [-h] [-S] [-a ascf]\n", arg0);
+    printf("Usage: %s [-D seqSoftIoc.dbd] [-h] [-S] [-a ascf]\n", arg0);
     puts("\t[-m macro=value,macro2=value2] [-d file.db]");
     puts("\t[-x prefix] [st.cmd]");
-    puts("Compiled-in path to softIoc.dbd is:");
+    puts("Compiled-in path to seqSoftIoc.dbd is:");
     printf("\t%s\n", base_dbd);
     epicsExit(status);
 }
@@ -112,7 +112,7 @@ int main(int argc, char *argv[])
 	epicsExit(EXIT_FAILURE);
     }
     
-    softIoc_registerRecordDeviceDriver(pdbbase);
+    seqSoftIoc_registerRecordDeviceDriver(pdbbase);
 
     seqRegisterSequencerProgram(&PROG_NAME);
     if (startIocsh) {
