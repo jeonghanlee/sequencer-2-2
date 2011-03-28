@@ -44,8 +44,6 @@ LIBRARY += softIoc
 
 DBD += softIoc.dbd
 softIoc_DBD += base.dbd
-softIoc_DBD += dlload.dbd
-softIoc_DBD += system.dbd
 
 softIoc_SRCS += softIoc_registerRecordDeviceDriver.cpp
 
