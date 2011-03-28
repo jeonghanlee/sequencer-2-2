@@ -470,9 +470,12 @@ void seqWakeup(SPROG *sp, unsigned eventNum)
 
 		epicsMutexMustLock(sp->programLock);
 		/* If event bit in mask is set, wake that state set */
+		DEBUG("seqWakeup: eventNum=%d, mask=%u, state set=%d\n", eventNum, 
+			ss->mask? *ss->mask : 0, (int)ssNum(ss));
 		if (eventNum == 0 || 
 			(ss->mask && bitTest(ss->mask, eventNum)))
 		{
+			DEBUG("seqWakeup: waking up state set=%d\n", (int)ssNum(ss));
 			epicsEventSignal(ss->syncSemId); /* wake up ss thread */
 		}
 		epicsMutexUnlock(sp->programLock);

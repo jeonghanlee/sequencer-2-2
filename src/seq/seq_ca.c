@@ -205,6 +205,7 @@ static void proc_db_events(
 	DBCHAN	*dbch = ch->dbch;
 
 	assert(dbch != NULL);
+
 	DEBUG("proc_db_events: var=%s, pv=%s, type=%s, status=%d\n", ch->varName,
 		dbch->dbName, event_type_name[evtype], status);
 

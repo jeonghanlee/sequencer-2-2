@@ -211,9 +211,9 @@ static void anonymous_put(SS_ID ss, CHAN *ch)
 		DEBUG("seq_pvPut: type=%d, size=%d, count=%d, value=%p, val_ptr=%p, buf_size=%d, q=%p\n",
 			type, size, ch->count, value, pv_value_ptr(value, type),
 			pv_size_n(type, ch->count), queue);
-		print_channel_value(printf, ch, var);
+		print_channel_value(DEBUG, ch, var);
 		memcpy(pv_value_ptr(value, type), var, size * ch->count);
-		print_channel_value(printf, ch, pv_value_ptr(value, type));
+		print_channel_value(DEBUG, ch, pv_value_ptr(value, type));
 		/* Copy whole message into queue */
 		full = seqQueuePut(queue, value);
 		if (full)
@@ -788,6 +788,8 @@ epicsShareFunc boolean epicsShareAPI seq_efTestAndClear(SS_ID ss, EV_ID ev_flag)
 
 	isSet = bitTest(sp->evFlags, ev_flag);
 	bitClear(sp->evFlags, ev_flag);
+
+	DEBUG("seq_efTestAndClear: ev_flag=%d, isSet=%d, ss=%d\n", ev_flag, isSet, (int)ssNum(ss));
 
 	epicsMutexUnlock(sp->programLock);
 
