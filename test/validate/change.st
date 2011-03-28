@@ -12,6 +12,12 @@ entry {
 ss main {
     int x = 0;
     state zero {
+#if 0
+        /* uncomment to test rejection of state change in entry block */
+        entry {
+            state zero;
+        }
+#endif
         when (delay(1)) {
         	x = time(0) %10 - 5;
             errlogPrintf("state=zero, new random x=%d\n", x);
@@ -21,6 +27,12 @@ ss main {
                 state neg;
             }
         } state zero
+#if 0
+        /* uncomment to test rejection of state change in exit block */
+        exit {
+            state zero;
+        }
+#endif
     }
     state pos {
         when (delay(1)) {
