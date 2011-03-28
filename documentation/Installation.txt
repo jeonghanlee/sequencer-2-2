@@ -135,10 +135,6 @@ is to use only CA). You can also configure where the re2c tool is
 installed (the default configuration assumes that it can be found in
 your ``PATH``).
 
-Note: setting ``INSTALL_LOCATION_APP`` currently does not work.
-
-.. todo:: fix build with INSTALL_LOCATION set
-
 Your environment should be configured for building EPICS applications.
 This means that ``EPICS_HOST_ARCH`` and (possibly) ``LD_LIBRARY_PATH``
 should be correctly defined. See the `EPICS Application Developer's

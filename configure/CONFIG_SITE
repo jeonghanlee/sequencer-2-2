@@ -9,7 +9,7 @@ PVKTL  = FALSE
 #CROSS_COMPILER_TARGET_ARCHS = vxWorks-68040
 
 # To install somewhere other than $(TOP) set this:
-#INSTALL_LOCATION_APP = <install path>
+#INSTALL_LOCATION = <install path>
 
 # Use this when your IOC and the host use different paths
 # to access the application. Typically this will be 
