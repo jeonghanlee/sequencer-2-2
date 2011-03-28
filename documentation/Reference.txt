@@ -677,9 +677,6 @@ in a state transition action block (i.e. after a when) and has the effect
 of immediately jumping out of the action block, overriding the statically
 specified new state (given after the block) with its state argument.
 
-.. todo:: find out if the compiler guards against state changes in other
-   action blocks.
-
 Expressions
 ^^^^^^^^^^^
 
