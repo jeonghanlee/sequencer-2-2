@@ -26,9 +26,11 @@ PROD += subscript
 PROD += syncq
 PROD += pvSync
 PROD += pvPutAsync
+PROD += pvGetComplete
 PROD += array
 PROD += stop
 PROD += userfunc
+PROD += eftest
 
 #PROD += ctest
 
@@ -48,8 +50,10 @@ softIoc_DBD += system.dbd
 softIoc_SRCS += softIoc_registerRecordDeviceDriver.cpp
 
 DB_INSTALLS += syncq.db
+DB_INSTALLS += pvGetComplete.db
 DB_INSTALLS += pvPutAsync.db
 DB_INSTALLS += userfunc.db
+DB_INSTALLS += eftest.db
 
 include $(TOP)/configure/RULES
 #----------------------------------------
