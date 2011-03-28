@@ -41,7 +41,13 @@
 #define ssNum(ss)		((ss)-(ss)->sprog->ss)
 #define chNum(ch)		((ch)-(ch)->sprog->chan)
 
-#define metaPtr(ch,ss)		(((ch)->sprog->options&OPT_SAFE)?((ch)->dbch->ssMetaData+ssNum(ss)):(&(ch)->dbch->metaData))
+#define metaPtr(ch,ss) (				\
+	(ch)->dbch					\
+	?(((ch)->sprog->options&OPT_SAFE)		\
+		?((ch)->dbch->ssMetaData+ssNum(ss))	\
+		:(&(ch)->dbch->metaData))		\
+	:0						\
+)
 
 /* Generic iteration on lists */
 #define foreach(e,l)		for (e = l; e != 0; e = e->next)
