@@ -31,6 +31,7 @@ PROD += array
 PROD += stop
 PROD += userfunc
 PROD += eftest
+PROD += race
 
 #PROD += ctest
 
@@ -52,6 +53,7 @@ DB_INSTALLS += pvGetComplete.db
 DB_INSTALLS += pvPutAsync.db
 DB_INSTALLS += userfunc.db
 DB_INSTALLS += eftest.db
+DB_INSTALLS += race.db
 
 include $(TOP)/configure/RULES
 #----------------------------------------

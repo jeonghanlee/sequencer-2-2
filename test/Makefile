@@ -7,7 +7,6 @@ DIRS += simple
 DIRS += johng
 DIRS += validate
 DIRS += demo
-DIRS += race
 
 ifeq '$(EPICS_HAS_UNIT_TEST)' '1'
 DIRS += unit
