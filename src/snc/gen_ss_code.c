@@ -13,10 +13,10 @@
 #include	<string.h>
 #include	<assert.h>
 
-#include	"parse.h"
+#include	"expr.h"
 #include	"analysis.h"
 #include	"gen_code.h"
-#include	"snc_main.h"
+#include	"main.h"
 #include	"sym_table.h"
 #include	"gen_ss_code.h"
 

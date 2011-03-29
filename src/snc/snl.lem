@@ -10,9 +10,9 @@
 #include <string.h>
 #include <assert.h>
 
-#include "parse.h"
-#include "snc_main.h"
-#include "lexer.h"
+#include "expr.h"
+#include "main.h"
+#include "parser.h"
 }
 
 %extra_argument { Expr **presult }

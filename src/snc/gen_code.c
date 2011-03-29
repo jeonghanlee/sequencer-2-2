@@ -17,7 +17,7 @@
 #include	"analysis.h"
 #include	"gen_ss_code.h"
 #include	"gen_tables.h"
-#include	"snc_main.h"
+#include	"main.h"
 #include	"gen_code.h"
 
 static void gen_preamble(char *prog_name);

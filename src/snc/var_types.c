@@ -7,8 +7,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "snc_main.h"
-#include "parse.h"
+#include "main.h"
+#include "expr.h"
 
 /* #define DEBUG */
 

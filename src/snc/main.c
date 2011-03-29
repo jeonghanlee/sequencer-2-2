@@ -15,10 +15,10 @@
 #include	<stdarg.h>
 
 #include	"types.h"
-#include	"lexer.h"
+#include	"parser.h"
 #include	"analysis.h"
 #include	"gen_code.h"
-#include	"snc_main.h"
+#include	"main.h"
 
 #include <seqVersion.h>
 

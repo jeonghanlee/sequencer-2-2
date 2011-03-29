@@ -12,8 +12,8 @@
 #include <stdarg.h>
 
 #include "snl.h"
-#include "snc_main.h"
-#include "lexer.h"
+#include "main.h"
+#include "parser.h"
 
 #define	EOI		0
 

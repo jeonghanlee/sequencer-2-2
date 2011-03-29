@@ -16,8 +16,8 @@
 
 #include "types.h"
 #include "sym_table.h"
-#include "snc_main.h"
-#include "parse.h"
+#include "main.h"
+#include "expr.h"
 #include "analysis.h"
 
 static const int impossible = 0;

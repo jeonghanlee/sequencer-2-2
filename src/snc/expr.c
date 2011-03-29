@@ -20,8 +20,8 @@
 #define expr_type_GLOBAL
 #include "types.h"
 #undef expr_type_GLOBAL
-#include "parse.h"
-#include "snc_main.h"
+#include "expr.h"
+#include "main.h"
 
 /* Expr is the generic syntax tree node */
 Expr *expr(

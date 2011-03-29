@@ -16,10 +16,10 @@
 
 #include	"seqCom.h"
 #include	"analysis.h"
-#include	"snc_main.h"
+#include	"main.h"
 #include	"sym_table.h"
 #include	"gen_code.h"
-#include	"parse.h"
+#include	"expr.h"
 #include	"gen_tables.h"
 
 typedef struct event_mask_args {

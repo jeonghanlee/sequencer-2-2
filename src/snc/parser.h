@@ -4,10 +4,9 @@
 		(see file Copyright.HZB included in this distribution)
 ***************************************************************************
 		Interface to lemon generated parser
-                TODO: should rename this file
 ***************************************************************************/
-#ifndef INCLlexerh
-#define INCLlexerh
+#ifndef INCLparserh
+#define INCLparserh
 
 #include "types.h"
 
@@ -29,4 +28,4 @@ void snlParserFree(
 
 void snlParserTrace(FILE *TraceFILE, char *zTracePrompt);
 
-#endif	/*INCLlexerh*/
+#endif	/*INCLparserh*/
