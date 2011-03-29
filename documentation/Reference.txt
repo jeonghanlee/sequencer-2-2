@@ -1,8 +1,8 @@
 SNL Reference
 =============
 
-This chapter is supposed to give a detailed reference for the SNL
-syntax and semantics.
+This chapter gives a detailed reference for the SNL syntax and semantics
+and for the built-in functions.
 
 Formal syntax is given in `BNF`_. Multiple rules for the same
 `nonterminal symbol`_ mean that any of the given rules may apply. `Terminal
@@ -21,7 +21,7 @@ Comments
 .. productionlist::
    comment: "/*" <anything> "*/"
 
-C-style comments may be placed anywhere in the state program. They are
+C-style comments may be placed anywhere in the program. They are
 treated as white space by *snc*. As in C, comments cannot be nested.
 
 Identifiers
@@ -105,7 +105,7 @@ Program Name and Parameter
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The program name is an identifier. It is used as the name of the global
-variable which contains or points to all the state program data structures
+variable which contains or points to all the program data structures
 (the address of this global variable is passed to the ``seq`` function when
 creating the run-time sequencer). It is also used as the base for the state
 set thread names unless overridden via the *name* parameter (see :ref:`run
@@ -481,7 +481,8 @@ interpretation, however, is different:
 
 Global (top-level) options are interpreted as if the corresponding
 compiler option had been given on the command line (see
-:ref:`CompilerOptions`).
+:ref:`CompilerOptions`). Global option definitions take precedence over
+options given to the compiler on the command line.
 
 State options occur inside the state construct and affect only the
 state in which they are defined, see `State Option`_.
@@ -1172,7 +1173,7 @@ pvChannelCount
    unsigned pvChannelCount()
 
 Returns the total number of process variables
-associated with the state program.
+associated with the program.
 
 pvAssignCount
 ^^^^^^^^^^^^^
@@ -1424,7 +1425,7 @@ one or more user-supplied functions. For example::
        { ... }
    }%
 
-There is little reason to do this, since a state program can of
+There is little reason to do this, since a program can of
 course be linked against C libraries.
 
 Calling pvGet etc. from C
@@ -1474,7 +1475,7 @@ The C file will contain the following declaration::
    };
 
 The sequencer allocates the structure area at run time and passes a
-pointer to this structure into the state program. This structure
+pointer to this structure into the program. This structure
 has the following type::
 
    struct UserVar *pVar;
