@@ -146,18 +146,31 @@ Global Entry and Exit Blocks
    exit: "exit" `block`
    exit: 
 
-A state program may specify optional entry code to run prior to running
-the state sets, and exit code to run after all state sets have exited.
-Both are run in the context of the first state set thread. The
-entry or exit code is a regular SNL code block an thus can contain
-local definitions. Contrary to older versions, there are no restrictions
-w.r.t. calling built-in pv functions. If the global :option:`+c` is in
-effect, the entry code is executed only after all channels have been
-connected and monitored channels have received their first monitor event.
+An SNL program may specify optional entry code to run prior to running the
+state sets, and exit code to run after all state sets have exited. Both are
+run in the context of the first state set thread.
 
-Global entry and exit blocks should not be confused with the entry and
-exit blocks of a state, which have the same syntax, but are executed at
-each transition from/to a new state.
+(Global entry and exit blocks should not be confused with
+:ref:`state entry and exit blocks`, which have the same syntax but are
+executed at each transition from/to a new state.)
+
+The entry or exit code is a regular SNL code block an thus can contain local
+variable declarations. Global entry code is always executed after initiating
+connections to (named) PVs, and exit code is executed before connections are
+shut down. Furthermore, if the global :option:`+c` option is in effect, the
+entry code is executed only after all channels are connected and monitored
+channels have received their first monitor event. All built-in PV functions
+can be expected to work in global entry and exit blocks.
+
+Note that global entry and exit blocks operate as if executed as part of the
+first state set. This means that in :ref:`safe mode` changes to global
+variables made from inside the entry block are not visible to state sets
+other than the first unless explicitly communicated (e.g. by calling pvPut).
+The fact that the first state set plays a special role is a historical
+accident, rather than concious design. I might be tempted to redesign this
+aspect in a future version, for instance by giving entry and exit blocks
+their own dedicated virtual state set.
+
 
 Final C Code Block
 ^^^^^^^^^^^^^^^^^^

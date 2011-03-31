@@ -43,10 +43,9 @@ void sequencer (void *arg)	/* ptr to original (global) state program table */
 		goto exit;
 	}
 
-	/* Note that the program init, entry, and exit functions
-	   get the global var buffer sp->var passed,
+	/* Note that the program init function
+	   gets the global var buffer sp->var passed,
 	   not the state set local one, even in safe mode. */
-	/* TODO: document this */
 
 	/* Call sequencer init function to initialize variables. */
 	sp->initFunc(sp->var);
@@ -69,8 +68,9 @@ void sequencer (void *arg)	/* ptr to original (global) state program table */
 	if (seq_connect(sp, ((sp->options & OPT_CONN) != 0)) != pvStatOK)
 		goto exit;
 
-	/* Call program entry function if defined. */
-	if (sp->entryFunc) sp->entryFunc(sp->ss, sp->var);
+	/* Call program entry function if defined.
+	   Treat as if called from 1st state set. */
+	if (sp->entryFunc) sp->entryFunc(sp->ss, sp->ss->var);
 
 	/* Create each additional state set task (additional state set thread
 	   names are derived from the first ss) */
@@ -98,15 +98,16 @@ void sequencer (void *arg)	/* ptr to original (global) state program table */
 	/* First state set jumps directly to entry point */
 	ss_entry(sp->ss);
 
-	/* Call program exit function if defined */
-	if (sp->exitFunc) sp->exitFunc(sp->ss, sp->var);
-
 	DEBUG("   Wait for other state sets to exit\n");
 	for (nss = 1; nss < sp->numSS; nss++)
 	{
 		SSCB *ss = sp->ss + nss;
 		epicsEventMustWait(ss->dead);
 	}
+
+	/* Call program exit function if defined.
+	   Treat as if called from 1st state set. */
+	if (sp->exitFunc) sp->exitFunc(sp->ss, sp->ss->var);
 
 exit:
 	DEBUG("   Disconnect all channels\n");
