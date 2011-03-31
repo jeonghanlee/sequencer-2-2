@@ -843,6 +843,15 @@ epicsShareFunc boolean epicsShareAPI seq_pvGetQ(SS_ID ss, VAR_ID varId)
 	DBCHAN	*dbch = ch->dbch;
 	PVMETA	*meta = metaPtr(ch,ss);
 
+	if (!ch->queue)
+	{
+		errlogSevPrintf(errlogFatal,
+			"pvGetQ(%s): user error (variable not queued)\n",
+			ch->varName
+		);
+		return FALSE;
+	}
+
 	epicsMutexMustLock(sp->programLock);
 
 	/* Determine event flag number and whether set */
