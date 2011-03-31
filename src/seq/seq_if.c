@@ -198,6 +198,20 @@ epicsShareFunc boolean epicsShareAPI seq_pvGetComplete(SS_ID ss, VAR_ID varId)
 	}
 }
 
+struct putq_cp_arg {
+	CHAN	*ch;
+	void	*var;
+};
+
+static void *putq_cp(void *dest, const void *src, size_t elemSize)
+{
+	struct putq_cp_arg *arg = (struct putq_cp_arg *)src;
+	CHAN *ch = arg->ch;
+
+	return memcpy(pv_value_ptr(dest, ch->type->getType),
+		arg->var, ch->type->size * ch->count);
+}
+
 static void anonymous_put(SS_ID ss, CHAN *ch)
 {
 	char *var = valPtr(ch,ss);
@@ -207,8 +221,8 @@ static void anonymous_put(SS_ID ss, CHAN *ch)
 		QUEUE queue = ch->queue;
 		pvType type = ch->type->getType;
 		size_t size = ch->type->size;
-		char value[pv_size_n(type, ch->count)];
-		int full;
+		boolean full;
+		struct putq_cp_arg arg = {ch, var};
 
 		DEBUG("anonymous_put: type=%d, size=%d, count=%d, buf_size=%d, q=%p\n",
 			type, size, ch->count, pv_size_n(type, ch->count), queue);
@@ -219,10 +233,7 @@ static void anonymous_put(SS_ID ss, CHAN *ch)
 		   callbacks, because anonymous and named PVs are disjoint. */
 		epicsMutexMustLock(ch->varLock);
 
-		memcpy(pv_value_ptr(value, type), var, size * ch->count);
-		print_channel_value(DEBUG, ch, pv_value_ptr(value, type));
-		/* Copy whole message into queue */
-		full = seqQueuePut(queue, value);
+		full = seqQueuePutF(queue, putq_cp, &arg);
 		if (full)
 		{
 			errlogSevPrintf(errlogMinor,
@@ -818,6 +829,8 @@ static void *getq_cp(void *dest, const void *value, size_t elemSize)
 	PVMETA	*meta = arg->meta;
 	void	*var = arg->var;
 	pvType	type = ch->type->getType;
+	size_t	count = ch->count;
+
 	if (ch->dbch)
 	{
 		assert(pv_is_time_type(type));
@@ -825,9 +838,9 @@ static void *getq_cp(void *dest, const void *value, size_t elemSize)
 		meta->status = *pv_status_ptr(value,type);
 		meta->severity = *pv_severity_ptr(value,type);
 		meta->timeStamp = *pv_stamp_ptr(value,type);
-		memcpy(var, pv_value_ptr(value,type), ch->type->size * ch->count);
+		count = ch->dbch->dbCount;
 	}
-	return NULL;
+	return memcpy(var, pv_value_ptr(value,type), ch->type->size * count);
 }
 
 /*

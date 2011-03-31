@@ -262,16 +262,32 @@ static void proc_db_events(
 	}
 }
 
+struct putq_cp_arg {
+	CHAN	*ch;
+	void	*value;
+};
+
+static void *putq_cp(void *dest, const void *src, size_t elemSize)
+{
+	struct putq_cp_arg *arg = (struct putq_cp_arg *)src;
+	CHAN *ch = arg->ch;
+
+	return memcpy(dest, arg->value,
+		pv_size_n(ch->type->getType, ch->dbch->dbCount));
+}
+
 /* Common code for event and callback handling (queuing version) */
 static void proc_db_events_queued(SPROG *sp, CHAN *ch, pvValue *value)
 {
 	boolean	full;
+	struct putq_cp_arg arg = {ch, value};
 
 	DEBUG("proc_db_events_queued: var=%s, pv=%s, queue=%p, used(max)=%d(%d)\n",
 		ch->varName, ch->dbch->dbName,
 		ch->queue, seqQueueUsed(ch->queue), seqQueueNumElems(ch->queue));
-	/* Copy whole message into queue; no lock needed because only one writer */
-	full = seqQueuePut(ch->queue, value);
+	/* Copy whole message into queue; no need to lock against other
+	   writers, because named and anonymous PVs are disjoint. */
+	full = seqQueuePutF(ch->queue, putq_cp, &arg);
 	if (full)
 	{
 		errlogSevPrintf(errlogMinor,

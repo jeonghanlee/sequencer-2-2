@@ -131,7 +131,10 @@ static void ss_read_buffer_static(SSCB *ss, CHAN *ch)
 	char *val = valPtr(ch,ss);
 	char *buf = bufPtr(ch);
 	ptrdiff_t nch = chNum(ch);
-	size_t var_size = ch->type->size * ch->count;
+	/* Must take dbCount for db channels, else we overwrite
+	   elements we didn't get */
+	size_t count = ch->dbch ? ch->dbch->dbCount : ch->count;
+	size_t var_size = ch->type->size * count;
 
 	if (!ss->dirty[nch])
 		return;
@@ -190,7 +193,10 @@ void ss_write_buffer(CHAN *ch, void *val, PVMETA *meta)
 {
 	SPROG *sp = ch->sprog;
 	char *buf = bufPtr(ch);	/* shared buffer */
-	size_t var_size = ch->type->size * ch->count;
+	/* Must use dbCount for db channels, else we overwrite
+	   elements we didn't get */
+	size_t count = ch->dbch ? ch->dbch->dbCount : ch->count;
+	size_t var_size = ch->type->size * count;
 	ptrdiff_t nch = chNum(ch);
 	unsigned nss;
 
