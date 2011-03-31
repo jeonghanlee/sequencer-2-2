@@ -76,14 +76,14 @@ boolean seqQueueGet(QUEUE q, void *value)
     return seqQueueGetF(q, memcpy, value);
 }
 
-boolean seqQueueGetF(QUEUE q, seqQueueFunc *f, void *arg)
+boolean seqQueueGetF(QUEUE q, seqQueueFunc *get, void *arg)
 {
     if (q->wr == q->rd) {
         if (!q->overflow) {
             return TRUE;
         }
         epicsMutexLock(q->mutex);
-        f(arg, q->buffer + q->rd * q->elemSize, q->elemSize);
+        get(arg, q->buffer + q->rd * q->elemSize, q->elemSize);
         /* check again, a put might have intervened */
         if (q->wr == q->rd && q->overflow)
             q->overflow = FALSE;
@@ -91,7 +91,7 @@ boolean seqQueueGetF(QUEUE q, seqQueueFunc *f, void *arg)
             q->rd = (q->rd + 1) % q->numElems;
         epicsMutexUnlock(q->mutex);
     } else {
-        f(arg, q->buffer + q->rd * q->elemSize, q->elemSize);
+        get(arg, q->buffer + q->rd * q->elemSize, q->elemSize);
         q->rd = (q->rd + 1) % q->numElems;
     }
     return FALSE;
@@ -102,7 +102,7 @@ boolean seqQueuePut(QUEUE q, const void *value)
     return seqQueuePutF(q, memcpy, value);
 }
 
-boolean seqQueuePutF(QUEUE q, seqQueueFunc *f, const void *arg)
+boolean seqQueuePutF(QUEUE q, seqQueueFunc *put, const void *arg)
 {
     boolean r = FALSE;
 
@@ -122,13 +122,13 @@ boolean seqQueuePutF(QUEUE q, seqQueueFunc *f, const void *arg)
                 q->overflow = FALSE;
             }
         }
-        f(q->buffer + q->wr * q->elemSize, arg, q->elemSize);
+        put(q->buffer + q->wr * q->elemSize, arg, q->elemSize);
         if (!q->overflow) {
             q->wr = (q->wr + 1) % q->numElems;
         }
         epicsMutexUnlock(q->mutex);
     } else {
-        f(q->buffer + q->wr * q->elemSize, arg, q->elemSize);
+        put(q->buffer + q->wr * q->elemSize, arg, q->elemSize);
         q->wr = (q->wr + 1) % q->numElems;
     }
     return r;
