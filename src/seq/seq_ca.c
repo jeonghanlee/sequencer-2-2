@@ -236,8 +236,8 @@ static void proc_db_events(
 			meta.message = pmsg;
 		}
 
-		/* Write value and meta data to CA buffers (lock-free) */
-		ss_write_buffer(0, ch, val, &meta);
+		/* Write value and meta data to shared buffers */
+		ss_write_buffer(ch, val, &meta);
 	}
 
 	/* Wake up each state set that uses this channel in an event */

@@ -92,8 +92,8 @@ struct channel
 	QUEUE		queue;		/* queue if queued */
 	boolean		monitored;	/* whether channel is monitored */
 	/* buffer access, only used in safe mode */
-	epicsMutexId	varLock;	/* mutex for put to anonymous pvs */
-	boolean		busy;		/* buffer is currently being written */
+	epicsMutexId	varLock;	/* mutex for locking access to shared
+					   var buffer and meta data */
 };
 
 struct pv_type
@@ -215,7 +215,7 @@ struct pvreq
 
 /* seq_task.c */
 void sequencer (void *arg);
-void ss_write_buffer(SSCB *pwSS, CHAN *ch, void *val, PVMETA *meta);
+void ss_write_buffer(CHAN *ch, void *val, PVMETA *meta);
 void ss_read_buffer(SSCB *ss, CHAN *ch);
 void seqWakeup(SPROG *sp, unsigned eventNum);
 void seqCreatePvSys(SPROG *sp);

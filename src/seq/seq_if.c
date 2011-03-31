@@ -231,7 +231,7 @@ static void anonymous_put(SS_ID ss, CHAN *ch)
 	/* check if monitored to mirror behaviour for named PVs */
 	else if (ch->monitored)
 	{
-		ss_write_buffer(ss, ch, var, 0);
+		ss_write_buffer(ch, var, 0);
 	}
 	/* Must give varLock before calling seq_efSet, else (possible) deadlock! */
 	epicsMutexUnlock(ch->varLock);

@@ -123,38 +123,42 @@ exit:
 
 /*
  * ss_read_buffer_static() - static version of ss_read_buffer.
- * This is to enable inlining in the for loop in ss_entry.
+ * This is to enable inlining in the for loop in ss_read_all_buffer.
  */
 static void ss_read_buffer_static(SSCB *ss, CHAN *ch)
 {
-	SPROG	*sp = ss->sprog;
-	char	*val = valPtr(ch,ss);
-	char	*buf = bufPtr(ch);
-	int	nch = (int)(ch - sp->chan);
-	size_t	var_size = ch->type->size * ch->count;
+	char *val = valPtr(ch,ss);
+	char *buf = bufPtr(ch);
+	ptrdiff_t nch = chNum(ch);
+	size_t var_size = ch->type->size * ch->count;
 
 	if (!ss->dirty[nch])
 		return;
-	do {
-		ss->dirty[nch] = FALSE;
-		DEBUG("ss %s: before read %s", ss->ssName, ch->varName);
-		print_channel_value(DEBUG,ch,val);
-		memcpy(val, buf, var_size);
-		if (ch->dbch) {
-			int nss = (int)(ss - sp->ss);
-			/* structure copy */
-			ch->dbch->ssMetaData[nss] = ch->dbch->metaData;
-		}
-		DEBUG("ss %s: after read %s", ss->ssName, ch->varName);
-		print_channel_value(DEBUG,ch,val);
-	} while ((ch->busy || ss->dirty[nch])
-		&& (epicsThreadSleep(0.0),TRUE));
-		/* Note: the sleep(0) here acts as a yield. */
+
+	epicsMutexMustLock(ch->varLock);
+
+	DEBUG("ss %s: before read %s", ss->ssName, ch->varName);
+	print_channel_value(DEBUG, ch, val);
+
+	memcpy(val, buf, var_size);
+	if (ch->dbch) {
+		int nss = (int)ssNum(ss);
+		/* structure copy */
+		ch->dbch->ssMetaData[nss] = ch->dbch->metaData;
+	}
+
+	DEBUG("ss %s: after read %s", ss->ssName, ch->varName);
+	print_channel_value(DEBUG, ch, val);
+
+	ss->dirty[nch] = FALSE;
+
+	epicsMutexUnlock(ch->varLock);
 }
 
 /*
- * ss_read_buffer() - Only used in safe mode.
- * Lock-free reading of variable buffer.
+ * ss_read_buffer() - Copy value and meta data
+ * from shared buffer to state set local buffer
+ * and reset corresponding dirty flag.
  */
 void ss_read_buffer(SSCB *ss, CHAN *ch)
 {
@@ -162,8 +166,8 @@ void ss_read_buffer(SSCB *ss, CHAN *ch)
 }
 
 /*
- * ss_read_all_buffer() - Only used in safe mode.
- * Lock-free reading of variable buffer.
+ * ss_read_all_buffer() - Call ss_read_buffer_static
+ * for all channels.
  */
 static void ss_read_all_buffer(SPROG *sp, SSCB *ss)
 {
@@ -178,36 +182,35 @@ static void ss_read_all_buffer(SPROG *sp, SSCB *ss)
 }
 
 /*
- * ss_write_buffer() - Only used in safe mode.
- * Lock-free writing of variable buffer.
+ * ss_write_buffer() - Copy given value and meta data
+ * to shared buffer and set dirty flag for each state set.
  */
-void ss_write_buffer(SSCB *pwSS, CHAN *ch, void *val, PVMETA *meta)
+void ss_write_buffer(CHAN *ch, void *val, PVMETA *meta)
 {
-	SPROG	*sp = ch->sprog;
-	char	*buf = bufPtr(ch);
-	size_t	var_size = ch->type->size * ch->count;
+	SPROG *sp = ch->sprog;
+	char *buf = bufPtr(ch);	/* shared buffer */
+	size_t var_size = ch->type->size * ch->count;
+	ptrdiff_t nch = chNum(ch);
 	unsigned nss;
-	int	nch = (int)(ch - sp->chan);
 
-#define ss_name pwSS ? pwSS->ssName : ""
-	ch->busy = TRUE;
-	DEBUG("ss %s: before write %s", ss_name, ch->varName);
-	print_channel_value(DEBUG,ch,buf);
+	epicsMutexMustLock(ch->varLock);
+
+	DEBUG("ss_write_buffer: before write %s", ch->varName);
+	print_channel_value(DEBUG, ch, buf);
+
 	memcpy(buf, val, var_size);
-	if (ch->dbch && meta) {
+	if (ch->dbch && meta)
 		/* structure copy */
 		ch->dbch->metaData = *meta;
-	}
-	DEBUG("ss %s: after write %s", ss_name, ch->varName);
-	print_channel_value(DEBUG,ch,buf);
-	for (nss = 0; nss < sp->numSS; nss++)
-	{
-		SSCB *ss = sp->ss + nss;
-		if (ss != pwSS)
-			ss->dirty[nch] = TRUE;
-	}
-	ch->busy = FALSE;
-#undef ss_name
+
+	DEBUG("ss_write_buffer: after write %s", ch->varName);
+	print_channel_value(DEBUG, ch, buf);
+
+	if (sp->options & OPT_SAFE)
+		for (nss = 0; nss < sp->numSS; nss++)
+			sp->ss[nss].dirty[nch] = TRUE;
+
+	epicsMutexUnlock(ch->varLock);
 }
 
 /*

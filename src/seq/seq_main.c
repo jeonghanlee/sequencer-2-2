@@ -216,22 +216,26 @@ static void init_sscb(SPROG *sp, SSCB *ss, seqSS *seqSS)
 		ss->putSemId[nch] = epicsEventMustCreate(epicsEventFull);
 	ss->dead = epicsEventMustCreate(epicsEventEmpty);
 
-	ss->dirty = newArray(boolean, sp->numChans);
-
 	/* No need to copy the state structs, they can be shared
 	   because nothing gets mutated. */
 	ss->states = seqSS->states;
 
-	/* Allocate user variable area if safe mode option (+s) is set */
+	/* Allocate separate user variable area if safe mode option (+s) is set */
 	if (sp->options & OPT_SAFE)
+	{
+		ss->dirty = newArray(boolean, sp->numChans);
 		ss->var = (USER_VAR *)calloc(1, sp->varSize);
+	}
 	else
-		ss->var = NULL;
+	{
+		ss->dirty = NULL;
+		ss->var = sp->var;
+	}
 }
 
 /*
- * init_chan--Build the database channel structures.
- * Note:  Actual PV name is not filled in here. */
+ * Build the database channel structures.
+ */
 static void init_chan(SPROG *sp, CHAN *ch, seqChan *seqChan)
 {
 	DEBUG("init_chan: ch=%p\n", ch);
