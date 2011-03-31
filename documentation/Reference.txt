@@ -317,8 +317,7 @@ Variables are statically scoped, i.e. they are visible to the program
 only inside the smallest enclosing :token:`block`. This is similar to
 C and other statically scoped programming languages.
 
-However, contrary to other languages, life time does not strictly
-follow static scope.
+However, contrary to C, life time does not strictly follow static scope.
 
 Global variables, i.e. variables declared at the top-level (before
 any state sets) are visible throughout the program, and persist as long
@@ -338,7 +337,7 @@ For local variables, life time depends on where they are declared:
    undefined until they become initialized e.g. by an assignment.
 
 .. note:: In :ref:`safe mode` changes made to a global variable are *not*
-   immediately visible to other state sets.
+   visible to other state sets unless explicitly communicated.
 
 Process Variables
 ^^^^^^^^^^^^^^^^^
@@ -379,7 +378,7 @@ Assigned variables must be of global life time, see
 :ref:`variable scope`. Assigned variables, or separately assigned
 elements of an array, can be used as argument to built-in ``pvXXX``
 procedures (see `Built-in Functions`_). This is the primary means of
-interacting with process variables from within a SNL program.
+interacting with process variables from within an SNL program.
 
 Only certain types of variables can be assigned to a PV: allowed
 are numeric types (char, short, int, long, and their unsigned variants)
@@ -393,8 +392,18 @@ command line argument, or program parameter (see `Program Name and
 Parameter`_). If the process variable name is an empty string, then no
 actual assignment to any process variable is performed, but the variable
 is marked for potential (dynamic) assignment with :c:func:`pvAssign`.
-In :ref:`safe mode` (new in version 2.1) such variables are assigned
-to :ref:`anonymous pvs`.
+
+.. note:: An :token:`assign` clause using an empty string for the PV name
+   is interpreted differently in :ref:`safe mode`, see
+   :ref:`anonymous pvs`.
+
+.. todo:: In safe mode it might make sense to implicitly declare every
+   global variable as assigned (wholesale, if it is an array) by default.
+   An explicit assign/connect statement will override this, of course.
+   This is because un-assigned global variables are not very useful in
+   safe mode, since the only reason to use global variables at all is to
+   enable communication between state sets (and to avoid having to type
+   the same declarations in every state set that uses a certain channel).
 
 An array variable assigned wholesale to one process variable (using
 the first syntactic variant above) or an element of a
@@ -408,9 +417,6 @@ used.
 
 Pointer types may not be assigned to process variables.
 
-.. note:: An :token:`assign` clause using an empty string for the PV name
-   is interpreted differently in :ref:`safe mode`.
-
 The keyword "connect" is new in version 2.1 and is synonymous
 with "assign". It is offered as an alternative because the traditional
 term "assign" is too easily confused with the assignment
@@ -419,6 +425,7 @@ nothing in common. However, for compatibility and the
 fact that most SNL programmers are used to it, I have refrained from
 making any disruptive change here. Thus, the documentation still talks
 about "assigned variables", the "assign clause" etc.
+
 
 monitor
 ~~~~~~~
