@@ -122,7 +122,7 @@ struct db_channel
 	boolean		connected;	/* whether channel is connected */
 	void		*monid;		/* monitor id (supplied by PV lib) */
 	boolean		gotOneMonitor;	/* whether got at least one monitor */
-	PVMETA		metaData;	/* meta data from last access (ca buffer) */
+	PVMETA		metaData;	/* meta data (shared buffer) */
 	PVMETA		*ssMetaData;	/* array of meta data,
 					   one for each state set (safe mode) */
 };
@@ -138,9 +138,9 @@ struct state_set
 	SPROG		*sprog;		/* ptr back to state program block */
 
 	/* dynamic state set data (assigned at runtime) */
-	int		currentState;	/* current state index */
-	int		nextState;	/* next state index */
-	int		prevState;	/* previous state index */
+	int		currentState;	/* current state index, -1 if none */
+	int		nextState;	/* next state index, -1 if none */
+	int		prevState;	/* previous state index, -1 if none */
 	const bitMask	*mask;		/* current event mask */
 	unsigned	numDelays;	/* number of delays activated */
 	double		*delay;		/* queued delay values in secs (array) */
@@ -153,7 +153,7 @@ struct state_set
 	epicsEventId	*putSemId;	/* semaphores for async put */
 	/* safe mode */
 	boolean		*dirty;		/* array of flags, one for each channel */
-	USER_VAR	*var;		/* variable value block (safe mode) */
+	USER_VAR	*var;		/* variable value block */
 };
 
 struct program_instance
@@ -172,7 +172,7 @@ struct program_instance
 	unsigned	numQueues;	/* number of syncQ queues */
 	SSCB		*ss;		/* array of state set control blocks */
 	unsigned	numSS;		/* number of state sets */
-	USER_VAR	*var;		/* user variable area (or CA buffer in safe mode) */
+	USER_VAR	*var;		/* user variable area (shared buffer) */
 	size_t		varSize;	/* size of user variable area */
 	MACRO		*macros;	/* ptr to macro table */
 	char		*params;	/* program parameters */

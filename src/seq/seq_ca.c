@@ -216,7 +216,7 @@ static void proc_db_events(
 		return;
 	}
 
-	/* Copy value and meta data into user variable CA buffer
+	/* Copy value and meta data into user variable shared buffer
 	   (can get NULL value pointer for put completion only) */
 	if (value != NULL)
 	{

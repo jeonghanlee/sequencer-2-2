@@ -52,8 +52,7 @@ void sequencer (void *arg)	/* ptr to original (global) state program table */
 	sp->initFunc(sp->var);
 
 	/* Initialize state set variables. In safe mode, copy variable
-	   block to state set buffers.
-	   Must do all this before connecting. */
+	   block to state set buffers. Must do all this before connecting. */
 	for (nss = 0; nss < sp->numSS; nss++)
 	{
 		SSCB	*ss = sp->ss + nss;

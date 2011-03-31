@@ -175,8 +175,9 @@ epicsShareFunc pvStat epicsShareAPI seq_pvGet(SS_ID, VAR_ID, enum compType);
 epicsShareFunc pvStat epicsShareAPI seq_pvGetMultiple(SS_ID, VAR_ID,
 	unsigned, enum compType);
 epicsShareFunc boolean epicsShareAPI seq_pvGetQ(SS_ID, VAR_ID);
-epicsShareFunc void epicsShareAPI seq_pvFreeQ(SS_ID, VAR_ID);
 epicsShareFunc void epicsShareAPI seq_pvFlushQ(SS_ID, VAR_ID);
+/* retain seq_pvFreeQ for compatibility */
+#define seq_pvFreeQ seq_pvFlushQ
 epicsShareFunc pvStat epicsShareAPI seq_pvPut(SS_ID, VAR_ID, enum compType);
 epicsShareFunc pvStat epicsShareAPI seq_pvPutMultiple(SS_ID, VAR_ID,
 	unsigned, enum compType);
