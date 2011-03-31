@@ -864,20 +864,15 @@ epicsShareFunc boolean epicsShareAPI seq_pvGetQ(SS_ID ss, VAR_ID varId)
 	if (isSet)
 	{
 		struct getq_cp_arg arg = {ch, var, meta};
-		QUEUE	queue = ch->queue;
-		boolean	empty;
+		boolean	was_empty;
 
-		empty = seqQueueGetF(queue, getq_cp, &arg);
-		if (empty)
-		{
+		was_empty = seqQueueGetF(ch->queue, getq_cp, &arg);
+		if (was_empty)
 			errlogSevPrintf(errlogMajor,
 				"pvGetQ: event flag set but queue is empty\n");
-		}
-		else if (dbch)
-		{
+		else if (seqQueueIsEmpty(ch->queue))
 			/* If queue is now empty, clear the event flag */
-			if (seqQueueIsEmpty(queue)) bitClear(sp->evFlags, ev_flag);
-		}
+			bitClear(sp->evFlags, ev_flag);
 	}
 	epicsMutexUnlock(sp->programLock);
 
