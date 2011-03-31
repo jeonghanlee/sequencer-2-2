@@ -202,8 +202,6 @@ static void anonymous_put(SS_ID ss, CHAN *ch)
 {
 	char *var = valPtr(ch,ss);
 
-	/* Must lock because multiple writers */
-	epicsMutexMustLock(ch->varLock);
 	if (ch->queue)
 	{
 		QUEUE queue = ch->queue;
@@ -215,6 +213,12 @@ static void anonymous_put(SS_ID ss, CHAN *ch)
 		DEBUG("anonymous_put: type=%d, size=%d, count=%d, buf_size=%d, q=%p\n",
 			type, size, ch->count, pv_size_n(type, ch->count), queue);
 		print_channel_value(DEBUG, ch, var);
+
+		/* Note: Must lock here because multiple state sets can issue
+		   pvPut calls concurrently. OTOH, no need to lock against CA
+		   callbacks, because anonymous and named PVs are disjoint. */
+		epicsMutexMustLock(ch->varLock);
+
 		memcpy(pv_value_ptr(value, type), var, size * ch->count);
 		print_channel_value(DEBUG, ch, pv_value_ptr(value, type));
 		/* Copy whole message into queue */
@@ -227,14 +231,14 @@ static void anonymous_put(SS_ID ss, CHAN *ch)
 			  ch->varName
 			);
 		}
+
+		epicsMutexUnlock(ch->varLock);
 	}
 	/* check if monitored to mirror behaviour for named PVs */
 	else if (ch->monitored)
 	{
 		ss_write_buffer(ch, var, 0);
 	}
-	/* Must give varLock before calling seq_efSet, else (possible) deadlock! */
-	epicsMutexUnlock(ch->varLock);
 	/* Wake up each state set that uses this channel in an event */
 	seqWakeup(ss->sprog, ch->eventNum);
 	/* If there's an event flag associated with this channel, set it */
