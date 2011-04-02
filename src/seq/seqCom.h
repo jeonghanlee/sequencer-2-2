@@ -203,6 +203,7 @@ epicsShareFunc void epicsShareAPI seq_pvFlush(SS_ID);
 epicsShareFunc void epicsShareAPI seq_delayInit(SS_ID, DELAY_ID, double);
 epicsShareFunc boolean epicsShareAPI seq_delay(SS_ID, DELAY_ID);
 epicsShareFunc char *epicsShareAPI seq_macValueGet(SS_ID, const char *);
+epicsShareFunc void epicsShareAPI seq_pvExit(SS_ID);
 /* global info */
 epicsShareFunc unsigned epicsShareAPI seq_pvChannelCount(SS_ID);
 epicsShareFunc unsigned epicsShareAPI seq_pvConnectCount(SS_ID);

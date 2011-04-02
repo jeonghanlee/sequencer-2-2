@@ -441,18 +441,7 @@ void epicsShareAPI seqStop(epicsThreadId tid)
 	sp = seqFindProg(tid);
 	if (sp == NULL)
 		return;
-
-	DEBUG("Stop %s: sp=%p, tid=%p\n", sp->progName, sp,tid);
-
-	/* Ask all state set threads to exit */
-	DEBUG("   Asking state set threads to exit\n");
-	sp->die = TRUE;
-
-	/* Take care that we die even if waiting for initial connect */
-	epicsEventSignal(sp->ready);
-
-	DEBUG("   Waking up all state sets\n");
-	seqWakeup (sp, 0);
+	seq_pvExit(sp->ss);
 }
 
 void seqCreatePvSys(SPROG *sp)

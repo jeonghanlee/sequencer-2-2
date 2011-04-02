@@ -975,7 +975,20 @@ epicsShareFunc boolean epicsShareAPI seq_optGet(SS_ID ss, const char *opt)
 /* 
  * Given macro name, return pointer to its value.
  */
-epicsShareFunc char *epicsShareAPI seq_macValueGet(SS_ID ssId, const char *name)
+epicsShareFunc char *epicsShareAPI seq_macValueGet(SS_ID ss, const char *name)
 {
-	return seqMacValGet(ssId->sprog, name);
+	return seqMacValGet(ss->sprog, name);
+}
+
+/* 
+ * Immediately terminate all state sets and jump to global exit block.
+ */
+epicsShareFunc void epicsShareAPI seq_pvExit(SS_ID ss)
+{
+	SPROG *sp = ss->sprog;
+	/* Ask all state set threads to exit */
+	sp->die = TRUE;
+	/* Take care that we die even if waiting for initial connect */
+	epicsEventSignal(sp->ready);
+	seqWakeup(sp, 0);
 }
