@@ -82,7 +82,7 @@ identifiers for all state programs type::
 
   seqShow
 
-.. _StoppingtheStateProgramTasks:
+.. _Stopping the State Program Tasks:
 
 Stopping the State Program Tasks
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

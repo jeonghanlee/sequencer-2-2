@@ -768,7 +768,7 @@ Sequencer deletion re-written
    Sequencer deletion has been completely re-written. You can no longer
    delete a sequencer by deleting one of its tasks. Instead you must
    use the new ``seqStop`` routine. See
-   :ref:`StoppingtheStateProgramTasks`.
+   :ref:`Stopping the State Program Tasks`.
 
 efClear can wake up state sets
    Clearing an event flag can now wake up state sets that reference
