@@ -458,11 +458,18 @@ static void gen_event_body(Expr *xp)
 		indent(level); printf("{\n");
 
 		next_sp = tp->extra.e_when->next_state;
-		/* NULL at this point would have been an error in analysis phase */
-		assert(next_sp != 0);
-		indent(level+1);
-		printf("*pNextState = %d;\n", next_sp->extra.e_state->index);
-		indent(level+1); printf("*pTransNum = %d;\n", trans_num);
+		if (!next_sp)
+		{
+			/* "when(...) {...} exit" -> exit from program */
+			indent(level+1);
+			printf("seq_pvExit(ssId);\n");
+		}
+		else
+		{
+			indent(level+1);
+			printf("*pNextState = %d;\n", next_sp->extra.e_state->index);
+		}
+		indent(level+1);printf("*pTransNum = %d;\n", trans_num);
 		indent(level+1); printf("return TRUE;\n");
 		indent(level); printf("}\n");
 		trans_num++;

@@ -1203,14 +1203,18 @@ static uint connect_states(SymTable st, Expr *prog)
 
 			foreach (tp, sp->state_whens)
 			{
-				Expr *next_sp = (Expr *)sym_table_lookup(st, tp->value, ssp);
+				Expr *next_sp = 0;
 
-				if (!next_sp)
+				if (tp->value)
 				{
-					error_at_expr(tp,
-						"a state with name '%s' does not "
-						"exist in state set '%s'\n",
-					 	tp->value, ssp->value);
+					next_sp = (Expr *)sym_table_lookup(st, tp->value, ssp);
+					if (!next_sp)
+					{
+						error_at_expr(tp,
+							"a state with name '%s' does not "
+							"exist in state set '%s'\n",
+					 		tp->value, ssp->value);
+					}
 				}
 				tp->extra.e_when->next_state = next_sp;
 				assert(!next_sp || strcmp(tp->value,next_sp->value) == 0);

@@ -260,6 +260,11 @@ when(p) ::= WHEN(t) LPAREN opt_expr(c) RPAREN block(b) STATE NAME(n). {
 	p = expr(D_WHEN, t, c, b.left, b.right);
 }
 
+when(p) ::= WHEN(t) LPAREN opt_expr(c) RPAREN block(b) EXIT. {
+	t.str = 0;
+	p = expr(D_WHEN, t, c, b.left, b.right);
+}
+
 %type block {ExprPair}
 block(p) ::= LBRACE block_defns(ds) statements(xs) RBRACE. {
 	p = (ExprPair){ds,xs};
