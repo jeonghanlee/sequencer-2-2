@@ -1,6 +1,11 @@
 Using the Run Time Sequencer
 ============================
 
+.. todo:: This chapter should be completely re-worked.
+
+.. note:: Much of the information here is out-dated, some is
+   missing, and some is plainly wrong.
+
 In the previous chapter you learned how to create and compile some
 simple state programs. In this chapter you will be introduced to
 the run-time sequencer so that you can execute your state program.
@@ -87,15 +92,16 @@ identifiers for all state programs type::
 Stopping the State Program Tasks
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-You can no longer directly delete state program tasks. Instead, you
-must use ``seqStop`` .
+You should not directly delete state program tasks. Instead, use
+the ``seqStop`` command::
 
   seqStop level_check
 
 The parameter to ``seqStop`` is either the task identifier (tid) or
-the *unquoted* task name of the state program task.
+the task name of the state program task.
 
-A state program can no longer delete itself.
+A state program can also terminate itself, see :ref:`Transitions` and
+:c:func:`pvExit`.
 
 Unix-specific instructions
 --------------------------
@@ -104,7 +110,7 @@ Executing the State Program
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Under Unix, you execute the state program directly. You might type
-the following:
+the following::
 
   level_check
 

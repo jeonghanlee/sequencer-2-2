@@ -649,6 +649,8 @@ block that determines the next state.
 .. note:: State options can be used to control whether entry/exit blocks
    get executed even if the new state is the same as the current one.
 
+.. _Transitions:
+
 Transitions
 ~~~~~~~~~~~
 
@@ -656,14 +658,25 @@ Transitions
    whens: `whens` `when`
    whens: `when`
    when: "when" "(" `opt_expr` ")" `block` "state" `identifier`
+   when: "when" "(" `opt_expr` ")" `block` "exit"
    opt_expr: `expr`
    opt_expr: 
 
 A state transition starts with the keyword "when", followed by a
-condition (in parantheses), followed by a block, and finally the name
+condition (in parantheses), followed by a block, and finally the
+keyword "state" and then the name
 of the target state (which must be any state of the same state set).
 
 If there is no condition given, it defaults to ``TRUE`` (1).
+
+.. versionadded:: 2.1
+
+Instead of declaring which should be the next
+state, one can use the single keyword "exit" to specify that at this
+point all state sets should terminate (after completing any transition
+still in progress) and execution
+proceed with the global exit block (if any). See the built-in
+function :c:func:`pvExit` which performs a similar action.
 
 Block
 ^^^^^
@@ -1200,6 +1213,30 @@ for events, that is, after a state's entry block is executed
 The buffer is also flushed after initiating a synchronous
 operation that waits for a callback (i.e. ``pvPut(var,SYNC)``
 and ``pvGet(var,SYNC)``).
+
+pvExit
+^^^^^^
+
+.. c:function::
+   void pvExit()
+
+.. versionadded:: 2.1
+
+Terminate all state sets (after completing any
+transition still in progress) and proceed with the global exit block (if
+any). Afterwards disconnect all channels, close the pv system (CA), free all
+allocated memory, and then terminate the program.
+
+Note: if the program has been started under an ioc shell, then only the SNL
+program is terminated, not the whole ioc. If terminating the ioc shell is
+required, you should call the ``exit()`` function from the standard C
+library. This call can conveniently be placed in the SNL program's global
+exit block.
+
+A more structured way to achieve the same effect is to end a state transition
+with the keyword "exit", see the :token:`when` clause in the subsection on
+`Transitions`_. See also the ioc shell command ``seqStop`` in section
+:ref:`Stopping the State Program Tasks`.
 
 pvChannelCount
 ^^^^^^^^^^^^^^
