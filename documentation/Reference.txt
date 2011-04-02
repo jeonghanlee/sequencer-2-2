@@ -208,7 +208,11 @@ Declarations
    init_exprs: `init_expr`
    init_exprs: 
 
-Variable declarations are quite similar to C. Since version 2.1 you can
+Variable declarations are quite similar to C.
+
+.. versionadded:: 2.1
+
+You can now
 declare more than one variable in a single declaration (comma
 separated) and add pointer and array markers (subscripts)
 ad libitum as well as initializers.
@@ -371,7 +375,9 @@ The second one assigns a single element of an array variable to a
 single process variable. The third one assigns elements of an array
 variable to separate process variables.
 
-The fourth one is new in version 2.1; it serves as an abbreviation for
+..versionadded:: 2.1
+
+The fourth variant serves as an abbreviation for
 the first variant, in the special case where the PV name is empty (``""``).
 
 Assigned variables must be of global life time, see
@@ -417,7 +423,9 @@ used.
 
 Pointer types may not be assigned to process variables.
 
-The keyword "connect" is new in version 2.1 and is synonymous
+.. versionadded:: 2.1
+
+The keyword "connect" is synonymous
 with "assign". It is offered as an alternative because the traditional
 term "assign" is too easily confused with the assignment
 statement (``var = expression;``), even though these notions have
@@ -457,9 +465,11 @@ When a monitor is posted on any of the associated
 process variables, or when an asynchronous get operation completes,
 the corresponding event flag is set.
 
-.. note:: Since version 2.1 it is allowed to :token:`sync` an event flag to
-   more than one variable and that such an association can be made and
-   removed at runtime using :c:func:`pvSync`.
+.. versionadded:: 2.1
+
+It is now allowed to :token:`sync` an event flag to
+more than one variable and that such an association can be made and
+removed at runtime using :c:func:`pvSync`.
 
 syncQ
 ~~~~~
@@ -479,8 +489,9 @@ queue and the corresponding event flag is set. If the queue is
 already full, the last entry is overwritten. The :c:func:`pvGetQ`
 function reads items from the queue.
 
-Since version 2.1 you can use "syncq" (all lower case) as keyword
-instead of "syncQ".
+.. versionadded:: 2.1
+
+You can use "syncq" (all lower case) as keyword instead of "syncQ".
 
 .. _option definition:
 
@@ -1007,9 +1018,12 @@ pvFreeQ
    void pvFreeQ(queued_var)
 
 Deletes all entries from a queued variable's queue and
-clears the associated event flag. Since version 2.1 queue
-elements are no longer dynamically allocated, so this
-simply flushes the queue.
+clears the associated event flag.
+
+.. versionadded:: 2.1
+
+Queue elements are no longer dynamically allocated, so this
+is now an alias for pvFlushQ.
 
 pvFlushQ
 ^^^^^^^^
@@ -1017,8 +1031,9 @@ pvFlushQ
 .. c:function::
    void pvFlushQ(queued_var)
 
+.. versionadded:: 2.1
+
 Flush the queue associated with this variable, so it is empty afterwards.
-This function is new in version 2.1. and is an alias for :c:func:`pvFreeQ`.
 
 pvAssign
 ^^^^^^^^
@@ -1279,7 +1294,9 @@ the specified macro name. If the macro does not exist, it returns
 Safe Mode
 ---------
 
-Since version 2.1 SNL code can be interpreted in safe mode. This must be
+.. versionadded:: 2.1
+
+SNL code can be interpreted in *safe mode*. This must be
 enabled with the :option:`+s` option, because it changes the way variables
 are handled and is thus not fully backwards compatible. It should, however,
 be easy to adapt existing programs to safe mode by making communication
