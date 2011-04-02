@@ -8,10 +8,10 @@ accelerators and telescopes.
 The state notation language *SNL* allows programming sequential
 operations that interact with EPICS process variables without the usual
 complexity involved with task scheduling, semaphores, event handling,
-and I/O programming. The language is a restricted subset if C, enhanced
+and I/O programming. The language is a restricted subset of C, enhanced
 with extra syntax for descibing state sets, states, state transitions,
-and the binding of program variables to named process variables. See
-the :doc:`Tutorial` for a gentle introduction.
+and the binding of program variables to named and anonymous process
+variables. See the :doc:`Tutorial` for a gentle introduction.
 
 From the SNL source code, the SNL compiler *snc* generates a number of
 C code procedures that are called by the run-time sequencer, a C
