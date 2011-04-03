@@ -28,4 +28,4 @@ download, build, and install the software.
    PV-API
    Examples
 
-:ref:`genindex`
+.. :ref:`genindex`

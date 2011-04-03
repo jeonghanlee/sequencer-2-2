@@ -1,12 +1,10 @@
-Examples of State Programs
-==========================
+Examples of SNL Programs
+========================
 
 Entry and exit action example
 -----------------------------
 
-The following state program illustrates entry and exit actions.
-
-::
+The following state program illustrates entry and exit actions. ::
 
   program snctest
   float v;
@@ -40,9 +38,7 @@ Dynamic assignment example
 
 The following segment of a state program illustrates dynamic
 assignment of database variables to database channels. We have left
-out error checking for simplicity.
-
-::
+out error checking for simplicity. ::
 
   program dynamic
   option -c; /* don't wait for db connections */
@@ -76,7 +72,7 @@ out error checking for simplicity.
 Complex example
 ---------------
 
-*This example needs updating.*
+.. todo:: This example needs updating.
 
 The following state program contains most of the concepts presented
 in the previous sections. It consists of four state sets: (1)
@@ -125,7 +121,7 @@ Preamble
   char *pmac; /* used to access program macros */
 
 level_det state set
-^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^
 
 ::
 
