@@ -248,6 +248,17 @@ static void init_chan(SPROG *sp, CHAN *ch, seqChan *seqChan)
 	ch->monitored = seqChan->monitored;
 	ch->eventNum = seqChan->eventNum;
 
+	/* Fill in request type info */
+	ch->type = find_type(seqChan->varType);
+
+	DEBUG("  varname=%s, count=%u\n"
+		"  efId=%u, monitored=%u, eventNum=%u\n",
+		ch->varName, ch->count,
+		ch->efId, ch->monitored, ch->eventNum);
+	DEBUG("  type=%p: typeStr=%s, putType=%d, getType=%d, size=%d\n",
+		ch->type, ch->type->typeStr,
+		ch->type->putType, ch->type->getType, ch->type->size);
+
 	if (seqChan->dbAsName)
 	{
 		char name_buffer[100];
@@ -260,23 +271,15 @@ static void init_chan(SPROG *sp, CHAN *ch, seqChan *seqChan)
 			if (sp->options & OPT_SAFE)
 				dbch->ssMetaData = newArray(PVMETA, sp->numSS);
 			ch->dbch = dbch;
+			DEBUG("  assigned name=%s, expanded name=%s\n",
+				seqChan->dbAsName, ch->dbch->dbName);
 		}
-		DEBUG("  assigned name=%s, expanded name=%s\n",
-			seqChan->dbAsName, ch->dbch->dbName);
 	}
-	else
+
+	if (!ch->dbch)
+	{
 		DEBUG("  pv name=<anonymous>\n");
-
-	/* Fill in get/put db types, element size */
-	ch->type = find_type(seqChan->varType);
-
-	DEBUG("  varname=%s, count=%u\n"
-		"  efId=%u, monitored=%u, eventNum=%u\n",
-		ch->varName, ch->count,
-		ch->efId, ch->monitored, ch->eventNum);
-	DEBUG("  type=%p: typeStr=%s, putType=%d, getType=%d, size=%d\n",
-		ch->type, ch->type->typeStr,
-		ch->type->putType, ch->type->getType, ch->type->size);
+	}
 
 	if (seqChan->queued)
 	{
