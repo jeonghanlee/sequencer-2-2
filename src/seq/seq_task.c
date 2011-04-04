@@ -126,7 +126,7 @@ exit:
  * ss_read_buffer_static() - static version of ss_read_buffer.
  * This is to enable inlining in the for loop in ss_read_all_buffer.
  */
-static void ss_read_buffer_static(SSCB *ss, CHAN *ch)
+static void ss_read_buffer_static(SSCB *ss, CHAN *ch, boolean dirty_only)
 {
 	char *val = valPtr(ch,ss);
 	char *buf = bufPtr(ch);
@@ -136,7 +136,7 @@ static void ss_read_buffer_static(SSCB *ss, CHAN *ch)
 	size_t count = ch->dbch ? ch->dbch->dbCount : ch->count;
 	size_t var_size = ch->type->size * count;
 
-	if (!ss->dirty[nch])
+	if (!ss->dirty[nch] && dirty_only)
 		return;
 
 	epicsMutexMustLock(ch->varLock);
@@ -146,9 +146,8 @@ static void ss_read_buffer_static(SSCB *ss, CHAN *ch)
 
 	memcpy(val, buf, var_size);
 	if (ch->dbch) {
-		int nss = (int)ssNum(ss);
 		/* structure copy */
-		ch->dbch->ssMetaData[nss] = ch->dbch->metaData;
+		ch->dbch->ssMetaData[ssNum(ss)] = ch->dbch->metaData;
 	}
 
 	DEBUG("ss %s: after read %s", ss->ssName, ch->varName);
@@ -162,11 +161,12 @@ static void ss_read_buffer_static(SSCB *ss, CHAN *ch)
 /*
  * ss_read_buffer() - Copy value and meta data
  * from shared buffer to state set local buffer
- * and reset corresponding dirty flag.
+ * and reset corresponding dirty flag. Do this
+ * only if dirty flag is set or dirty_only is FALSE.
  */
-void ss_read_buffer(SSCB *ss, CHAN *ch)
+void ss_read_buffer(SSCB *ss, CHAN *ch, boolean dirty_only)
 {
-	return ss_read_buffer_static(ss, ch);
+	return ss_read_buffer_static(ss, ch, dirty_only);
 }
 
 /*
@@ -181,18 +181,19 @@ static void ss_read_all_buffer(SPROG *sp, SSCB *ss)
 	{
 		CHAN *ch = sp->chan + nch;
 		/* Call static version so it gets inlined */
-		ss_read_buffer_static(ss, ch);
+		ss_read_buffer_static(ss, ch, TRUE);
 	}
 }
 
 /*
  * ss_write_buffer() - Copy given value and meta data
- * to shared buffer and set dirty flag for each state set.
+ * to shared buffer. In safe mode, if dirtify is TRUE then
+ * set dirty flag for each state set.
  */
-void ss_write_buffer(CHAN *ch, void *val, PVMETA *meta)
+void ss_write_buffer(CHAN *ch, void *val, PVMETA *meta, boolean dirtify)
 {
 	SPROG *sp = ch->sprog;
-	char *buf = bufPtr(ch);	/* shared buffer */
+	char *buf = bufPtr(ch);		/* shared buffer */
 	/* Must use dbCount for db channels, else we overwrite
 	   elements we didn't get */
 	size_t count = ch->dbch ? ch->dbch->dbCount : ch->count;
@@ -213,7 +214,7 @@ void ss_write_buffer(CHAN *ch, void *val, PVMETA *meta)
 	DEBUG("ss_write_buffer: after write %s", ch->varName);
 	print_channel_value(DEBUG, ch, buf);
 
-	if (sp->options & OPT_SAFE)
+	if ((sp->options & OPT_SAFE) && dirtify)
 		for (nss = 0; nss < sp->numSS; nss++)
 			sp->ss[nss].dirty[nch] = TRUE;
 

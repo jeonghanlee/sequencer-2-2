@@ -236,8 +236,9 @@ static void proc_db_events(
 			meta.message = pmsg;
 		}
 
-		/* Write value and meta data to shared buffers */
-		ss_write_buffer(ch, val, &meta);
+		/* Write value and meta data to shared buffers.
+		   Set the dirty flag only of this was a monitor event. */
+		ss_write_buffer(ch, val, &meta, evtype == MON_COMPLETE);
 	}
 
 	/* Wake up each state set that uses this channel in an event */

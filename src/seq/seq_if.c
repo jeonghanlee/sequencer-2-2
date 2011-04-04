@@ -48,10 +48,13 @@ epicsShareFunc pvStat epicsShareAPI seq_pvGet(SS_ID ss, VAR_ID varId, enum compT
 	PVMETA		*meta = metaPtr(ch,ss);
 	double		tmo = 10.0;
 
-	/* Anonymous PV and safe mode, just copy from shared buffer */
+	/* Anonymous PV and safe mode, just copy from shared buffer.
+	   Note that completion is always immediate, so no distinction
+	   between SYNC and ASYNC needed. See also pvGetComplete. */
 	if ((sp->options & OPT_SAFE) && !dbch)
 	{
-		ss_read_buffer(ss,ch);
+		/* Copy regardless of whether dirty flag is set or not */
+		ss_read_buffer(ss, ch, FALSE);
 		return pvStatOK;
 	}
 	/* No named PV and traditional mode => user error */
@@ -152,6 +155,9 @@ epicsShareFunc pvStat epicsShareAPI seq_pvGet(SS_ID ss, VAR_ID varId, enum compT
 		switch (epicsEventWaitWithTimeout(getSem, tmo))
 		{
 		case epicsEventWaitOK:
+			if (sp->options & OPT_SAFE)
+				/* Copy regardless of whether dirty flag is set or not */
+				ss_read_buffer(ss, ch, FALSE);
 			break;
 		case epicsEventWaitTimeout:
 			meta->status = pvStatTIMEOUT;
@@ -180,13 +186,32 @@ epicsShareFunc boolean epicsShareAPI seq_pvGetComplete(SS_ID ss, VAR_ID varId)
 	SPROG		*sp = ss->sprog;
 	CHAN		*ch = sp->chan + varId;
 
+	if (!ch->dbch)
+	{
+		if (sp->options & OPT_SAFE)
+		{
+			/* Anonymous PVs always complete immediately */
+			return TRUE;
+		}
+		else
+		{
+			errlogSevPrintf(errlogFatal,
+				"pvGetComplete(%s): user error (variable not assigned)\n",
+				ch->varName
+			);
+			return FALSE;
+		}
+	}
+
 	switch (epicsEventTryWait(getSem))
 	{
 	case epicsEventWaitOK:
 		epicsEventSignal(getSem);
-		/* in safe mode, copy value and meta data from CA buffer to ss local buffer */
+		/* In safe mode, copy value and meta data from shared buffer
+		   to ss local buffer. */
 		if (sp->options & OPT_SAFE)
-			ss_read_buffer(ss,ch);
+			/* Copy regardless of whether dirty flag is set or not */
+			ss_read_buffer(ss, ch, FALSE);
 		return TRUE;
 	case epicsEventWaitTimeout:
 		return FALSE;
@@ -245,10 +270,10 @@ static void anonymous_put(SS_ID ss, CHAN *ch)
 
 		epicsMutexUnlock(ch->varLock);
 	}
-	/* check if monitored to mirror behaviour for named PVs */
-	else if (ch->monitored)
+	else
 	{
-		ss_write_buffer(ch, var, 0);
+		/* Set dirty flag only if monitored */
+		ss_write_buffer(ch, var, 0, ch->monitored);
 	}
 	/* Wake up each state set that uses this channel in an event */
 	seqWakeup(ss->sprog, ch->eventNum);
