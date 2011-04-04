@@ -38,12 +38,12 @@ typedef enum {
 /*
  * Value-related types (c.f. db_access.h)
  */
-typedef char   pvChar;
-typedef short  pvShort;
-typedef long   pvLong;
-typedef float  pvFloat;
-typedef double pvDouble;
-typedef char   pvString[40]; /* use sizeof( pvString ) */
+typedef epicsInt8    pvChar;
+typedef epicsInt16   pvShort;
+typedef epicsInt32   pvLong;
+typedef epicsFloat32 pvFloat;
+typedef epicsFloat64 pvDouble;
+typedef char         pvString[40]; /* use sizeof( pvString ) */
 
 #define PV_TIME_XXX(type) \
     typedef struct { \

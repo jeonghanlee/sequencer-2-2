@@ -174,6 +174,10 @@ static unsigned type_assignable_array(Type *t, int depth)
         return FALSE;
     case V_ARRAY:
         return type_assignable_array(t->val.array.elem_type, depth + 1);
+    case V_LONG:
+        return sizeof(long) <= 4;
+    case V_ULONG:
+        return sizeof(unsigned long) <= 4;
     default:
         return TRUE;
     }

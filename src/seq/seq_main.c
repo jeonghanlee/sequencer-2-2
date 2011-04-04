@@ -313,32 +313,34 @@ static void init_chan(SPROG *sp, CHAN *ch, seqChan *seqChan)
  */
 static PVTYPE pv_type_map[] =
 {
-	{ "char",		pvTypeCHAR,	pvTypeTIME_CHAR,	sizeof(char)	},
-	{ "short",		pvTypeSHORT,	pvTypeTIME_SHORT,	sizeof(short)	},
-	{ "int",		pvTypeLONG,	pvTypeTIME_LONG,	sizeof(long)	},
-	{ "long",		pvTypeLONG,	pvTypeTIME_LONG,	sizeof(long)	},
-	{ "unsigned char",	pvTypeCHAR,	pvTypeTIME_CHAR,	sizeof(char)	},
-	{ "unsigned short",	pvTypeSHORT,	pvTypeTIME_SHORT,	sizeof(short)	},
-	{ "unsigned int",	pvTypeLONG,	pvTypeTIME_LONG,	sizeof(long)	},
-	{ "unsigned long",	pvTypeLONG,	pvTypeTIME_LONG,	sizeof(long)	},
-	{ "float",		pvTypeFLOAT,	pvTypeTIME_FLOAT,	sizeof(float)	},
-	{ "double",		pvTypeDOUBLE,	pvTypeTIME_DOUBLE,	sizeof(double)	},
-	{ "string",		pvTypeSTRING,	pvTypeTIME_STRING,	sizeof(string)	},
-	{ NULL,			pvTypeERROR,	pvTypeERROR,		0		}
+	{ "char",		pvTypeCHAR,	pvTypeTIME_CHAR,	sizeof(char)		},
+	{ "short",		pvTypeSHORT,	pvTypeTIME_SHORT,	sizeof(short)		},
+	{ "int",		pvTypeLONG,	pvTypeTIME_LONG,	sizeof(int)		},
+	{ "long",		pvTypeLONG,	pvTypeTIME_LONG,	sizeof(long)		},
+	{ "unsigned char",	pvTypeCHAR,	pvTypeTIME_CHAR,	sizeof(unsigned char)	},
+	{ "unsigned short",	pvTypeSHORT,	pvTypeTIME_SHORT,	sizeof(unsigned short)	},
+	{ "unsigned int",	pvTypeLONG,	pvTypeTIME_LONG,	sizeof(unsigned int)	},
+	{ "unsigned long",	pvTypeLONG,	pvTypeTIME_LONG,	sizeof(unsigned long)	},
+	{ "float",		pvTypeFLOAT,	pvTypeTIME_FLOAT,	sizeof(float)		},
+	{ "double",		pvTypeDOUBLE,	pvTypeTIME_DOUBLE,	sizeof(double)		},
+	{ "string",		pvTypeSTRING,	pvTypeTIME_STRING,	sizeof(string)		},
+	{ NULL,			pvTypeERROR,	pvTypeERROR,		0			}
 };
 
 static PVTYPE *find_type(const char *userType)
 {
-	PVTYPE	*pt = pv_type_map;
+	PVTYPE	*pt;
 
-	while (pt->typeStr)
-	{
+	/* TODO: select pvType according to sizeof int/long/etc */
+	assert(sizeof(char)==1);
+	assert(sizeof(unsigned char)==1);
+	assert(sizeof(short)==2);
+	assert(sizeof(unsigned short)==2);
+	assert(sizeof(int)==4);
+	assert(sizeof(unsigned int)==4);
+	for (pt = pv_type_map; pt->typeStr; pt++)
 		if (strcmp(userType, pt->typeStr) == 0)
-		{
 			break;
-		}
-		pt++;
-	}
 	return pt;
 }
 
