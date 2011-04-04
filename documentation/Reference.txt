@@ -896,11 +896,13 @@ Puts (or writes) the value of an SNL variable to the underlying process
 variable. Returns the status from the PV layer (e.g. ``pvStatOK`` for
 success).
 
-If the variable is an array and associated with multiple PVs, then all the
-elements of the array are written to their respective PVs.
+If the variable is an array and associated with multiple PVs, then only
+the first element of the array interacts with its underlying PV.
 
-.. todo:: Seems this was never true. I like it but it breaks
-   compatibility. This is just too bad. (Similar for pvGet).
+.. todo:: It would be much nicer to have *all* the
+   elements of the array written to their respective PVs in this case.
+   Would this break compatibility too much?
+   Need to find out what to do.
 
 By default, :c:func:`pvPut` is un-confirmed "fire and forget";
 completion must be inferred by other means. The optional ``SYNC``
@@ -937,8 +939,8 @@ behaviour for anonymous PVs exactly mirrors that of named PVs, including the fac
 that the new value will not be seen by other state sets until they issue a pvGet,
 or, if the variable is monitored, until they wait for an event in a :token:`when`
 clause.
-Note that for anonymous PVs completion is always immediate, so the ``SYNC`` and
-``ASYNC`` options are not very useful.
+Note that for anonymous PVs completion is always immediate, so the ``ASYNC`` option
+is not very useful.
 
 pvPutComplete
 ^^^^^^^^^^^^^
@@ -972,7 +974,14 @@ pvGet
 
 Gets (or reads) the value of an SNL variable from the underlying process
 variable. Returns the status from the PV layer (e.g.
-``pvStatOK`` for success). By default, the state set will block until the
+``pvStatOK`` for success). 
+
+If the variable is an array and associated with multiple PVs, then only
+the first element of the array interacts with its underlying PV.
+
+.. todo:: Same as for pvPut, i.e. should work like 'foreach element do pvGet'.
+
+By default, the state set will block until the
 read operation is complete with a hard-coded timeout of 10s. The
 asynchronous (:option:`+a`) compile option can be used to prevent this, in
 which case completion can be checked via a subsequent call to
@@ -983,15 +992,11 @@ The optional ``SYNC`` and ``ASYNC`` arguments override the compile option.
 specified; ``ASYNC`` doesn't block and so gives default behavior if
 :option:`+a` was specified.
 
-In :ref:`safe mode`, :c:func:`pvGet` can be used with anonymous PVs (variables assigned
-to "") to communicate between state sets. In order to mirror the behaviour of
-named PVs, if ``ASYNC`` is specified, then the variable will not be updated
-until a pvGetComplete is executed from the same state set, or, if the
+In :ref:`safe mode`, if ``ASYNC`` is specified and the variable is not
+monitored, then the state set local copy of the variable will not be updated
+until a call to pvGetComplete is made and returns ``TRUE`` or, if the
 variable is monitored, until the state set waits for events in a :token:`when`
-clause.
-
-.. todo:: Needs to be implemented, right now ASYNC behaves the same as SYNC
-   for anonymous PVs.
+clause. Note that anonymous PVs behave exactly in teh same way.
 
 pvGetComplete
 ^^^^^^^^^^^^^
@@ -1004,13 +1009,9 @@ i.e. the value in the variable is current. This call is appropriate only if
 the asynchronous (:option:`+a`) compile option is specified or
 :c:func:`pvGet` 's optional ``ASYNC`` argument was used.
 
-In :ref:`safe mode`, the update of the variable with the value from the PV layer
-happens as a side effect of this call (if TRUE is returned).
-
-Unlike :c:func:`pvPutComplete`, :c:func:`pvGetComplete` doesn't support
-arrays.
-
-.. todo:: check if this is correct; i think it is not.
+In :ref:`safe mode`, the the state set local copy of the variable will be
+updated with the value from the PV layer as a side effect of this call
+(if TRUE is returned).
 
 pvGetQ
 ^^^^^^
