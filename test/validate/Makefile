@@ -26,7 +26,9 @@ PROD += subscript
 PROD += syncq
 PROD += pvSync
 PROD += pvPutAsync
+ifeq '$(EPICS_HAS_UNIT_TEST)' '1'
 PROD += pvGet
+endif
 PROD += array
 PROD += stop
 PROD += userfunc
