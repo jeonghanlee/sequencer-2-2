@@ -26,7 +26,7 @@ PROD += subscript
 PROD += syncq
 PROD += pvSync
 PROD += pvPutAsync
-PROD += pvGetComplete
+PROD += pvGet
 PROD += array
 PROD += stop
 PROD += userfunc
@@ -49,7 +49,7 @@ seqSoftIoc_DBD += base.dbd
 seqSoftIoc_SRCS += seqSoftIoc_registerRecordDeviceDriver.cpp
 
 DB_INSTALLS += syncq.db
-DB_INSTALLS += pvGetComplete.db
+DB_INSTALLS += pvGet.db
 DB_INSTALLS += pvPutAsync.db
 DB_INSTALLS += userfunc.db
 DB_INSTALLS += eftest.db
