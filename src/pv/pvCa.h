@@ -42,22 +42,22 @@ public:
 		void *priv = NULL, int debug = 0 );
     epicsShareFunc ~caVariable();
 
-    epicsShareFunc virtual pvStat get( pvType type, int count, pvValue *value );
-    epicsShareFunc virtual pvStat getNoBlock( pvType type, int count, pvValue *value );
-    epicsShareFunc virtual pvStat getCallback( pvType type, int count,
+    epicsShareFunc virtual pvStat get( pvType type, unsigned count, pvValue *value );
+    epicsShareFunc virtual pvStat getNoBlock( pvType type, unsigned count, pvValue *value );
+    epicsShareFunc virtual pvStat getCallback( pvType type, unsigned count,
 		pvEventFunc func, void *arg = NULL );
-    epicsShareFunc virtual pvStat put( pvType type, int count, pvValue *value );
-    epicsShareFunc virtual pvStat putNoBlock( pvType type, int count, pvValue *value );
-    epicsShareFunc virtual pvStat putCallback( pvType type, int count, pvValue *value,
+    epicsShareFunc virtual pvStat put( pvType type, unsigned count, pvValue *value );
+    epicsShareFunc virtual pvStat putNoBlock( pvType type, unsigned count, pvValue *value );
+    epicsShareFunc virtual pvStat putCallback( pvType type, unsigned count, pvValue *value,
 		pvEventFunc func, void *arg = NULL );
-    epicsShareFunc virtual pvStat monitorOn( pvType type, int count,
+    epicsShareFunc virtual pvStat monitorOn( pvType type, unsigned count,
 		pvEventFunc func, void *arg = NULL,
 		pvCallback **pCallback = NULL );
     epicsShareFunc virtual pvStat monitorOff( pvCallback *callback = NULL );
 
     epicsShareFunc virtual int getConnected() const;
     epicsShareFunc virtual pvType getType() const;
-    epicsShareFunc virtual int getCount() const;
+    epicsShareFunc virtual unsigned getCount() const;
 
 private:
     chid chid_;		/* channel access id */

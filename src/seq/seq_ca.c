@@ -136,7 +136,7 @@ pvStat seq_connect(SPROG *sp, boolean wait)
  * Called when a "get" completes.
  */
 epicsShareFunc void seq_get_handler(
-	void *var, pvType type, int count, pvValue *value, void *arg, pvStat status)
+	void *var, pvType type, unsigned count, pvValue *value, void *arg, pvStat status)
 {
 	PVREQ	*rQ = (PVREQ *)arg;
 	CHAN	*ch = rQ->ch;
@@ -153,7 +153,7 @@ epicsShareFunc void seq_get_handler(
  * Called when a "put" completes.
  */
 epicsShareFunc void seq_put_handler(
-	void *var, pvType type, int count, pvValue *value, void *arg, pvStat status)
+	void *var, pvType type, unsigned count, pvValue *value, void *arg, pvStat status)
 {
 	PVREQ	*rQ = (PVREQ *)arg;
 	CHAN	*ch = rQ->ch;
@@ -169,7 +169,7 @@ epicsShareFunc void seq_put_handler(
  * seq_mon_handler() - PV events (monitors) come here.
  */
 epicsShareFunc void seq_mon_handler(
-	void *var, pvType type, int count, pvValue *value, void *arg, pvStat status)
+	void *var, pvType type, unsigned count, pvValue *value, void *arg, pvStat status)
 {
 	CHAN	*ch = (CHAN *)arg;
 	SPROG	*sp = ch->sprog;
@@ -349,7 +349,7 @@ pvStat seq_monitor(CHAN *ch, boolean on)
 		status = pvVarMonitorOn(
 				dbch->pvid,		/* pvid */
 				ch->type->getType,	/* requested type */
-				(int)ch->count,		/* element count */
+				ch->count,		/* element count */
 				seq_mon_handler,	/* function to call */
 				ch,			/* user arg (channel struct) */
 				&dbch->monid);		/* where to put event id */
@@ -410,7 +410,7 @@ void seq_conn_handler(void *var, int connected)
 		DEBUG("%s connected to %s\n", ch->varName, dbch->dbName);
 		if (!dbch->connected)
 		{
-			int dbCount;
+			unsigned dbCount;
 			dbch->connected = TRUE;
 			sp->connectCount++;
 			if (sp->firstMonitorCount == sp->monitorCount

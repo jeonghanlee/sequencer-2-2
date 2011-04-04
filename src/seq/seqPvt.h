@@ -224,11 +224,11 @@ char *seqMacValGet(SPROG *sp, const char *name);
 void seqMacEval(SPROG *sp, const char *inStr, char *outStr, size_t maxChar);
 void seqMacFree(SPROG *sp);
 /* seq_ca.c */
-void seq_get_handler(void *var, pvType type, int count,
+void seq_get_handler(void *var, pvType type, unsigned count,
 	pvValue *value, void *arg, pvStat status);
-void seq_put_handler(void *var, pvType type, int count,
+void seq_put_handler(void *var, pvType type, unsigned count,
 	pvValue *value, void *arg, pvStat status);
-void seq_mon_handler(void *var, pvType type, int count,
+void seq_mon_handler(void *var, pvType type, unsigned count,
 	pvValue *value, void *arg, pvStat status);
 void seq_conn_handler(void *var,int connected);
 pvStat seq_connect(SPROG *sp, boolean wait);

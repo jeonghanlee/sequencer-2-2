@@ -161,7 +161,7 @@ void pvVariable::setError( int status, pvSevr sevr, pvStat stat,
  *
  * Description:
  */
-pvCallback::pvCallback( pvVariable *variable, pvType type, int count,
+pvCallback::pvCallback( pvVariable *variable, pvType type, unsigned count,
 			pvEventFunc func, void *arg, int debug ) :
     magic_( PV_MAGIC ),
     debug_( debug ),
@@ -292,39 +292,39 @@ epicsShareFunc pvStat epicsShareAPI pvVarDestroy( void *var ) {
     return pvStatOK;
 }
 
-epicsShareFunc pvStat epicsShareAPI pvVarGet( void *var, pvType type, int count, pvValue *value ) {
+epicsShareFunc pvStat epicsShareAPI pvVarGet( void *var, pvType type, unsigned count, pvValue *value ) {
     VAR_CHECK( return pvStatERROR );
     return Var->get( type, count, value );
 }
 
-epicsShareFunc pvStat epicsShareAPI pvVarGetNoBlock( void *var, pvType type, int count, pvValue *value ) {
+epicsShareFunc pvStat epicsShareAPI pvVarGetNoBlock( void *var, pvType type, unsigned count, pvValue *value ) {
     VAR_CHECK( return pvStatERROR );
     return Var->getNoBlock( type, count, value );
 }
 
-epicsShareFunc pvStat epicsShareAPI pvVarGetCallback( void *var, pvType type, int count,
+epicsShareFunc pvStat epicsShareAPI pvVarGetCallback( void *var, pvType type, unsigned count,
 		         pvEventFunc func, void *arg ) {
     VAR_CHECK( return pvStatERROR );
     return Var->getCallback( type, count, func, arg );
 }
 
-epicsShareFunc pvStat epicsShareAPI pvVarPut( void *var, pvType type, int count, pvValue *value ) {
+epicsShareFunc pvStat epicsShareAPI pvVarPut( void *var, pvType type, unsigned count, pvValue *value ) {
     VAR_CHECK( return pvStatERROR );
     return Var->put( type, count, value );
 }
 
-epicsShareFunc pvStat epicsShareAPI pvVarPutNoBlock( void *var, pvType type, int count, pvValue *value ) {
+epicsShareFunc pvStat epicsShareAPI pvVarPutNoBlock( void *var, pvType type, unsigned count, pvValue *value ) {
     VAR_CHECK( return pvStatERROR );
     return Var->putNoBlock( type, count, value );
 }
 
-epicsShareFunc pvStat epicsShareAPI pvVarPutCallback( void *var, pvType type, int count, pvValue *value,
+epicsShareFunc pvStat epicsShareAPI pvVarPutCallback( void *var, pvType type, unsigned count, pvValue *value,
                          pvEventFunc func, void *arg ) {
     VAR_CHECK( return pvStatERROR );
     return Var->putCallback( type, count, value, func, arg );
 }
 
-epicsShareFunc pvStat epicsShareAPI pvVarMonitorOn( void *var, pvType type, int count,
+epicsShareFunc pvStat epicsShareAPI pvVarMonitorOn( void *var, pvType type, unsigned count,
                        pvEventFunc func, void *arg, void **pCallback ) {
     VAR_CHECK( return pvStatERROR );
     return Var->monitorOn( type, count, func, arg, ( pvCallback ** ) pCallback);
@@ -360,7 +360,7 @@ epicsShareFunc pvType epicsShareAPI pvVarGetType( void *var ) {
     return Var->getType();
 }
 
-epicsShareFunc int epicsShareAPI pvVarGetCount( void *var ) {
+epicsShareFunc unsigned epicsShareAPI pvVarGetCount( void *var ) {
     VAR_CHECK( return pvStatERROR );
     return Var->getCount();
 }

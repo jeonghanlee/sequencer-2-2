@@ -41,7 +41,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvGet(SS_ID ss, VAR_ID varId, enum compT
 {
 	SPROG		*sp = ss->sprog;
 	CHAN		*ch = sp->chan + varId;
-	int		status;
+	pvStat		status;
 	PVREQ		*req;
 	epicsEventId	getSem = ss->getSemId[varId];
 	DBCHAN		*dbch = ch->dbch;
@@ -132,7 +132,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvGet(SS_ID ss, VAR_ID varId, enum compT
 	status = pvVarGetCallback(
 			dbch->pvid,		/* PV id */
 			ch->type->getType,	/* request type */
-			(int)ch->count,		/* element count */
+			ch->count,		/* element count */
 			seq_get_handler,	/* callback handler */
 			req);			/* user arg */
 	if (status != pvStatOK)
@@ -264,8 +264,8 @@ epicsShareFunc pvStat epicsShareAPI seq_pvPut(SS_ID ss, VAR_ID varId, enum compT
 {
 	SPROG	*sp = ss->sprog;
 	CHAN	*ch = sp->chan + varId;
-	int	status;
-	int	count;
+	pvStat	status;
+	unsigned count;
 	char	*var = valPtr(ch,ss);	/* ptr to value */
 	PVREQ	*req;
 	DBCHAN	*dbch = ch->dbch;
@@ -353,8 +353,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvPut(SS_ID ss, VAR_ID varId, enum compT
 
 	/* Determine number of elements to put (don't try to put more
 	   than db count) */
-	assert(dbch->dbCount <= INT_MAX);
-	count = (int)dbch->dbCount;
+	count = dbch->dbCount;
 
 	/* Perform the PV put operation (either non-blocking or with a
 	   callback routine specified) */

@@ -39,7 +39,7 @@
  */
 typedef void (*pvConnFunc)( void *var, int connected );
 
-typedef void (*pvEventFunc)( void *var, pvType type, int count,
+typedef void (*pvEventFunc)( void *var, pvType type, unsigned count,
 			     pvValue *value, void *arg, pvStat status );
 
 /*
@@ -117,22 +117,22 @@ public:
 		void *priv = NULL, int debug = 0 );
     epicsShareFunc virtual ~pvVariable();
 
-    epicsShareFunc virtual pvStat get( pvType type, int count, pvValue *value ) = 0;
-    epicsShareFunc virtual pvStat getNoBlock( pvType type, int count, pvValue *value ) = 0;
-    epicsShareFunc virtual pvStat getCallback( pvType type, int count,
+    epicsShareFunc virtual pvStat get( pvType type, unsigned count, pvValue *value ) = 0;
+    epicsShareFunc virtual pvStat getNoBlock( pvType type, unsigned count, pvValue *value ) = 0;
+    epicsShareFunc virtual pvStat getCallback( pvType type, unsigned count,
 		pvEventFunc func, void *arg = NULL ) = 0;
-    epicsShareFunc virtual pvStat put( pvType type, int count, pvValue *value ) = 0;
-    epicsShareFunc virtual pvStat putNoBlock( pvType type, int count, pvValue *value ) = 0;
-    epicsShareFunc virtual pvStat putCallback( pvType type, int count, pvValue *value,
+    epicsShareFunc virtual pvStat put( pvType type, unsigned count, pvValue *value ) = 0;
+    epicsShareFunc virtual pvStat putNoBlock( pvType type, unsigned count, pvValue *value ) = 0;
+    epicsShareFunc virtual pvStat putCallback( pvType type, unsigned count, pvValue *value,
 		pvEventFunc func, void *arg = NULL ) = 0;
-    epicsShareFunc virtual pvStat monitorOn( pvType type, int count,
+    epicsShareFunc virtual pvStat monitorOn( pvType type, unsigned count,
 		pvEventFunc func, void *arg = NULL,
 		pvCallback **pCallback = NULL ) = 0;
     epicsShareFunc virtual pvStat monitorOff( pvCallback *callback = NULL ) = 0;
 
     epicsShareFunc virtual int getConnected() const = 0;
     epicsShareFunc virtual pvType getType() const = 0;
-    epicsShareFunc virtual int getCount() const = 0;
+    epicsShareFunc virtual unsigned getCount() const = 0;
 
     epicsShareFunc inline int getMagic() const { return magic_; }
     epicsShareFunc inline void setDebug( int debug ) { debug_ = debug; }
@@ -179,7 +179,7 @@ private:
 class pvCallback {
 
 public:
-    epicsShareFunc pvCallback( pvVariable *variable, pvType type, int count,
+    epicsShareFunc pvCallback( pvVariable *variable, pvType type, unsigned count,
 		pvEventFunc func, void *arg, int debug = 0);
     epicsShareFunc ~pvCallback();
 
@@ -189,7 +189,7 @@ public:
 
     epicsShareFunc inline pvVariable *getVariable() { return variable_; }
     epicsShareFunc inline pvType getType() { return type_; }
-    epicsShareFunc inline int getCount() { return count_; };
+    epicsShareFunc inline unsigned getCount() { return count_; };
     epicsShareFunc inline pvEventFunc getFunc() { return func_; };
     epicsShareFunc inline void *getArg() { return arg_; };
     epicsShareFunc inline void setPrivate( void *priv ) { private_ = priv; }
@@ -258,15 +258,15 @@ epicsShareFunc const char * epicsShareAPI pvSysGetMess( void *sys );
 epicsShareFunc pvStat epicsShareAPI pvVarCreate( void *sys, const char *name, pvConnFunc func, void *priv,
 		    int debug, void **pVar );
 epicsShareFunc pvStat epicsShareAPI pvVarDestroy( void *var );
-epicsShareFunc pvStat epicsShareAPI pvVarGet( void *var, pvType type, int count, pvValue *value );
-epicsShareFunc pvStat epicsShareAPI pvVarGetNoBlock( void *var, pvType type, int count, pvValue *value );
-epicsShareFunc pvStat epicsShareAPI pvVarGetCallback( void *var, pvType type, int count,
+epicsShareFunc pvStat epicsShareAPI pvVarGet( void *var, pvType type, unsigned count, pvValue *value );
+epicsShareFunc pvStat epicsShareAPI pvVarGetNoBlock( void *var, pvType type, unsigned count, pvValue *value );
+epicsShareFunc pvStat epicsShareAPI pvVarGetCallback( void *var, pvType type, unsigned count,
 		         pvEventFunc func, void *arg );
-epicsShareFunc pvStat epicsShareAPI pvVarPut( void *var, pvType type, int count, pvValue *value );
-epicsShareFunc pvStat epicsShareAPI pvVarPutNoBlock( void *var, pvType type, int count, pvValue *value );
-epicsShareFunc pvStat epicsShareAPI pvVarPutCallback( void *var, pvType type, int count, pvValue *value,
+epicsShareFunc pvStat epicsShareAPI pvVarPut( void *var, pvType type, unsigned count, pvValue *value );
+epicsShareFunc pvStat epicsShareAPI pvVarPutNoBlock( void *var, pvType type, unsigned count, pvValue *value );
+epicsShareFunc pvStat epicsShareAPI pvVarPutCallback( void *var, pvType type, unsigned count, pvValue *value,
 		         pvEventFunc func, void *arg );
-epicsShareFunc pvStat epicsShareAPI pvVarMonitorOn( void *var, pvType type, int count,
+epicsShareFunc pvStat epicsShareAPI pvVarMonitorOn( void *var, pvType type, unsigned count,
 		       pvEventFunc func, void *arg, void **pId );
 epicsShareFunc pvStat epicsShareAPI pvVarMonitorOff( void *var, void *id );
 epicsShareFunc int    epicsShareAPI pvVarGetMagic( void *var );
@@ -274,7 +274,7 @@ epicsShareFunc void   epicsShareAPI pvVarSetDebug( void *var, int debug );
 epicsShareFunc int    epicsShareAPI pvVarGetDebug( void *var );
 epicsShareFunc int    epicsShareAPI pvVarGetConnected( void *var );
 epicsShareFunc pvType epicsShareAPI pvVarGetType( void *var );
-epicsShareFunc int    epicsShareAPI pvVarGetCount( void *var );
+epicsShareFunc unsigned epicsShareAPI pvVarGetCount( void *var );
 epicsShareFunc char * epicsShareAPI pvVarGetName( void *var );
 epicsShareFunc void   epicsShareAPI pvVarSetPrivate( void *var, void *priv );
 epicsShareFunc void * epicsShareAPI pvVarGetPrivate( void *var );

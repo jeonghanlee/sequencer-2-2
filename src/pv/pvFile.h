@@ -40,22 +40,22 @@ public:
 		  void *priv = NULL, int debug = 0 );
     ~fileVariable();
 
-    virtual pvStat get( pvType type, int count, pvValue *value );
-    virtual pvStat getNoBlock( pvType type, int count, pvValue *value );
-    virtual pvStat getCallback( pvType type, int count,
+    virtual pvStat get( pvType type, unsigned count, pvValue *value );
+    virtual pvStat getNoBlock( pvType type, unsigned count, pvValue *value );
+    virtual pvStat getCallback( pvType type, unsigned count,
 		pvEventFunc func, void *arg = NULL );
-    virtual pvStat put( pvType type, int count, pvValue *value );
-    virtual pvStat putNoBlock( pvType type, int count, pvValue *value );
-    virtual pvStat putCallback( pvType type, int count, pvValue *value,
+    virtual pvStat put( pvType type, unsigned count, pvValue *value );
+    virtual pvStat putNoBlock( pvType type, unsigned count, pvValue *value );
+    virtual pvStat putCallback( pvType type, unsigned count, pvValue *value,
 		pvEventFunc func, void *arg = NULL );
-    virtual pvStat monitorOn( pvType type, int count,
+    virtual pvStat monitorOn( pvType type, unsigned count,
 		pvEventFunc func, void *arg = NULL,
 		pvCallback **pCallback = NULL );
     virtual pvStat monitorOff( pvCallback *callback = NULL );
 
     virtual int getConnected() const { return TRUE; }
     virtual pvType getType() const { return pvTypeSTRING; }
-    virtual int getCount() const { return 1; }
+    virtual unsigned getCount() const { return 1; }
 
 private:
     char *value_;	/* current value */

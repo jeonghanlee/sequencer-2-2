@@ -186,7 +186,7 @@ fileVariable::~fileVariable()
  *
  * Description:
  */
-pvStat fileVariable::get( pvType type, int count, pvValue *value )
+pvStat fileVariable::get( pvType type, unsigned count, pvValue *value )
 {
     if ( getDebug() > 0 )
         printf( "%8p: fileVariable::get( %d, %d )\n", this, type, count );
@@ -204,7 +204,7 @@ pvStat fileVariable::get( pvType type, int count, pvValue *value )
  *
  * Description:
  */
-pvStat fileVariable::getNoBlock( pvType type, int count, pvValue *value )
+pvStat fileVariable::getNoBlock( pvType type, unsigned count, pvValue *value )
 {
     if ( getDebug() > 0 )
         printf( "%8p: fileVariable::getNoBlock( %d, %d )\n", this,
@@ -222,7 +222,7 @@ pvStat fileVariable::getNoBlock( pvType type, int count, pvValue *value )
  *
  * Description:
  */
-pvStat fileVariable::getCallback( pvType type, int count,
+pvStat fileVariable::getCallback( pvType type, unsigned count,
 			          pvEventFunc func, void *arg )
 {
     if ( getDebug() > 0 )
@@ -244,7 +244,7 @@ pvStat fileVariable::getCallback( pvType type, int count,
  *
  * Description:
  */
-pvStat fileVariable::put( pvType type, int count, pvValue *value )
+pvStat fileVariable::put( pvType type, unsigned count, pvValue *value )
 {
     if ( getDebug() > 0 )
         printf( "%8p: fileVariable::put( %d, %d )\n", this, type, count );
@@ -261,7 +261,7 @@ pvStat fileVariable::put( pvType type, int count, pvValue *value )
  *
  * Description:
  */
-pvStat fileVariable::putNoBlock( pvType type, int count, pvValue *value )
+pvStat fileVariable::putNoBlock( pvType type, unsigned count, pvValue *value )
 {
     if ( getDebug() > 0 )
         printf( "%8p: fileVariable::putNoBlock( %d, %d )\n", this,
@@ -277,7 +277,7 @@ pvStat fileVariable::putNoBlock( pvType type, int count, pvValue *value )
  *
  * Description:
  */
-pvStat fileVariable::putCallback( pvType type, int count, pvValue *value,
+pvStat fileVariable::putCallback( pvType type, unsigned count, pvValue *value,
 			          pvEventFunc func, void *arg )
 {
     if ( getDebug() > 0 )
@@ -296,7 +296,7 @@ pvStat fileVariable::putCallback( pvType type, int count, pvValue *value,
  *
  * Description:
  */
-pvStat fileVariable::monitorOn( pvType type, int count, pvEventFunc func,
+pvStat fileVariable::monitorOn( pvType type, unsigned count, pvEventFunc func,
 			        void *arg, pvCallback **pCallback )
 {
     if ( getDebug() > 0 )
