@@ -757,7 +757,7 @@ epicsShareFunc boolean epicsShareAPI seq_efTest(SS_ID ss, EV_ID ev_flag)
 /* event flag */
 {
 	SPROG	*sp = ss->sprog;
-	int	isSet;
+	boolean	isSet;
 
 	assert(ev_flag > 0 && ev_flag <= ss->sprog->numEvFlags);
 	epicsMutexMustLock(sp->programLock);
@@ -777,7 +777,7 @@ epicsShareFunc boolean epicsShareAPI seq_efTest(SS_ID ss, EV_ID ev_flag)
 epicsShareFunc boolean epicsShareAPI seq_efClear(SS_ID ss, EV_ID ev_flag)
 {
 	SPROG	*sp = ss->sprog;
-	int	isSet;
+	boolean	isSet;
 
 	assert(ev_flag > 0 && ev_flag <= ss->sprog->numEvFlags);
 	epicsMutexMustLock(sp->programLock);
@@ -800,7 +800,7 @@ epicsShareFunc boolean epicsShareAPI seq_efClear(SS_ID ss, EV_ID ev_flag)
 epicsShareFunc boolean epicsShareAPI seq_efTestAndClear(SS_ID ss, EV_ID ev_flag)
 {
 	SPROG	*sp = ss->sprog;
-	int	isSet;
+	boolean	isSet;
 
 	assert(ev_flag > 0 && ev_flag <= ss->sprog->numEvFlags);
 	epicsMutexMustLock(sp->programLock);
