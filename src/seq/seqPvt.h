@@ -34,8 +34,7 @@
 #include "seq_queue.h"
 #include "seqCom.h"
 
-#define valPtr(ch,ss)		((char*)basePtr(ch,ss)+(ch)->offset)
-#define basePtr(ch,ss)		(((ch)->sprog->options&OPT_SAFE)?(ss)->var:(ch)->sprog->var)
+#define valPtr(ch,ss)		((char*)(ss)->var+(ch)->offset)
 #define bufPtr(ch)		((char*)(ch)->sprog->var+(ch)->offset)
 
 #define ssNum(ss)		((ss)-(ss)->sprog->ss)
