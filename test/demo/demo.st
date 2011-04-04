@@ -35,7 +35,7 @@ program demo( PVSYS ",debug=1" )
 option  +r;
 
 /* control variables and transition points for light control */
-long    light;
+int     light;
 assign  light    to LIGHT;
 
 double  lightOn;
