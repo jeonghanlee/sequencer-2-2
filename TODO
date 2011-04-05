@@ -1,10 +1,3 @@
-* Make sure that variables assigned to anonymous PVs are only updated
-  before when() clauses if monitored or if a pvGet completes.
-  This is important so we can exchange an anonymous for a named PV and vice
-  versa w/o disrupting the program logic.
-
-* Check that communication via anonymous PVs uses the full array length.
-
 * Check whether it makes sense to let users specify the communication
   (request) type. This is currently baked-in to be inferred from the
   variable's type as specified in the program text. The question is if this
@@ -14,16 +7,7 @@
 * Add optional timeout argument for pvGet and pvPut to override the
   hard-coded default of 10 seconds.
 
-* Check event_flag argument for pvSync in the compiler.
-
 * Raw ideas:
-
-  - Allow 'final' states with no transitions (no when() clauses, no exit
-    clauses). They would serve as an end-point, e.g. in case of an error.
-    Same as ::
-
-      when (FALSE) {
-      } state no_matter
 
   - Allow parameterized state sets (like a function). Then allow to "jump"
     from one state set to another one. The "caller" i.e. the original state
@@ -52,4 +36,14 @@
       pv {} int x[2][100];            /* multiple(2) anonymous array[100] pvs */
       pv {"n1", "n2"} int x[2][100];  /* multiple(2) named array[100] pvs */
 
-* More tests, especially unit tests.
+* More regression tests.
+
+* Clarify the situation of a pvPut/pvGet to array variable that
+  has been connected to separate PVs. Currently this puts/gets the first element,
+  but wouldn't it be nice if it meant to put/get all (connected) elements?
+  Write to tech-talk and ask (since it breaks compatibility)?
+
+* What if a variable is declared in a outer scope (e.g. global), but
+  the "monitor" or "sync" appears in an inner scope? The compiler currently
+  allows this but there is no well-defined semantics I can think of.
+  Need to fix the compiler to abort with an error in this case.
