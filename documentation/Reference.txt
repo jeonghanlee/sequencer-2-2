@@ -305,10 +305,10 @@ See :ref:`EventFlags`.
 Foreign Entities
 ~~~~~~~~~~~~~~~~
 
-The pseudo type "foreign" is used to declare a C variable or
-struct tag or CPP macro that have been defined outside the SNL program.
-No warning will be issued if such a variable, struct tag, or macro is
-used in the program even if warnings are enabled.
+The pseudo type "foreign" is used to declare any number of C variables
+or struct tags or CPP macros that have been defined outside the SNL
+program. No warning will be issued if such a variable, struct tag, or
+macro is used in the program even if warnings are enabled.
 
 You cannot declare arrays of or pointers to foreign entities.
 
@@ -765,10 +765,10 @@ record selection, and postfix operators (increment and decrement).
    an identifier, but can also be used as a function.
 
 .. note:: SNL makes no use of the semantics of structure member access and
-   that struct tags are treated as expressions (variables, in fact). A
-   side-effect is that *snc* will warn that structure tags are "used but
-   not declared", which can be silenced with a :ref:`foreign entities`
-   declaration, just as with variables.
+   struct tags are treated as if they were expressions (variables, in
+   fact). A side-effect is that *snc* will warn that structure tags are
+   "used but not declared", which can be silenced with a :ref:`foreign
+   entities` declaration, just as with variables.
 
 Unary Prefix Operators
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -1601,8 +1601,8 @@ variable, and then does a pvPut::
 Syntax Summary
 --------------
 
-Here is a complete summary of all syntax rules. It is guaranteed to
-be up-to-date as it is automatically generated from the parser
-generator specification.
+What follows is a summary of all syntax rules. It is guaranteed to be
+up-to-date as it is automatically generated from the parser generator
+specification.
 
 .. include:: bnf.inc
