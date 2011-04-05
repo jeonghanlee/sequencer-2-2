@@ -33,6 +33,7 @@ PROD += race
 ifeq '$(EPICS_HAS_UNIT_TEST)' '1'
 PROD += eftest
 PROD += pvGet
+PROD += safeMonitor
 endif
 
 #PROD += ctest
