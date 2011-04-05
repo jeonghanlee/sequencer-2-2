@@ -1,29 +1,75 @@
-program pvGetComplete
+/*
+ * ss write: Put increasing numbers to (monitored and ef synced) PV, wait for reply,
+ *  then check sent and received are equal, then sleep a bit, check again, then
+ *  pvGet the anonymous PV and check again.
+ * ss read: Wait for event using efTestAndClear in when clause, then send back
+ *  the same value via anonymous (also monitored and ef synced) PV.
+ * TODO: add a similar test with a named PV
+ */
+program eftest
+
+%%#include "stdlib.h"
+%%#include "epicsUnitTest.h"
+%%#include "epicsThread.h"
 
 option +s;
 
-evflag f;
+evflag ef_named, ef_anonymous;
+
+double anonymous;
+assign anonymous;
+monitor anonymous;
+sync anonymous to ef_anonymous;
+
+entry {
+    testPlan(0);
+    efClear(ef_named);
+}
 
 ss read {
-    double test;
-    assign test to "eftest";
-    monitor test;
-    sync test to f;
-
+    double named;
+    assign named to "test";
+    monitor named;
+    sync named to ef_named;
     state wait {
-        when (efTestAndClear(f)) {
-            printf("test=%f\n", test);
+        when (efTestAndClear(ef_named)) {
+            anonymous = named;
+            pvPut(anonymous);
+            testDiag("read: pvPut(anonymous=%.1f)", anonymous);
+            epicsThreadSleep(0.1);
+            testOk(named==anonymous,
+                "read: named=%.1f==%.1f=anonymous", named, anonymous);
         } state wait
     }
 }
 
 ss write {
-    double out = 1.0;
-    assign out to "eftest";
-    state run {
-        when (delay(1)) {
-            out = -out;
-            pvPut(out);
-        } state run
+    double named = 1.0;
+    assign named to "test";
+    int n=0;
+    state send {
+        when (n > 10) {
+        } exit
+        when (delay(0.01)) {
+            named = n;
+            pvPut(named);
+            testDiag("write: pvPut(named=%.1f)", named);
+            anonymous = named;
+        } state recv
     }
+    state recv {
+        when (efTestAndClear(ef_anonymous)) {
+            testOk(named==anonymous, "write: named=%.1f==%.1f=anonymous", named, anonymous);
+            epicsThreadSleep(0.1);
+            testOk(named==anonymous, "write: named=%.1f==%.1f=anonymous", named, anonymous);
+            pvGet(anonymous);
+            testOk(named==anonymous, "write: named=%.1f==%.1f=anonymous", named, anonymous);
+            n++;
+        } state send
+    }
+}
+
+exit {
+    testDone();
+    exit(0);
 }
