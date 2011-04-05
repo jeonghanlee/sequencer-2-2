@@ -178,5 +178,5 @@ ss write {
 
 exit {
     testDone();
-    exit(1);
+    exit(0);
 }
