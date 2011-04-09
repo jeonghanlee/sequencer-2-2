@@ -72,7 +72,6 @@ static struct func_symbol func_symbols[] =
 	{"pvConnected",		FT_PV,		FALSE,	0,	FALSE,	FALSE},
 	{"pvCount",		FT_PV,		FALSE,	0,	FALSE,	FALSE},
 	{"pvDisconnect",	FT_PV,		FALSE,	0,	FALSE,	FALSE},
-	{"pvExit",		FT_OTHER,	FALSE,	0,	FALSE,	FALSE},
 	{"pvFlush",		FT_OTHER,	FALSE,	0,	FALSE,	FALSE},
 	{"pvFlushQ",		FT_PV,		FALSE,	0,	FALSE,	FALSE},
 	{"pvFreeQ",		FT_PV,		FALSE,	0,	FALSE,	FALSE},
@@ -462,7 +461,7 @@ static void gen_event_body(Expr *xp)
 		{
 			/* "when(...) {...} exit" -> exit from program */
 			indent(level+1);
-			printf("seq_pvExit(ssId);\n");
+			printf("seq_exit(ssId);\n");
 		}
 		else
 		{

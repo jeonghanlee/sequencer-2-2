@@ -1007,12 +1007,13 @@ epicsShareFunc char *epicsShareAPI seq_macValueGet(SS_ID ss, const char *name)
 /* 
  * Immediately terminate all state sets and jump to global exit block.
  */
-epicsShareFunc void epicsShareAPI seq_pvExit(SS_ID ss)
+epicsShareFunc void epicsShareAPI seq_exit(SS_ID ss)
 {
 	SPROG *sp = ss->sprog;
 	/* Ask all state set threads to exit */
 	sp->die = TRUE;
 	/* Take care that we die even if waiting for initial connect */
 	epicsEventSignal(sp->ready);
+	/* Wakeup all state sets unconditionally */
 	seqWakeup(sp, 0);
 }

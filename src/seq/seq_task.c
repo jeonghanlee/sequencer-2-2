@@ -267,9 +267,10 @@ static void ss_entry(void *arg)
 	{
 		boolean	ev_trig;
 		int	transNum = 0;	/* highest prio trans. # triggered */
+		STATE	*st = ss->states + ss->currentState;
 
 		/* Set state to current state */
-		STATE *st = ss->states + ss->currentState;
+		assert(ss->currentState >= 0);
 
 		/* Set state set event mask to this state's event mask */
 		ss->mask = st->eventMask;
@@ -307,8 +308,7 @@ static void ss_entry(void *arg)
 				epicsEventWait(ss->syncSemId);
 
 			/* Check whether we have been asked to exit */
-			if (sp->die)
-				goto exit;
+			if (sp->die) goto exit;
 
 			/* Copy dirty variable values from CA buffer
 			 * to user (safe mode only).
@@ -333,6 +333,9 @@ static void ss_entry(void *arg)
 
 		/* Execute the state change action */
 		st->actionFunc(ss, var, transNum, &ss->nextState);
+
+		/* Check whether we have been asked to exit */
+		if (sp->die) goto exit;
 
 		/* If changing state, do exit actions */
 		if (st->exitFunc && (ss->currentState != ss->nextState
@@ -442,7 +445,7 @@ void epicsShareAPI seqStop(epicsThreadId tid)
 	sp = seqFindProg(tid);
 	if (sp == NULL)
 		return;
-	seq_pvExit(sp->ss);
+	seq_exit(sp->ss);
 }
 
 void seqCreatePvSys(SPROG *sp)

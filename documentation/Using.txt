@@ -100,8 +100,7 @@ the ``seqStop`` command::
 The parameter to ``seqStop`` is either the task identifier (tid) or
 the task name of the state program task.
 
-A state program can also terminate itself, see :ref:`Transitions` and
-:c:func:`pvExit`.
+A state program can also terminate itself, see :ref:`Transitions`.
 
 Unix-specific instructions
 --------------------------
