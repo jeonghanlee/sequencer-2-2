@@ -67,7 +67,7 @@
 
 extern int seqSoftIoc_registerRecordDeviceDriver(struct dbBase *pdbbase);
 
-#define DBD_FILE "dbd/seqSoftIoc.dbd"
+#define DBD_FILE "../../../dbd/seqSoftIoc.dbd"
 
 const char *arg0;
 const char *base_dbd = DBD_FILE;

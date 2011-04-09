@@ -11,32 +11,42 @@ SNCFLAGS_DEFAULT += +m -i
 SNCFLAGS_vxWorks += -nil-
 
 #  Sequence programs and/or object files to create
-PROD += sncDelay
-PROD += sncEntry
-PROD += sncEntryOpte
-PROD += sncEntryVar
-PROD += sncExitOptx
-PROD += sncOptt
-PROD += sncOpttVar
-PROD += assign
-PROD += change
-PROD += declarations
-PROD += local
-PROD += subscript
-PROD += syncq
-PROD += pvSync
-PROD += pvPutAsync
-PROD += array
-PROD += stop
-PROD += userfunc
-PROD += race
+TESTPROD += sncDelay
+TESTPROD += sncEntry
+TESTPROD += sncEntryOpte
+TESTPROD += sncEntryVar
+TESTPROD += sncExitOptx
+TESTPROD += sncOptt
+TESTPROD += sncOpttVar
+TESTPROD += assign
+TESTPROD += change
+TESTPROD += declarations
+TESTPROD += local
+TESTPROD += subscript
+TESTPROD += syncq
+TESTPROD += pvSync
+TESTPROD += pvPutAsync
+TESTPROD += array
+TESTPROD += stop
+TESTPROD += userfunc
+TESTPROD += race
+
+REGRESSION_TESTS_WITH_DB += eftest
+REGRESSION_TESTS_WITH_DB += pvGet
+REGRESSION_TESTS_WITH_DB += bittypes
+
+REGRESSION_TESTS_WITHOUT_DB += safeMonitor
+
+REGRESSION_TESTS += $(REGRESSION_TESTS_WITHOUT_DB)
+REGRESSION_TESTS += $(REGRESSION_TESTS_WITH_DB)
+
 ifeq '$(EPICS_HAS_UNIT_TEST)' '1'
-PROD += eftest
-PROD += pvGet
-PROD += safeMonitor
+TESTPROD += $(REGRESSION_TESTS)
+TESTSCRIPTS_HOST += $(REGRESSION_TESTS:%=%.t)
+TESTSCRIPTS_HOST += $(REGRESSION_TESTS_WITH_DB:%=%Ioc.t)
 endif
 
-#PROD += ctest
+#TESTPROD += ctest
 
 #  Libraries
 PROD_LIBS += seqSoftIoc
@@ -51,13 +61,14 @@ seqSoftIoc_DBD += base.dbd
 
 seqSoftIoc_SRCS += seqSoftIoc_registerRecordDeviceDriver.cpp
 
-DB_INSTALLS += syncq.db
-DB_INSTALLS += pvGet.db
-DB_INSTALLS += pvPutAsync.db
-DB_INSTALLS += userfunc.db
-DB_INSTALLS += eftest.db
-DB_INSTALLS += race.db
-
 include $(TOP)/configure/RULES
 #----------------------------------------
 #  ADD RULES AFTER THIS LINE
+
+%Ioc.t: %$(EXE)
+	@$(RM) $@
+	@$(PERL) ../makeTestfile.pl $@ $* $<
+
+%.t: %$(EXE)
+	@$(RM) $@
+	@$(PERL) ../makeTestfile.pl $@ $* $<

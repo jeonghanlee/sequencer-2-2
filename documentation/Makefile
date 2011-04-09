@@ -44,6 +44,8 @@ help:
 realclean clean:
 	-rm -rf $(BUILDDIR)
 
+runtests:
+
 html: bnf.inc
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 
