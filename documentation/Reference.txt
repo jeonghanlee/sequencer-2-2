@@ -938,7 +938,9 @@ are equivalent. Whereas in ::
    pvPut(var,ASYNC);
    pvPut(var,ASYNC);
 
-the second pvPut fails.
+the second pvPut may fail if it is a named PV located on another IOC (since
+the first one is still awaiting completion), whereas for local named PVs and
+anonymous PVs it will succeed (since completion is immediate in these cases).
 
 In :ref:`safe mode`, :c:func:`pvPut` can be used with anonymous PVs (variables assigned
 to "") to communicate between state sets. This makes sense only with global
