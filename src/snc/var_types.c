@@ -25,6 +25,12 @@ const char *type_name(unsigned tag)
         case V_UINT:    return "unsigned int";
         case V_LONG:    return "long";
         case V_ULONG:   return "unsigned long";
+        case V_INT8T:   return "epicsInt8";
+        case V_UINT8T:  return "epicsUInt8";
+        case V_INT16T:  return "epicsInt16";
+        case V_UINT16T: return "epicsUInt16";
+        case V_INT32T:  return "epicsInt32";
+        case V_UINT32T: return "epicsUInt32";
         case V_FLOAT:   return "float";
         case V_DOUBLE:  return "double";
         case V_STRING:  return "string";
@@ -174,6 +180,10 @@ static unsigned type_assignable_array(Type *t, int depth)
         return FALSE;
     case V_ARRAY:
         return type_assignable_array(t->val.array.elem_type, depth + 1);
+    case V_INT:
+        return sizeof(int) <= 4;
+    case V_UINT:
+        return sizeof(unsigned int) <= 4;
     case V_LONG:
         return sizeof(long) <= 4;
     case V_ULONG:

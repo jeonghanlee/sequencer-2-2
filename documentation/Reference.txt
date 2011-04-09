@@ -239,6 +239,12 @@ Types
    type: "unsigned" "short"
    type: "unsigned" "int"
    type: "unsigned" "long"
+   type: "int8_t"
+   type: "uint8_t"
+   type: "int16_t"
+   type: "uint16_t"
+   type: "int32_t"
+   type: "uint32_t"
    type: "float"
    type: "double"
    type: "string"
@@ -247,6 +253,7 @@ Types
 
 These are the allowed base types, of which you can declare variables,
 or pointers or arrays etc. The list contains the usual numeric types,
+(including the fixed size integral types from the C99 standard)
 as well as three types that don't exist in C: "string", "evflag" and
 "foreign". These are explained below.
 

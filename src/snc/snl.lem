@@ -192,6 +192,14 @@ type(p) ::= UNSIGNED CHAR.			{ p = V_UCHAR;	}
 type(p) ::= UNSIGNED SHORT.			{ p = V_USHORT;	}
 type(p) ::= UNSIGNED INT.			{ p = V_UINT;	}
 type(p) ::= UNSIGNED LONG.			{ p = V_ULONG;	}
+
+type(p) ::= INT8T.				{ p = V_INT8T;	}
+type(p) ::= UINT8T.				{ p = V_UINT8T;	}
+type(p) ::= INT16T.				{ p = V_INT16T;	}
+type(p) ::= UINT16T.				{ p = V_UINT16T;}
+type(p) ::= INT32T.				{ p = V_INT32T;	}
+type(p) ::= UINT32T.				{ p = V_UINT32T;}
+
 type(p) ::= FLOAT.				{ p = V_FLOAT;	}
 type(p) ::= DOUBLE.				{ p = V_DOUBLE;	}
 type(p) ::= STRING.				{ p = V_STRING;	}

@@ -233,6 +233,13 @@ snl:
 	"when"		{ KEYWORD(WHEN,		"when"); }
 	"while"		{ KEYWORD(WHILE,	"while"); }
 
+	"int8_t"	{ TYPEWORD(INT8T,  	"int8_t"); }
+	"uint8_t"	{ TYPEWORD(UINT8T, 	"uint8_t"); }
+	"int16_t"	{ TYPEWORD(INT16T, 	"int16_t"); }
+	"uint16_t"	{ TYPEWORD(UINT16T,	"uint16_t"); }
+	"int32_t"	{ TYPEWORD(INT32T, 	"int32_t"); }
+	"uint32_t"	{ TYPEWORD(UINT32T,	"uint32_t"); }
+
 	"TRUE"		{ LITERAL(INTCON, integer_literal, "TRUE"); }
 	"FALSE"		{ LITERAL(INTCON, integer_literal, "FALSE"); }
 	"ASYNC"		{ LITERAL(INTCON, integer_literal, "ASYNC"); }
