@@ -416,5 +416,3 @@ LOCAL long siGetIoInitInfo(int cmd, struct stringinRecord *rec, IOSCANPVT *ppvt)
 
     return 0;
 }
-
-pr_fun *devSequencer_nothing_dummy = nothing;

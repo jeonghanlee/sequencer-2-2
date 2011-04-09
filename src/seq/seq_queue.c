@@ -176,6 +176,3 @@ size_t seqQueueElemSize(const QUEUE q)
 {
     return q->elemSize;
 }
-
-/* avoid nothing define but not used warnings */
-pr_fun *queue_nothing_dummy = nothing;
