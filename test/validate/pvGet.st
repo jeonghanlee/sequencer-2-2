@@ -14,21 +14,23 @@ foreign shared;
 int anon;
 assign anon;
 
-evflag stop;
+#define MAX_GET 10
 
-#define MAX_PUT 40
+evflag ef_read_named, ef_read_anon, ef_read_named_sync, ef_read_anon_sync;
 
 entry {
-    testPlan(108);
+    testPlan(MAX_GET*4*3);
 }
 
 ss read_named {
     int named;
     connect named to "named_pv";
     int expected;
+    int n = 0;
 
     state get {
-        when (efTest(stop)) {
+        when (n == MAX_GET) {
+            efSet(ef_read_named);
         } state done
         when (delay(0.2)) {
             expected = shared;
@@ -52,6 +54,7 @@ ss read_named {
         when (pvGetComplete(named)) {
             testOk(expected==named,
                 "completion after sync:     expected=%d==%d=named", expected, named);
+            n++;
         } state get
     }
     state done {
@@ -61,9 +64,11 @@ ss read_named {
 
 ss read_anon {
     int expected;
+    int n = 0;
 
     state get {
-        when (efTest(stop)) {
+        when (n == MAX_GET) {
+            efSet(ef_read_anon);
         } state done
         when (delay(0.2)) {
             expected = shared;
@@ -87,6 +92,7 @@ ss read_anon {
         when (pvGetComplete(anon)) {
             testOk(expected==anon,
                 "completion after sync:     expected=%d==%d=anon", expected, anon);
+            n++;
         } state get
     }
     state done {
@@ -98,9 +104,11 @@ ss read_named_sync {
     int named;
     connect named to "named_pv";
     int expected;
+    int n = 0;
 
     state get {
-        when (efTest(stop)) {
+        when (n == MAX_GET) {
+            efSet(ef_read_named_sync);
         } state done
         when (delay(0.2)) {
             expected = shared;
@@ -118,6 +126,7 @@ ss read_named_sync {
         when () {
             testOk(expected==named,
                 "after sync:                expected=%d==%d=named", expected, named);
+            n++;
         } state get
     }
     state done {
@@ -127,9 +136,11 @@ ss read_named_sync {
 
 ss read_anon_sync {
     int expected;
+    int n = 0;
 
     state get {
-        when (efTest(stop)) {
+        when (n == MAX_GET) {
+            efSet(ef_read_anon_sync);
         } state done
         when (delay(0.2)) {
             expected = shared;
@@ -147,6 +158,7 @@ ss read_anon_sync {
         when () {
             testOk(expected==anon,
                 "after sync:                expected=%d==%d=anon", expected, anon);
+            n++;
         } state get
     }
     state done {
@@ -159,9 +171,9 @@ ss write {
     connect out to "named_pv";
 
     state run {
-        when (out == MAX_PUT) {
-            efSet(stop);
-        } state done
+        when (efTest(ef_read_named) && efTest(ef_read_anon) &&
+            efTest(ef_read_named_sync) && efTest(ef_read_anon_sync)) {
+        } exit
         when (delay(0.07)) {
             shared = out;
             pvPut(out);
@@ -169,10 +181,6 @@ ss write {
             pvPut(anon);
             out++;
         } state run
-    }
-    state done {
-        when (delay(0.4)) {
-        } exit
     }
 }
 
