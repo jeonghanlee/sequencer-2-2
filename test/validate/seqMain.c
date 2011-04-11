@@ -203,12 +203,7 @@ int main(int argc, char *argv[])
     if (startIocsh) {
 	iocsh(NULL);
     } else {
-	if (loadedDb) {
-	    epicsThreadExitMain();
-	} else {
-	    printf("%s: Nothing to do!\n", arg0);
-	    usage(EXIT_FAILURE);
-	}
+        epicsThreadExitMain();
     }
     epicsExit(EXIT_SUCCESS);
     /*Note that the following statement will never be executed*/
