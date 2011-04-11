@@ -11,6 +11,10 @@ SNCFLAGS_DEFAULT += +m -i
 SNCFLAGS_vxWorks += -nil-
 
 #  Sequence programs and/or object files to create
+TESTPROD += declarations
+TESTPROD += local
+TESTPROD += pvPutAsync
+TESTPROD += pvSync
 TESTPROD += sncDelay
 TESTPROD += sncEntry
 TESTPROD += sncEntryOpte
@@ -18,23 +22,23 @@ TESTPROD += sncEntryVar
 TESTPROD += sncExitOptx
 TESTPROD += sncOptt
 TESTPROD += sncOpttVar
-TESTPROD += assign
-TESTPROD += change
-TESTPROD += declarations
-TESTPROD += local
+TESTPROD += stop
 TESTPROD += subscript
 TESTPROD += syncq
-TESTPROD += pvSync
-TESTPROD += pvPutAsync
-TESTPROD += array
-TESTPROD += stop
 TESTPROD += userfunc
-TESTPROD += race
 
-REGRESSION_TESTS_WITH_DB += eftest
-REGRESSION_TESTS_WITH_DB += pvGet
 REGRESSION_TESTS_WITH_DB += bittypes
+REGRESSION_TESTS_WITH_DB += eftest
+REGRESSION_TESTS_WITH_DB += norace
+REGRESSION_TESTS_WITH_DB += pvGet
 
+# uncomment this test to see race
+# fail (safe mode off)
+REGRESSION_TESTS_WITH_DB += race
+
+REGRESSION_TESTS_WITHOUT_DB += array
+REGRESSION_TESTS_WITHOUT_DB += assign
+REGRESSION_TESTS_WITHOUT_DB += change
 REGRESSION_TESTS_WITHOUT_DB += safeMonitor
 
 REGRESSION_TESTS += $(REGRESSION_TESTS_WITHOUT_DB)
@@ -72,3 +76,5 @@ include $(TOP)/configure/RULES
 %.t: %$(EXE)
 	@$(RM) $@
 	@$(PERL) ../makeTestfile.pl $@ $* $<
+
+norace.o race.o: ../raceCommon.st

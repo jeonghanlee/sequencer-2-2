@@ -1,6 +1,6 @@
 program safeMonitor
 
-%%#include "stdlib.h"
+%%#include <stdlib.h>
 %%#include "epicsUnitTest.h"
 %%#include "epicsThread.h"
 

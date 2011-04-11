@@ -1,6 +1,11 @@
 program array
 
 %%#include <stdlib.h>
+%%#include "epicsUnitTest.h"
+
+entry {
+    testPlan(20);
+}
 
 ss array {
     state init {
@@ -17,23 +22,23 @@ ss array {
             &a4a5s[3]
         };
         assign a4a5s to {};
-        entry {
+        when () {
             int i, j;
             for (i = 0; i < 4; i++) {
-                printf("\n");
                 for (j = 0; j < 5; j++) {
-                    printf(" %s=", a4a5s[i][j]);
-                    printf("%s", (*a4ps[i])[j]);
+                    testOk(a4a5s[i][j] == (*a4ps[i])[j],
+                        "a4a5s[%d][%d]=%s==%s=(*a4ps[%d])[%d])",
+                        i, j, a4a5s[i][j], (*a4ps[i])[j], i, j);
                 }
             }
-            printf("\n");
             for (i = 0; i < 4; i++) {
-                printf(" %p", a4ps[i]);
+                testDiag("a4ps[%d]=%p", i, a4ps[i]);
             }
-            printf("\n");
-        }
-        when (delay(1)) {
-            exit(0);
-        } state init
+        } exit
     }
+}
+
+exit {
+    testDone();
+    exit(0);
 }

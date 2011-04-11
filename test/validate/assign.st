@@ -1,13 +1,30 @@
 program assign_test
 
+%%#include <stdlib.h>
+%%#include "epicsUnitTest.h"
+
 int x = 0;
 assign x;
 
+foreign pvStatERROR;
+
+#define NTESTS 3
+
+entry {
+    testPlan(NTESTS);
+}
+
 ss w {
+    int n = 1;
     state w {
-        when (delay(1)) {
+        when(n > NTESTS) {
+        } exit
+        when (delay(0.01)) {
+            int status;
             x = !x;
-            pvPut(x);
+            status = pvPut(x);
+            testOk1(status==pvStatERROR);
+            n++;
         } state w
     }
 }
@@ -21,4 +38,9 @@ ss r {
         when (x) {
         } state yes
     }
+}
+
+exit {
+    testDone();
+    exit(0);
 }
