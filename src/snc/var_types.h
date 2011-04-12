@@ -55,12 +55,18 @@ struct type {
     struct type *parent;
 };
 
+enum type_assignable {
+    TA_OK,
+    TA_ERROR,
+    TA_TOO_LONG
+};
+
 const char *type_name (unsigned tag);
 #define type_base_type(t) (t->parent->tag)
 #define base_type(t) (t->parent)
 unsigned type_array_length1(Type *t);
 unsigned type_array_length2(Type *t);
-unsigned type_assignable(Type *t);
+enum type_assignable type_assignable(Type *t);
 void gen_type(Type *t, char *name);
 
 #endif /*INCLvar_typesh */
