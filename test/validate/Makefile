@@ -10,13 +10,16 @@ SNC = $(INSTALL_HOST_BIN)/snc
 SNCFLAGS_DEFAULT += +m -i
 SNCFLAGS_vxWorks += -nil-
 
+#compiler tests, should fail with errors
+#TESTPROD += scope
+#this one may fail or not, depending on arch/system
+#TESTPROD += tooLong
+
 #  Sequence programs and/or object files to create
 TESTPROD += declarations
 TESTPROD += local
 TESTPROD += pvPutAsync
 TESTPROD += pvSync
-#compiler test, should fail with errors
-#TESTPROD += scope
 TESTPROD += sncDelay
 TESTPROD += sncEntry
 TESTPROD += sncEntryOpte
