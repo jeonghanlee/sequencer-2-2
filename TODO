@@ -47,8 +47,3 @@
   has been connected to separate PVs. Currently this puts/gets the first element,
   but wouldn't it be nice if it meant to put/get all (connected) elements?
   Write to tech-talk and ask (since it breaks compatibility)?
-
-* What if a variable is declared in a outer scope (e.g. global), but
-  the "monitor" or "sync" appears in an inner scope? The compiler currently
-  allows this but there is no well-defined semantics I can think of.
-  Need to fix the compiler to abort with an error in this case.

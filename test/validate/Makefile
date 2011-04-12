@@ -15,6 +15,8 @@ TESTPROD += declarations
 TESTPROD += local
 TESTPROD += pvPutAsync
 TESTPROD += pvSync
+#compiler test, should fail with errors
+#TESTPROD += scope
 TESTPROD += sncDelay
 TESTPROD += sncEntry
 TESTPROD += sncEntryOpte

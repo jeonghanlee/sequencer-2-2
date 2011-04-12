@@ -23,6 +23,7 @@ syncq x to ef_x;
 
 int n = 0;
 assign n;
+monitor n;
 
 ss get {
     state get {
@@ -62,7 +63,6 @@ ss put {
 }
 
 ss flush {
-    monitor n;
     state idle {
         when (n%20==0) {
             printf("flush\n");

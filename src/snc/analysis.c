@@ -306,13 +306,20 @@ static void analyse_assign(SymTable st, ChanList *chan_list, Expr *scope, Expr *
 	assert(defn->type == D_ASSIGN);
 	if (!vp)
 	{
-		error_at_expr(defn, "variable '%s' not declared\n", name);
+		error_at_expr(defn, "cannot assign variable '%s': "
+			"variable was not declared\n", name);
 		return;
 	}
 	assert(vp->type);
 	if (!type_assignable(vp->type))
 	{
-		error_at_expr(defn, "this type of variable cannot be assigned to a pv\n", name);
+		error_at_expr(defn, "cannot assign variable '%s': wrong type\n", name);
+		return;
+	}
+	if (vp->scope != scope)
+	{
+		error_at_expr(defn, "cannot assign variable '%s': "
+			"assign must be in the same scope as declaration\n", name);
 		return;
 	}
 	if (defn->assign_subscr)
@@ -497,7 +504,7 @@ static void monitor_var(Expr *defn, Var *vp)
 
 	if (vp->assign == M_NONE)
 	{
-		error_at_expr(defn, "variable '%s' not assigned\n", vp->name);
+		error_at_expr(defn, "cannot monitor variable '%s': not assigned\n", vp->name);
 		return;
 	}
 	if (vp->monitor == M_SINGLE)
@@ -596,7 +603,13 @@ static void analyse_monitor(SymTable st, Expr *scope, Expr *defn)
 	if (!vp)
 	{
 		error_at_expr(defn,
-			"variable '%s' not declared\n", var_name);
+			"cannot monitor variable '%s': not declared\n", var_name);
+		return;
+	}
+	if (vp->scope != scope)
+	{
+		error_at_expr(defn, "cannot monitor variable '%s': "
+			"monitor must be in the same scope as declaration\n", var_name);
 		return;
 	}
 	if (defn->monitor_subscr)
@@ -735,6 +748,13 @@ static void analyse_sync(SymTable st, Expr *scope, Expr *defn)
 	if (!vp)
 	{
 		error_at_expr(defn, "variable '%s' not declared\n", var_name);
+		return;
+	}
+	if (vp->scope != scope)
+	{
+		error_at_expr(defn, "cannot sync variable '%s' to event flag '%s': "
+			"sync must be in the same scope as (variable) declaration\n",
+			var_name, ef_name);
 		return;
 	}
 	if (vp->sync == M_SINGLE)
@@ -891,6 +911,13 @@ static void analyse_syncq(SymTable st, SyncQList *syncq_list, Expr *scope, Expr 
 	if (!vp)
 	{
 		error_at_expr(defn, "variable '%s' not declared\n", var_name);
+		return;
+	}
+	if (vp->scope != scope)
+	{
+		error_at_expr(defn, "cannot syncq variable '%s' to event flag '%s': "
+			"sync must be in the same scope as (variable) declaration\n",
+			var_name, ef_name);
 		return;
 	}
 	if (vp->syncq == M_SINGLE)
