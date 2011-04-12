@@ -1,11 +1,16 @@
 * Check whether it makes sense to let users specify the communication
   (request) type. This is currently baked-in to be inferred from the
-  variable's type as specified in the program text. The question is if this
+  variable's type as specified in the program text. 
+  Another twist would be to allow to use the native type and convert
+  on the seq side. The question is if this
   brings any actual benefit, considering that sequencer and database
   typically run on the same IOC. It might be convenient, sometimes.
 
 * Add optional timeout argument for pvGet and pvPut to override the
   hard-coded default of 10 seconds.
+
+* pvGetComplete should support additional arguments for arrays of multiple
+  PVs, just like pvPutComplete.
 
 * Raw ideas:
 
