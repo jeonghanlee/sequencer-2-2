@@ -64,7 +64,7 @@ typedef struct {
 LOCAL long siInit( struct stringinRecord *rec );
 LOCAL long siRead( struct stringinRecord *rec );
 LOCAL long siGetIoInitInfo(int cmd, struct stringinRecord *rec, IOSCANPVT *ppvt);
-LOCAL DSET  devSiSeq = { 5, NULL, NULL, siInit, siGetIoInitInfo, siRead };
+LOCAL DSET  devSiSeq = { 5, NULL, NULL, siInit, siGetIoInitInfo, siRead, NULL };
 epicsExportAddress(dset,devSiSeq);
 
 LOCAL void devSeqScanThreadSpawn(void);

@@ -240,7 +240,7 @@ static void gen_init_reg(char *prog_name)
 {
 	printf("\n/* Register sequencer commands and program */\n");
 	printf("#include \"epicsExport.h\"\n");
-	printf("void %sRegistrar (void) {\n", prog_name);
+	printf("static void %sRegistrar (void) {\n", prog_name);
 	printf("    seqRegisterSequencerCommands();\n");
 	printf("    seqRegisterSequencerProgram (&%s);\n", prog_name);
 	printf("}\n");
