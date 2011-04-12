@@ -61,49 +61,49 @@ typedef struct {
 } DSET;
 
 /* stringin */
-LOCAL long siInit( struct stringinRecord *rec );
-LOCAL long siRead( struct stringinRecord *rec );
-LOCAL long siGetIoInitInfo(int cmd, struct stringinRecord *rec, IOSCANPVT *ppvt);
-LOCAL DSET  devSiSeq = { 5, NULL, NULL, siInit, siGetIoInitInfo, siRead, NULL };
+static long siInit( struct stringinRecord *rec );
+static long siRead( struct stringinRecord *rec );
+static long siGetIoInitInfo(int cmd, struct stringinRecord *rec, IOSCANPVT *ppvt);
+static DSET  devSiSeq = { 5, NULL, NULL, siInit, siGetIoInitInfo, siRead, NULL };
 epicsExportAddress(dset,devSiSeq);
 
-LOCAL void devSeqScanThreadSpawn(void);
-LOCAL void devSeqScanThread(void);
+static void devSeqScanThreadSpawn(void);
+static void devSeqScanThread(void);
 
-LOCAL epicsThreadOnceId devSeqScanThreadOnceFlag = EPICS_THREAD_ONCE_INIT;
-LOCAL char*             devSeqScanThreadName     = "devSeqScan";
-LOCAL ELLLIST           devSeqScanList;
+static epicsThreadOnceId devSeqScanThreadOnceFlag = EPICS_THREAD_ONCE_INIT;
+static char*             devSeqScanThreadName     = "devSeqScan";
+static ELLLIST           devSeqScanList;
 
-LOCAL  char *nullStr    = "";
+static char *nullStr    = "";
 
 /* Commands for Second field */
-LOCAL  char *nStateSets     = "nStateSets";
-LOCAL  char *nAssign        = "nAssign";
-LOCAL  char *nConnect       = "nConnect";
-LOCAL  char *nChans         = "nChans";
-LOCAL  char *nQueues        = "nQueues";
-LOCAL  char *queues        = "queues";
-LOCAL  char *threadPriority = "threadPriority";
-LOCAL  char *varSize        = "varSize";
+static char *nStateSets     = "nStateSets";
+static char *nAssign        = "nAssign";
+static char *nConnect       = "nConnect";
+static char *nChans         = "nChans";
+static char *nQueues        = "nQueues";
+static char *queues         = "queues";
+static char *threadPriority = "threadPriority";
+static char *varSize        = "varSize";
 
 /* Commands for Third field */
-LOCAL  char *threadId       = "threadId";
-LOCAL  char *threadIdHex    = "threadIdHex";
-LOCAL  char *timeElapsed    = "timeElapsed";
-LOCAL  char *nStates        = "nStates";
-LOCAL  char *firstState     = "firstState";
-LOCAL  char *prevState      = "prevState";
-LOCAL  char *nextState      = "nextState";
-LOCAL  char *currentState   = "currentState";
+static char *threadId       = "threadId";
+static char *threadIdHex    = "threadIdHex";
+static char *timeElapsed    = "timeElapsed";
+static char *nStates        = "nStates";
+static char *firstState     = "firstState";
+static char *prevState      = "prevState";
+static char *nextState      = "nextState";
+static char *currentState   = "currentState";
 
-LOCAL  char *notFoundMsg    = "Not Found";
-LOCAL  char *syntaxErrMsg   = "Syntax Error in INP field";
+static char *notFoundMsg    = "Not Found";
+static char *syntaxErrMsg   = "Syntax Error in INP field";
 
-typedef enum{
-    notUpdated =0,
+enum {
+    notUpdated = 0,
     updated,
     notFound
-} updateFlagMenu;
+};
 
 typedef enum {
     seqShownStateSets,
@@ -126,18 +126,18 @@ typedef enum {
 } seqShowVarType;
 
 typedef union {
-    long          numSS;
-    long          assignCount;
-    long          connectCount;
-    long          numChans;
-    int           numQueues;
+    unsigned      numSS;
+    unsigned      assignCount;
+    unsigned      connectCount;
+    unsigned      numChans;
+    unsigned      numQueues;
     QUEUE         *queues;
-    unsigned int  threadPriority;
-    long          varSize;
+    unsigned      threadPriority;
+    size_t        varSize;
 
     epicsThreadId threadId;
     double        timeElapsed;
-    long          numStates;
+    unsigned      numStates;
     const char    *firstStateName;
     const char    *prevStateName;
     const char    *nextStateName;
@@ -166,7 +166,7 @@ typedef struct {
             (UPDATEFLAG) = updated; \
         }
 
-LOCAL seqShowScanPvt* seqShowScanPvtInit(struct link* link)
+static seqShowScanPvt* seqShowScanPvtInit(struct link* link)
 {
     seqShowScanPvt   *pvtPt;
     char             inpStr[strlen(link->value.instio.string)+1];
@@ -229,7 +229,7 @@ LOCAL seqShowScanPvt* seqShowScanPvtInit(struct link* link)
     return pvtPt;
 }
 
-LOCAL void devSeqScanThreadSpawn(void) 
+static void devSeqScanThreadSpawn(void) 
 {
     epicsUInt32 devSeqScanStack;
 
@@ -242,14 +242,13 @@ LOCAL void devSeqScanThreadSpawn(void)
                       (EPICSTHREADFUNC)devSeqScanThread,NULL);
 }
 
-LOCAL void devSeqScanThread(void)
+static void devSeqScanThread(void)
 {
     ELLLIST          *pdevSeqScanList = &devSeqScanList;
     seqShowScanPvt   *pvtPt;
     seqShowVar       *varPt;
-    int              i;
+    unsigned         i;
     double           timeNow;
-
 
     while(!pdevSeqScanList->count) {
         epicsThreadSleep(0.5);
@@ -353,7 +352,7 @@ LOCAL void devSeqScanThread(void)
 }
 
 
-LOCAL long siInit( struct stringinRecord *rec )
+static long siInit( struct stringinRecord *rec )
 {
     struct link      *link   = &rec->inp;
 
@@ -372,7 +371,7 @@ LOCAL long siInit( struct stringinRecord *rec )
     return 0;
 }
 
-LOCAL long siRead( struct stringinRecord *rec )
+static long siRead( struct stringinRecord *rec )
 {
     seqShowScanPvt    *pvtPt = (seqShowScanPvt *)rec->dpvt;
     seqShowVar        *varPt;
@@ -385,30 +384,30 @@ LOCAL long siRead( struct stringinRecord *rec )
    
     epicsMutexLock(pvtPt->mutexId);
     switch(pvtPt->type){
-        case seqShownStateSets:     sprintf(rec->val, "%ld", varPt->numSS);                      break;
-        case seqShownAssign:        sprintf(rec->val, "%ld", varPt->assignCount);                break;
-        case seqShownConnect:       sprintf(rec->val, "%ld", varPt->connectCount);               break;
-        case seqShownChans:         sprintf(rec->val, "%ld", varPt->numChans);                   break;
-        case seqShownQueues:        sprintf(rec->val, "%d", varPt->numQueues);                   break;
-        case seqShowpQueues:        sprintf(rec->val, "%p", varPt->queues);                     break;
-        case seqShowthreadPriority: sprintf(rec->val, "%d", varPt->threadPriority);              break;
-        case seqShowvarSize:        sprintf(rec->val, "%ld", varPt->varSize);                    break;
-        case seqShowthreadId:       sprintf(rec->val, "%lu", (unsigned long) varPt->threadId);   break;
-        case seqShowthreadIdHex:    sprintf(rec->val, "0x%lx", (unsigned long) varPt->threadId); break;
-        case seqShowtimeElapsed:    sprintf(rec->val, "%.3f", varPt->timeElapsed);               break;
-        case seqShownStates:        sprintf(rec->val, "%ld", varPt->numStates);                  break;
-        case seqShowfirstState:     strcpy(rec->val, varPt->firstStateName);                    break;
-        case seqShowprevState:      strcpy(rec->val, varPt->prevStateName);                     break;
-        case seqShownextState:      strcpy(rec->val, varPt->nextStateName);                     break;
-        case seqShowcurrentState:   strcpy(rec->val, varPt->currentStateName);                  break;
-        case seqShowsyntaxErr:      strcpy(rec->val, varPt->syntaxErrMsg);                      break;
+        case seqShownStateSets:     sprintf(rec->val, "%u", varPt->numSS);          break;
+        case seqShownAssign:        sprintf(rec->val, "%u", varPt->assignCount);    break;
+        case seqShownConnect:       sprintf(rec->val, "%u", varPt->connectCount);   break;
+        case seqShownChans:         sprintf(rec->val, "%u", varPt->numChans);       break;
+        case seqShownQueues:        sprintf(rec->val, "%u", varPt->numQueues);      break;
+        case seqShowpQueues:        sprintf(rec->val, "%p", varPt->queues);         break;
+        case seqShowthreadPriority: sprintf(rec->val, "%d", varPt->threadPriority); break;
+        case seqShowvarSize:        sprintf(rec->val, "%u", (unsigned) varPt->varSize);        break;
+        case seqShowthreadId:       sprintf(rec->val, "%lu", (unsigned long) varPt->threadId); break;
+        case seqShowthreadIdHex:    sprintf(rec->val, "%p", varPt->threadId);       break;
+        case seqShowtimeElapsed:    sprintf(rec->val, "%.3f", varPt->timeElapsed);  break;
+        case seqShownStates:        sprintf(rec->val, "%u", varPt->numStates);      break;
+        case seqShowfirstState:     strcpy(rec->val, varPt->firstStateName);        break;
+        case seqShowprevState:      strcpy(rec->val, varPt->prevStateName);         break;
+        case seqShownextState:      strcpy(rec->val, varPt->nextStateName);         break;
+        case seqShowcurrentState:   strcpy(rec->val, varPt->currentStateName);      break;
+        case seqShowsyntaxErr:      strcpy(rec->val, varPt->syntaxErrMsg);          break;
     }
     epicsMutexUnlock(pvtPt->mutexId);
 
     return 0;
 }
 
-LOCAL long siGetIoInitInfo(int cmd, struct stringinRecord *rec, IOSCANPVT *ppvt)
+static long siGetIoInitInfo(int cmd, struct stringinRecord *rec, IOSCANPVT *ppvt)
 {
     seqShowScanPvt  *pvtPt = (seqShowScanPvt *)rec->dpvt;
 
