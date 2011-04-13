@@ -20,7 +20,7 @@
       _type == pvTypeTIME_SHORT  ? \
 		printf( "%hd", _val->timeShortVal.value[_ind] ) : \
       _type == pvTypeTIME_LONG   ? \
-		printf( "%ld", _val->timeLongVal.value[_ind] ) : \
+		printf( "%d", _val->timeLongVal.value[_ind] ) : \
       _type == pvTypeTIME_FLOAT  ? \
 		printf( "%g", _val->timeFloatVal.value[_ind] ) : \
       _type == pvTypeTIME_STRING ? \
@@ -31,13 +31,13 @@ void conn( void *, int connected ) {
     printf( "conn: connected=%d\n", connected );
 }
 
-void event( void *, pvType type, int count, pvValue *val, void *arg,
+void event( void *, pvType type, unsigned count, pvValue *val, void *arg,
 	    pvStat stat) {
     if ( stat != pvStatOK ) {
-	printf( "event%d: stat=%d\n", ( int ) arg, stat );
+	printf( "event%p: stat=%d\n", arg, stat );
     }
     else {
-	printf( "event%d: tim=%d, val=", ( int ) arg, val->timeDoubleVal.stamp.
+	printf( "event%p: tim=%d, val=", arg, val->timeDoubleVal.stamp.
 		secPastEpoch );
 	OUTPUT( type, val, 0 );
 	if ( count > 1 ) {

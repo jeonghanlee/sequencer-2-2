@@ -15,8 +15,12 @@ include $(TOP)/configure/CONFIG
 SNCFLAGS = +m
 
 #  Products
-#PROD_HOST = testCA pvtest arrput arrputCA
-PROD_HOST = pvsimpleCC pvsimpleC pvtest arrput gphtest
+TESTPROD_HOST += arrput
+TESTPROD_HOST += arrputCA
+TESTPROD_HOST += gphtest
+TESTPROD_HOST += pvsimpleC
+TESTPROD_HOST += pvsimpleCC
+TESTPROD_HOST += pvtest
 
 #  Libraries
 PROD_LIBS += seq
@@ -25,4 +29,3 @@ seq_DIR    = $(INSTALL_LIB)
 include $(TOP)/configure/RULES
 #----------------------------------------
 #  ADD RULES AFTER THIS LINE
-

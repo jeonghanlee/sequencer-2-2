@@ -7,8 +7,8 @@
 #include "pv.h"
 
 /* event handler (get/put completion; monitors) */
-void event( void *var, pvType type, int count, pvValue *val, void *arg,
-	    pvStat stat) {
+static void event( void *var, pvType type, unsigned count,
+        pvValue *val, void *arg, pvStat stat ) {
     printf( "event: %s=%g\n", pvVarGetName( var ), val->doubleVal[0] );
 }
 

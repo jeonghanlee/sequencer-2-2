@@ -4,7 +4,7 @@
 
 #include "gpHash.h"
 
-struct {
+static struct {
     const char *name;
     int  id;
 } details[] = {
@@ -18,7 +18,7 @@ struct {
 #define NDETAILS ( sizeof( details ) / sizeof( details[0] ) )
 
 int main() {
-    void *handle;
+    gphPvt *handle;
 
     gphInitPvt( &handle, 256 );
     for ( size_t i = 0; i < NDETAILS; i++ )
@@ -42,4 +42,3 @@ int main() {
 
     return 0;
 }
-
