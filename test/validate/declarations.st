@@ -69,7 +69,8 @@ ss one {
                 printf("s=%s\n",s);
             }
         } state one
-        when (complicated) {
-        } state one
+        when (delay(0.1) && !complicated) {
+            exit(0);
+        } exit
     }
 }

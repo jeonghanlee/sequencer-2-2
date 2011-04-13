@@ -3,6 +3,7 @@ TOP = ..
 include $(TOP)/configure/CONFIG
 
 #directories in which to build
+DIRS += bad
 DIRS += simple
 DIRS += johng
 DIRS += validate
