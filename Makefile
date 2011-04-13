@@ -14,6 +14,7 @@ examples_DEPEND_DIRS = src
 
 ifdef docs
 DIRS += documentation
+documentation_DEPEND_DIRS = src
 endif
 
 include $(TOP)/configure/RULES_TOP
