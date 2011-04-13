@@ -20,6 +20,7 @@ download, build, and install the software.
    Home <self>
    Manual
    Introduction
+   Notes
    Installation
    Tutorial
    Compiling
