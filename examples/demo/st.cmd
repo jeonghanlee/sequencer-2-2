@@ -4,4 +4,3 @@ demo_registerRecordDeviceDriver(pdbbase)
 dbLoadRecords "demo.db"
 iocInit
 seq &demo
-
