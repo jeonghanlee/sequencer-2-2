@@ -873,7 +873,7 @@ static void gen_pv_func(
 	if (ap->type == E_SUBSCR)
 	{
 		/* e.g. pvPut(xyz[i+2]); => seq_pvPut(ssId, 3 + (i+2)); */
-		printf(" + (");
+		printf(" + (VAR_ID)(");
 		/* generate the subscript expression */
 		gen_expr(context, subscr, 0);
 		printf(")");
