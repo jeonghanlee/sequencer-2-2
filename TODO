@@ -12,6 +12,18 @@
 * pvGetComplete should support additional arguments for arrays of multiple
   PVs, just like pvPutComplete.
 
+* It would be nice to be able to use foreign typedefs in SNL declarations.
+  However, *directly* supporting the use of typedefs like in C would be a bad
+  idea, as we would have to make the symbol table available to the lexer (to
+  decide if an identifier is a type or a variable). Instead, I am flirting
+  with the idea to borrow C++'s typename keyword, so one could write e.g. ::
+
+    %%#include <stdio.h>
+    typename FILE *f;
+
+  in SNL code. The "typename" would of course not be included in the
+  generated C code.
+
 * Raw ideas:
 
   - Allow parameterized state sets (like a function). Then allow to "jump"
@@ -41,9 +53,15 @@
       pv {} int x[2][100];            /* multiple(2) anonymous array[100] pvs */
       pv {"n1", "n2"} int x[2][100];  /* multiple(2) named array[100] pvs */
 
-* More regression tests.
+* Convert everything under test to use epicsUnitTest. Add more regression tests.
 
 * Clarify the situation of a pvPut/pvGet to array variable that
   has been connected to separate PVs. Currently this puts/gets the first element,
   but wouldn't it be nice if it meant to put/get all (connected) elements?
   Write to tech-talk and ask (since it breaks compatibility)?
+
+* Not sure what to do with devSequencer. It is ugly, accesses sequencer
+  internals, and does not work if programs are instantiated more than once.
+
+* Need to go over the introductory chapters in the docs, remove out-dated
+  information.
