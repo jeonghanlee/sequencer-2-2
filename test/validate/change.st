@@ -27,7 +27,7 @@ ss main {
         } exit
         when (delay(0.01)) {
             testOk(x == 0, "state=zero, x=%d", x);
-            x = random() % 10 - 5;
+            x = rand() % 10 - 5;
             testDiag("new random x=%d", x);
             n++;
             if (x > 0) {
