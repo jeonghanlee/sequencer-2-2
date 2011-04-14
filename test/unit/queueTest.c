@@ -28,8 +28,8 @@ static void check(QUEUE q, size_t expectedFree)
     int isEmpty = seqQueueIsEmpty(q);
     int isFull = seqQueueIsFull(q);
 
-    testOk(nFree == expectedFree, "Free: %d == %d", nFree, expectedFree);
-    testOk(nUsed == expectedUsed, "Used: %d == %d", nUsed, expectedUsed);
+    testOk(nFree == expectedFree, "Free: %lu == %lu", (unsigned long)nFree, (unsigned long)expectedFree);
+    testOk(nUsed == expectedUsed, "Used: %lu == %lu", (unsigned long)nUsed, (unsigned long)expectedUsed);
     testOk(isEmpty == expectedEmpty, "Empty: %d == %d", isEmpty, expectedEmpty);
     testOk(isFull == expectedFull, "Full: %d == %d", isFull, expectedFull);
 }
@@ -111,23 +111,23 @@ MAIN(queueTest)
             size_t j;
             for (j = 0; j < i; j++) {
                 int full = seqQueuePut(q, put+j);
-                testOk(full==(j>=numElems), "q put %d", j);
+                testOk(full==(j>=numElems), "q put %lu", (unsigned long)j);
             }
             check(q, numElems > i ? numElems - i : 0);
             for (j = 0; j < i; j++) {
                 get[j] = -1ull;
                 int empty = seqQueueGet(q, get+j);
-                testOk(empty==(j>=numElems), "q get %d", j);
+                testOk(empty==(j>=numElems), "q get %lu", (unsigned long)j);
             }
             check(q, numElems);
             for (j = 0; j < i; j++) {
                 if (j < numElems-1) {
-                    testOk(get[j]==put[j], "get[%d]==put[%d]", j, j);
+                    testOk(get[j]==put[j], "get[%lu]==put[%lu]", (unsigned long)j, (unsigned long)j);
                 } else if (j == numElems-1 && i>=numElems) {
                     testOk(get[j]==put[i-1],
-                        "overflow: get[%d]==put[%d]", j, i-1);
+                        "overflow: get[%lu]==put[%lu]", (unsigned long)j, (unsigned long)i-1);
                 } else {
-                    testOk(get[j]==-1ull, "get[%d] unchanged", j);
+                    testOk(get[j]==-1ull, "get[%lu] unchanged", (unsigned long)j);
                 }
             }
         }
