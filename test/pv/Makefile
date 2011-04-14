@@ -17,7 +17,6 @@ SNCFLAGS = +m
 #  Products
 TESTPROD_HOST += arrput
 TESTPROD_HOST += arrputCA
-TESTPROD_HOST += gphtest
 TESTPROD_HOST += pvsimpleC
 TESTPROD_HOST += pvsimpleCC
 TESTPROD_HOST += pvtest
