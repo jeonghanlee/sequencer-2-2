@@ -1,5 +1,7 @@
 program declarations
 
+%%#include <stdlib.h>
+
 option +s;
 
 foreign MAX_STRING_SIZE;
