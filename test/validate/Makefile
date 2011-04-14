@@ -34,7 +34,7 @@ REGRESSION_TESTS_WITH_DB += pvGet
 
 # uncomment this test to see race
 # fail (safe mode off)
-REGRESSION_TESTS_WITH_DB += race
+#REGRESSION_TESTS_WITH_DB += race
 
 REGRESSION_TESTS_WITHOUT_DB += array
 REGRESSION_TESTS_WITHOUT_DB += assign
