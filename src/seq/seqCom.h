@@ -83,7 +83,7 @@ typedef struct UserVar USER_VAR;	/* defined by program, opaque */
 typedef char string[MAX_STRING_SIZE];	/* the string typedef */
 
 /* these typedefs make the code more self documenting */
-typedef unsigned bitMask;		/* for event masks and options */
+typedef epicsUInt32 bitMask;		/* for event masks and options */
 typedef unsigned EV_ID;			/* identifier for an event */
 typedef unsigned VAR_ID;		/* identifier for a pv */
 typedef unsigned DELAY_ID;		/* identifier for a delay */
