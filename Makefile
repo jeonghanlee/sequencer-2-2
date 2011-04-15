@@ -19,8 +19,8 @@ endif
 
 include $(TOP)/configure/RULES_TOP
 
-install-docs:
-	rsync -r -t $(TOP)/html/* wwwcsr@www-csr.bessy.de:www/control/SoftDist/sequencer
-	rsync -r -t /opt/repositories/controls/darcs/epics/support/seq/ wwwcsr@www-csr.bessy.de:www/control/SoftDist/sequencer/repo/
+upload:
+	rsync -r -t $(TOP)/html/ wwwcsr@www-csr.bessy.de:www/control/SoftDist/sequencer/
+	darcs push wwwcsr@www-csr.bessy.de:www/control/SoftDist/sequencer/repo
 
 .PHONY: install-docs
