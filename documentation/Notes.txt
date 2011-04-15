@@ -306,8 +306,27 @@ Other internal changes include:
   argument is needed for the action callback
 
 
-Notes on Releases 2.0.0 to 2.0.12
----------------------------------
+Notes on Releases 2.0.x
+-----------------------
+
+.. _Release_Notes_2.0.13:
+
+Release 2.0.13
+^^^^^^^^^^^^^^
+
+-  added upload target to top-level Makefile
+
+-  64bit fixes:
+
+   *  changed bitMask from unsigned long to epicsUInt32
+   *  output error message when trying to "assign" integers
+      that are longer than 32 bits
+   *  use fixed size types for pvXxx types (particularly,
+      use epicsInt32 instead of long in typedef pvLong)
+
+-  several minor fixes
+
+-  ansificated compiler sources
 
 .. _Release_Notes_2.0.12:
 
