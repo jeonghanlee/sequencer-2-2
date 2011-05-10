@@ -22,5 +22,7 @@ include $(TOP)/configure/RULES_TOP
 upload:
 	rsync -r -t $(TOP)/html/ wwwcsr@www-csr.bessy.de:www/control/SoftDist/sequencer/
 	darcs push wwwcsr@www-csr.bessy.de:www/control/SoftDist/sequencer/repo
+	darcs dist -d seq-snapshot-`date -I`
+	rsync seq-snapshot-* wwwcsr@www-csr.bessy.de:www/control/SoftDist/sequencer/releases/
 
 .PHONY: install-docs
