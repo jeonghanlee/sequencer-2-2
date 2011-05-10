@@ -138,7 +138,7 @@ struct event_flag
 	uint	queued;
 };
 
-struct variable				/* Variable or function definition */
+struct variable				/* variable definition */
 {
 	Var	*next;			/* link to next variable in list */
 	char	*name;			/* variable name */

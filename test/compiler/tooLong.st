@@ -1,9 +1,8 @@
 /*
  * Test proper rejection of variables whose type is too long
  * to allow faithfull representation in CA, i.e. 64 bit types.
- * On linux-x86_64 this should give error messages for the l and ul
- * variables. On systems where sizeof(int)==8 (64 bit Windows?)
- * even i and ui should be rejected.
+ * On 64 bit target systems this should give error
+ * messages for the l and ul variables.
  */
 program tooLong
 

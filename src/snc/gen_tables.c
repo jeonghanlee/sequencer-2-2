@@ -59,8 +59,7 @@ static void gen_channel_table(ChanList *chan_list, uint num_event_flags, int opt
 	{
 		printf("\n/* Channel table */\n");
 		printf("static seqChan G_channels[] = {\n");
-		printf("  /* dbAsName, offset, pVarName, */\n");
-		printf("  /* pVarType, count, eventNum, efId, monitored, queued, queueSize, queueIndex */\n");
+		printf("\t/* dbAsName, offset, pVarName, pVarType, count, eventNum, efId, monitored, queued, queueSize, queueIndex */\n");
 		foreach (cp, chan_list->first)
 		{
 			gen_channel(cp, num_event_flags, opt_reent);
@@ -95,9 +94,30 @@ static void gen_var_name(Var *vp)
 /* Generate a seqChan structure */
 static void gen_channel(Chan *cp, uint num_event_flags, int opt_reent)
 {
-	Var	*vp = cp->var;
-	char	elem_str[20] = "";
-	uint	ef_num = 0;
+	Var		*vp = cp->var;
+	char		elem_str[20] = "";
+	uint		ef_num = 0;
+	enum type_tag	type = type_base_type(vp->type);
+
+	if (type == V_LONG || type == V_ULONG)
+	{
+		printf(
+"#if LONG_MAX > 0x7fffffffL\n"
+		);
+		gen_line_marker(vp->decl);
+		printf(
+"#error variable '"
+		);
+		gen_var_decl(vp);
+		printf("'"
+" cannot be assigned to a PV (on the chosen target system)\\\n"
+" because Channel Access does not support integral types longer than 4 bytes.\\\n"
+" You can use '%s' instead, or the fixed size type '%s'.\n"
+"#endif\n",
+		type == V_LONG ? "int" : "unsigned int",
+		type == V_LONG ? "int32_t" : "uint32_t"
+		);
+	}
 
 	if (vp->assign == M_MULTI)
 		sprintf(elem_str, "[%d]", cp->index);
@@ -108,9 +128,9 @@ static void gen_channel(Chan *cp, uint num_event_flags, int opt_reent)
 		ef_num = cp->syncq->ef_var->chan.evflag->index;
 
 	if (cp->name == NULL)
-		printf("  {NULL, ");
+		printf("\t{NULL, ");
 	else
-		printf("  {\"%s\", ", cp->name);
+		printf("\t{\"%s\", ", cp->name);
 
 	if (opt_reent)
 	{
@@ -126,9 +146,9 @@ static void gen_channel(Chan *cp, uint num_event_flags, int opt_reent)
 	}
 
 	/* variable name with optional elem num */
-	printf("\"%s%s\",\n", vp->name, elem_str);
+	printf("\"%s%s\", ", vp->name, elem_str);
 	/* variable type */
-	printf("    \"%s\", ", type_name(type_base_type(vp->type)));
+	printf("\"%s\", ", type_name(type_base_type(vp->type)));
 	/* count, for requests */
 	printf("%d, ", cp->count);
 	/* event number */

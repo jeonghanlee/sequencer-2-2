@@ -169,31 +169,23 @@ unsigned type_array_length2(Type *t)
     }
 }
 
-static enum type_assignable type_assignable_array(Type *t, int depth)
+static unsigned type_assignable_array(Type *t, int depth)
 {
     if (depth > 2)
-        return TA_ERROR;
+        return FALSE;
     switch (t->tag) {
     case V_NONE:
     case V_EVFLAG:
     case V_POINTER:
-        return TA_ERROR;
+        return FALSE;
     case V_ARRAY:
         return type_assignable_array(t->val.array.elem_type, depth + 1);
-    case V_INT:
-        return sizeof(int) <= 4 ? TA_OK : TA_TOO_LONG;
-    case V_UINT:
-        return sizeof(unsigned int) <= 4 ? TA_OK : TA_TOO_LONG;
-    case V_LONG:
-        return sizeof(long) <= 4 ? TA_OK : TA_TOO_LONG;
-    case V_ULONG:
-        return sizeof(unsigned long) <= 4 ? TA_OK : TA_TOO_LONG;
     default:
-        return TA_OK;
+        return TRUE;
     }
 }
 
-enum type_assignable type_assignable(Type *t)
+unsigned type_assignable(Type *t)
 {
     return type_assignable_array(t, 0);
 }

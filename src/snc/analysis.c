@@ -302,7 +302,6 @@ static void analyse_assign(SymTable st, ChanList *chan_list, Expr *scope, Expr *
 {
 	char *name = defn->value;
 	Var *vp = find_var(st, name, scope);
-	enum type_assignable ta;
 
 	assert(defn->type == D_ASSIGN);
 	if (!vp)
@@ -312,23 +311,9 @@ static void analyse_assign(SymTable st, ChanList *chan_list, Expr *scope, Expr *
 		return;
 	}
 	assert(vp->type);
-
-	ta = type_assignable(vp->type);
-	if (ta == TA_ERROR)
+	if (!type_assignable(vp->type))
 	{
 		error_at_expr(defn, "cannot assign variable '%s': wrong type\n", name);
-		return;
-	}
-	else if (ta == TA_TOO_LONG)
-	{
-		error_at_expr(defn,
-			"cannot assign variable >%s< because on this architecture its "
-			"(base) type is larger than 4 bytes. Such variables cannot be "
-			"faithfully mapped to any of the Channel Access base types.\n"
-			"Try declaring the variable as 'int' or, if that is still too "
-			"large on your system, as 'short'. You can also use a fixed "
-			"size integer type such as int32_t.\n",
-			name);
 		return;
 	}
 	if (vp->scope != scope)
