@@ -22,8 +22,8 @@ TESTPROD_HOST += pvsimpleCC
 TESTPROD_HOST += pvtest
 
 #  Libraries
-PROD_LIBS += seq
-seq_DIR    = $(INSTALL_LIB)
+PROD_LIBS += seq pv
+PROD_LIBS += $(EPICS_BASE_IOC_LIBS)
 
 include $(TOP)/configure/RULES
 #----------------------------------------

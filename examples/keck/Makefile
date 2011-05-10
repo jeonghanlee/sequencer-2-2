@@ -23,7 +23,7 @@ SNCFLAGS = +m
 PROD_HOST = etcSeq tcsSeq
 
 #  Libraries
-PROD_LIBS += seq
+PROD_LIBS += seq pv
 seq_DIR    = $(INSTALL_LIB)
 
 #  Extra requirements for tcsSeq
@@ -34,4 +34,3 @@ tcs_DIR     = $(KROOT)/rel/dcs/default/lib/$(HOST_ARCH)
 include $(TOP)/configure/RULES
 #----------------------------------------
 #  ADD RULES AFTER THIS LINE
-

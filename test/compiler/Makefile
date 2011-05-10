@@ -18,8 +18,7 @@ TESTSCRIPTS_HOST += test.t
 #TESTPROD += sncExOpt_UnrecOpt
 #TESTPROD += tooLong
 
-PROD_LIBS += seq
-PROD_LIBS += pv
+PROD_LIBS += seq pv
 PROD_LIBS += $(EPICS_BASE_IOC_LIBS)
 
 include $(TOP)/configure/RULES
