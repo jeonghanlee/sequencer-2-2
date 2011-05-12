@@ -198,12 +198,12 @@ static unsigned seqMacParseName(const char *str)
 	unsigned nChar;
 
 	/* First character must be [A-Z,a-z] */
-	if (!isalpha(*str))
+	if (!isalpha((int)*str))
 		return 0;
 	str++;
 	nChar = 1;
 	/* Character must be [A-Z,a-z,0-9,_] */
-	while ( isalnum(*str) || *str == '_' )
+	while ( isalnum((int)*str) || *str == '_' )
 	{
 		str++;
 		nChar++;
