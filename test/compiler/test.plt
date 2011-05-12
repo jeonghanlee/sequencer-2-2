@@ -23,24 +23,24 @@ if ($host_arch =~ /64/) {
   push(@success,"tooLong");
 }
 
-sub test_success {
+sub make {
   my ($test) = @_;
-  $_ = `$snc ../$test.st -o $test 2>&1`;
+  $_ = `make -s TESTPROD=$test 2>&1`;
   print("result=$?\n");
+}
+
+sub test_success {
+  make(@_);
   ok($? != -1 and $? == 0 and not /error/ and not /warning/);
 }
 
 sub test_warning {
-  my ($test) = @_;
-  $_ = `$snc ../$test.st -o $test 2>&1`;
-  print("result=$?\n");
+  make(@_);
   ok($? != -1 and $? == 0 and not /error/ and /warning/);
 }
 
 sub test_error {
-  my ($test) = @_;
-  $_ = `$snc ../$test.st -o $test 2>&1`;
-  print("result=$?\n");
+  make(@_);
   ok($? != -1 and $? != 0 and /error/);
 }
 
