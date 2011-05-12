@@ -63,6 +63,8 @@ DBD += seqSoftIoc.dbd
 seqSoftIoc_DBD += base.dbd
 
 seqSoftIoc_SRCS += seqSoftIoc_registerRecordDeviceDriver.cpp
+
+ifeq '$(EPICS_HAS_UNIT_TEST)' '1'
 seqSoftIoc_SRCS += testSupport.c
 
 PROD_vxWorks = vxTestHarness
@@ -78,6 +80,7 @@ vxTestHarness_DBD += $(COMMON_DIR)/vxTestHarnessRegistrars.dbd
 USR_DBDFLAGS += -I $(COMMON_DIR)
 
 DB += vxTestHarness.db
+endif
 
 # PROD_RTEMS = rtemsTestHarness
 # rtemsTestHarness_SRCS += $(TESTPROD_HOST::%=%.st)
