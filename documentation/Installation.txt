@@ -19,16 +19,24 @@ page.
 .. _re2c: http://re2c.org/
 .. _re2c download: http://sourceforge.net/projects/re2c/files/
 
+
 Download
 --------
 
-Newer releases are available here:
+Releases are available here:
 
    http://www-csr.bessy.de/control/SoftDist/sequencer/releases/
 
-The latest release is currently `2.0.99`_, which is a beta release
-for the upcoming `2.1.0`_. Release notes are contained in the
-:doc:`Introduction`.
+The current stable release is `2.0.13`_.
+
+Development snapshots are available under the name
+
+   seq-snapshot-<date>.tar.gz
+
+In the releases directory there is always a symbolic link to the
+`latest snapshot`_.
+
+Release notes are contained in the documentation, see :doc:`Notes`.
 
 Older releases can be either downloaded from the PSI website
 
@@ -40,6 +48,7 @@ or by following the links here:
    Version   Release Notes
    --------- ---------------------------
    `2.0.99`_ :ref:`Release_Notes_2.0.99`
+   `2.0.98`_ n/a
    `2.0.13`_ :ref:`Release_Notes_2.0.13`
    `2.0.12`_ :ref:`Release_Notes_2.0.12`
    `2.0.11`_ :ref:`Release_Notes_2.0.11`
@@ -58,16 +67,20 @@ or by following the links here:
    `1.9.4`_  :ref:`Release_Notes_1.9`
    ========= ===========================
 
-You can look at (or even use at your own risk ;-) my latest
-development version by checking out the `darcs`_ repository::
+Please note that 2.0.89 and 2.0.99 are long since
+out-dated and are listed here only for historical reasons.
+If you want to help testing the upcoming
+major release (2.1.0), please use
+the `latest snapshot`_, or check out the `darcs`_ repository::
 
-   darcs get http://www-csr.bessy.de/control/SoftDist/sequencer/repo/ seq-head
+   > darcs get http://www-csr.bessy.de/control/SoftDist/sequencer/repo/ seq-head
 
-You can also look at the repo using the `repository browser`_.
+You can also follow development by using the `repository browser`_.
 
 See `Contribute`_ for a short description how to record and send
 patches.
 
+.. _latest snapshot: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-snapshot-latest.tar.gz
 .. _2.1.0: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2.1.0.tar.gz
 .. _2.0.99: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2.0.99.tar.gz
 .. _2.0.98: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2.0.98.tar.gz
@@ -89,6 +102,7 @@ patches.
 .. _1.9.4: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-1.9.4.tar.gz
 .. _repository browser: http://www-csr.bessy.de/cgi-bin/darcsweb.cgi?r=sequencer;a=summary
 
+
 Unpack
 ------
 
@@ -107,29 +121,30 @@ You can now::
    > cd seq-x.y.z
 
 and look at the source tree. The actual source code for the sequencer
-is under *src*. The documentation sources are under *documentation* and
+is under ``src``. The documentation sources are under ``documentation`` and
 consist of plain readable text files (actually, the format is
 `reStructuredText`_ but you need to know about that only if you plan to
 make changes to the docs).
 
 In what follows, ``$SEQ`` refers to the directory where you are now,
-i.e. *.../seq-x.y.z/*.
+i.e. ``.../seq-x.y.z/``.
 
 .. _GNU tar: http://www.gnu.org/software/tar/
 .. _reStructuredText: http://docutils.sourceforge.net/rst.html
+
 
 Configure and Build
 -------------------
 
 The sequencer uses the EPICS build system. This means there is no
 automatic configuration, instead you have to edit the file
-*configure/RELEASE* and perhaps also *configure/CONFIG_SITE*. These are
-make include files, so the syntax is that of (GNU) make.
+``configure/RELEASE`` and perhaps also ``configure/CONFIG_SITE``.
+These are make include files, so the syntax is that of (GNU) make.
 
-In *configure/RELEASE*, change the definition of the variable
+In ``configure/RELEASE``, change the definition of the variable
 ``EPICS_BASE`` to the path where your EPICS base is installed.
 
-In *configure/CONFIG_SITE*, you can specify the target architectures
+In ``configure/CONFIG_SITE``, you can specify the target architectures
 for which to build via the ``CROSS_COMPILER_TARGET_ARCHS`` variable (a
 subset of those for which EPICS has been built, default is all), and
 the message systems to support via the ``PVXXX`` variables (the default
@@ -144,15 +159,17 @@ Guide
 <http://www.aps.anl.gov/epics/base/R3-14/11-docs/AppDevGuide.pdf>`_ 
 for details.
 
-After changing the files in *configure*, run GNU make.
+After changing the files in ``configure``, run GNU make.
 
-Note that make builds first in the *configure* directory, then the
-*src* tree, and finally the *test* tree. A failure in the *test* tree
-will not impact your ability to write sequences (but is still a bug and
+Note that make builds first in the ``configure`` directory, then the
+``src`` tree, and finally the ``test`` and ``examples`` trees. A failure
+in the latter two
+will not impact your ability to write SNL programs (but is still a bug and
 should be reported, see `Report Bugs`_).
 
+
 Building the Manual
--------------------
+^^^^^^^^^^^^^^^^^^^
 
 From 2.0.99 on, the manual is in reStructureText format. This format
 is (more or less) readable plain text, so this section is optional.
@@ -165,15 +182,15 @@ The html pages are generated by issuing::
    > make docs=1
 
 This will generate the home page and install it into the directory
-*$SEQ/html*. This step requires that you have `Python`_ and `Sphinx`_
+``$SEQ/html``. This step requires that you have `Python`_ and `Sphinx`_
 installed on your system.
 
 If, in addition, you want a printable version (pdf), do::
 
    > make docs=1 pdf=1
 
-This generates a pdf file named *Manual.pdf* and also puts it into the
-*html* subdirectory. Note that pdf generattion is done via latex, so
+This generates a pdf file named ``Manual.pdf`` and also puts it into the
+``html`` subdirectory. Note that pdf generattion is done via latex, so
 you need to have a working latex installation. On my system (kubuntu
 karmic) I also needed to install the package tetex-extra.
 
@@ -182,23 +199,38 @@ karmic) I also needed to install the package tetex-extra.
 
 .. _Verifyingtheinstallation:
 
+
 Test
 ----
 
-Under Linux and Solaris, the *-R* loader option will have been used to
-link executables, so ``LD_LIBRARY_PATH`` should need no further
-additions. Under other operating systems, it may be necessary to append
-``$SEQ/lib/$EPICS_HOST_ARCH``.
+Since version 2.1, the sequencer comes with an automated test suite.
+You can run all tests by issuing ::
 
-Change directory to test/demo and do::
+   > make -s runtests
 
-   ../../bin/$EPICS_HOST_ARCH/demo stcmd.host
+(the -s option is to suppress irrelevant output generated by make).
+Note that this requires EPICS base R3.14.10 or later, since we use the
+test support in base. Also note that some of the tests are supposed
+to run for half a minute, so don't give up too soon.
 
-to rune the demo program. This includes its own CA server, so no IOC or
-portable CA server is needed. The output should look something like
-this::
+You can also run the tests on an embedded system. Currently only
+vxWorks systems are supported, but RTEMS will follow soon. To do this,
+point the vxWorks startup script to ::
 
-   ben@sarun[1]: .../test/demo > ../../bin/linux-x86/demo stcmd.host 
+   $SEQ/test/validate/O.$T_A/st.cmd
+
+where ``$T_A`` is the name of the target architecture and ``$SEQ`` refers to
+the (absolute) path of you sequencer installation. The system will
+start an IOC and will run a number of SNL test programs, one after the other,
+after each one giving a summary of how many tests failed etc.
+
+To check out an example, change directory to examples/demo and run ::
+
+   > ../../bin/$EPICS_HOST_ARCH/demo stcmd.host
+
+The output should look something like this::
+
+   ben@sarun[1]: .../examples/demo > ../../bin/linux-x86/demo stcmd.host 
    dbLoadDatabase "../../dbd/demo.dbd"
    demo_registerRecordDeviceDriver(pdbbase)
    dbLoadRecords "demo.db"
@@ -237,27 +269,6 @@ This illustrates the very basic "sequencer device support" that was
 added in release 2.0. These records are returning the names of the
 first two state-sets of the demo program.
 
-Most (maybe all) of the other test programs do not connect to process
-variables and can be run without an IOC. For example::
-
-   ben@sarun[1]: .../bin/linux-x86 > ./sncExitOptx -s
-   SEQ Version 2.0.12: Thu May 13 22:53:48 2010
-   Spawning state program "sncexitoptx", thread 0x804ecf0: "sncexitoptx"
-   epics> low, delay timeout, incr v and now reenter low
-   v = 1
-   Pause on each exit of low, including 'iterations'
-   low, delay timeout, incr v and now reenter low
-   v = 2
-   Pause on each exit of low, including 'iterations'
-   low, delay timeout, incr v and now reenter low
-   v = 3
-   Pause on each exit of low, including 'iterations'
-   ...etc...
-
-Note the :option:`-s` argument to the test program. Without it, the program
-will not start an iocShell and you will have difficulty terminating the
-program (in fact, you have to ``kill -9`` it). Similar for the other
-test programs.
 
 Use
 ---
@@ -267,35 +278,32 @@ application. For more general usage information, see the section on
 :doc:`Compiling` and :doc:`Using`.
 
 To use the sequencer in an EPICS application, change the definition of
-``SNCSEQ`` in *configure/RELEASE* (that is, the one in your
+``SNCSEQ`` in ``configure/RELEASE`` (that is, the one in your
 application, not the sequencer's) to contain the path to your
 sequencer installation.
 
 As soon as ``SNCSEQ`` is defined, the EPICS build system automagically
 includes the build rules defined in the sequencer. To add an SNL
-program to your application, write something like
-
-::
+program to your application, write something like ::
 
    SRCS += xyz.st
    abc_LIBS += seq pv
 
-into your Makefile. Here, *xyz.st* is the name of your SNL program, and
-*abc* is the name of the library or binary to produce. Note that *.st*
+into your Makefile. Here, ``xyz.st`` is the name of your SNL program, and
+``abc`` is the name of the library or binary to produce. Note that ``.st``
 files are run through the C preprocessor (*cpp*) before giving them to
-the SNL compiler. Use the extension *.stt* to avoid this. For details,
+the SNL compiler. Use the extension ``.stt`` to avoid this. For details,
 see Chapter 4 of the `EPICS Application Developer's Guide`_.
 
 .. _EPICS Application Developer's Guide: http://www.aps.anl.gov/epics/base/R3-14/11-docs/AppDevGuide.pdf
 
 A complete example application that also uses the sequencer can be
-produced using makeBaseApp, e.g.
+produced using makeBaseApp, e.g. ::
 
-::
+   > makeBaseApp.pl -t example ex
 
-   makeBaseApp.pl -t example ex
+Take a look at ``exApp/src``, especially the ``Makefile``.
 
-Take a look at *exApp/src*, especially the *Makefile*.
 
 Report Bugs
 -----------
@@ -305,6 +313,7 @@ Please send bug reports to to tech-talk@aps.anl.gov or the maintainer
 if you include which release of the sequencer and EPICS base release
 you are using.
 
+
 Contribute
 ----------
 
@@ -312,23 +321,23 @@ I am always happy to receive patches (bug fixes, improvements,
 whatever). You can create a local copy of the `darcs`_
 repository by saying::
 
-   darcs get http://www-csr.bessy.de/control/SoftDist/sequencer/repo/
+   > darcs get http://www-csr.bessy.de/control/SoftDist/sequencer/repo/
 
 Assuming you have made some changes, first update your repository to
 include the latest changes from upstream (with darcs this is not
-strictly necessary, but good practice as it avoids conflicts)::
+strictly necessary, but good practice as it helps to avoid conflicts)::
 
-   darcs pull
+   > darcs pull
 
 (darcs will ask you for each patch that is not yet in your repo). Then
 record your changes (if you haven't already)::
 
-   darcs record
+   > darcs record
 
 (darcs will prompt you for every single change you made and then prompt
 you for giving the patch a name). Finally say::
 
-   darcs send
+   > darcs send
 
 Please respect the coding style when making changes. This includes
 indentation (tabs or spaces, how many) and all the other little things
