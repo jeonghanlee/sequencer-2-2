@@ -100,7 +100,7 @@ typedef void INIT_FUNC(USER_VAR *var);
 typedef const struct seqChan seqChan;
 typedef const struct seqState seqState;
 typedef const struct seqSS seqSS;
-typedef const struct seqProgram seqProgram;
+typedef struct seqProgram seqProgram;
 
 /* Static information about a channel */
 struct seqChan
