@@ -104,9 +104,9 @@ $(COMMON_DIR)/vxTestHarnessRegistrars.dbd:
 
 $(COMMON_DIR)/vxTestHarness.dbd: $(COMMON_DIR)/vxTestHarnessRegistrars.dbd
 
-$(COMMON_DIR)/vxTestHarness.db:
+$(COMMON_DIR)/vxTestHarness.db: $(REGRESSION_TESTS_WITH_DB:%=../%.db)
 	$(RM) $@
-	cat $(REGRESSION_TESTS_WITH_DB:%=../%.db) > $@
+	$(PERL) -ne print $(REGRESSION_TESTS_WITH_DB:%=../%.db) > $@
 
 st.cmd: ../st.cmd.vxWorks
 	$(CP) $< $@
