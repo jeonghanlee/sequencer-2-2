@@ -96,7 +96,7 @@ include $(TOP)/configure/RULES
 	@$(RM) $@
 	@$(PERL) ../makeTestfile.pl $@ $* $<
 
-norace.o race.o: ../raceCommon.st
+norace.i race.i: ../raceCommon.st
 
 $(COMMON_DIR)/vxTestHarnessRegistrars.dbd:
 	$(RM) $@
