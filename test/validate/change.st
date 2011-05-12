@@ -1,9 +1,9 @@
 /* Test state change statement */
-program changetest
+program changeTest
 
 %%#include <time.h>
 %%#include <stdlib.h>
-%%#include "epicsUnitTest.h"
+%%#include "../testSupport.h"
 
 #define MAX_TEST 50
 
@@ -67,5 +67,5 @@ ss main {
 
 exit {
     testDone();
-    exit(0);
+    seq_test_done();
 }

@@ -1,4 +1,4 @@
-program stop
+program stopTest
 
 ss main {
     state start {

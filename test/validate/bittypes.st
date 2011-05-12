@@ -1,8 +1,6 @@
-program bittypes
+program bittypesTest
 
-%%#include "stdlib.h"
-%%#include "epicsUnitTest.h"
-%%#include "epicsThread.h"
+%%#include "../testSupport.h"
 
 int8_t i8;
 uint8_t ui8;
@@ -71,5 +69,5 @@ ss test {
 
 exit {
     testDone();
-    exit(0);
+    seq_test_done();
 }

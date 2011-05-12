@@ -6,11 +6,9 @@
  *  the same value via anonymous (also monitored and ef synced) PV.
  * TODO: add a similar test with a named PV
  */
-program eftest
+program evflagTest
 
-%%#include "stdlib.h"
-%%#include "epicsUnitTest.h"
-%%#include "epicsThread.h"
+%%#include "../testSupport.h"
 
 option +s;
 
@@ -71,5 +69,5 @@ ss write {
 
 exit {
     testDone();
-    exit(0);
+    seq_test_done();
 }

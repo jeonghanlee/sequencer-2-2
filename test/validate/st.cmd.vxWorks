@@ -1,0 +1,13 @@
+ld < vxTestHarness.munch
+dbLoadDatabase("../O.Common/vxTestHarness.dbd")
+vxTestHarness_registerRecordDeviceDriver(pdbbase)
+dbLoadRecords("../O.Common/vxTestHarness.db")
+iocInit
+run_seq_test &arrayTest
+run_seq_test &assignTest
+run_seq_test &changeTest
+run_seq_test &safeMonitorTest
+run_seq_test &bittypesTest
+run_seq_test &evflagTest
+run_seq_test &noraceTest
+run_seq_test &pvGetTest

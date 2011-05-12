@@ -1,8 +1,6 @@
-program safeMonitor
+program safeMonitorTest
 
-%%#include <stdlib.h>
-%%#include "epicsUnitTest.h"
-%%#include "epicsThread.h"
+%%#include "../testSupport.h"
 
 option +s;
 
@@ -47,5 +45,5 @@ ss write {
 
 exit {
     testDone();
-    exit(0);
+    seq_test_done();
 }

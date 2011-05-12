@@ -1,4 +1,4 @@
-program sncopttvar
+program sncOpttVarTest
 
 option +r;
 

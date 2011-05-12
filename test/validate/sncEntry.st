@@ -1,5 +1,5 @@
 /* snc test program to test entry and exit condition execution. */
-program sncentry
+program sncEntryTest
 
 option +s;
 

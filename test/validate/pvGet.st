@@ -1,15 +1,14 @@
-program pvGet
+program pvGetTest
 
-%%#include "stdlib.h"
-%%#include "epicsThread.h"
-%%#include "epicsUnitTest.h"
+%%#include "../testSupport.h"
 
 option +s;
 
 /* use literal C code to circumvent safe mode */
 %%int shared = 0;
+%%epicsMutexId mutex;
 
-foreign shared;
+foreign shared, mutex;
 
 int anon;
 assign anon;
@@ -20,6 +19,7 @@ evflag ef_read_named, ef_read_anon, ef_read_named_sync, ef_read_anon_sync;
 
 entry {
     testPlan(MAX_GET*4*3);
+    mutex = epicsMutexMustCreate();
 }
 
 ss read_named {
@@ -33,8 +33,10 @@ ss read_named {
             efSet(ef_read_named);
         } state done
         when (delay(0.2)) {
+            epicsMutexMustLock(mutex);
             expected = shared;
             pvGet(named, ASYNC);
+            epicsMutexUnlock(mutex);
             if (pvGetComplete(named)) {
                 testOk(expected==named,
                     "immediate completion:      expected=%d==%d=named", expected, named);
@@ -71,8 +73,10 @@ ss read_anon {
             efSet(ef_read_anon);
         } state done
         when (delay(0.2)) {
+            epicsMutexMustLock(mutex);
             expected = shared;
             pvGet(anon, ASYNC);
+            epicsMutexUnlock(mutex);
             if (pvGetComplete(anon)) {
                 testOk(expected==anon,
                     "immediate completion:      expected=%d==%d=anon", expected, anon);
@@ -111,13 +115,17 @@ ss read_named_sync {
             efSet(ef_read_named_sync);
         } state done
         when (delay(0.2)) {
+            epicsMutexMustLock(mutex);
             expected = shared;
             pvGet(named, SYNC);
+            epicsMutexUnlock(mutex);
             testOk(expected==named,
                 "synchronous get:           expected=%d==%d=named", expected, named);
             epicsThreadSleep(0.1);
+            epicsMutexMustLock(mutex);
             expected = shared;
             pvGet(named, SYNC);
+            epicsMutexUnlock(mutex);
             testOk(expected==named,
                 "repeat get after delay:    expected=%d==%d=named", expected, named);
         } state wait
@@ -143,13 +151,17 @@ ss read_anon_sync {
             efSet(ef_read_anon_sync);
         } state done
         when (delay(0.2)) {
+            epicsMutexMustLock(mutex);
             expected = shared;
             pvGet(anon, SYNC);
+            epicsMutexUnlock(mutex);
             testOk(expected==anon,
                 "synchronous get:           expected=%d==%d=anon", expected, anon);
             epicsThreadSleep(0.1);
+            epicsMutexMustLock(mutex);
             expected = shared;
             pvGet(anon, SYNC);
+            epicsMutexUnlock(mutex);
             testOk(expected==anon,
                 "repeat get after delay:    expected=%d==%d=anon", expected, anon);
         } state wait
@@ -175,10 +187,12 @@ ss write {
             efTest(ef_read_named_sync) && efTest(ef_read_anon_sync)) {
         } exit
         when (delay(0.07)) {
+            epicsMutexMustLock(mutex);
             shared = out;
             pvPut(out);
             anon = out;
             pvPut(anon);
+            epicsMutexUnlock(mutex);
             out++;
         } state run
     }
@@ -186,5 +200,5 @@ ss write {
 
 exit {
     testDone();
-    exit(0);
+    seq_test_done();
 }

@@ -1,4 +1,4 @@
-program syncq_test
+program syncqTest
 
 option +s;
 

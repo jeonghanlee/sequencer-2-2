@@ -1,4 +1,4 @@
-program norace
+program noraceTest
 
 option +s;
 

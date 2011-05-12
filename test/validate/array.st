@@ -1,7 +1,6 @@
-program array
+program arrayTest
 
-%%#include <stdlib.h>
-%%#include "epicsUnitTest.h"
+%%#include "../testSupport.h"
 
 entry {
     testPlan(20);
@@ -40,5 +39,5 @@ ss array {
 
 exit {
     testDone();
-    exit(0);
+    seq_test_done();
 }

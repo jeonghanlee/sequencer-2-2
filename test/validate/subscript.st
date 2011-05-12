@@ -1,4 +1,4 @@
-program subscript
+program subscriptTest
 
 float single[2];
 assign single;                  /* one single channel, count = 2 */

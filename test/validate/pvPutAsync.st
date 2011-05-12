@@ -1,4 +1,4 @@
-program pvPutAsync
+program pvPutAsyncTest
 
 %%#include <stdlib.h>
 

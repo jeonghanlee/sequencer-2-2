@@ -1,4 +1,4 @@
-program sncentryopte
+program sncEntryOpteTest
 /* snc test program to test entry and exit condition execution, with -e
  * option. Test -e, that entry will be executed on each iteration.
  */

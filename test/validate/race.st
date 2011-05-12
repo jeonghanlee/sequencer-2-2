@@ -1,3 +1,3 @@
-program race
+program raceTest
 
 #include "raceCommon.st"

@@ -1,4 +1,4 @@
-program declarations
+program declTest
 
 %%#include <stdlib.h>
 

@@ -1,4 +1,4 @@
-program userfunc
+program userfuncTest
 
 option +r;
 

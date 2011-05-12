@@ -1,5 +1,5 @@
 /* illustrate / test local variable declarations */
-program local
+program localTest
 
 /* options */
 #if 0

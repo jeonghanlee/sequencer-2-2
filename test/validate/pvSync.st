@@ -1,4 +1,4 @@
-program pvSync
+program pvSyncTest
 
 int x;
 assign x;

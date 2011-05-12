@@ -1,7 +1,6 @@
-program assign_test
+program assignTest
 
-%%#include <stdlib.h>
-%%#include "epicsUnitTest.h"
+%%#include "../testSupport.h"
 
 int x = 0;
 assign x;
@@ -42,5 +41,5 @@ ss r {
 
 exit {
     testDone();
-    exit(0);
+    seq_test_done();
 }

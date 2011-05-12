@@ -1,4 +1,4 @@
-program sncoptt
+program sncOpttTest
 /* snc test program to test state option -t, not to reset timers.
  */
 

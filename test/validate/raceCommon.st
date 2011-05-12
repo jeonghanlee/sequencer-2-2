@@ -1,9 +1,4 @@
-%%#include <stdlib.h>
-%%#include "epicsUnitTest.h"
-
-%%#include <stdio.h>
-%%#include <assert.h>
-%%#include <sched.h>
+%%#include "../testSupport.h"
 
 string x;
 assign x to "x";
@@ -141,5 +136,5 @@ ss stop {
 
 exit {
     testDone();
-    exit(0);
+    seq_test_done();
 }

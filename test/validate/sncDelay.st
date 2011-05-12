@@ -1,4 +1,4 @@
-program sncDelay
+program sncDelayTest
 /* snc test program to demonstrate delay and state transition without
    using external events.
 */
