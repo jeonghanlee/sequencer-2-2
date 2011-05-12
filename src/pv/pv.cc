@@ -245,7 +245,7 @@ epicsShareFunc int epicsShareAPI pvSysGetMagic( void *sys ) {
 }
 
 epicsShareFunc void epicsShareAPI pvSysSetDebug( void *sys, int debug ) {
-    SYS_CHECK( ; );
+    SYS_CHECK( {} );
     Sys->setDebug( debug );
 }
 
@@ -341,7 +341,7 @@ epicsShareFunc int epicsShareAPI pvVarGetMagic( void *var ) {
 }
 
 epicsShareFunc void epicsShareAPI pvVarSetDebug( void *var, int debug ) {
-    VAR_CHECK( ; );
+    VAR_CHECK( {} );
     Var->setDebug( debug );
 }
 
@@ -366,7 +366,7 @@ epicsShareFunc unsigned epicsShareAPI pvVarGetCount( void *var ) {
 }
 
 epicsShareFunc void epicsShareAPI pvVarSetPrivate( void *var, void *priv ) {
-    VAR_CHECK( ; );
+    VAR_CHECK( {} );
     Var->setPrivate( priv );
 }
 
