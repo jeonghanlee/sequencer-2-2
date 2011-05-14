@@ -5,6 +5,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "alarm.h"
 #include "cadef.h"
@@ -197,7 +198,11 @@ epicsShareFunc pvStat caVariable::get( pvType type, unsigned count, pvValue *val
         printf( "%8p: caVariable::get( %d, %d )\n", this, type, count );
 
     int caType = typeToCA( type );
+#ifdef _WIN32
+    char *caValue = (char*)alloca( dbr_size_n( caType, count ) );
+#else
     char caValue[dbr_size_n( caType, count )];
+#endif
     INVOKE( ca_array_get( caType, count, chid_, caValue ) );
     // ### must block so can convert value; should use ca_get_callback()
     if ( getStat() == pvStatOK )
@@ -261,7 +266,11 @@ epicsShareFunc pvStat caVariable::put( pvType type, unsigned count, pvValue *val
         printf( "%8p: caVariable::put( %d, %d )\n", this, type, count );
 
     int caType = typeToCA( type );
+#ifdef _WIN32
+    char *caValue = (char*)alloca( dbr_size_n( caType, count ) );
+#else
     char caValue[dbr_size_n( caType, count )];
+#endif
     copyToCA( type, count, value, ( union db_access_val * ) caValue );
     INVOKE( ca_array_put( caType, count, chid_, caValue ) );
     if ( getStat() == pvStatOK )
@@ -283,7 +292,11 @@ epicsShareFunc pvStat caVariable::putNoBlock( pvType type, unsigned count, pvVal
 		type, count );
 
     int caType = typeToCA( type );
+#ifdef _WIN32
+    char *caValue = (char*)alloca( dbr_size_n( caType, count ) );
+#else
     char caValue[dbr_size_n( caType, count )];
+#endif
     copyToCA( type, count, value, ( union db_access_val * ) caValue );
     INVOKE( ca_array_put( caType, count, chid_, caValue ) );
     return getStat();
@@ -458,7 +471,11 @@ void pvCaMonitorHandler( struct event_handler_args args )
 	( *func ) ( ( void * ) variable, type, count, NULL, arg,
 		    statFromCA( args.status ) );
     } else {
+#ifdef _WIN32
+        char *value = (char*)alloca( pv_size_n(typeFromCA(args.type), count) );
+#else
 	char value[pv_size_n(typeFromCA(args.type), count)];
+#endif
 	copyFromCA( args.type, args.count, ( union db_access_val * ) args.dbr,
 		    (pvValue *) value );
 	// ### should assert args.type is equiv to type and args.count is count
