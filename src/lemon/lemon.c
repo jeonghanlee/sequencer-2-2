@@ -58,7 +58,7 @@ static void LemonAtExit(void)
     made_files = NULL;
 }
 
-static char *msort(char*,char**,int(*)(const char*,const char*));
+static char *msort(char*,unsigned long,int(*)(const char*,const char*));
 
 /*
 ** Compilers are getting increasingly pedantic about type conversions
@@ -316,6 +316,8 @@ struct lemon {
   memory_error(); \
 }
 
+#define OFFSETOF(p,n) ((char*)&((p)->n) - (char*)(p))
+
 /**************** From the file "table.h" *********************************/
 /*
 ** All code in this file has been automatically generated
@@ -415,7 +417,7 @@ static int actioncmp(
 static struct action *Action_sort(
   struct action *ap
 ){
-  ap = (struct action *)msort((char *)ap,(char **)&ap->next,
+  ap = (struct action *)msort((char *)ap,OFFSETOF(ap,next),
                               (int(*)(const char*,const char*))actioncmp);
   return ap;
 }
@@ -1296,14 +1298,14 @@ void Configlist_closure(struct lemon *lemp)
 
 /* Sort the configuration list */
 void Configlist_sort(){
-  current = (struct config *)msort((char *)current,(char **)&(current->next),Configcmp);
+  current = (struct config *)msort((char *)current,OFFSETOF(current,next),Configcmp);
   currentend = 0;
   return;
 }
 
 /* Sort the basis configuration list */
 void Configlist_sortbasis(){
-  basis = (struct config *)msort((char *)current,(char **)&(current->bp),Configcmp);
+  basis = (struct config *)msort((char *)current,OFFSETOF(current,bp),Configcmp);
   basisend = 0;
   return;
 }
@@ -1628,7 +1630,7 @@ static char *merge(
 /*
 ** Inputs:
 **   list:      Pointer to a singly-linked list of structures.
-**   next:      Pointer to pointer to the second element of the list.
+**   offset:    Offset to 'next' pointer in a list element struct.
 **   cmp:       A comparison function.
 **
 ** Return Value:
@@ -1641,14 +1643,12 @@ static char *merge(
 #define LISTSIZE 30
 static char *msort(
   char *list,
-  char **next,
+  unsigned long offset,
   int (*cmp)(const char*,const char*)
 ){
-  unsigned long offset;
   char *ep;
   char *set[LISTSIZE];
   int i;
-  offset = (unsigned long)next - (unsigned long)list;
   for(i=0; i<LISTSIZE; i++) set[i] = 0;
   while( list ){
     ep = list;
