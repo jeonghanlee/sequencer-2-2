@@ -3,6 +3,7 @@ include $(TOP)/configure/CONFIG
 #----------------------------------------
 #  ADD MACRO DEFINITIONS AFTER THIS LINE
 
+# default main (+m option)
 INC += seqMain.c
 
 #  Internal debug control
