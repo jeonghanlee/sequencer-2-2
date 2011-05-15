@@ -135,6 +135,7 @@ ss stop {
 }
 
 exit {
+    testOk1(TRUE);
     testDone();
     seq_test_done();
 }
