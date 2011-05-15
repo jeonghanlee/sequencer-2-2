@@ -32,7 +32,7 @@ extern int access(const char *path, int mode);
 #endif
 
 /* #define PRIVATE static */
-#define PRIVATE
+#define PRIVATE static
 
 #ifdef TEST
 #define MAXRHS 5       /* Set low to exercise exception code */
@@ -1138,6 +1138,7 @@ static int resolve_conflict(
   }
   return errcnt;
 }
+
 /********************* From the file "configlist.c" *************************/
 /*
 ** Routines to processing a configuration list and building a state
@@ -1343,6 +1344,7 @@ void Configlist_eat(struct config *cfp)
   }
   return;
 }
+
 /***************** From the file "error.c" *********************************/
 /*
 ** Code for printing error message.
@@ -1356,6 +1358,7 @@ void ErrorMsg(const char *filename, int lineno, const char *format, ...){
   va_end(ap);
   fprintf(stderr, "\n");
 }
+
 /**************** From the file "main.c" ************************************/
 /*
 ** Main program file for the LEMON parser generator.
@@ -1547,6 +1550,7 @@ int main(int argc, char **argv)
   exit(exitcode);
   return (exitcode);
 }
+
 /******************** From the file "msort.c" *******************************/
 /*
 ** A generic merge-sort program.
@@ -1666,6 +1670,7 @@ static char *msort(
   for(i=0; i<LISTSIZE; i++) if( set[i] ) ep = merge(set[i],ep,cmp,offset);
   return ep;
 }
+
 /************************ From the file "option.c" **************************/
 static char **argv;
 static struct s_options *op;
@@ -1940,6 +1945,7 @@ void OptPrint(){
     }
   }
 }
+
 /*********************** From the file "parse.c" ****************************/
 /*
 ** Input file parser for the LEMON parser generator.
@@ -2659,6 +2665,7 @@ void Parse(struct lemon *gp)
   gp->rule = ps.firstrule;
   gp->errorcnt = ps.errorcnt;
 }
+
 /*************************** From the file "plink.c" *********************/
 /*
 ** Routines processing configuration follow-set propagation links
@@ -2721,6 +2728,7 @@ void Plink_delete(struct plink *plp)
     plp = nextpl;
   }
 }
+
 /*********************** From the file "report.c" **************************/
 /*
 ** Procedures for generating reports and tables in the LEMON parser generator.
@@ -4224,7 +4232,6 @@ void ResortStates(struct lemon *lemp)
   }
 }
 
-
 /***************** From the file "set.c" ************************************/
 /*
 ** Set manipulation routines for the LEMON parser generator.
@@ -4280,6 +4287,7 @@ int SetUnion(char *s1, char *s2)
   }
   return progress;
 }
+
 /********************** From the file "table.c" ****************************/
 /*
 ** All code in this file has been automatically generated
