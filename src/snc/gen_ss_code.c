@@ -933,6 +933,7 @@ void gen_ss_user_var_init(Expr *ssp, int level)
 	printf("{\n");
 	foreach(vp, ssp->extra.e_ss->var_list->first)
 	{
+		if (vp->init) gen_line_marker(vp->init);
 		indent(level+1); gen_var_init(vp, level+1); printf(",\n");
 	}
 	foreach (sp, ssp->ss_states)
@@ -946,8 +947,9 @@ void gen_ss_user_var_init(Expr *ssp, int level)
 			indent(level+1); printf("{\n");
 			foreach (vp, sp->extra.e_state->var_list->first)
 			{
-					indent(level+2); gen_var_init(vp, level+2);
-					printf("%s\n", vp->next ? "," : "");
+				if (vp->init) gen_line_marker(vp->init);
+				indent(level+2); gen_var_init(vp, level+2);
+				printf("%s\n", vp->next ? "," : "");
 			}
 			indent(level+1);
 			printf("}%s\n", sp->next ? "," : "");
@@ -969,6 +971,7 @@ static void gen_user_var_init(Expr *prog, int level)
 	{
 		if (vp->type->tag >= V_CHAR)
 		{
+			if (vp->init) gen_line_marker(vp->init);
 			indent(level+1); gen_var_init(vp, level+1); printf(",\n");
 		}
 	}
