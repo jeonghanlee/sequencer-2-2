@@ -113,6 +113,7 @@ $(COMMON_DIR)/vxTestHarness.db: $(REGRESSION_TESTS_WITH_DB:%=../%.db)
 
 st.cmd: ../st.cmd.vxWorks
 	$(CP) $< $@
+	$(foreach t,$(REGRESSION_TESTS),echo "run_seq_test &$tTest" >> $@;)
 
 ifeq "$(OS_CLASS)" "vxWorks"
 build: st.cmd
