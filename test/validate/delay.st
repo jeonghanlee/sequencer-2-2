@@ -1,4 +1,4 @@
-program sncDelayTest
+program delayTest
 /* snc test program to demonstrate delay and state transition without
    using external events.
 */
@@ -8,9 +8,6 @@ option +s;
 
 float v = 0;
 assign v;
-
-string msg;
-assign msg;
 
 ss test {
     float thr = 5.0;

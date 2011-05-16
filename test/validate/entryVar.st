@@ -1,4 +1,4 @@
-program sncEntryVarTest
+program entryVarTest
 /* snc test program to test entry and exit condition execution, with CA
  * assignment and control of transition. 
  * In this case, CD01:FD:PERIOD has units "seconds", and lopr = 10, hopr = 360.

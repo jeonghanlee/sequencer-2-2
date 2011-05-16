@@ -1,4 +1,4 @@
-program sncOpttVarTest
+program opttVarTest
 
 %%#include "../testSupport.h"
 

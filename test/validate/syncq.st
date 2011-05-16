@@ -14,13 +14,6 @@ monitor s1;
 evflag ef_s1;
 syncq s1 to ef_s1 5;
 
-/* just to validate default queue size */
-string x;
-assign x to "syncq";
-monitor x;
-evflag ef_x;
-syncq x to ef_x;
-
 int n = 0;
 assign n;
 monitor n;
