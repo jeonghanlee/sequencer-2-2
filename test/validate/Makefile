@@ -12,8 +12,6 @@ SNCFLAGS_vxWorks += -nil-
 
 #  Sequence programs and/or object files to create
 TESTPROD_HOST += decl
-TESTPROD_HOST += local
-TESTPROD_HOST += pvPutAsync
 TESTPROD_HOST += pvSync
 TESTPROD_HOST += sncDelay
 TESTPROD_HOST += sncEntry
@@ -25,12 +23,12 @@ TESTPROD_HOST += sncOpttVar
 TESTPROD_HOST += stop
 TESTPROD_HOST += subscript
 TESTPROD_HOST += syncq
-TESTPROD_HOST += userfunc
 
 REGRESSION_TESTS_WITH_DB += bittypes
 REGRESSION_TESTS_WITH_DB += evflag
 REGRESSION_TESTS_WITH_DB += norace
 REGRESSION_TESTS_WITH_DB += pvGet
+REGRESSION_TESTS_WITH_DB += pvPutAsync
 
 # uncomment this test to see race
 # fail (safe mode off)
@@ -39,7 +37,9 @@ REGRESSION_TESTS_WITH_DB += pvGet
 REGRESSION_TESTS_WITHOUT_DB += array
 REGRESSION_TESTS_WITHOUT_DB += assign
 REGRESSION_TESTS_WITHOUT_DB += change
+REGRESSION_TESTS_WITHOUT_DB += local
 REGRESSION_TESTS_WITHOUT_DB += safeMonitor
+REGRESSION_TESTS_WITHOUT_DB += userfunc
 
 REGRESSION_TESTS += $(REGRESSION_TESTS_WITHOUT_DB)
 REGRESSION_TESTS += $(REGRESSION_TESTS_WITH_DB)

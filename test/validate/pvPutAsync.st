@@ -1,9 +1,13 @@
 program pvPutAsyncTest
 
-%%#include <stdlib.h>
+%%#include "../testSupport.h"
 
 int x;
 assign x to "pvPutAsync1";
+
+entry {
+    testPlan(10);
+}
 
 ss test1 {
     state put_async {
@@ -11,38 +15,46 @@ ss test1 {
         entry {
             i = 0;
         }
-        when (i == 4) {
+        when (i == 5) {
         } state put_sync
-        when (delay(0.5)) {
+        when (delay(0.4)) {
             int status;
             x = 1;
             status = pvPut(x,ASYNC);
             /* first ok, next three failure */
-            if (status)
-                printf("test1: pvPut/ASYNC %d failed: %s\n", i, pvMessage(x));
-            else
-                printf("test1: pvPut/ASYNC %d issued\n", i);
+            testOk((i==0)==(status==pvStatOK), "pvPut/ASYNC %d: result=%d (%s)",
+                i, status, status ? pvMessage(x) : "");
+/*
+ *             if (status)
+ *                 printf("test1: pvPut/ASYNC %d failed: %s\n", i, pvMessage(x));
+ *             else
+ *                 printf("test1: pvPut/ASYNC %d issued\n", i);
+ */
             ++i;
         } state put_async
     }
     state put_sync {
         when (pvPutComplete(x)) {
             int i = 0;
-            printf("test1: pvPut/ASYNC complete\n");
+            testPass("pvPut/ASYNC complete\n");
             for (i=0; i<4; i++) {
                 int status = pvPut(x,SYNC);
                 /* should always succeed */
+                testOk(status==pvStatOK, "pvPut/SYNC %d, status=%d (%s)",
+                    i, status, status ? pvMessage(x) : "");
+#if 0
                 if (status) {
                     printf("test1: pvPut/SYNC failed: %s\n", pvMessage(x));
                 } else {
                     printf("test1: pvPut/SYNC ok\n");
                 }
+#endif
             }
         } state wait
     }
     state wait {
         when (delay(1)) {
-        } state put_async
+        } exit
     }
 }
 
@@ -75,3 +87,8 @@ ss test2 {
     }
 }
 #endif
+
+exit {
+    testDone();
+    seq_test_done();
+}

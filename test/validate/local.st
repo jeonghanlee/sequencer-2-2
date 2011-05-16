@@ -1,32 +1,40 @@
 /* illustrate / test local variable declarations */
 program localTest
 
+%%#include "../testSupport.h"
+
 /* options */
-#if 0
-option  +r;
-#endif
+option +r;
 
-/* control variables */
-
-/* ordinary variables */
+/* variables */
 int i = 1;
+
+entry {
+    testPlan(5);
+}
 
 /* only state-set */
 ss start {
+    int i = 2;
     state first {
-        int i = 0;
-        when () {
-            printf( "i = %d\n", i );
+        int i = 3;
+        when (i < 5) {
+            testOk(i>=3, "state local i == %d >= 3", i);
+            i = i+1;
         } state last
+        when () {
+        } exit
     }
-
     state last {
-        when ( delay( 2.0 ) ) {
+        when ( delay( 0.1 ) ) {
+            testOk(i==2,"state set local i==%d", i);
         } state first
     }
 }
 
 /* exit handler */
 exit {
-    printf( "exit: i = %d\n", i );
+    testOk(i==1, "global i==%d", i);
+    testDone();
+    seq_test_done();
 }
