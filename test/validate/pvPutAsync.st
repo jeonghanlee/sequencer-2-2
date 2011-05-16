@@ -2,6 +2,8 @@ program pvPutAsyncTest
 
 %%#include "../testSupport.h"
 
+foreign pvStatOK;
+
 int x;
 assign x to "pvPutAsync1";
 
