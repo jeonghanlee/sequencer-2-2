@@ -12,7 +12,6 @@ SNCFLAGS_vxWorks += -nil-
 
 #  Sequence programs and/or object files to create
 TESTPROD_HOST += decl
-TESTPROD_HOST += pvSync
 TESTPROD_HOST += sncDelay
 TESTPROD_HOST += sncEntry
 TESTPROD_HOST += sncEntryOpte
@@ -38,6 +37,7 @@ REGRESSION_TESTS_WITHOUT_DB += array
 REGRESSION_TESTS_WITHOUT_DB += assign
 REGRESSION_TESTS_WITHOUT_DB += change
 REGRESSION_TESTS_WITHOUT_DB += local
+REGRESSION_TESTS_WITHOUT_DB += pvSync
 REGRESSION_TESTS_WITHOUT_DB += safeMonitor
 REGRESSION_TESTS_WITHOUT_DB += userfunc
 
