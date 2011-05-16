@@ -27,6 +27,6 @@ upload:
 	darcs push $(USER_AT_HOST):$(SEQ_PATH)/repo
 	darcs dist -d seq-snapshot-`date -I`
 	rsync seq-snapshot-* $(USER_AT_HOST):$(SEQ_PATH)/releases/
-	ssh $(USER_AT_HOST) 'cd $(SEQ_PATH)/releases && ln -s seq-snapshot-`date -I`.tar.gz seq-snapshot-latest.tar.gz'
+	ssh $(USER_AT_HOST) 'cd $(SEQ_PATH)/releases && ln -f -s seq-snapshot-`date -I`.tar.gz seq-snapshot-latest.tar.gz'
 
 .PHONY: install-docs
