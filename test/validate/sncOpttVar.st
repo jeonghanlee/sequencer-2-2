@@ -1,6 +1,8 @@
 program sncOpttVarTest
 
-option +r;
+%%#include "../testSupport.h"
+
+option +s;
 
 /* snc test program to test state option -t, not to reset timers on entry
  * from self, where delay is a variable. Test is that;
@@ -11,76 +13,108 @@ option +r;
  *   iii. Re-entrant code, variable d is assigned properly in entry{}.
  */
 
-float d; /* Delay variable for managing low state*/
-float v; /* Iteration Counter for managing high state*/
+char msg[60];
+assign msg;
+monitor msg;
+evflag ef_msg;
+syncq msg to ef_msg;
 
-ss ss1
-{
-	state low
-	{
-  	    option -t; /* -t Don't reset timers on re-entry to state */
-	    entry 
-	    { 
-		d = 4.0;
-		printf("Entered low, initialize delay to %g sec.\n",d);
-	    }
-	    when(d>10.0)
-	    {
-		printf("low, delay = %g, now changing to high\n",d);
-	    } state high
-	    when(delay(d)) 
-	    {
-		printf("low, delay timeout, reenter low\n");
-		d += 2.0;
-		printf("low, waiting %g secs to iterate\n",d);
-	    } state low
-	    exit 
-	    { 
-		printf("low, print this on exit of low\n");
-	    }
-
-	}
-
-	state high
-	{
-	    entry { 
-                 printf("\nEntered high\n");
-                 v = 3.0;
-            }
-	    when(v==0)
-	    {
-		printf("changing to low\n");
-	    } state low
-	    when(delay(3.0))
-	    {
-		printf("high, delay 3.0 timeout, decr v and re-enter high\n");
-		v = v-1.0;
-		printf("v = %g\n",v); 
-	    } state high
-	}
+entry {
+    testPlan(40);
 }
 
-/* Expected Output:
-Entered low, initialize delay to 4 sec.
-low, delay timeout, reenter low
-low, waiting 6 secs to iterate
-low, delay timeout, reenter low
-low, waiting 8 secs to iterate
-low, delay timeout, reenter low
-low, waiting 10 secs to iterate
-low, delay timeout, reenter low
-low, waiting 12 secs to iterate
-low, delay = 12, now changing to high
-low, print this on exit of low
+ss low_high {
+    state low {
+        double d; /* Delay variable for managing low state*/
+        option -t; /* -t Don't reset timers on re-entry to state */
+        entry {
+            d = 0.4;
+            sprintf(msg, "Entered low, initialize delay to %g sec.",d);
+            pvPut(msg);
+        }
+        when(d>1.1) {
+            sprintf(msg, "low, delay = %g, now changing to high",d);
+            pvPut(msg);
+        } state high
+        when(delay(d)) {
+            sprintf(msg, "low, delay timeout, reenter low");
+            pvPut(msg);
+            d += 0.2;
+            sprintf(msg, "low, waiting %g secs to iterate",d);
+            pvPut(msg);
+        } state low
+        exit {
+            sprintf(msg, "low, print this on exit of low");
+            pvPut(msg);
+        }
+    }
 
-Entered high
-high, delay 3.0 timeout, decr v and re-enter high
-v = 2
-high, delay 3.0 timeout, decr v and re-enter high
-v = 1
-high, delay 3.0 timeout, decr v and re-enter high
-v = 0
-changing to low
-Entered low, initialize delay to 4 sec.
-...
-*/
+    state high {
+        int v; /* iteration counter */
+        entry {
+            v = 3;
+            sprintf(msg, "Entered high");
+            pvPut(msg);
+        }
+        when(v==0) {
+            sprintf(msg, "changing to low");
+            pvPut(msg);
+        } state low
+        when(delay(0.3)) {
+            sprintf(msg, "high, delay 0.3 timeout, decr v and re-enter high");
+            pvPut(msg);
+            v -= 1;
+            sprintf(msg, "v = %d",v); 
+            pvPut(msg);
+        } state high
+    }
+}
+
+ss check {
+    char *expected[20] = {
+        "Entered low, initialize delay to 0.4 sec.",
+        "low, delay timeout, reenter low",
+        "low, waiting 0.6 secs to iterate",
+        "low, delay timeout, reenter low",
+        "low, waiting 0.8 secs to iterate",
+        "low, delay timeout, reenter low",
+        "low, waiting 1 secs to iterate",
+        "low, delay timeout, reenter low",
+        "low, waiting 1.2 secs to iterate",
+        "low, delay = 1.2, now changing to high",
+        "low, print this on exit of low",
+        "Entered high",
+        "high, delay 0.3 timeout, decr v and re-enter high",
+        "v = 2",
+        "high, delay 0.3 timeout, decr v and re-enter high",
+        "v = 1",
+        "high, delay 0.3 timeout, decr v and re-enter high",
+        "v = 0",
+        "changing to low",
+        0
+    };
+    char **xp;
+    int repeat = 1;
+    state check_msg {
+        entry {
+            xp = expected;
+            testPass("start 1st round...");
+        }
+        when (repeat && !*xp) {
+            xp = expected;
+            testPass("one more time...");
+            repeat = 0;
+        } state check_msg
+        when (!*xp) {
+        } exit
+        when (pvGetQ(msg)) {
+            testOk(strcmp(*xp,msg)==0, "msg=%s", msg);
+            xp++;
+        } state check_msg
+    }
+}
+
+exit {
+    testDone();
+    seq_test_done();
+}
