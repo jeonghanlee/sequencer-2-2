@@ -309,6 +309,13 @@ Other internal changes include:
 Notes on Releases 2.0.x
 -----------------------
 
+.. _Release_Notes_2.0.14:
+
+Release 2.0.14
+^^^^^^^^^^^^^^
+
+-  fix windows build by using osiUnistd.h instead of unistd.h
+
 .. _Release_Notes_2.0.13:
 
 Release 2.0.13

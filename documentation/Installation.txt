@@ -49,6 +49,7 @@ or by following the links here:
    --------- ---------------------------
    `2.0.99`_ :ref:`Release_Notes_2.0.99`
    `2.0.98`_ n/a
+   `2.0.14`_ :ref:`Release_Notes_2.0.14`
    `2.0.13`_ :ref:`Release_Notes_2.0.13`
    `2.0.12`_ :ref:`Release_Notes_2.0.12`
    `2.0.11`_ :ref:`Release_Notes_2.0.11`
@@ -84,6 +85,7 @@ patches.
 .. _2.1.0: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2.1.0.tar.gz
 .. _2.0.99: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2.0.99.tar.gz
 .. _2.0.98: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2.0.98.tar.gz
+.. _2.0.14: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2.0.14.tar.gz
 .. _2.0.13: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2.0.13.tar.gz
 .. _2.0.12: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2.0.12.tar.gz
 .. _2.0.11: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2.0.11.tar.gz
