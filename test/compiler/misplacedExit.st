@@ -5,37 +5,32 @@ monitor v;
 
 ss ss1
 {
-	state low
-	{
-	    entry 
-	    { 
-		printf("Will do this on entry");
-	    }
-	    entry 
-	    { 
-		printf("Another thing to do on entry");
-	    }
-	    when(v>5.0)
-	    {
-		printf("now changing to high\n");
-	    } state high
-	    exit 
-	    { 
-		printf("Something to do on exit");
-	    }
-	    when(delay(.1)) 
-	    {
-	    } state low
+    state low
+    {
+        when(v>5.0)
+        {
+            printf("now changing to high\n");
+        } state high
 
-	}
-	state high
-	{
-	    when(v<=5.0)
-	    {
-		printf("changing to low\n");
-	    } state low
-	    when(delay(.1))
-	    {
-	    } state high
-	}
+        exit 
+        { 
+            printf("Something to do on exit");
+        }
+
+        when(delay(.1))
+        {
+        } state low
+
+    }
+    state high
+    {
+        when(v<=5.0)
+        {
+            printf("changing to low\n");
+        } state low
+
+        when(delay(.1))
+        {
+        } state high
+    }
 }

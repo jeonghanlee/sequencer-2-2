@@ -1,5 +1,5 @@
 use strict;
-use Test::Simple tests => 5;
+use Test::Simple tests => 8;
 
 my $host_arch = $ENV{EPICS_HOST_ARCH};
 my $snc = "../../../bin/$host_arch/snc";
@@ -10,11 +10,14 @@ my @success = qw(
 
 my @warning = qw(
   sncExOpt_UnrecOpt
+  syncq_no_size
 );
 
 my @error = qw(
   misplacedExit
-  scope
+  syncq_not_assigned
+  syncq_not_monitored
+  syncq_size_out_of_range
 );
 
 if ($host_arch =~ /64/) {

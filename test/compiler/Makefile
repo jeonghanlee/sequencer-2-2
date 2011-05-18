@@ -17,6 +17,10 @@ TESTSCRIPTS_HOST += test.t
 #TESTPROD += sncExOpt_DuplOpt
 #TESTPROD += sncExOpt_UnrecOpt
 #TESTPROD += tooLong
+#TESTPROD += syncq_no_size
+#TESTPROD += syncq_not_assigned
+#TESTPROD += syncq_not_monitored
+#TESTPROD += syncq_size_out_of_range
 
 PROD_LIBS += seq pv
 PROD_LIBS += $(EPICS_BASE_IOC_LIBS)
