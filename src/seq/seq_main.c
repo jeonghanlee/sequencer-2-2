@@ -281,7 +281,7 @@ static void init_chan(SPROG *sp, CHAN *ch, seqChan *seqChan)
 		DEBUG("  pv name=<anonymous>\n");
 	}
 
-	if (seqChan->queued)
+	if (seqChan->queueSize)
 	{
 		/* We want to store the whole pv message in the queue,
 		   so that we can extract status etc when we remove
@@ -299,9 +299,8 @@ static void init_chan(SPROG *sp, CHAN *ch, seqChan *seqChan)
 				== size);
 		}
 		ch->queue = sp->queues[seqChan->queueIndex];
-		DEBUG("  queued=%d, queueSize=%d, queueIndex=%d, queue=%p\n",
-			seqChan->queued, seqChan->queueSize,
-			seqChan->queueIndex, ch->queue);
+		DEBUG("  queueSize=%d, queueIndex=%d, queue=%p\n",
+			seqChan->queueSize, seqChan->queueIndex, ch->queue);
 		DEBUG("  queue->numElems=%d, queue->elemSize=%d\n",
 			seqQueueNumElems(ch->queue), seqQueueElemSize(ch->queue));
 	}

@@ -159,11 +159,11 @@ static void gen_channel(Chan *cp, uint num_event_flags, int opt_reent)
 	printf("%d, ", cp->monitor);
 	/* syncQ queue */
 	if (!cp->syncq)
-		printf("0, 0, 0");
+		printf("0, 0");
 	else if (!cp->syncq->size)
-		printf("1, DEFAULT_QUEUE_SIZE, %d", cp->syncq->index);
+		printf("DEFAULT_QUEUE_SIZE, %d", cp->syncq->index);
 	else
-		printf("1, %d, %d", cp->syncq->size, cp->syncq->index);
+		printf("%d, %d", cp->syncq->size, cp->syncq->index);
 	printf("}");
 }
 

@@ -113,8 +113,7 @@ struct seqChan
 	unsigned	eventNum;	/* event number for this channel */
 	EV_ID		efId;		/* event flag id if synced */
 	boolean		monitored;	/* whether channel should be monitored */
-	boolean		queued;		/* whether queued via syncQ */
-	unsigned	queueSize;	/* syncQ queue size */
+	unsigned	queueSize;	/* syncQ queue size (0=not queued) */
 	unsigned	queueIndex;	/* syncQ queue index */
 };
 
