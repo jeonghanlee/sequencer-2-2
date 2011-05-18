@@ -259,11 +259,11 @@ static void init_chan(SPROG *sp, CHAN *ch, seqChan *seqChan)
 		ch->type, ch->type->typeStr,
 		ch->type->putType, ch->type->getType, ch->type->size);
 
-	if (seqChan->dbAsName)
+	if (seqChan->chName)
 	{
 		char name_buffer[100];
 
-		seqMacEval(sp, seqChan->dbAsName, name_buffer, sizeof(name_buffer));
+		seqMacEval(sp, seqChan->chName, name_buffer, sizeof(name_buffer));
 		if (name_buffer[0])
 		{
 			DBCHAN	*dbch = new(DBCHAN);
@@ -272,7 +272,7 @@ static void init_chan(SPROG *sp, CHAN *ch, seqChan *seqChan)
 				dbch->ssMetaData = newArray(PVMETA, sp->numSS);
 			ch->dbch = dbch;
 			DEBUG("  assigned name=%s, expanded name=%s\n",
-				seqChan->dbAsName, ch->dbch->dbName);
+				seqChan->chName, ch->dbch->dbName);
 		}
 	}
 

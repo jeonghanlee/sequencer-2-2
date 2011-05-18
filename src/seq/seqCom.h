@@ -105,7 +105,7 @@ typedef struct seqProgram seqProgram;
 /* Static information about a channel */
 struct seqChan
 {
-	const char	*dbAsName;	/* assigned channel name */
+	const char	*chName;	/* assigned channel name */
 	ptrdiff_t	offset;		/* offset to value */
 	const char	*varName;	/* variable name, including subscripts*/
 	const char	*varType;	/* variable type, e.g. "int" */

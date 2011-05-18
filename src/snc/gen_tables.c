@@ -59,7 +59,7 @@ static void gen_channel_table(ChanList *chan_list, uint num_event_flags, int opt
 	{
 		printf("\n/* Channel table */\n");
 		printf("static seqChan G_channels[] = {\n");
-		printf("\t/* dbAsName, offset, pVarName, pVarType, count, eventNum, efId, monitored, queued, queueSize, queueIndex */\n");
+		printf("\t/* chName, offset, varName, varType, count, eventNum, efId, monitored, queueSize, queueIndex */\n");
 		foreach (cp, chan_list->first)
 		{
 			gen_channel(cp, num_event_flags, opt_reent);
