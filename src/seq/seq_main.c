@@ -13,9 +13,9 @@
 /* #define DEBUG printf */
 #define DEBUG nothing
 
-static void init_sprog(SPROG *sp, seqProgram *seqProg);
-static void init_sscb(SPROG *sp, SSCB *ss, seqSS *seqSS);
-static void init_chan(SPROG *sp, CHAN *ch, seqChan *seqChan);
+static boolean init_sprog(SPROG *sp, seqProgram *seqProg);
+static boolean init_sscb(SPROG *sp, SSCB *ss, seqSS *seqSS);
+static boolean init_chan(SPROG *sp, CHAN *ch, seqChan *seqChan);
 static PVTYPE *find_type(const char *userType);
 
 /*
@@ -43,22 +43,25 @@ epicsShareFunc void epicsShareAPI seq(
 	/* Exit if no parameters specified */
 	if (seqProg == 0)
 	{
-		errlogPrintf("Bad first argument seqProg (is NULL)\n");
+		errlogSevPrintf(errlogFatal, "seq: bad first argument seqProg (is NULL)\n");
 		return;
 	}
 
 	/* Check for correct state program format */
 	if (seqProg->magic != MAGIC)
-	{	/* Oops */
-		errlogPrintf("Illegal magic number in state program.\n");
-		errlogPrintf(" - Possible mismatch between SNC & SEQ "
-			"versions\n");
-		errlogPrintf(" - Re-compile your program?\n");
-		epicsThreadSleep(1.0);	/* let error messages get printed */
+	{
+		errlogSevPrintf(errlogFatal, "seq: illegal magic number in state program.\n"
+			"      - probable mismatch between SNC & SEQ versions\n"
+			"      - re-compile your program?\n");
 		return;
 	}
 
 	sp = new(SPROG);
+	if (!sp)
+	{
+		errlogSevPrintf(errlogFatal, "seq: calloc failed\n");
+		return;
+	}
 
 	/* Parse the macro definitions from the "program" statement */
 	seqMacParse(sp, seqProg->params);
@@ -67,7 +70,8 @@ epicsShareFunc void epicsShareAPI seq(
 	seqMacParse(sp, macroDef);
 
 	/* Initialize program struct */
-	init_sprog(sp, seqProg);
+	if (!init_sprog(sp, seqProg))
+		return;
 
 	/* Specify stack size */
 	if (stackSize == 0)
@@ -115,6 +119,11 @@ epicsShareFunc void epicsShareAPI seq(
 
 	tid = epicsThreadCreate(threadName, sp->threadPriority,
 		sp->stackSize, sequencer, sp);
+	if (!tid)
+	{
+		errlogSevPrintf(errlogFatal, "seq: epicsThreadCreate failed");
+		return;
+	}
 
 	printf("Spawning sequencer program \"%s\", thread %p: \"%s\"\n",
 		sp->progName, tid, threadName);
@@ -124,7 +133,7 @@ epicsShareFunc void epicsShareAPI seq(
  * Copy data from seqCom.h structures into this thread's dynamic structures
  * as defined in seq.h.
  */
-static void init_sprog(SPROG *sp, seqProgram *seqProg)
+static boolean init_sprog(SPROG *sp, seqProgram *seqProg)
 {
 	unsigned nss, nch;
 
@@ -142,51 +151,103 @@ static void init_sprog(SPROG *sp, seqProgram *seqProg)
 
 	/* Allocate user variable area if reentrant option (+r) is set */
 	if (sp->options & OPT_REENT)
+	{
 		sp->var = (USER_VAR *)calloc(1, sp->varSize);
+		if (!sp->var)
+		{
+			errlogSevPrintf(errlogFatal, "init_sprog: calloc failed\n");
+			return FALSE;
+		}
+	}
 	else
+	{
 		sp->var = NULL;
+	}
 
 	DEBUG("init_sprog: numSS=%d, numChans=%d, numEvFlags=%u, "
 		"progName=%s, varSize=%u\n", sp->numSS, sp->numChans,
 		sp->numEvFlags, sp->progName, sp->varSize);
 
 	/* Create semaphores */
-	sp->programLock = epicsMutexMustCreate();
-	sp->ready = epicsEventMustCreate(epicsEventEmpty);
-	sp->dead = epicsEventMustCreate(epicsEventEmpty);
+	sp->programLock = epicsMutexCreate();
+	if (!sp->programLock)
+	{
+		errlogSevPrintf(errlogFatal, "init_sprog: epicsMutexCreate failed\n");
+		return FALSE;
+	}
+	sp->ready = epicsEventCreate(epicsEventEmpty);
+	if (!sp->ready)
+	{
+		errlogSevPrintf(errlogFatal, "init_sprog: epicsEventCreate failed\n");
+		return FALSE;
+	}
+	sp->dead = epicsEventCreate(epicsEventEmpty);
+	if (!sp->dead)
+	{
+		errlogSevPrintf(errlogFatal, "init_sprog: epicsEventCreate failed\n");
+		return FALSE;
+	}
 
 	/* Allocate an array for event flag bits. Note this does
 	   *not* reserve space for all event numbers (i.e. including
 	   channels), only for event flags. */
 	sp->evFlags = newArray(bitMask, NWORDS(sp->numEvFlags));
+	if (!sp->evFlags)
+	{
+		errlogSevPrintf(errlogFatal, "init_sprog: calloc failed\n");
+		return FALSE;
+	}
 
 	/* Allocate and initialize syncQ queues */
 	if (sp->numQueues > 0)
 	{
 		sp->queues = newArray(QUEUE, sp->numQueues);
+		if (!sp->queues)
+		{
+			errlogSevPrintf(errlogFatal, "init_sprog: calloc failed\n");
+			return FALSE;
+		}
 	}
 	/* Initial pool for pv requests is 1kB on 32-bit systems */
 	freeListInitPvt(&sp->pvReqPool, 128, sizeof(PVREQ));
+	if (!sp->pvReqPool)
+	{
+		errlogSevPrintf(errlogFatal, "init_sprog: freeListInitPvt failed\n");
+		return FALSE;
+	}
 
 	/* Allocate array of state set structs and initialize it */
 	sp->ss = newArray(SSCB, sp->numSS);
+	if (!sp->ss)
+	{
+		errlogSevPrintf(errlogFatal, "init_sprog: calloc failed\n");
+		return FALSE;
+	}
 	for (nss = 0; nss < sp->numSS; nss++)
 	{
-		init_sscb(sp, sp->ss + nss, seqProg->ss + nss);
+		if (!init_sscb(sp, sp->ss + nss, seqProg->ss + nss))
+			return FALSE;
 	}
 
 	/* Allocate array of channel structs and initialize it */
 	sp->chan = newArray(CHAN, sp->numChans);
+	if (!sp->chan)
+	{
+		errlogSevPrintf(errlogFatal, "init_sprog: calloc failed\n");
+		return FALSE;
+	}
 	for (nch = 0; nch < sp->numChans; nch++)
 	{
-		init_chan(sp, sp->chan + nch, seqProg->chan + nch);
+		if (!init_chan(sp, sp->chan + nch, seqProg->chan + nch))
+			return FALSE;
 	}
+	return TRUE;
 }
 
 /*
  * Initialize a state set control block
  */
-static void init_sscb(SPROG *sp, SSCB *ss, seqSS *seqSS)
+static boolean init_sscb(SPROG *sp, SSCB *ss, seqSS *seqSS)
 {
 	unsigned nch;
 
@@ -196,7 +257,17 @@ static void init_sscb(SPROG *sp, SSCB *ss, seqSS *seqSS)
 	ss->maxNumDelays = seqSS->numDelays;
 
 	ss->delay = newArray(double, ss->maxNumDelays);
+	if (!ss->delay)
+	{
+		errlogSevPrintf(errlogFatal, "init_sscb: calloc failed\n");
+		return FALSE;
+	}
 	ss->delayExpired = newArray(boolean, ss->maxNumDelays);
+	if (!ss->delayExpired)
+	{
+		errlogSevPrintf(errlogFatal, "init_sscb: calloc failed\n");
+		return FALSE;
+	}
 	ss->currentState = 0; /* initial state */
 	ss->nextState = 0;
 	ss->prevState = 0;
@@ -205,16 +276,50 @@ static void init_sscb(SPROG *sp, SSCB *ss, seqSS *seqSS)
 	pvTimeGetCurrentDouble(&ss->timeEntered);
 	ss->sprog = sp;
 
-	ss->syncSemId = epicsEventMustCreate(epicsEventEmpty);
+	ss->syncSemId = epicsEventCreate(epicsEventEmpty);
+	if (!ss->syncSemId)
+	{
+		errlogSevPrintf(errlogFatal, "init_sscb: epicsEventCreate failed\n");
+		return FALSE;
+	}
 
 	ss->getSemId = newArray(epicsEventId, sp->numChans);
+	if (!ss->getSemId)
+	{
+		errlogSevPrintf(errlogFatal, "init_sscb: calloc failed\n");
+		return FALSE;
+	}
 	for (nch = 0; nch < sp->numChans; nch++)
-		ss->getSemId[nch] = epicsEventMustCreate(epicsEventFull);
+	{
+		ss->getSemId[nch] = epicsEventCreate(epicsEventFull);
+		if (!ss->getSemId[nch])
+		{
+			errlogSevPrintf(errlogFatal, "init_sscb: epicsEventCreate failed\n");
+			return FALSE;
+		}
+	}
 
 	ss->putSemId = newArray(epicsEventId, sp->numChans);
+	if (!ss->putSemId)
+	{
+		errlogSevPrintf(errlogFatal, "init_sscb: calloc failed\n");
+		return FALSE;
+	}
 	for (nch = 0; nch < sp->numChans; nch++)
-		ss->putSemId[nch] = epicsEventMustCreate(epicsEventFull);
-	ss->dead = epicsEventMustCreate(epicsEventEmpty);
+	{
+		ss->putSemId[nch] = epicsEventCreate(epicsEventFull);
+		if (!ss->putSemId[nch])
+		{
+			errlogSevPrintf(errlogFatal, "init_sscb: epicsEventCreate failed\n");
+			return FALSE;
+		}
+	}
+	ss->dead = epicsEventCreate(epicsEventEmpty);
+	if (!ss->dead)
+	{
+		errlogSevPrintf(errlogFatal, "init_sscb: epicsEventCreate failed\n");
+		return FALSE;
+	}
 
 	/* No need to copy the state structs, they can be shared
 	   because nothing gets mutated. */
@@ -224,19 +329,30 @@ static void init_sscb(SPROG *sp, SSCB *ss, seqSS *seqSS)
 	if (sp->options & OPT_SAFE)
 	{
 		ss->dirty = newArray(boolean, sp->numChans);
+		if (!ss->dirty)
+		{
+			errlogSevPrintf(errlogFatal, "init_sscb: calloc failed\n");
+			return FALSE;
+		}
 		ss->var = (USER_VAR *)calloc(1, sp->varSize);
+		if (!ss->var)
+		{
+			errlogSevPrintf(errlogFatal, "init_sscb: calloc failed\n");
+			return FALSE;
+		}
 	}
 	else
 	{
 		ss->dirty = NULL;
 		ss->var = sp->var;
 	}
+	return TRUE;
 }
 
 /*
  * Build the database channel structures.
  */
-static void init_chan(SPROG *sp, CHAN *ch, seqChan *seqChan)
+static boolean init_chan(SPROG *sp, CHAN *ch, seqChan *seqChan)
 {
 	DEBUG("init_chan: ch=%p\n", ch);
 	ch->sprog = sp;
@@ -250,6 +366,12 @@ static void init_chan(SPROG *sp, CHAN *ch, seqChan *seqChan)
 
 	/* Fill in request type info */
 	ch->type = find_type(seqChan->varType);
+	if (!ch->type->size)
+	{
+		errlogSevPrintf(errlogFatal, "init_chan: unknown type %s for assigned variable: %s\n",
+			seqChan->varType, seqChan->varName);
+		return FALSE;
+	}
 
 	DEBUG("  varname=%s, count=%u\n"
 		"  efId=%u, monitored=%u, eventNum=%u\n",
@@ -267,9 +389,26 @@ static void init_chan(SPROG *sp, CHAN *ch, seqChan *seqChan)
 		if (name_buffer[0])
 		{
 			DBCHAN	*dbch = new(DBCHAN);
+			if (!dbch)
+			{
+				errlogSevPrintf(errlogFatal, "init_chan: calloc failed\n");
+				return FALSE;
+			}
 			dbch->dbName = epicsStrDup(name_buffer);
+			if (!dbch->dbName)
+			{
+				errlogSevPrintf(errlogFatal, "init_chan: epicsStrDup failed\n");
+				return FALSE;
+			}
 			if (sp->options & OPT_SAFE)
+			{
 				dbch->ssMetaData = newArray(PVMETA, sp->numSS);
+				if (!dbch->ssMetaData)
+				{
+					errlogSevPrintf(errlogFatal, "init_chan: calloc failed\n");
+					return FALSE;
+				}
+			}
 			ch->dbch = dbch;
 			DEBUG("  assigned name=%s, expanded name=%s\n",
 				seqChan->chName, ch->dbch->dbName);
@@ -289,8 +428,15 @@ static void init_chan(SPROG *sp, CHAN *ch, seqChan *seqChan)
 		size_t size = pv_size_n(ch->type->getType, ch->count);
 
 		if (sp->queues[seqChan->queueIndex] == NULL)
+		{
 			sp->queues[seqChan->queueIndex] =
 				seqQueueCreate(seqChan->queueSize, size);
+			if (!sp->queues[seqChan->queueIndex])
+			{
+				errlogSevPrintf(errlogFatal, "init_chan: seqQueueCreate failed\n");
+				return FALSE;
+			}
+		}
 		else
 		{
 			assert(seqQueueNumElems(sp->queues[seqChan->queueIndex])
@@ -304,7 +450,13 @@ static void init_chan(SPROG *sp, CHAN *ch, seqChan *seqChan)
 		DEBUG("  queue->numElems=%d, queue->elemSize=%d\n",
 			seqQueueNumElems(ch->queue), seqQueueElemSize(ch->queue));
 	}
-	ch->varLock = epicsMutexMustCreate();
+	ch->varLock = epicsMutexCreate();
+	if (!ch->varLock)
+	{
+		errlogSevPrintf(errlogFatal, "init_chan: epicsMutexCreate failed\n");
+		return FALSE;
+	}
+	return TRUE;
 }
 
 /*
