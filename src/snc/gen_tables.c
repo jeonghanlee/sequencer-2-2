@@ -96,7 +96,7 @@ static void gen_channel(Chan *cp, uint num_event_flags, int opt_reent)
 {
 	Var		*vp = cp->var;
 	char		elem_str[20] = "";
-	uint		ef_num = 0;
+	uint		ef_num;
 	enum type_tag	type = type_base_type(vp->type);
 
 	if (type == V_LONG || type == V_ULONG)
@@ -124,8 +124,8 @@ static void gen_channel(Chan *cp, uint num_event_flags, int opt_reent)
 
 	if (cp->sync)
 		ef_num = cp->sync->chan.evflag->index;
-	else if (cp->syncq)
-		ef_num = cp->syncq->ef_var->chan.evflag->index;
+	else
+		ef_num = 0;
 
 	if (cp->name == NULL)
 		printf("\t{NULL, ");
@@ -351,6 +351,8 @@ static void gen_state_event_mask(Expr *sp, uint num_event_flags,
 #endif
 }
 
+#define bitnum(var_ix, ch_ix, num_efs) ((var_ix)+(ch_ix)+(num_efs)+1)
+
 /* Iteratee for scalar variables (including event flags). */
 static int iter_event_mask_scalar(Expr *ep, Expr *scope, void *parg)
 {
@@ -385,26 +387,12 @@ static int iter_event_mask_scalar(Expr *ep, Expr *scope, void *parg)
 	assert(vp->assign == M_SINGLE);		/* by L3 */
 	cp = vp->chan.single;
 
-	/* value queued via syncQ? */
-	if (vp->syncq != M_NONE)
-	{
-		int ef_num;
-		assert(vp->syncq == M_SINGLE);	/* by L1 */
-		ef_num = cp->syncq->ef_var->chan.evflag->index;
+	bitSet(event_words, bitnum(vp->index,cp->index,num_event_flags));
 #ifdef DEBUG
-		report("  iter_event_mask_scalar: queued var: %s, ef_num=%d\n",
-			vp->name, ef_num);
+	report("  iter_event_mask_scalar: var: %s, event bit=%d+%d+%d+1=%d\n",
+		vp->name, vp->index, cp->index, num_event_flags,
+		bitnum(vp->index,cp->index,num_event_flags));
 #endif
-		bitSet(event_words, ef_num);
-	}
-	else
-	{
-#ifdef DEBUG
-		report("  iter_event_mask_scalar: var: %s, event bit=%d\n",
-			vp->name, vp->index + cp->index + num_event_flags + 1);
-#endif
-		bitSet(event_words, vp->index + cp->index + num_event_flags + 1);
-	}
 	return FALSE;		/* no children anyway */
 }
 
@@ -450,10 +438,11 @@ static int iter_event_mask_array(Expr *ep, Expr *scope, void *parg)
 	{
 		uint ix = vp->chan.single->index;
 #ifdef DEBUG
-		report("  iter_event_mask_array: %s, event bit=%d\n",
-			vp->name, vp->index + ix + num_event_flags + 1);
+		report("  iter_event_mask_array: %s, event bit=%d+%d+%d+1=%d\n",
+			vp->name, vp->index, ix, num_event_flags,
+			bitnum(vp->index,ix,num_event_flags));
 #endif
-		bitSet(event_words, vp->index + ix + num_event_flags + 1);
+		bitSet(event_words, bitnum(vp->index,ix,num_event_flags));
 		return TRUE;
 	}
 	else
@@ -476,9 +465,9 @@ static int iter_event_mask_array(Expr *ep, Expr *scope, void *parg)
 #ifdef DEBUG
 			report("  iter_event_mask_array: %s, event bit=%d+%d+%d+1=%d\n",
 				vp->name, vp->index, ix, num_event_flags,
-                                vp->index + ix + num_event_flags + 1);
+                                bitnum(vp->index,ix,num_event_flags));
 #endif
-			bitSet(event_words, vp->index + ix + num_event_flags + 1);
+			bitSet(event_words, bitnum(vp->index,ix,num_event_flags));
 			return FALSE;	/* important: do NOT descend further
 				   	   otherwise will find the array var and
 				   	   set all the bits (see below) */
@@ -494,13 +483,13 @@ static int iter_event_mask_array(Expr *ep, Expr *scope, void *parg)
 			/* set all event bits for this variable */
 			uint ix;
 #ifdef DEBUG
-			report("  iter_event_mask_array: %s, event bits=%d..%d\n",
-				vp->name, vp->index + num_event_flags + 1,
-				vp->index + num_event_flags + length1);
+			report("  iter_event_mask_array: %s, event bits=%d..(%d)\n",
+				vp->name, bitnum(vp->index,0,num_event_flags),
+				bitnum(vp->index,length1,num_event_flags));
 #endif
 			for (ix = 0; ix < length1; ix++)
 			{
-				bitSet(event_words, vp->index + ix + num_event_flags + 1);
+				bitSet(event_words, bitnum(vp->index,ix,num_event_flags));
 			}
 			return FALSE;	/* no children anyway */
 		}

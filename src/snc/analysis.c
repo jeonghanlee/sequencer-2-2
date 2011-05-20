@@ -34,7 +34,7 @@ static void assign_subscript(ChanList *chan_list, Expr *defn, Var *vp, Expr *sub
 static void assign_single(ChanList *chan_list, Expr *defn, Var *vp, Expr *pv_name);
 static void assign_multi(ChanList *chan_list, Expr *defn, Var *vp, Expr *pv_name_list);
 static Chan *new_channel(ChanList *chan_list, Var *vp, uint count, uint index);
-static SyncQ *new_sync_queue(SyncQList *syncq_list, Var *evp, uint size);
+static SyncQ *new_sync_queue(SyncQList *syncq_list, uint size);
 static void connect_variables(SymTable st, Expr *scope);
 static void connect_state_change_stmts(SymTable st, Expr *scope);
 static uint connect_states(SymTable st, Expr *ss_list);
@@ -891,8 +891,8 @@ static void syncq_elem(Expr *defn, Var *vp, Expr *subscr, SyncQ *qp)
 
 static void analyse_syncq(SymTable st, SyncQList *syncq_list, Expr *scope, Expr *defn)
 {
-	char	*var_name, *ef_name;
-	Var	*vp, *evp;
+	char	*var_name;
+	Var	*vp, *evp = 0;
 	SyncQ	*qp;
 	uint	n_size = 0;
 
@@ -903,10 +903,6 @@ static void analyse_syncq(SymTable st, SyncQList *syncq_list, Expr *scope, Expr 
 	var_name = defn->value;
 	assert(var_name);
 
-	assert(defn->syncq_evflag);
-	ef_name = defn->syncq_evflag->value;
-	assert(ef_name);
-
 	vp = find_var(st, var_name, scope);
 	if (!vp)
 	{
@@ -915,9 +911,9 @@ static void analyse_syncq(SymTable st, SyncQList *syncq_list, Expr *scope, Expr 
 	}
 	if (vp->scope != scope)
 	{
-		error_at_expr(defn, "cannot syncq variable '%s' to event flag '%s': "
-			"sync must be in the same scope as (variable) declaration\n",
-			var_name, ef_name);
+		error_at_expr(defn, "cannot syncq variable '%s': "
+			"syncq must be in the same scope as declaration\n",
+			var_name);
 		return;
 	}
 	if (vp->syncq == M_SINGLE)
@@ -925,37 +921,52 @@ static void analyse_syncq(SymTable st, SyncQList *syncq_list, Expr *scope, Expr 
 		error_at_expr(defn, "variable '%s' already syncq'd\n", vp->name);
 		return;
 	}
-	evp = find_var(st, ef_name, scope);
-	if (!evp)
+	if (!defn->syncq_size)
 	{
-		error_at_expr(defn, "event flag '%s' not declared\n", ef_name);
-		return;
+		warning_at_expr(defn, "leaving out the queue size is deprecated"
+			", queue size defaults to 100 elements\n");
 	}
-	if (evp->type->tag != V_EVFLAG)
-	{
-		error_at_expr(defn, "variable '%s' is not a event flag\n", ef_name);
-		return;
-	}
-	if (evp->chan.evflag->queued)
-	{
-		error_at_expr(defn, "event flag '%s' is already used for another syncq\n",
-			ef_name);
-		return;
-	}
-	if (defn->syncq_size && !strtoui(defn->syncq_size->value, UINT_MAX, &n_size))
+	else if (!strtoui(defn->syncq_size->value, UINT_MAX, &n_size) || n_size < 1)
 	{
 		error_at_expr(defn->syncq_size, "queue size '%s' out of range\n",
 			defn->syncq_size->value);
 		return;
 	}
-	evp->chan.evflag->queued = TRUE;
-	qp = new_sync_queue(syncq_list, evp, n_size);
+	if (defn->syncq_evflag)
+	{
+		char *ef_name = defn->syncq_evflag->value;
+		assert(ef_name);
+
+		evp = find_var(st, ef_name, scope);
+		if (!evp)
+		{
+			error_at_expr(defn, "event flag '%s' not declared\n", ef_name);
+			return;
+		}
+		if (evp->type->tag != V_EVFLAG)
+		{
+			error_at_expr(defn, "variable '%s' is not a event flag\n", ef_name);
+			return;
+		}
+		if (evp->chan.evflag->queued)
+		{
+			error_at_expr(defn, "event flag '%s' is already used for another syncq\n",
+				ef_name);
+			return;
+		}
+		evp->chan.evflag->queued = TRUE;
+	}
+	qp = new_sync_queue(syncq_list, n_size);
 	if (defn->syncq_subscr)
 	{
+		if (evp)
+			sync_elem(defn, vp, defn->sync_subscr, evp);
 		syncq_elem(defn, vp, defn->syncq_subscr, qp);
 	}
 	else
 	{
+		if (evp)
+			sync_var(defn, vp, evp);
 		syncq_var(defn, vp, qp);
 	}
 }
@@ -983,15 +994,14 @@ static Chan *new_channel(ChanList *chan_list, Var *vp, uint count, uint index)
 	return cp;
 }
 
-/* Allocate a sync queue structure for event flag evp, add it to the sync queue
-   list, and initialize members index, var, and size. Also increase sync queue
+/* Allocate a sync queue structure, add it to the sync queue list,
+   and initialize members index, var, and size. Also increase sync queue
    count in the list. */
-static SyncQ *new_sync_queue(SyncQList *syncq_list, Var *evp, uint size)
+static SyncQ *new_sync_queue(SyncQList *syncq_list, uint size)
 {
 	SyncQ *qp = new(SyncQ);
 
 	qp->index = syncq_list->num_elems++;
-	qp->ef_var = evp;
 	qp->size = size;
 
 	/* add new syncqnel to syncq_list */

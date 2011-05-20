@@ -139,6 +139,10 @@ syncq(p) ::= SYNCQ variable(v) opt_subscript(s) to event_flag(f) syncq_size(n) S
 	p = expr(D_SYNCQ, v, s, expr(E_VAR, f), n);
 }
 
+syncq(p) ::= SYNCQ variable(v) opt_subscript(s) syncq_size(n) SEMICOLON. {
+	p = expr(D_SYNCQ, v, s, 0, n);
+}
+
 %type event_flag {Token}
 event_flag(p) ::= NAME(x).			{ p = x; }
 %type variable {Token}

@@ -183,7 +183,6 @@ struct sync_queue
 	SyncQ	*next;
 	uint	index;
 	uint	size;
-	Var	*ef_var;
 };
 
 struct chan_list
