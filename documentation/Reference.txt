@@ -460,7 +460,6 @@ sync
 
 .. productionlist::
    sync: "sync" `variable` `opt_subscript` `to` `event_flag` ";"
-   syncq: "syncQ" `variable` `opt_subscript` `to` `event_flag` `syncq_size` ";"
    event_flag: `identifier`
 
 An event flag can be associated with an :token:`assign`\ed program
@@ -482,23 +481,69 @@ syncQ
 ~~~~~
 
 .. productionlist::
-   syncq: "syncQ" `variable` `opt_subscript` `to` `event_flag` `syncq_size` ";"
+   syncq: "syncq" `variable` `opt_subscript` `to` `event_flag` `syncq_size` ";"
+   syncq: "syncq" `variable` `opt_subscript` `syncq_size` ";"
    syncq_size: `integer_literal`
    syncq_size: 
 
-An event flag can be associated with a monitor queue which, in
-turn, is associated with an SNL variable (which may be an array,
-and thus associated with several process variables). The
-queue size defaults to 100 but can be overridden on a per-queue
-basis. When a monitor is posted on any of the associated process
-variables, the variable's value is written to the end of the
-queue and the corresponding event flag is set. If the queue is
-already full, the last entry is overwritten. The :c:func:`pvGetQ`
-function reads items from the queue.
+This declares a variable to be queued.
+
+When a monitor is posted on any of the process variables associated
+with the given program variable, the new value is written to the end
+of the queue. If the queue is already full, the last (youngest) entry
+is overwritten. The :c:func:`pvGetQ` function reads items from the
+queue.
+
+The variable must be :token:`assign`\ed and :token:`monitor`\ed.
+Specifying a size (number of elements) for the queue is optional. If
+a size is given, it must be a positive decimal number, denoting the
+maximum number of elements that can be stored in the queue. A
+missing size means that it defaults to 100 elements. The variable can
+be an array, and may be associated with multiple process variables, in
+which case there is still only one queue, but any change in any of the
+incolved PVs will add an entry to the queue.
 
 .. versionadded:: 2.1
 
-You can use "syncq" (all lower case) as keyword instead of "syncQ".
+You can use "syncq" (all lower case) as keyword instead of "syncQ". The
+latter may be deprecated in a future version.
+
+.. versionadded:: 2.1
+
+Not giving a queue size (thus relying on the default of 100 elements)
+is now *deprecated* and the compiler will issue a warning. The reason
+for this is that queues are now statically allocated, which can result
+in a large memory overhead especially if the variable is an array
+associated with a single PV. (A default queue size of 1 would be much
+more useful, but for compatibility I kept it at 100 as in previous
+versions.)
+
+.. versionadded:: 2.1
+
+A queued variable no longer needs to be associated with an event flag.
+The first form of the :token:`syncq` clause is now merely an
+abbreviation for a :token:`sync` clause together with a :token:`syncq`
+of the second form, i.e. ::
+
+   syncq var to ef qsize;
+
+is equivalent to ::
+
+   sync var to ef;
+   syncq var qsize;
+
+Forcing the association with an event flag was never really necessary,
+since :c:func:`pvGetQ` already checks and returns whether the queue is
+empty or not; and any state set that mentions a variable in a
+:token:`when` clause automatically gets woken up whenever the variable
+changes due to a monitor event. On the other hand, relying on the event
+flag being set as an indication that the queue is non-empty has always
+been unreliable since another pvGetQ might have intervened and emptied
+the queue between the two calls.
+
+Note that pvGetQ clears an event flag associated with the variable if
+the queue becomes empty after removing the head element.
+
 
 .. _option definition:
 
@@ -1038,9 +1083,40 @@ pvGetQ
 
 If the queue associated with this variable is not empty, remove its first
 (oldest) value and update the variable with it. Returns whether there was
-an element in the queue (and the variable got updated). Note that in safe
-mode only the state set local copy of the variable gets updated, other
-state sets are not affected at all.
+an element in the queue (and the variable got updated). If an element gets
+removed, and the queue becomes empty as a result, then any event flag
+:token:`sync`\ed to the variable will be cleared.
+
+It is an error to call pvGetQ
+with a variable that is not associated with a queue (see the :token:`syncq`
+clause and the built-in function :c:func:`pvSync`).
+
+Note that since pvGetQ may have a *side-effect* you should be
+careful when combining a call to pvGetQ with other conditions in the same
+:token:`when` clause, e.g. ::
+
+        when (pvGetQ(msg) && other_condition) {
+           printf(msg);
+        } state ...
+
+would remove the head from the queue every time the when clause gets
+evaluated, regardless of whether the ``other_condition`` is met. This is most
+probably is not the desired effect, as you would loose an
+unknown number of messages. (Of course it *could* be exactly what you want,
+especially if ``other_condition`` were in fact ``!suppress_output``.)
+Whereas ::
+
+        when (other_condition && pvGetQ(msg)) {
+           printf(msg);
+        } state ...
+
+is "safe", in the sense that no messages will be lost. BTW, If you
+combine with a disjunction ("||") it is the other way around, i.e. pvGetQ
+should appear as the first operand. This is all merely a result of the
+evaluation order imposed by the C language; similar remarks apply
+whenever you want to use an expression inside a :token:`when` clause that
+potentially has a side-effect.
+
 
 pvFreeQ
 ^^^^^^^
