@@ -23,19 +23,29 @@ my ($target, $stem, $exe, $ioc) = @ARGV;
 
 my $db = "../$stem.db";
 
-open(my $OUT, '>', $target) or die "Can't create $target: $!\n";
+open(my $OUT, ">", $target) or die "Can't create $target: $!\n";
+
+my $pid = '$pid';
+my $err = '$!';
 
 if ($ioc eq "ioc") {
   print $OUT <<EOF;
-exec '(softIoc -S -d $db &); ./$exe -S; killall -9 softIoc' or die 'exec failed';
+my $pid = fork();
+die "fork failed: $err" unless defined($pid);
+if (!$pid) {
+  exec("softIoc -S -d $db");
+  die "exec failed: $err";
+}
+system("./$exe -S");
+kill 9, $pid or die "kill failed: $err";
 EOF
 } elsif (-r "$db") {
   print $OUT <<EOF;
-exec './$exe -S -d $db' or die 'exec failed';
+exec "./$exe -S -d $db" or die "exec failed: $err";
 EOF
 } else {
   print $OUT <<EOF;
-exec './$exe -S' or die 'exec failed';
+exec "./$exe -S" or die "exec failed: $err";
 EOF
 }
 
