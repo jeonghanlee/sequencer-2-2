@@ -876,9 +876,9 @@ epicsShareFunc boolean epicsShareAPI seq_pvGetQ(SS_ID ss, VAR_ID varId)
 	CHAN	*ch = sp->chan + varId;
 	void	*var = valPtr(ch,ss);
 	EV_ID	ev_flag = ch->efId;
-	boolean	isSet;
-	DBCHAN	*dbch = ch->dbch;
 	PVMETA	*meta = metaPtr(ch,ss);
+	boolean	was_empty;
+	struct getq_cp_arg arg = {ch, var, meta};
 
 	if (!ch->queue)
 	{
@@ -889,32 +889,20 @@ epicsShareFunc boolean epicsShareAPI seq_pvGetQ(SS_ID ss, VAR_ID varId)
 		return FALSE;
 	}
 
-	epicsMutexMustLock(sp->programLock);
+	was_empty = seqQueueGetF(ch->queue, getq_cp, &arg);
 
-	/* Determine event flag number and whether set */
-	isSet = bitTest(sp->evFlags, ev_flag);
-
-	DEBUG("pvGetQ: pv name=%s, isSet=%d\n",
-		dbch ? dbch->dbName : "<anomymous>", isSet);
-
-	/* If set, queue should be non-empty */
-	if (isSet)
+	if (ev_flag)
 	{
-		struct getq_cp_arg arg = {ch, var, meta};
-		boolean	was_empty;
-
-		was_empty = seqQueueGetF(ch->queue, getq_cp, &arg);
-		if (was_empty)
-			errlogSevPrintf(errlogMajor,
-				"pvGetQ: event flag set but queue is empty\n");
-		else if (seqQueueIsEmpty(ch->queue))
-			/* If queue is now empty, clear the event flag */
+		epicsMutexMustLock(sp->programLock);
+		/* If queue is now empty, clear the event flag */
+		if (seqQueueIsEmpty(ch->queue))
+		{
 			bitClear(sp->evFlags, ev_flag);
+		}
+		epicsMutexUnlock(sp->programLock);
 	}
-	epicsMutexUnlock(sp->programLock);
 
-	/* return whether event flag was set on entry */
-	return isSet;
+	return (!was_empty);
 }
 
 /*
