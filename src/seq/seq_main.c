@@ -426,25 +426,26 @@ static boolean init_chan(SPROG *sp, CHAN *ch, seqChan *seqChan)
 		   so that we can extract status etc when we remove
 		   the message. */
 		size_t size = pv_size_n(ch->type->getType, ch->count);
+		QUEUE *q = sp->queues + seqChan->queueIndex;
 
-		if (sp->queues[seqChan->queueIndex] == NULL)
+		if (*q == NULL)
 		{
-			sp->queues[seqChan->queueIndex] =
-				seqQueueCreate(seqChan->queueSize, size);
-			if (!sp->queues[seqChan->queueIndex])
+			*q = seqQueueCreate(seqChan->queueSize, size);
+			if (!*q)
 			{
 				errlogSevPrintf(errlogFatal, "init_chan: seqQueueCreate failed\n");
 				return FALSE;
 			}
 		}
-		else
+		else if (seqQueueNumElems(*q) != seqChan->queueSize ||
+			 seqQueueElemSize(*q) != size)
 		{
-			assert(seqQueueNumElems(sp->queues[seqChan->queueIndex])
-				== seqChan->queueSize);
-			assert(seqQueueElemSize(sp->queues[seqChan->queueIndex])
-				== size);
+			errlogSevPrintf(errlogFatal,
+				"init_chan(varname=%s): inconsistent shared queue definitions\n",
+				seqChan->varName);
+			return FALSE;
 		}
-		ch->queue = sp->queues[seqChan->queueIndex];
+		ch->queue = *q;
 		DEBUG("  queueSize=%d, queueIndex=%d, queue=%p\n",
 			seqChan->queueSize, seqChan->queueIndex, ch->queue);
 		DEBUG("  queue->numElems=%d, queue->elemSize=%d\n",
