@@ -87,6 +87,8 @@ MAIN(queueTest)
     QUEUE q;
     epicsThreadId reader, writer;
 
+    errlogSetSevToLog(errlogFatal+1);
+
     testPlan(212 + 2*threadTestMaxNumElems);
 
     testOk1(seqQueueCreate(1,0)==0);
