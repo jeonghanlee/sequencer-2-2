@@ -270,6 +270,9 @@ interact with process variables of type ``DBF_ENUM`` or ``DBF_MENU``.
 
 .. todo:: Allow "const" for non-channel variables.
 
+.. todo:: Allow *use* of (named) struct, union, and enum types in variable
+   declarations (note: not struct, union, and enum type declarations).
+
 Strings
 ~~~~~~~
 
@@ -951,8 +954,8 @@ state. It should be used only within a :token:`when` expression.
 
 The :option:`-t` state option (see `State Option`_) controls whether the
 delay is measured from when the current state was entered from a different
-state (:option:`-t`) or from any state, including itself (:option:`+t` ,
-the default)
+state (:option:`-t`) or from any state, including itself (:option:`+t`,
+the default).
 
 pvPut
 ^^^^^
@@ -1172,8 +1175,8 @@ As usual, ``assigned_var`` can also be an array element.
    ``assign var``.
 
 .. note:: If a variable gets de-assigned from a non-empty to an empty
-   name, the corresponding channel is destroyed, which may result in
-   memory being dynamically allocated gets freed. If your
+   name, the corresponding channel is destroyed, which means that
+   dynamically allocated memory gets freed. If your
    system cannot handle dynamic memory allocation without fragmentation,
    care should be taken that assignment and de-assignment do not
    alternate too often.
