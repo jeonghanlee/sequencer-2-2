@@ -98,7 +98,7 @@ pvStat seq_connect(SPROG *sp, boolean wait)
 				&dbch->pvid);		/* ptr to PV id */
 		if (status != pvStatOK)
 		{
-			errlogPrintf("seq_connect: pvVarCreate() %s failure: "
+			errlogSevPrintf(errlogFatal, "seq_connect: pvVarCreate() %s failure: "
 				"%s\n", dbch->dbName, pvVarGetMess(dbch->pvid));
 			continue;
 		}
@@ -122,7 +122,8 @@ pvStat seq_connect(SPROG *sp, boolean wait)
 				if (status == epicsEventWaitError || sp->die)
 					return pvStatERROR;
 				if (delay < 60) delay += 10;
-				errlogPrintf("%s[%d]: assignCount=%d, connectCount=%d, monitorCount=%d\n",
+				errlogSevPrintf(errlogInfo,
+					"%s[%d]: assignCount=%d, connectCount=%d, monitorCount=%d\n",
 					sp->progName, sp->instance,
 					sp->assignCount, sp->connectCount, sp->monitorCount);
 			}
@@ -324,7 +325,7 @@ epicsShareFunc void seq_disconnect(SPROG *sp)
 		/* Disconnect this PV */
 		status = pvVarDestroy(dbch->pvid);
 		if (status != pvStatOK)
-		    errlogPrintf("seq_disconnect: pvVarDestroy() %s failure: "
+		    errlogSevPrintf(errlogFatal, "seq_disconnect: pvVarDestroy() %s failure: "
 				"%s\n", dbch->dbName, pvVarGetMess(dbch->pvid));
 
 		/* Clear monitor & connect indicators */
@@ -357,7 +358,7 @@ pvStat seq_monitor(CHAN *ch, boolean on)
 	else
 		status = pvVarMonitorOff(dbch->pvid, dbch->monid);
 	if (status != pvStatOK)
-		errlogPrintf("seq_monitor: pvVarMonitor%s(%s) failure: %s\n",
+		errlogSevPrintf(errlogFatal, "seq_monitor: pvVarMonitor%s(%s) failure: %s\n",
 			on?"On":"Off", dbch->dbName, pvVarGetMess(dbch->pvid));
 	else if (!on)
 		dbch->monid = NULL;
@@ -402,7 +403,8 @@ void seq_conn_handler(void *var, int connected)
 		}
 		else
 		{
-			errlogPrintf("%s disconnect event but already disconnected %s\n",
+			errlogSevPrintf(errlogMinor,
+				"%s disconnect event but already disconnected %s\n",
 				ch->varName, dbch->dbName);
 		}
 	}
@@ -430,7 +432,8 @@ void seq_conn_handler(void *var, int connected)
 		}
 		else
 		{
-			errlogPrintf("%s connect event but already connected %s\n",
+			errlogSevPrintf(errlogMinor,
+				"%s connect event but already connected %s\n",
 				ch->varName, dbch->dbName);
 		}
 	}

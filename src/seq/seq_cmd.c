@@ -98,7 +98,7 @@ static void seqCallFunc(const iocshArgBuf *args)
         return;
     }
     if (stackSize < 0) {
-        errlogPrintf("3rd argument of seq must be a positive integer");
+        errlogSevPrintf(errlogFatal, "3rd argument of seq must be a positive integer");
         return;
     }
     if (*table == '&')

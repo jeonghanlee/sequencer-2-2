@@ -143,7 +143,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvGet(SS_ID ss, VAR_ID varId, enum compT
 		meta->status = pvStatERROR;
 		meta->severity = pvSevrMAJOR;
 		meta->message = "get failure";
-		errlogPrintf("pvGet: pvVarGetCallback() %s failure: %s\n",
+		errlogSevPrintf(errlogFatal, "pvGet: pvVarGetCallback() %s failure: %s\n",
 			dbch->dbName, pvVarGetMess(dbch->pvid));
 		return status;
 	}
@@ -216,7 +216,7 @@ epicsShareFunc boolean epicsShareAPI seq_pvGetComplete(SS_ID ss, VAR_ID varId)
 	case epicsEventWaitTimeout:
 		return FALSE;
 	case epicsEventWaitError:
-		errlogPrintf("pvGetComplete: "
+		errlogSevPrintf(errlogFatal, "pvGetComplete: "
 		  "epicsEventTryWait(getSemId[%d]) failure\n", varId);
 	default:
 		return FALSE;
@@ -407,7 +407,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvPut(SS_ID ss, VAR_ID varId, enum compT
 	}
 	if (status != pvStatOK)
 	{
-		errlogPrintf("pvPut: pvVarPut%s() %s failure: %s\n",
+		errlogSevPrintf(errlogFatal, "pvPut: pvVarPut%s() %s failure: %s\n",
 			(compType == DEFAULT) ? "NoBlock" : "Callback",
 			dbch->dbName, pvVarGetMess(dbch->pvid));
 		return status;
@@ -474,7 +474,7 @@ epicsShareFunc boolean epicsShareAPI seq_pvPutComplete(
 			done = TRUE;
 			break;
 		case epicsEventWaitError:
-			errlogPrintf("pvPutComplete: "
+			errlogSevPrintf(errlogFatal, "pvPutComplete: "
 			  "epicsEventTryWait(putSemId[%d]) failure\n", varId);
 		case epicsEventWaitTimeout:
 			break;
@@ -522,7 +522,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvAssign(SS_ID ss, VAR_ID varId, const c
 		status = pvVarDestroy(dbch->pvid);
 		if (status != pvStatOK)
 		{
-			errlogPrintf("pvAssign: pvVarDestroy() %s failure: "
+			errlogSevPrintf(errlogFatal, "pvAssign: pvVarDestroy() %s failure: "
 				"%s\n", dbch->dbName, pvVarGetMess(dbch->pvid));
 		}
 		free(dbch->dbName);
@@ -557,7 +557,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvAssign(SS_ID ss, VAR_ID varId, const c
 			&dbch->pvid);		/* ptr to pvid */
 		if (status != pvStatOK)
 		{
-			errlogPrintf("pvAssign: pvVarCreate() %s failure: "
+			errlogSevPrintf(errlogFatal, "pvAssign: pvVarCreate() %s failure: "
 				"%s\n", dbch->dbName, pvVarGetMess(dbch->pvid));
 		}
 	}

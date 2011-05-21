@@ -454,7 +454,7 @@ void seqCreatePvSys(SPROG *sp)
 	pvStat status = pvSysCreate(sp->pvSysName,
 		max(0, debug-1), &sp->pvSys);
 	if (status != pvStatOK)
-		errlogPrintf("pvSysCreate(\"%s\") failure\n", sp->pvSysName);
+		errlogSevPrintf(errlogFatal, "pvSysCreate(\"%s\") failure\n", sp->pvSysName);
 }
 
 /*
