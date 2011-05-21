@@ -92,13 +92,13 @@ include $(TOP)/configure/RULES
 #----------------------------------------
 #  ADD RULES AFTER THIS LINE
 
-%Ioc.t: %$(EXE)
-	@$(RM) $@
-	@$(PERL) ../makeTestfile.pl $@ $* $<
+$(REGRESSION_TESTS_WITH_DB:%=%Ioc.t): %Ioc.t: %$(EXE) ../makeTestfile.pl
+	$(RM) $@
+	$(PERL) ../makeTestfile.pl $@ $* $< ioc
 
-%.t: %$(EXE)
-	@$(RM) $@
-	@$(PERL) ../makeTestfile.pl $@ $* $<
+$(REGRESSION_TESTS:%=%.t): %.t: %$(EXE) ../makeTestfile.pl
+	$(RM) $@
+	$(PERL) ../makeTestfile.pl $@ $* $< noioc
 
 norace.i race.i: ../raceCommon.st
 

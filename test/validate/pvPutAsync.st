@@ -26,12 +26,6 @@ ss test1 {
             /* first ok, next three failure */
             testOk((i==0)==(status==pvStatOK), "pvPut/ASYNC %d: result=%d (%s)",
                 i, status, status ? pvMessage(x) : "");
-/*
- *             if (status)
- *                 printf("test1: pvPut/ASYNC %d failed: %s\n", i, pvMessage(x));
- *             else
- *                 printf("test1: pvPut/ASYNC %d issued\n", i);
- */
             ++i;
         } state put_async
     }
@@ -44,13 +38,6 @@ ss test1 {
                 /* should always succeed */
                 testOk(status==pvStatOK, "pvPut/SYNC %d, status=%d (%s)",
                     i, status, status ? pvMessage(x) : "");
-#if 0
-                if (status) {
-                    printf("test1: pvPut/SYNC failed: %s\n", pvMessage(x));
-                } else {
-                    printf("test1: pvPut/SYNC ok\n");
-                }
-#endif
             }
         } state wait
     }

@@ -25,10 +25,9 @@ my $db = "../$stem.db";
 
 open(my $OUT, '>', $target) or die "Can't create $target: $!\n";
 
-if (-r "$db" && $target =~ m/Ioc$/) {
+if ($ioc eq "ioc") {
   print $OUT <<EOF;
-system 'softIoc -S -d $db' or die 'system failed';
-exec './$exe -S -d $db' or die 'exec failed';
+exec '(softIoc -S -d $db &); ./$exe -S; killall -9 softIoc' or die 'exec failed';
 EOF
 } elsif (-r "$db") {
   print $OUT <<EOF;

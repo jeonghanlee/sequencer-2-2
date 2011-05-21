@@ -64,6 +64,7 @@
 #include "asDbLib.h"
 #include "iocInit.h"
 #include "iocsh.h"
+#include "errlog.h"
 
 extern int seqSoftIoc_registerRecordDeviceDriver(struct dbBase *pdbbase);
 
@@ -88,6 +89,8 @@ int main(int argc, char *argv[])
     int startIocsh = 1;	/* default = start shell */
     int loadedDb = 0;
     
+    errlogSetSevToLog(errlogFatal+1);
+
     arg0 = strrchr(*argv, '/');
     if (!arg0) {
 	arg0 = *argv;
