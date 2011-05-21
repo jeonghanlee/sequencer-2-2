@@ -1,11 +1,15 @@
+# Do not run this inside the source directory!
+# Instead, run test.t inside O.$(EPICS_HOST_ARCH)
+
 use strict;
-use Test::Simple tests => 8;
+use Test::More;
 
 my $host_arch = $ENV{EPICS_HOST_ARCH};
 my $snc = "../../../bin/$host_arch/snc";
 
 my @success = qw(
   sncExOpt_DuplOpt
+  varinitOptr
 );
 
 my @warning = qw(
@@ -18,6 +22,7 @@ my @error = qw(
   syncq_not_assigned
   syncq_not_monitored
   syncq_size_out_of_range
+  varinit
 );
 
 if ($host_arch =~ /64/) {
@@ -29,32 +34,36 @@ if ($host_arch =~ /64/) {
 sub make {
   my ($test) = @_;
   $_ = `make -s TESTPROD=$test 2>&1`;
-  print("result=$?\n");
+  # uncomment this comment to find out what went wrong:
+  #diag("$test result=$?, response=$_");
 }
 
-sub test_success {
-  make(@_);
+sub check_success {
   ok($? != -1 and $? == 0 and not /error/ and not /warning/);
 }
 
-sub test_warning {
-  make(@_);
+sub check_warning {
   ok($? != -1 and $? == 0 and not /error/ and /warning/);
 }
 
-sub test_error {
-  make(@_);
+sub check_error {
   ok($? != -1 and $? != 0 and /error/);
 }
 
-foreach my $t (@success) {
-  test_success($t);
-}
+my @alltests = (
+  [\&check_success, \@success],
+  [\&check_warning, \@warning],
+  [\&check_error, \@error],
+);
 
-foreach my $t (@warning) {
-  test_warning($t);
-}
+plan tests => @success + @warning + @error;
 
-foreach my $t (@error) {
-  test_error($t);
+system("touch ../*.st");
+
+foreach my $group (@alltests) {
+  my ($check, $tests) = @$group;
+  foreach my $test (@$tests) {
+    make($test);
+    &$check($test);
+  }
 }

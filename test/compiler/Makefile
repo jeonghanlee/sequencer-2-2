@@ -12,23 +12,9 @@ SNC = $(INSTALL_HOST_BIN)/snc
 
 TESTSCRIPTS_HOST += test.t
 
-#TESTPROD += misplacedExit
-#TESTPROD += scope
-#TESTPROD += sncExOpt_DuplOpt
-#TESTPROD += sncExOpt_UnrecOpt
-#TESTPROD += tooLong
-#TESTPROD += syncq_no_size
-#TESTPROD += syncq_not_assigned
-#TESTPROD += syncq_not_monitored
-#TESTPROD += syncq_size_out_of_range
-
 PROD_LIBS += seq pv
 PROD_LIBS += $(EPICS_BASE_IOC_LIBS)
 
 include $(TOP)/configure/RULES
 #----------------------------------------
 #  ADD RULES AFTER THIS LINE
-
-ifndef T_A
-runtests: clean
-endif
