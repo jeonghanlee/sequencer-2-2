@@ -12,9 +12,11 @@ sync x to efx;
 
 foreign MAX_STRING_SIZE;
 
+#define MAX_TESTS 30
+
 entry {
-    testPlan(0);
-    testDiag("This test will run for 30 seconds...");
+    testPlan(MAX_TESTS);
+    testDiag("This test will run for %d seconds...", MAX_TESTS);
 }
 
 ss race1 {
@@ -128,14 +130,18 @@ ss race3 {
 }
 
 ss stop {
-    state idle {
-        when (delay(30)) {
+    int seconds = MAX_TESTS;
+    state count {
+        when (seconds == 0) {
         } exit
+        when (delay(1.0)) {
+            seconds -= 1;
+            testPass("%d seconds left", seconds);
+        } state count
     }
 }
 
 exit {
-    testOk1(TRUE);
     testDone();
     seq_test_done();
 }
