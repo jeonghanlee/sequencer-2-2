@@ -452,8 +452,15 @@ monitor
 
 This sets up a monitor for an assigned variable or array element.
 
-Monitored variables are automatically updated with the
-current value of the underlying process variable.
+Monitored variables are automatically updated whenever the underlying
+process variable changes its value. Note, however, that this depends on
+the configuration of the underlying PV: some PVs post an update event
+only if the value changes by at least a certain amount. Also, events may
+be posted, even if no actual change happens, i.e. the value remains the
+same. The details can be found in the `EPICS Record Reference Manual`_.
+
+.. _EPICS Record Reference Manual: http://www.aps.anl.gov/epics/wiki/index.php/RRM_3-14
+
 
 sync
 ~~~~
@@ -462,20 +469,23 @@ sync
    sync: "sync" `variable` `opt_subscript` `to` `event_flag` ";"
    event_flag: `identifier`
 
-An event flag can be associated with an :token:`assign`\ed program
-variable. The variable may be an array, even one associated with
-several process variables. Also, multiple :token:`sync` clauses
-can mention the same event flag but different program variables.
+This declares a variable to be synchronized with an event flag.
 
-When a monitor is posted on any of the associated
-process variables, or when an asynchronous get operation completes,
-the corresponding event flag is set.
+When a monitor is posted on any of the process variables associated
+with the event flag (and these are :token:`monitor`\ed), or when an
+asynchronous get operation completes, the corresponding event flag is
+set.
+
+The variable must be :token:`assign`\ed and :token:`monitor`\ed.
+A variable can be mentioned in at most one sync clause, but an event
+flag may appear in more than one such clause. The variable may be an
+array, and as such may be associated with multiple process variables.
 
 .. versionadded:: 2.1
 
-It is now allowed to :token:`sync` an event flag to
-more than one variable and that such an association can be made and
-removed at runtime using :c:func:`pvSync`.
+*  It is now allowed to sync an event flag to more than one variable.
+*  There is now a run-time equivalent to the sync clause, see the
+   built-in function :c:func:`pvSync`.
 
 syncQ
 ~~~~~
