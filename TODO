@@ -1,3 +1,38 @@
+* Need to re-consider global entry/exit blocks and initialization of
+	variables with global lifetime. There are some apparent inconsistencies,
+	for instance
+
+		option +r;
+		int x = 1;
+		ss ...{
+			int y = x;
+		}
+
+	compiles w/o error but y gets initialized to 0, not 1. OTOH, w/o the
+	+r option, we get a compiler error (non-constant initializer). I have
+	now documented this, but it is still surprising: if the ss...{} block
+	were a regular C code block, the example above would compile and work
+	just fine.
+
+	The situation is further complicated by the +c option (on by default)
+	which demands connections be established before state sets start running.
+	Maybe we need multi-state initialization:
+
+		init global vars
+		if option +c:
+			wait for global channels (connect + 1st monitor)
+		execute global entry block
+		foreach state set:
+			init state set local vars
+			if option +c:
+				wait for locally defined channels
+		start state sets
+
+	This would need state set local connection and 1st-monitor counters, and
+	also additional hooks for variable initialization and additional flags
+	in the snc generated channel definition table (to indicate in which state
+	set the variable was declared).
+
 * Check whether it makes sense to let users specify the communication
   (request) type. This is currently baked-in to be inferred from the
   variable's type as specified in the program text. 

@@ -353,6 +353,19 @@ For local variables, life time depends on where they are declared:
 .. note:: In :ref:`safe mode` changes made to a global variable are *not*
    visible to other state sets unless explicitly communicated.
 
+.. note:: Initializers for variables of global life time must respect
+   the usual C rules for top-level variable initializers. Particularly,
+   they must be *constant expressions* in the C sense, i.e. calculable
+   at compile time, which also means they must not refer to other variables.
+   If the :option:`-r` option is in effect, this restriction is slightly
+   relaxed: initializer expressions need not be constant, but they still
+   cannot refer to the values of other variables, or rather: all these
+   values will be zero, even if the variable refered to was declared
+   (and initialized) in an enclosing scope.
+
+   Some of these restrictions might be lifted in a future version.
+
+
 Process Variables
 ^^^^^^^^^^^^^^^^^
 
