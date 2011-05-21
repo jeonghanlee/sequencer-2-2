@@ -16,8 +16,7 @@ option +s;
 char msg[60];
 assign msg;
 monitor msg;
-evflag ef_msg;
-syncq msg to ef_msg;
+syncq msg 40;
 
 entry {
     testPlan(40);

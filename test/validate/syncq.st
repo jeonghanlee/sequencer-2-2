@@ -12,7 +12,8 @@ string s1[1];
 assign s1 to "syncq";
 monitor s1;
 evflag ef_s1;
-syncq s1 to ef_s1 5;
+sync s1 to ef_s1;
+syncq s1;
 
 int n = 0;
 assign n;
