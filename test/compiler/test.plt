@@ -33,7 +33,7 @@ if ($host_arch =~ /64/) {
 
 sub make {
   my ($test) = @_;
-  $_ = `make -s TESTPROD=$test 2>&1`;
+  $_ = `make -B -s TESTPROD=$test 2>&1`;
   # uncomment this comment to find out what went wrong:
   #diag("$test result=$?, response=$_");
 }
@@ -57,8 +57,6 @@ my @alltests = (
 );
 
 plan tests => @success + @warning + @error;
-
-system("touch ../*.st");
 
 foreach my $group (@alltests) {
   my ($check, $tests) = @$group;
