@@ -6,23 +6,6 @@ include $(TOP)/configure/CONFIG
 # default main (+m option)
 INC += seqMain.c
 
-#  Internal debug control
-#USR_CPPFLAGS = -DDEBUG
-
-# USR_CFLAGS += -Waddress
-USR_CFLAGS += -Wc++-compat
-# USR_CFLAGS += -Wconversion
-USR_CFLAGS += -Wmissing-declarations
-USR_CFLAGS += -Wmissing-field-initializers
-USR_CFLAGS += -Wmissing-prototypes
-USR_CFLAGS += -Wnested-externs
-USR_CFLAGS += -Wold-style-definition
-USR_CFLAGS += -Wpointer-arith
-USR_CFLAGS += -Wsign-compare
-# USR_CFLAGS += -Wstrict-prototypes
-
-USR_CFLAGS += -Werror
-
 #  snc product
 PROD_HOST += snc
 
