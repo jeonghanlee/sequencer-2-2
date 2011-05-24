@@ -28,11 +28,3 @@ endif
 EPICS_HAS_UNIT_TEST := $(shell $(PERL) -e 'print($(EPICS_MODIFICATION) >= 10)')
 
 SEQ_VERSION = 2.1.0
-
-# USR_CFLAGS_Linux += -Wpointer-arith -Wbad-function-cast
-#USR_CFLAGS_Linux += -Wc++-compat
-# USR_CFLAGS_Linux += -Wsign-compare -Waddress
-# USR_CFLAGS_Linux += -Wstrict-prototypes -Wold-style-definition -Wmissing-prototypes
-# USR_CFLAGS_Linux += -Wmissing-declarations -Wmissing-field-initializers
-# USR_CFLAGS_Linux += -Wnested-externs
-#USR_CFLAGS_Linux += -Wconversion
