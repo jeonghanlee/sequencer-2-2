@@ -20,6 +20,8 @@ endif
 DEFAULT_REPO = /opt/repositories/controls/darcs/epics/support/seq/trunk
 SEQ_PATH = www/control/SoftDist/sequencer
 USER_AT_HOST = wwwcsr@www-csr.bessy.de
+DATE := $(shell date -I)
+SNAPSHOT = seq-snapshot-$(DATE)
 
 include $(TOP)/configure/RULES_TOP
 
@@ -27,8 +29,9 @@ upload:
 	rsync -r -t $(TOP)/html/ $(USER_AT_HOST):$(SEQ_PATH)/
 	darcs push $(DEFAULT_REPO)
 	darcs push --repo=$(DEFAULT_REPO) -a $(USER_AT_HOST):$(SEQ_PATH)/repo
-	darcs dist -d seq-snapshot-`date -I`
-	rsync seq-snapshot-* $(USER_AT_HOST):$(SEQ_PATH)/releases/
-	ssh $(USER_AT_HOST) 'cd $(SEQ_PATH)/releases && ln -f -s seq-snapshot-`date -I`.tar.gz seq-snapshot-latest.tar.gz'
+	darcs dist -d $(SNAPSHOT)
+	rsync $(SNAPSHOT).tar.gz $(USER_AT_HOST):$(SEQ_PATH)/releases/
+	ssh $(USER_AT_HOST) 'cd $(SEQ_PATH)/releases && ln -f -s $(SNAPSHOT).tar.gz seq-snapshot-latest.tar.gz'
+	$(RM) $(SNAPSHOT).tar.gz
 
-.PHONY: install-docs
+.PHONY: upload
