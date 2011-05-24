@@ -4,7 +4,7 @@ include $(TOP)/configure/CONFIG
 #----------------------------------------
 #  ADD MACRO DEFINITIONS AFTER THIS LINE
 
-SNC = $(INSTALL_HOST_BIN)/snc
+SNC = $(INSTALL_HOST_BIN)/snc$(HOSTEXE)
 
 # purify support (uncomment to enable)
 #CXX := purify $(CXX)

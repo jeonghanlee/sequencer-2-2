@@ -5,7 +5,7 @@ include $(TOP)/configure/CONFIG
 #  ADD MACRO DEFINITIONS AFTER THIS LINE
 
 #  Location of SNL compiler
-SNC = $(INSTALL_HOST_BIN)/snc
+SNC = $(INSTALL_HOST_BIN)/snc$(HOSTEXE)
 
 #  Generate snc main program
 SNCFLAGS = +m

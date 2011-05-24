@@ -14,7 +14,7 @@ USR_CPPFLAGS += -DCA
 USR_CPPFLAGS += -I$(KROOT)/rel/dcs/default/include
 
 #  Location of SNL compiler
-SNC = $(INSTALL_HOST_BIN)/snc
+SNC = $(INSTALL_HOST_BIN)/snc$(HOSTEXE)
 
 #  Generate snc main programs
 SNCFLAGS = +m

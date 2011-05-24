@@ -8,7 +8,7 @@ include $(TOP)/configure/CONFIG
 SNCFLAGS_DEFAULT += +m -i
 SNCFLAGS_vxWorks += -nil-
 
-SNC = $(INSTALL_HOST_BIN)/snc
+SNC = $(INSTALL_HOST_BIN)/snc$(HOSTEXE)
 
 TESTSCRIPTS_HOST += test.t
 
