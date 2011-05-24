@@ -279,7 +279,7 @@ when(p) ::= WHEN(t) LPAREN opt_expr(c) RPAREN block(b) EXIT. {
 
 %type block {ExprPair}
 block(p) ::= LBRACE block_defns(ds) statements(xs) RBRACE. {
-	p = (ExprPair){ds,xs};
+	p.left = ds; p.right = xs;
 }
 
 block_defns(p) ::= block_defns(ds) block_defn(d). {
