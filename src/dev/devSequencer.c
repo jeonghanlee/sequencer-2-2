@@ -169,10 +169,14 @@ typedef struct {
 static seqShowScanPvt* seqShowScanPvtInit(struct link* link)
 {
     seqShowScanPvt   *pvtPt;
-    char             inpStr[strlen(link->value.instio.string)+1];
     char             *inpArg[3];
     int              argN  = 0;
     int              i     = 0;
+#ifdef _WIN32
+    char             *inpStr = (char *)alloca(strlen(link->value.instio.string)+1);
+#else
+    char             inpStr[strlen(link->value.instio.string)+1];
+#endif
 
     pvtPt = new(seqShowScanPvt);
     if(!pvtPt) return NULL;

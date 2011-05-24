@@ -9,6 +9,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <osiUnistd.h>
+#ifdef _WIN32
+#include <io.h>
+#endif
 #include <stdarg.h>
 
 #include "snl.h"
@@ -350,7 +353,7 @@ line_marker_str:
 	(["] (ESC|ANY\[\n\\"])* ["])
 			{
 				uchar saved = cursor[-1];
-                                char *str = (char *)(s->tok + line_marker_part + 1);
+				char *str = (char *)(s->tok + line_marker_part + 1);
 				cursor[-1] = 0;
 				if (!s->file) {
 					s->file = strdup(str);
@@ -441,7 +444,7 @@ int main() {
 	int		tt;	/* token type */
 	Token		tv;	/* token value */
 
-	bzero(&s, sizeof(s));
+	memset(&s, 0, sizeof(s));
 
 	s.cur = fill(&s, s.cur);
 	s.line = 1;
@@ -458,13 +461,14 @@ Expr *parse_program(const char *src_file)
 	Scanner	s;
 	int	tt;		/* token type */
 	Token	tv;		/* token value */
-        Expr	*result;	/* result of parsing */
+	Expr	*result;	/* result of parsing */
+	void	*parser;	/* the (lemon generated) parser */
 
-	bzero(&s, sizeof(s));
+	memset(&s, 0, sizeof(s));
 	s.file = strdup(src_file);
 	s.line = 1;
 
-	void *parser = snlParserAlloc(malloc);
+	parser = snlParserAlloc(malloc);
 	do
 	{
 		tt = scan(&s, &tv);

@@ -222,12 +222,13 @@ static void proc_db_events(
 	if (value != NULL)
 	{
 		void *val = pv_value_ptr(value,type);
-                PVMETA meta = {
-			*pv_stamp_ptr(value,type),
-			*pv_status_ptr(value,type),
-			*pv_severity_ptr(value,type),
-			0
-		};
+		PVMETA meta;
+
+		/* must not use an initializer here, the MS C compiler chokes on it */
+		meta.timeStamp = *pv_stamp_ptr(value,type);
+		meta.status = *pv_status_ptr(value,type);
+		meta.severity = *pv_severity_ptr(value,type);
+		meta.message = NULL;
 
 		/* Set error message only when severity indicates error */
 		if (meta.severity != pvSevrNONE)
@@ -253,13 +254,13 @@ static void proc_db_events(
 	/* Signal completion */
 	switch (evtype)
 	{
-	    case GET_COMPLETE:
+	case GET_COMPLETE:
 		epicsEventSignal(ss->getSemId[chNum(ch)]);
 		break;
-	    case PUT_COMPLETE:
+	case PUT_COMPLETE:
 		epicsEventSignal(ss->putSemId[chNum(ch)]);
 		break;
-	    default:
+	default:
 		break;
 	}
 }
