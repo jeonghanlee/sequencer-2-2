@@ -172,10 +172,10 @@ static seqShowScanPvt* seqShowScanPvtInit(struct link* link)
     char             *inpArg[3];
     int              argN  = 0;
     int              i     = 0;
-#ifdef _WIN32
-    char             *inpStr = (char *)alloca(strlen(link->value.instio.string)+1);
-#else
+#if (__STDC_VERSION__ >= 199901L) || defined(__GNUC__)
     char             inpStr[strlen(link->value.instio.string)+1];
+#else
+    char             *inpStr = (char *)alloca(strlen(link->value.instio.string)+1);
 #endif
 
     pvtPt = new(seqShowScanPvt);
