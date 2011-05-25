@@ -52,19 +52,19 @@ endif
 #--------------------------------------------------
 # Rules
 
-%.i: ../%.st
+%.i: %.st
 	$(ECHO) "preprocessing $<"
 	@$(RM) $@
 	$(PREPROCESS.cpp)
 
 %.c: %.i $(SNC)
 	$(ECHO) "converting $<"
-	$(SNC) $(TARGET_SNCFLAGS) $(SNCFLAGS) $(USR_SNCFLAGS) $< -o $(@F).tmp
+	$(SNC) $(TARGET_SNCFLAGS) $(SNCFLAGS) $(USR_SNCFLAGS) $(call PATH_FILTER,$<) -o $(@F).tmp
 	$(MV) $(@F).tmp $@
 
-%.c: ../%.stt $(SNC)
+%.c: %.stt $(SNC)
 	$(ECHO) "converting $< "
-	$(SNC) $(TARGET_SNCFLAGS) $(SNCFLAGS) $(USR_SNCFLAGS) $< -o $(@F).tmp
+	$(SNC) $(TARGET_SNCFLAGS) $(SNCFLAGS) $(USR_SNCFLAGS) $(call PATH_FILTER,$<) -o $(@F).tmp
 	$(MV) $(@F).tmp $@
 
 clean::
