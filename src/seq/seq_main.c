@@ -9,9 +9,7 @@
 		(see file Copyright.HZB included in this distribution)
 ***************************************************************************/
 #include "seq.h"
-
-/* #define DEBUG printf */
-#define DEBUG nothing
+#include "seq_debug.h"
 
 static boolean init_sprog(SPROG *sp, seqProgram *seqProg);
 static boolean init_sscb(SPROG *sp, SSCB *ss, seqSS *seqSS);

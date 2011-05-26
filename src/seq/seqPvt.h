@@ -250,6 +250,4 @@ void seq_free(SPROG *sp);
 typedef int pr_fun(const char *format,...);
 void print_channel_value(pr_fun *, CHAN *ch, void *val);
 
-static int nothing(const char *format,...) {return 0;}
-
 #endif	/*INCLseqPvth*/

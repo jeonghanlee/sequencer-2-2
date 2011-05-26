@@ -29,9 +29,7 @@
  *	  Argonne National Laboratory
  */
 #include "seq.h"
-
-/* #define DEBUG errlogPrintf */
-#define DEBUG nothing
+#include "seq_debug.h"
 
 /*
  * Event type (extra argument passed to proc_db_events().

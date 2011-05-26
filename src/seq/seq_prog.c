@@ -12,9 +12,7 @@
 	and removed from the list when deleted.
 ***************************************************************************/
 #include "seq.h"
-
-/* #define DEBUG errlogPrintf */
-#define DEBUG nothing
+#include "seq_debug.h"
 
 /*
  * seqFindProg() - find a program in the state program list from thread id.

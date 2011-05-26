@@ -13,9 +13,7 @@
         TODO: Get rid of this and use the macLib from EPICS base.
 ***************************************************************************/
 #include "seq.h"
-
-/* #define DEBUG printf */
-#define DEBUG nothing
+#include "seq_debug.h"
 
 /* Macro table */
 struct macro

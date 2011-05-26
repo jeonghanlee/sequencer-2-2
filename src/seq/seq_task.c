@@ -12,9 +12,7 @@
 	Thread creation and control for sequencer state sets.
 ***************************************************************************/
 #include "seq.h"
-
-/* #define DEBUG errlogPrintf */
-#define DEBUG nothing
+#include "seq_debug.h"
 
 static void ss_entry(void *arg);
 static void seq_clearDelay(SSCB *,STATE *);
