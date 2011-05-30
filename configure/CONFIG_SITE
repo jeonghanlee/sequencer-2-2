@@ -2,7 +2,7 @@
 
 # Enable build of different process variable access methods
 PVCA   = TRUE
-PVFILE = TRUE
+PVFILE = FALSE
 PVKTL  = FALSE
 
 # To restrict the architectures to cross-compile for, set this:
