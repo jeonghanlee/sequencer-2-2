@@ -20,7 +20,7 @@ endif
 DEFAULT_REPO = /opt/repositories/controls/darcs/epics/support/seq/trunk
 SEQ_PATH = www/control/SoftDist/sequencer
 USER_AT_HOST = wwwcsr@www-csr.bessy.de
-DATE := $(shell date -I)
+DATE = $(shell date -I)
 SNAPSHOT = seq-snapshot-$(DATE)
 
 include $(TOP)/configure/RULES_TOP
