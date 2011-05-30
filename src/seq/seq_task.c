@@ -164,7 +164,7 @@ static void ss_read_buffer_static(SSCB *ss, CHAN *ch, boolean dirty_only)
  */
 void ss_read_buffer(SSCB *ss, CHAN *ch, boolean dirty_only)
 {
-	return ss_read_buffer_static(ss, ch, dirty_only);
+	ss_read_buffer_static(ss, ch, dirty_only);
 }
 
 /*
