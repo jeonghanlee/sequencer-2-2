@@ -105,11 +105,19 @@ typedef union {
     (assert(pv_is_valid_type(type)),\
     (count)<=0?pv_sizes[type]:pv_sizes[type]+((count)-1)*pv_value_sizes[type])
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 epicsShareExtern const size_t pv_sizes[];
 epicsShareExtern const size_t pv_value_sizes[];
 epicsShareExtern const size_t pv_value_offsets[];
 epicsShareExtern const size_t pv_status_offsets[];
 epicsShareExtern const size_t pv_severity_offsets[];
 epicsShareExtern const size_t pv_stamp_offsets[];
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* INCLpvTypeh */
