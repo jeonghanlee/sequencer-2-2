@@ -36,6 +36,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#ifdef _WIN32
+#include <malloc.h>
+#endif
+
 #include "alarm.h"
 #include "dbDefs.h"
 #include "recSup.h"

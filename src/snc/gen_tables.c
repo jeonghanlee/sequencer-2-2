@@ -14,6 +14,10 @@
 #include	<string.h>
 #include	<assert.h>
 
+#ifdef _WIN32
+#include <malloc.h>
+#endif
+
 #include	"seqCom.h"
 #include	"analysis.h"
 #include	"main.h"
