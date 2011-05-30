@@ -134,7 +134,7 @@ pvStat seq_connect(SPROG *sp, boolean wait)
  * seq_get_handler() - Sequencer callback handler.
  * Called when a "get" completes.
  */
-epicsShareFunc void seq_get_handler(
+void seq_get_handler(
 	void *var, pvType type, unsigned count, pvValue *value, void *arg, pvStat status)
 {
 	PVREQ	*rQ = (PVREQ *)arg;
@@ -151,7 +151,7 @@ epicsShareFunc void seq_get_handler(
  * seq_put_handler() - Sequencer callback handler.
  * Called when a "put" completes.
  */
-epicsShareFunc void seq_put_handler(
+void seq_put_handler(
 	void *var, pvType type, unsigned count, pvValue *value, void *arg, pvStat status)
 {
 	PVREQ	*rQ = (PVREQ *)arg;
@@ -167,7 +167,7 @@ epicsShareFunc void seq_put_handler(
 /*
  * seq_mon_handler() - PV events (monitors) come here.
  */
-epicsShareFunc void seq_mon_handler(
+void seq_mon_handler(
 	void *var, pvType type, unsigned count, pvValue *value, void *arg, pvStat status)
 {
 	CHAN	*ch = (CHAN *)arg;
@@ -304,7 +304,7 @@ static void proc_db_events_queued(SPROG *sp, CHAN *ch, pvValue *value)
 }
 
 /* Disconnect all database channels */
-epicsShareFunc void seq_disconnect(SPROG *sp)
+void seq_disconnect(SPROG *sp)
 {
 	unsigned nch;
 
