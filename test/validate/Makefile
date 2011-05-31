@@ -65,6 +65,9 @@ seqSoftIoc_DBD += base.dbd
 
 seqSoftIoc_SRCS += seqSoftIoc_registerRecordDeviceDriver.cpp
 
+seqSoftIoc_LIBS += seq pv
+seqSoftIoc_LIBS += $(EPICS_BASE_IOC_LIBS)
+
 ifeq '$(EPICS_HAS_UNIT_TEST)' '1'
 seqSoftIoc_SRCS += testSupport.c
 
@@ -92,19 +95,21 @@ include $(TOP)/configure/RULES
 #----------------------------------------
 #  ADD RULES AFTER THIS LINE
 
+SOFTIOC=$(EPICS_BASE_BIN)/softIoc$(HOSTEXE)
+SOFTDBD=$(EPICS_BASE)/dbd/softIoc.dbd
+
 $(REGRESSION_TESTS_WITH_DB:%=%Ioc.t): %Ioc.t: %$(EXE) ../makeTestfile.pl
 	$(RM) $@
-	$(PERL) ../makeTestfile.pl $@ $* $< ioc
+	$(PERL) ../makeTestfile.pl $@ $* $< ioc $(SOFTIOC) $(SOFTDBD) $(EPICS_HOST_ARCH)
 
 $(REGRESSION_TESTS:%=%.t): %.t: %$(EXE) ../makeTestfile.pl
 	$(RM) $@
-	$(PERL) ../makeTestfile.pl $@ $* $< noioc
+	$(PERL) ../makeTestfile.pl $@ $* $< noioc $(SOFTIOC) $(SOFTDBD) $(EPICS_HOST_ARCH)
 
 norace.i race.i: ../raceCommon.st
 
 $(COMMON_DIR)/vxTestHarnessRegistrars.dbd:
-	$(RM) $@
-	$(foreach t,$(REGRESSION_TESTS),echo 'registrar($tTestRegistrar)' >> $@;)
+	$(PERL) -e "foreach (qw($(REGRESSION_TESTS))) {print qq(registrar($${_}TestRegistrar)\n)}" > $@
 
 $(COMMON_DIR)/vxTestHarness.dbd: $(COMMON_DIR)/vxTestHarnessRegistrars.dbd
 
@@ -114,7 +119,7 @@ $(COMMON_DIR)/vxTestHarness.db: $(REGRESSION_TESTS_WITH_DB:%=../%.db)
 
 st.cmd: ../st.cmd.vxWorks
 	$(CP) $< $@
-	$(foreach t,$(REGRESSION_TESTS),echo "run_seq_test &$tTest" >> $@;)
+	$(PERL) -e "foreach (qw($(REGRESSION_TESTS))) {print qq(run_seq_test &$${_}Test\n)}" >> $@
 
 ifeq "$(OS_CLASS)" "vxWorks"
 build: st.cmd

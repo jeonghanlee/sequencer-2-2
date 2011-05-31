@@ -19,25 +19,34 @@
 
 use strict;
 
-my ($target, $stem, $exe, $ioc) = @ARGV;
+my ($target, $stem, $exe, $ioc, $softioc, $softdbd) = @ARGV;
 
 my $db = "../$stem.db";
+
+my $host_arch = $ENV{EPICS_HOST_ARCH};
 
 open(my $OUT, ">", $target) or die "Can't create $target: $!\n";
 
 my $pid = '$pid';
 my $err = '$!';
 
+my $killit;
+if ($host_arch =~ /win32/) {
+  $killit = 'system("taskkill /F /IM softIoc.exe")';
+} else {
+  $killit = 'kill 9, $pid or die "kill failed: $!"';
+}
+
 if ($ioc eq "ioc") {
   print $OUT <<EOF;
 my $pid = fork();
 die "fork failed: $err" unless defined($pid);
 if (!$pid) {
-  exec("softIoc -S -d $db");
+  exec("$softioc -D $softdbd -S -d $db");
   die "exec failed: $err";
 }
 system("./$exe -S");
-kill 9, $pid or die "kill failed: $err";
+$killit;
 EOF
 } elsif (-r "$db") {
   print $OUT <<EOF;
