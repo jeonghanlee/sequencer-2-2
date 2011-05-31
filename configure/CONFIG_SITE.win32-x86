@@ -1,0 +1,1 @@
+ECHO := $(if $(findstring s,$(MAKEFLAGS)),REM,@echo)

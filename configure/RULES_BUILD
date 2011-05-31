@@ -45,7 +45,11 @@ endif
 
 # preserve compatibility to base versions before 3.14.12
 ifndef ECHO
- ECHO := $(if $(findstring s,$(MAKEFLAGS)),\#,@echo)
+ ifeq 'EPICS_HOST_ARCH' 'win32-x86'
+  ECHO := $(if $(findstring s,$(MAKEFLAGS)),REM,@echo)
+ else
+  ECHO := $(if $(findstring s,$(MAKEFLAGS)),\#,@echo)
+ endif
 endif
 
 
