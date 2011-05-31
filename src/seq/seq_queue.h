@@ -26,10 +26,10 @@ typedef struct seqQueue *QUEUE;
       numElems <= seqQueueMaxNumElems
       elemSize > 0
 */
-QUEUE seqQueueCreate(size_t numElems, size_t elemSize);
+epicsShareFunc QUEUE seqQueueCreate(size_t numElems, size_t elemSize);
 
 /* Return whether all invariants are satisfied */
-boolean seqQueueInvariant(QUEUE q);
+epicsShareFunc boolean seqQueueInvariant(QUEUE q);
 
 /* A common precondition of the following operations is
    that their QUEUE argument is valid; they do not check
@@ -44,42 +44,42 @@ boolean seqQueueInvariant(QUEUE q);
    overwritten. */
 
 /* Destroy the queue, freeing all memory. */
-void seqQueueDestroy(QUEUE q);
+epicsShareFunc void seqQueueDestroy(QUEUE q);
 
 /* Get an element from the queue if possible. Return
    whether the queue was empty and therefore no
    element is available. The value argument must point to a
    memory area with at least seqQueueElemSize(q)
    bytes. */
-boolean seqQueueGet(QUEUE q, void *value);
+epicsShareFunc boolean seqQueueGet(QUEUE q, void *value);
 
 /* Put an element into the queue. Return whether the
    queue was full and therefore its last element was
    overwritten. The value argument must point to a
    memory area with at least seqQueueElemSize(q)
    bytes. */
-boolean seqQueuePut(QUEUE q, const void *value);
+epicsShareFunc boolean seqQueuePut(QUEUE q, const void *value);
 
 /* Remove all elements. Cheap. */
-void seqQueueFlush(QUEUE q);
+epicsShareFunc void seqQueueFlush(QUEUE q);
 
 /* How many free elements are left. */
-size_t seqQueueFree(const QUEUE q);
+epicsShareFunc size_t seqQueueFree(const QUEUE q);
 
 /* How many elements are used up. */
-size_t seqQueueUsed(const QUEUE q);
+epicsShareFunc size_t seqQueueUsed(const QUEUE q);
 
 /* Number of elements (fixed on construction). */
-size_t seqQueueNumElems(const QUEUE q);
+epicsShareFunc size_t seqQueueNumElems(const QUEUE q);
 
 /* Element size (fixed on construction). */
-size_t seqQueueElemSize(const QUEUE q);
+epicsShareFunc size_t seqQueueElemSize(const QUEUE q);
 
 /* Whether empty, same as seqQueueUsed(q)==0 */
-boolean seqQueueIsEmpty(const QUEUE q);
+epicsShareFunc boolean seqQueueIsEmpty(const QUEUE q);
 
 /* Whether full, same as seqQueueFree(q)==0 */
-boolean seqQueueIsFull(const QUEUE q);
+epicsShareFunc boolean seqQueueIsFull(const QUEUE q);
 
 
 /* Unsafe operations; use with care */
@@ -89,11 +89,11 @@ typedef void* seqQueueFunc(void *dest, const void *src, size_t elemSize);
    instead the user supplied function is called.
    seqQueueGet(q,v) == seqQueueGetF(q,memcpy,v)
    */
-boolean seqQueueGetF(QUEUE q, seqQueueFunc *f, void *arg);
+epicsShareFunc boolean seqQueueGetF(QUEUE q, seqQueueFunc *f, void *arg);
 
 /* Like seqQueuePut but does not copy the element's data;
    instead the user supplied function is called.
    seqQueuePut(q,v) == seqQueuePutF(q,memcpy,v) */
-boolean seqQueuePutF(QUEUE q, seqQueueFunc *f, const void *arg);
+epicsShareFunc boolean seqQueuePutF(QUEUE q, seqQueueFunc *f, const void *arg);
 
 #endif /* INCLseq_queueh */

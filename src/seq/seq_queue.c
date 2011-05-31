@@ -13,7 +13,7 @@ struct seqQueue {
     char            *buffer;
 };
 
-boolean seqQueueInvariant(QUEUE q)
+epicsShareFunc boolean seqQueueInvariant(QUEUE q)
 {
     return (q != NULL)
         && q->elemSize > 0
@@ -23,7 +23,7 @@ boolean seqQueueInvariant(QUEUE q)
         && q->wr < q->numElems;
 }
 
-QUEUE seqQueueCreate(size_t numElems, size_t elemSize)
+epicsShareFunc QUEUE seqQueueCreate(size_t numElems, size_t elemSize)
 {
     QUEUE q = new(struct seqQueue);
 
@@ -64,19 +64,19 @@ QUEUE seqQueueCreate(size_t numElems, size_t elemSize)
     return q;
 }
 
-void seqQueueDestroy(QUEUE q)
+epicsShareFunc void seqQueueDestroy(QUEUE q)
 {
     epicsMutexDestroy(q->mutex);
     free(q->buffer);
     free(q);
 }
 
-boolean seqQueueGet(QUEUE q, void *value)
+epicsShareFunc boolean seqQueueGet(QUEUE q, void *value)
 {
     return seqQueueGetF(q, memcpy, value);
 }
 
-boolean seqQueueGetF(QUEUE q, seqQueueFunc *get, void *arg)
+epicsShareFunc boolean seqQueueGetF(QUEUE q, seqQueueFunc *get, void *arg)
 {
     if (q->wr == q->rd) {
         if (!q->overflow) {
@@ -97,12 +97,12 @@ boolean seqQueueGetF(QUEUE q, seqQueueFunc *get, void *arg)
     return FALSE;
 }
 
-boolean seqQueuePut(QUEUE q, const void *value)
+epicsShareFunc boolean seqQueuePut(QUEUE q, const void *value)
 {
     return seqQueuePutF(q, memcpy, value);
 }
 
-boolean seqQueuePutF(QUEUE q, seqQueueFunc *put, const void *arg)
+epicsShareFunc boolean seqQueuePutF(QUEUE q, seqQueueFunc *put, const void *arg)
 {
     boolean r = FALSE;
 
@@ -134,7 +134,7 @@ boolean seqQueuePutF(QUEUE q, seqQueueFunc *put, const void *arg)
     return r;
 }
 
-void seqQueueFlush(QUEUE q)
+epicsShareFunc void seqQueueFlush(QUEUE q)
 {
     epicsMutexLock(q->mutex);
     q->rd = q->wr;
@@ -147,32 +147,32 @@ static size_t used(const QUEUE q)
     return (q->numElems + q->wr - q->rd) % q->numElems + (q->overflow ? 1 : 0);
 }
 
-size_t seqQueueFree(const QUEUE q)
+epicsShareFunc size_t seqQueueFree(const QUEUE q)
 {
     return q->numElems - used(q);
 }
 
-size_t seqQueueUsed(const QUEUE q)
+epicsShareFunc size_t seqQueueUsed(const QUEUE q)
 {
     return used(q);
 }
 
-boolean seqQueueIsEmpty(const QUEUE q)
+epicsShareFunc boolean seqQueueIsEmpty(const QUEUE q)
 {
     return q->wr == q->rd && !q->overflow;
 }
 
-boolean seqQueueIsFull(const QUEUE q)
+epicsShareFunc boolean seqQueueIsFull(const QUEUE q)
 {
     return (q->wr + 1) % q->numElems == q->rd && q->overflow;
 }
 
-size_t seqQueueNumElems(const QUEUE q)
+epicsShareFunc size_t seqQueueNumElems(const QUEUE q)
 {
     return q->numElems;
 }
 
-size_t seqQueueElemSize(const QUEUE q)
+epicsShareFunc size_t seqQueueElemSize(const QUEUE q)
 {
     return q->elemSize;
 }
