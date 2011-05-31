@@ -1008,9 +1008,9 @@ static void gen_prog_init_func(Expr *prog, int opt_reent)
 	printf("static void G_prog_init(struct %s *pVar)\n{\n", VAR_PREFIX);
 	if (opt_reent)
 	{
-		indent(1); printf("*pVar = (struct %s)", VAR_PREFIX);
-		gen_user_var_init(prog, 1);
-		printf(";\n");
+		indent(1); printf("struct %s pVarInit = ", VAR_PREFIX);
+		gen_user_var_init(prog, 1); printf(";\n");
+		indent(1); printf("*pVar = pVarInit;\n");
 	}
 	printf("}\n");
 }
