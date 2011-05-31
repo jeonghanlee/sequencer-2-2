@@ -99,27 +99,34 @@ SOFTIOC=$(EPICS_BASE_BIN)/softIoc$(HOSTEXE)
 SOFTDBD=$(EPICS_BASE)/dbd/softIoc.dbd
 
 $(REGRESSION_TESTS_WITH_DB:%=%Ioc.t): %Ioc.t: %$(EXE) ../makeTestfile.pl
-	$(RM) $@
-	$(PERL) ../makeTestfile.pl $@ $* $< ioc $(SOFTIOC) $(SOFTDBD) $(EPICS_HOST_ARCH)
+	$(RM) $@.tmp
+	$(PERL) ../makeTestfile.pl $@.tmp $* $< ioc $(SOFTIOC) $(SOFTDBD) $(EPICS_HOST_ARCH)
+	$(MV) $@.tmp $@
 
 $(REGRESSION_TESTS:%=%.t): %.t: %$(EXE) ../makeTestfile.pl
-	$(RM) $@
-	$(PERL) ../makeTestfile.pl $@ $* $< noioc $(SOFTIOC) $(SOFTDBD) $(EPICS_HOST_ARCH)
+	$(RM) $@.tmp
+	$(PERL) ../makeTestfile.pl $@.tmp $* $< noioc $(SOFTIOC) $(SOFTDBD) $(EPICS_HOST_ARCH)
+	$(MV) $@.tmp $@
 
 norace.i race.i: ../raceCommon.st
 
 $(COMMON_DIR)/vxTestHarnessRegistrars.dbd:
-	$(PERL) -e "foreach (qw($(REGRESSION_TESTS))) {print qq(registrar($${_}TestRegistrar)\n)}" > $@
+	$(RM) $@.tmp
+	$(PERL) -e "foreach $$x (qw($(REGRESSION_TESTS))) {print qq(registrar($${x}estRegistrar)\n)}" > $@.tmp
+	$(MV) $@.tmp $@
 
 $(COMMON_DIR)/vxTestHarness.dbd: $(COMMON_DIR)/vxTestHarnessRegistrars.dbd
 
 $(COMMON_DIR)/vxTestHarness.db: $(REGRESSION_TESTS_WITH_DB:%=../%.db)
-	$(RM) $@
-	$(PERL) -ne print $(REGRESSION_TESTS_WITH_DB:%=../%.db) > $@
+	$(RM) $@.tmp
+	$(PERL) -ne print $(REGRESSION_TESTS_WITH_DB:%=../%.db) > $@.tmp
+	$(MV) $@.tmp $@
 
 st.cmd: ../st.cmd.vxWorks
-	$(CP) $< $@
-	$(PERL) -e "foreach (qw($(REGRESSION_TESTS))) {print qq(run_seq_test &$${_}Test\n)}" >> $@
+	$(RM) $@.tmp
+	$(CP) $< $@.tmp
+	$(PERL) -e "foreach $$x (qw($(REGRESSION_TESTS))) {print qq(run_seq_test &$${x}Test\n)}" >> $@.tmp
+	$(MV) $@.tmp $@
 
 ifeq "$(OS_CLASS)" "vxWorks"
 build: st.cmd
