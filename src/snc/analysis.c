@@ -44,12 +44,12 @@ static uint assign_ef_bits(Expr *scope);
 
 Program *analyse_program(Expr *prog, Options options)
 {
+	Program *p = new(Program);
+
 	assert(prog);
 #ifdef DEBUG
 	report("-------------------- Analysis --------------------\n");
 #endif
-
-	Program *p = new(Program);
 
 	assert(p);
 
@@ -82,6 +82,9 @@ Program *analyse_program(Expr *prog, Options options)
 static int analyse_defn(Expr *scope, Expr *parent_scope, void *parg)
 {
 	Program	*p = (Program *)parg;
+	Expr *defn_list;
+	VarList **pvar_list;
+	Expr *defn;
 
 	assert(scope);
 
@@ -93,8 +96,8 @@ static int analyse_defn(Expr *scope, Expr *parent_scope, void *parg)
 	assert(is_scope(scope));
 	assert(!parent_scope || is_scope(parent_scope));
 
-	Expr *defn_list = defn_list_from_scope(scope);
-	VarList **pvar_list = pvar_list_from_scope(scope);
+	defn_list = defn_list_from_scope(scope);
+	pvar_list = pvar_list_from_scope(scope);
 
 	/* NOTE: We always need to allocate a var_list, even if there are no
 	   definitions on this level, so later on (see connect_variables below)
@@ -105,8 +108,6 @@ static int analyse_defn(Expr *scope, Expr *parent_scope, void *parg)
 		*pvar_list = new(VarList);
 		(*pvar_list)->parent_scope = parent_scope;
 	}
-
-	Expr *defn;
 
 	foreach (defn, defn_list)
 	{
@@ -259,6 +260,7 @@ static void analyse_state_option(StateOptions *options, Expr *defn)
 static void analyse_declaration(SymTable st, Expr *scope, Expr *defn)
 {
 	Var *vp;
+        VarList *var_list;
 
 	assert(scope);
 	assert(defn);
@@ -278,7 +280,7 @@ static void analyse_declaration(SymTable st, Expr *scope, Expr *defn)
 			: "event flags");
 	}
 
-	VarList *var_list = *pvar_list_from_scope(scope);
+	var_list = *pvar_list_from_scope(scope);
 
 	if (!sym_table_insert(st, vp->name, var_list, vp))
 	{
@@ -1328,7 +1330,11 @@ static int iter_connect_state_change_stmts(Expr *ep, Expr *scope, void *parg)
 
 static void connect_state_change_stmts(SymTable st, Expr *scope)
 {
-	connect_state_change_arg csc_arg = {st, 0, FALSE};
+	connect_state_change_arg csc_arg;
+
+	csc_arg.st = st;
+	csc_arg.ssp = 0;
+	csc_arg.in_when = FALSE;
 	traverse_expr_tree(scope,
 		(1<<S_CHANGE)|(1<<D_SS)|(1<<D_ENTRY)|(1<<D_EXIT)|(1<<D_WHEN),
 		expr_mask, 0, iter_connect_state_change_stmts, &csc_arg);

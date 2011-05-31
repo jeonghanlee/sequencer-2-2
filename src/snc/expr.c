@@ -23,6 +23,8 @@
 #include "expr.h"
 #include "main.h"
 
+static const StateOptions default_state_options = DEFAULT_STATE_OPTIONS;
+
 /* Expr is the generic syntax tree node */
 Expr *expr(
 	int	type,
@@ -56,7 +58,7 @@ Expr *expr(
 		break;
 	case D_STATE:
 		ep->extra.e_state = new(State);
-		ep->extra.e_state->options = DEFAULT_STATE_OPTIONS;
+		ep->extra.e_state->options = default_state_options;
 		break;
 	case D_WHEN:
 		ep->extra.e_when = new(When);

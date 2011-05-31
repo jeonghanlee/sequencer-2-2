@@ -701,9 +701,8 @@ static int gen_builtin_func(int context, Expr *ep)
 {
 	char	*func_name = ep->value;	/* function name */
 	Expr	*ap;			/* argument expr */
-
-	func_name = ep->value;
 	struct func_symbol *sym = lookup_func(func_name);
+
 	if (sym == NULL)
 		return FALSE;	/* not a special function */
 

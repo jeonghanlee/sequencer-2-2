@@ -68,7 +68,7 @@ struct options
 	uint	warn:1;			/* compiler warnings */
 };
 
-#define DEFAULT_OPTIONS (Options){0,1,0,0,0,1,0,1,1,1}
+#define DEFAULT_OPTIONS {0,1,0,0,0,1,0,1,1,1}
 
 struct state_options			/* run-time state options */
 {
@@ -77,7 +77,7 @@ struct state_options			/* run-time state options */
 	uint	no_exit_to_self:1;	/* don't do exit actions if exiting to same state */
 };
 
-#define DEFAULT_STATE_OPTIONS (StateOptions){1,1,1}
+#define DEFAULT_STATE_OPTIONS {1,1,1}
 
 struct token				/* for the lexer and parser */
 {

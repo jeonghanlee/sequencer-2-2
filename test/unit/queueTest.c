@@ -94,9 +94,11 @@ MAIN(queueTest)
     testOk1(seqQueueCreate(1,0)==0);
     testOk1(seqQueueCreate(0,1)==0);
 
-    for (numElems = 1; numElems <= 3; numElems++) {
-        ELEM put[2*numElems];
-        ELEM get[2*numElems];
+#define maxNumElems 3
+
+    for (numElems = 1; numElems <= maxNumElems; numElems++) {
+        ELEM put[2*maxNumElems];
+        ELEM get[2*maxNumElems];
         size_t i;
 
         testDiag("sequential queueTest with numElems=%u", (unsigned)numElems);
@@ -117,8 +119,9 @@ MAIN(queueTest)
             }
             check(q, numElems > i ? numElems - i : 0);
             for (j = 0; j < i; j++) {
+                int empty;
                 get[j] = -1ull;
-                int empty = seqQueueGet(q, get+j);
+                empty = seqQueueGet(q, get+j);
                 testOk(empty==(j>=numElems), "q get %lu", (unsigned long)j);
             }
             check(q, numElems);
