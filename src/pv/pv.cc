@@ -27,8 +27,10 @@ epicsShareFunc pvSystem::pvSystem( int debug ) :
     status_( 0 ),
     sevr_( pvSevrNONE ),
     stat_( pvStatOK ),
-    mess_( NULL ),
-    lock_( epicsMutexMustCreate() )
+    mess_( NULL )
+#if 0
+    ,lock_( epicsMutexMustCreate() )
+#endif
 {
     if ( getDebug() > 0 )
 	printf( "%8p: pvSystem::pvSystem( %d )\n", (void *)this, debug );
@@ -47,6 +49,7 @@ epicsShareFunc pvSystem::~pvSystem()
 	printf( "%8p: pvSystem::~pvSystem()\n", (void *)this );
 }
 
+#if 0
 /*+
  * Routine:	pvSystem::lock()/unlock()
  *
@@ -71,6 +74,7 @@ epicsShareFunc void pvSystem::unlock()
     if ( getDebug() > 1 )
 	printf( "%8p: pvSystem::unlock()\n", (void *)this );
 }
+#endif
 
 /*+
  * Routine:	pvSystem::setError()
@@ -227,6 +231,7 @@ epicsShareFunc pvStat epicsShareAPI pvSysPend( void *sys, double seconds, int wa
     return Sys->pend( seconds, wait );
 }
 
+#if 0
 epicsShareFunc pvStat epicsShareAPI pvSysLock( void *sys ) {
     SYS_CHECK( return pvStatERROR );
     Sys->lock();
@@ -238,6 +243,7 @@ epicsShareFunc pvStat epicsShareAPI pvSysUnlock( void *sys ) {
     Sys->unlock();
     return pvStatOK;
 }
+#endif
 
 epicsShareFunc int epicsShareAPI pvSysGetMagic( void *sys ) {
     SYS_CHECK( return pvStatERROR );

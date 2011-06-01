@@ -13,7 +13,9 @@
 
 #include "shareLib.h" /* reset share lib defines */
 #include "epicsThread.h"	/* for thread ids */
+#if 0
 #include "epicsMutex.h"		/* for locks */
+#endif
 
 #include "pvAlarm.h"		/* status and severity definitions */
 #include "pvType.h"		/* pv type definitions */
@@ -75,8 +77,10 @@ public:
     epicsShareFunc virtual pvVariable *newVariable( const char *name, pvConnFunc func = NULL,
 				     void *priv = NULL, int debug = 0 ) = 0;
 
+#if 0
     epicsShareFunc void lock();
     epicsShareFunc void unlock();
+#endif
 
     epicsShareFunc inline int getMagic() const { return magic_; }
     epicsShareFunc inline void setDebug( int debug ) { debug_ = debug; }
@@ -99,7 +103,9 @@ private:
     pvStat	stat_;		/* status */
     const char	*mess_;		/* error message */
 
+#if 0
     epicsMutexId	lock_;		/* prevents more than one thread in library */
+#endif
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -244,8 +250,10 @@ epicsShareFunc pvStat epicsShareAPI pvSysCreate( const char *name, int debug, vo
 epicsShareFunc pvStat epicsShareAPI pvSysDestroy( void *sys );
 epicsShareFunc pvStat epicsShareAPI pvSysFlush( void *sys );
 epicsShareFunc pvStat epicsShareAPI pvSysPend( void *sys, double seconds, int wait );
+#if 0
 epicsShareFunc pvStat epicsShareAPI pvSysLock( void *sys );
 epicsShareFunc pvStat epicsShareAPI pvSysUnlock( void *sys );
+#endif
 epicsShareFunc pvStat epicsShareAPI pvSysAttach( void *sys );
 epicsShareFunc int    epicsShareAPI pvSysGetMagic( void *sys );
 epicsShareFunc void   epicsShareAPI pvSysSetDebug( void *sys, int debug );
