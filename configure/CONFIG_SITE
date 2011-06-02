@@ -22,4 +22,4 @@ PVKTL  = FALSE
 RE2C = re2c$(HOSTEXE)
 
 # Parser generator
-LEMON = $(call PATH_FILTER,$(INSTALL_BIN)/lemon$(HOSTEXE))
+LEMON = $(call PATH_FILTER,$(INSTALL_HOST_BIN)/lemon$(HOSTEXE))
