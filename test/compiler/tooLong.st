@@ -18,9 +18,4 @@ assign l to "";
 unsigned long ul;
 assign ul to "";
 
-ss tooLong {
-    state xy {
-        when () {
-        } state xy
-    }
-}
+#include "simple.st"

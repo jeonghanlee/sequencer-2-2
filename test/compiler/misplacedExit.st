@@ -1,36 +1,12 @@
-program snctest
-float v;
-assign v to "grw:xxxExample";
-monitor v;
+program misplacedExitTest
 
-ss ss1
-{
-    state low
-    {
-        when(v>5.0)
-        {
-            printf("now changing to high\n");
-        } state high
-
-        exit 
-        { 
-            printf("Something to do on exit");
+ss x { 
+    state y {
+        when () {
+        } state y
+        exit {
         }
-
-        when(delay(.1))
-        {
-        } state low
-
-    }
-    state high
-    {
-        when(v<=5.0)
-        {
-            printf("changing to low\n");
-        } state low
-
-        when(delay(.1))
-        {
-        } state high
+        when() {
+        } state y
     }
 }
