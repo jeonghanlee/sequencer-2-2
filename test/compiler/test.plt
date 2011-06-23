@@ -9,7 +9,6 @@ my $snc = "../../../bin/$host_arch/snc";
 
 my @success = qw(
   sncExOpt_DuplOpt
-  varinitOptr
 );
 
 my @warning = qw(
@@ -23,6 +22,7 @@ my @error = qw(
   syncq_not_monitored
   syncq_size_out_of_range
   varinit
+  varinitOptr
 );
 
 if ($host_arch =~ /64/) {
