@@ -15,8 +15,8 @@
 #include "seq_debug.h"
 
 static void ss_entry(void *arg);
-static void seq_clearDelay(SSCB *,STATE *);
-static boolean seq_getTimeout(SSCB *, double *);
+static void clearDelays(SSCB *,STATE *);
+static boolean calcTimeout(SSCB *, double *);
 
 /*
  * sequencer() - Sequencer main thread entry point.
@@ -285,7 +285,7 @@ static void ss_entry(void *arg)
 		/* Flush any outstanding DB requests */
 		pvSysFlush(sp->pvSys);
 
-		seq_clearDelay(ss, st); /* Clear delay list */
+		clearDelays(ss, st); /* Clear delay list */
 		st->delayFunc(ss, var); /* Set up new delay list */
 
 		/* Setting this semaphore here guarantees that a when() is
@@ -300,10 +300,19 @@ static void ss_entry(void *arg)
 			double delay = 0.0;
 
 			/* Wake up on PV event, event flag, or expired delay */
-			if (seq_getTimeout(ss, &delay))
+			if (calcTimeout(ss, &delay))
+			{
+				DEBUG("before epicsEventWaitWithTimeout(ss=%d,delay=%f)\n",
+					ss - sp->ss, delay);
 				epicsEventWaitWithTimeout(ss->syncSemId, delay);
+				DEBUG("after epicsEventWaitWithTimeout()\n");
+			}
 			else
+			{
+				DEBUG("before epicsEventWait\n");
 				epicsEventWait(ss->syncSemId);
+				DEBUG("after epicsEventWait\n");
+			}
 
 			/* Check whether we have been asked to exit */
 			if (sp->die) goto exit;
@@ -356,9 +365,9 @@ exit:
 }
 
 /*
- * seq_clearDelay() - clear the time delay list.
+ * clearDelays() - clear the time delay list.
  */
-static void seq_clearDelay(SSCB *ss, STATE *st)
+static void clearDelays(SSCB *ss, STATE *st)
 {
 	unsigned ndelay;
 
@@ -381,42 +390,45 @@ static void seq_clearDelay(SSCB *ss, STATE *st)
 }
 
 /*
- * seq_getTimeout() - return time-out for pending on events.
+ * calcTimeout() - calculate the time-out for pending on events
  * Return whether to time out when waiting for events.
  * If yes, set *pdelay to the timout (in seconds).
  */
-static boolean seq_getTimeout(SSCB *ss, double *pdelay)
+static boolean calcTimeout(SSCB *ss, double *pdelay)
 {
 	unsigned ndelay;
 	boolean	do_timeout = FALSE;
-	double	cur, delay;
+	double	now, timeElapsed;
 	double	delayMin = 0;
 	/* not really necessary to initialize delayMin,
 	   but tell that to the compiler...
 	 */
 
 	if (ss->numDelays == 0)
-		return do_timeout;
+		return FALSE;
+
 	/*
-	 * Calculate the delay since this state was entered.
+	 * Calculate the timeElapsed since this state was entered.
 	 */
-	pvTimeGetCurrentDouble(&cur);
-	delay = cur - ss->timeEntered;
+	pvTimeGetCurrentDouble(&now);
+	timeElapsed = now - ss->timeEntered;
+	DEBUG("calcTimeout: now=%f, timeElapsed=%f\n", now, timeElapsed);
+
 	/*
 	 * Find the minimum delay among all unexpired timeouts if
 	 * one exists, and set do_timeout in this case.
 	 */
 	for (ndelay = 0; ndelay < ss->numDelays; ndelay++)
 	{
-		double delayN;
+		double delayN = ss->delay[ndelay];
 
 		if (ss->delayExpired[ndelay])
 			continue; /* skip if this delay entry already expired */
-		delayN = ss->delay[ndelay];
-		if (delay >= delayN)
+		if (timeElapsed >= delayN)
 		{	/* just expired */
 			ss->delayExpired[ndelay] = TRUE; /* mark as expired */
 			*pdelay = 0.0;
+			DEBUG("calcTimeout: %d expired\n", ndelay);
 			return TRUE;
 		}
 		if (!do_timeout || delayN<=delayMin)
@@ -427,8 +439,10 @@ static boolean seq_getTimeout(SSCB *ss, double *pdelay)
 	}
 	if (do_timeout)
 	{
-		*pdelay = max(0.0, delayMin - delay);
+		*pdelay = max(0.0, delayMin - timeElapsed);
 	}
+	DEBUG("calcTimeout: do_timeout=%s, *pdelay=%f\n",
+		do_timeout?"yes":"no", *pdelay);
 	return do_timeout;
 }
 
