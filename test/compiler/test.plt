@@ -7,33 +7,33 @@ use Test::More;
 my $host_arch = $ENV{EPICS_HOST_ARCH};
 my $snc = "../../../bin/$host_arch/snc";
 
-my @success = qw(
-  sncExOpt_DuplOpt
-);
+my $success = {
+  sncExOpt_DuplOpt => undef,
+};
 
-my @warning = qw(
-  sncExOpt_UnrecOpt
-  syncq_no_size
-);
+my $warning = {
+  sncExOpt_UnrecOpt => 1,
+  syncq_no_size => 1,
+};
 
-my @error = qw(
-  misplacedExit
-  syncq_not_assigned
-  syncq_not_monitored
-  syncq_size_out_of_range
-  varinit
-  varinitOptr
-  efArray
-  efPointer
-  efGlobal
-  foreignGlobal
-  pvNotAssigned
-);
+my $error = {
+  misplacedExit => 2,
+  syncq_not_assigned => 1,
+  syncq_not_monitored => 1,
+  syncq_size_out_of_range => 1,
+  varinit => [1,9],
+  varinitOptr => [1,10],
+  efArray => 1,
+  efPointer => 1,
+  efGlobal => 3,
+  foreignGlobal => 3,
+  pvNotAssigned => 20,
+};
 
 if ($host_arch =~ /64/) {
-  push(@error,"tooLong");
+  $error->{tooLong} = 1;
 } else {
-  push(@success,"tooLong");
+  $success->{tooLong} = undef;
 }
 
 sub make {
@@ -48,25 +48,37 @@ sub check_success {
 }
 
 sub check_warning {
-  ok($? != -1 and $? == 0 and not /error/ and /warning/);
+  my ($num_warnings) = @_;
+  my $nw = 0;
+  $nw++ while (/warning/g);
+  #diag("num_warnings=$nw(expected:$num_warnings)\n");
+  ok($? != -1 and $? == 0 and not /error/ and $nw == $num_warnings);
 }
 
 sub check_error {
-  ok($? != -1 and $? != 0 and /error/);
+  my ($num_errors) = @_;
+  my $ne = 0;
+  $ne++ while (/error/g);
+  #diag("num_errors=$ne (expected:$num_errors)\n");
+  if (ref $num_errors) {
+    ok($? != -1 and $? != 0 and $ne >= $num_errors->[0] and $ne <= $num_errors->[1]);
+  } else {
+    ok($? != -1 and $? != 0 and $ne == $num_errors);
+  }
 }
 
+plan tests => keys(%$success) + keys(%$warning) + keys(%$error);
+
 my @alltests = (
-  [\&check_success, \@success],
-  [\&check_warning, \@warning],
-  [\&check_error, \@error],
+  [\&check_success, $success],
+  [\&check_warning, $warning],
+  [\&check_error, $error],
 );
 
-plan tests => @success + @warning + @error;
-
 foreach my $group (@alltests) {
-  my ($check, $tests) = @$group;
-  foreach my $test (@$tests) {
+  my ($check,$tests) = @$group;
+  foreach my $test (sort(keys(%$tests))) {
     make($test);
-    &$check($test);
+    &$check($tests->{$test});
   }
 }
