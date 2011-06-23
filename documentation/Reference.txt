@@ -350,20 +350,24 @@ For local variables, life time depends on where they are declared:
    initialized every time the block is entered. If not, their value is
    undefined until they become initialized e.g. by an assignment.
 
-.. note:: In :ref:`safe mode` changes made to a global variable are *not*
-   visible to other state sets unless explicitly communicated.
+Variable Initialization
+^^^^^^^^^^^^^^^^^^^^^^^
 
-.. note:: Initializers for variables of global life time must respect
-   the usual C rules for top-level variable initializers. Particularly,
-   they must be *constant expressions* in the C sense, i.e. calculable
-   at compile time, which also means they must not refer to other variables.
-   If the :option:`-r` option is in effect, this restriction is slightly
-   relaxed: initializer expressions need not be constant, but they still
-   cannot refer to the values of other variables, or rather: all these
-   values will be zero, even if the variable refered to was declared
-   (and initialized) in an enclosing scope.
+Initializers for variables of global life time (i.e. globals as well as
+state set and state local ones) must respect
+the usual C rules for static variable initializers. Particularly,
+they must be *constant expressions* in the C sense, i.e. calculable
+at compile time, which also means they must not refer to other variables.
 
-   Some of these restrictions might be lifted in a future version.
+Variables of global life time are initialized before *any* other code is
+executed.
+
+Initializers for other variables (i.e. those with local lifetime) behave
+exactly as regular local C variables. Particularly, an initializer for
+such a variable may refer to other variables that have been declared
+(and, possibly, initialized) in an outer scope, and also to those that
+have previously been declared (and, possibly, initialized) in the same
+scope.
 
 
 Process Variables
