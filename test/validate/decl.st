@@ -10,11 +10,6 @@ int *(*(*complicated)[2][3])[1] = 0;
 
 evflag ef;
 
-#if 0
-evflag efa[3];  /* error: array of event flags */
-evflag *efp;    /* error: pointer to event flag */
-#endif
-
 /* struct member access */
 %%struct r { int x; } rv;
 
@@ -53,10 +48,7 @@ ss one {
         sync c to ef;
         string s = "s";
         assign s;
-        /* evflag ef; */    /* error: event flag must be global */
-        /* foreign z; */    /* error: foreign must be global */
         entry {
-            /* pvPut(a); */ /* error: not assigned */
             pvPut(b);
             pvPut(c);
             pvPut(s);

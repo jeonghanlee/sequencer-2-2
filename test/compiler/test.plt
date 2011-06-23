@@ -23,6 +23,11 @@ my @error = qw(
   syncq_size_out_of_range
   varinit
   varinitOptr
+  efArray
+  efPointer
+  efGlobal
+  foreignGlobal
+  pvNotAssigned
 );
 
 if ($host_arch =~ /64/) {
