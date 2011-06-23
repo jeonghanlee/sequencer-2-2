@@ -1,16 +1,18 @@
-/*
- * Strictly speaking, the rejection below is a bug, or at least
- * an infelicity. See TODO.
- */
 program varInitTest
 
 int x = 1;
+int xx = x;
 
 ss test {
 
-    int y = x;  /* option -r: non-constant initializer */
+    int y = x;
+    int yy = y;
 
     state test {
+
+        int z = y;
+        int zz = z;
+
         when () {} exit
     }
 }
