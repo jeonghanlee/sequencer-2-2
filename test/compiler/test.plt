@@ -31,7 +31,7 @@ my $error = {
 };
 
 if ($host_arch =~ /64/) {
-  $error->{tooLong} = 1;
+  $error->{tooLong} = 4;
 } else {
   $success->{tooLong} = undef;
 }
