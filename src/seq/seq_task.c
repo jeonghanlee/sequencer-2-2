@@ -300,7 +300,7 @@ static void ss_entry(void *arg)
 			double delay = 0.0;
 
 			/* Wake up on PV event, event flag, or expired delay */
-			if (seq_getTimeout(ss, &delay) && delay > 0.0)
+			if (seq_getTimeout(ss, &delay))
 				epicsEventWaitWithTimeout(ss->syncSemId, delay);
 			else
 				epicsEventWait(ss->syncSemId);
