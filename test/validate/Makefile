@@ -110,9 +110,9 @@ $(REGRESSION_TESTS:%=%.t): %.t: %$(EXE) ../makeTestfile.pl
 
 norace.i race.i: ../raceCommon.st
 
-$(COMMON_DIR)/vxTestHarnessRegistrars.dbd:
+$(COMMON_DIR)/vxTestHarnessRegistrars.dbd: ../makeTestDbd.pl
 	$(RM) $@.tmp
-	$(PERL) -e "foreach $$x (qw($(REGRESSION_TESTS))) {print qq(registrar($${x}estRegistrar)\n)}" > $@.tmp
+	$(PERL) ../makeTestDbd.pl $(REGRESSION_TESTS) > $@.tmp
 	$(MV) $@.tmp $@
 
 $(COMMON_DIR)/vxTestHarness.dbd: $(COMMON_DIR)/vxTestHarnessRegistrars.dbd
@@ -122,10 +122,10 @@ $(COMMON_DIR)/vxTestHarness.db: $(REGRESSION_TESTS_WITH_DB:%=../%.db)
 	$(PERL) -ne print $(REGRESSION_TESTS_WITH_DB:%=../%.db) > $@.tmp
 	$(MV) $@.tmp $@
 
-st.cmd: ../st.cmd.vxWorks
+st.cmd: ../st.cmd.vxWorks ../makeStCmd.pl
 	$(RM) $@.tmp
-	$(CP) $< $@.tmp
-	$(PERL) -e "foreach $$x (qw($(REGRESSION_TESTS))) {print qq(run_seq_test &$${x}Test\n)}" >> $@.tmp
+	$(CP) ../st.cmd.vxWorks $@.tmp
+	$(PERL) ../makeStCmd.pl $(REGRESSION_TESTS) >> $@.tmp
 	$(MV) $@.tmp $@
 
 ifeq "$(OS_CLASS)" "vxWorks"
