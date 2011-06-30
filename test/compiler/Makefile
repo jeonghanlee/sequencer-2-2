@@ -12,13 +12,13 @@ SNC = $(INSTALL_HOST_BIN)/snc$(HOSTEXE)
 
 TESTSCRIPTS_HOST += snc_test.t
 
-ifeq '$(findstring 64,$(ARCH_CLASS))' ''
-TESTSCRIPTS_HOST += make_test.t
-TESTSCRIPTS_CROSS += make_test.t
-else
-TESTSCRIPTS_HOST += make64_test.t
-TESTSCRIPTS_CROSS += make64_test.t
-endif
+# uncomment these tests if building for 32 bit systems
+#TESTSCRIPTS_HOST += make_test.t
+#TESTSCRIPTS_CROSS += make_test.t
+
+# uncomment these tests if building for 64 bit systems
+#TESTSCRIPTS_HOST += make64_test.t
+#TESTSCRIPTS_CROSS += make64_test.t
 
 PROD_LIBS += seq pv
 PROD_LIBS += $(EPICS_BASE_IOC_LIBS)
