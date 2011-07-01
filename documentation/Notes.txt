@@ -35,7 +35,7 @@ instead be published explicitly by calling pvPut on the variable.
 To facilitate internal communication between state sets, variables assigned
 to an empty string are treated as anonymous pseudo PVs, see :ref:`anonymous
 pvs` for details. For anonymous PVs, pvPut directly writes to an internal
-buffer, by-passing the CA layer. Other state sets will see such an explicit
+buffer, bypassing the CA layer. Other state sets will see such an explicit
 update only if they themselves perform a pvGet on them, or else --if the
 variable is monitored-- after a state change is initiated i.e. one of the
 when-conditions fires. In safe mode, the value of a program variable is
@@ -61,6 +61,17 @@ fail silently (i.e. CA returns a success status) if any of the records that
 need to be processed as a result of the put operation is either active (PACT
 is set), or currently involved in another callback-based put operation.
 
+Initialization
+^^^^^^^^^^^^^^
+
+Initialization for variables with global life time is now enforced
+to happen before any actions are executed and before connections are
+established. It is an error if an initializer for such a variable is not
+a constant (compile-time calculable) expression.
+
+Variables with local lifetime are handled as before i.e. exactly like local
+variables in C.
+
 Other Changes
 ^^^^^^^^^^^^^
 
@@ -84,7 +95,7 @@ much more complicated and it is certainly easier to extend with new
 features.
 
 Integer types that (in C) are longer than 32 bits are no longer allowed to
-be "assigned" to PVs, since CA does not natibvely support such types.
+be "assigned" to PVs, since CA does not natively support such types.
 Instead, the standard fixed size integer types from int8_t up to uint32_t
 can be used in SNL code. For compatibility these are currently translated to
 the corresponding epicsInt8...epicsUInt32.
@@ -92,9 +103,8 @@ the corresponding epicsInt8...epicsUInt32.
 The main procedure (:option:`+m`) is no longer hard-coded, so you can easily
 provide your own version. See :ref:`Building a Stand-alone Program`.
 
-In the sequencer library interface, bitMask is now a synonym for unsigned,
-not unsigned long. The C standards and books say that all the bitwise
-operations convert numbers to int or unsigned anyway.
+In the sequencer library interface, bitMask is now a synonym for epicsUInt32,
+not unsigned long.
 
 Lots of internal restructuring in the sequencer library.
 
