@@ -9,22 +9,24 @@
 ***************************************************************************
 		Generate tables for runtime sequencer
 ***************************************************************************/
-#include	<stdio.h>
-#include	<stdlib.h>
-#include	<string.h>
-#include	<assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <assert.h>
 
 #ifdef _WIN32
-#include <malloc.h>
+#  include <malloc.h>
+#elif (__STDC_VERSION__ < 199901L) && !defined(__GNUC__)
+#  include <alloca.h>
 #endif
 
-#include	"seqCom.h"
-#include	"analysis.h"
-#include	"main.h"
-#include	"sym_table.h"
-#include	"gen_code.h"
-#include	"expr.h"
-#include	"gen_tables.h"
+#include "seqCom.h"
+#include "analysis.h"
+#include "main.h"
+#include "sym_table.h"
+#include "gen_code.h"
+#include "expr.h"
+#include "gen_tables.h"
 
 typedef struct event_mask_args {
 	bitMask	*event_words;

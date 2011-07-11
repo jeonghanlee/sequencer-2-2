@@ -7,6 +7,12 @@
 #include <string.h>
 #include <stdlib.h>
 
+#ifdef _WIN32
+#  include <malloc.h>
+#elif (__STDC_VERSION__ < 199901L) && !defined(__GNUC__)
+#  include <alloca.h>
+#endif
+
 #include "alarm.h"
 #include "cadef.h"
 
