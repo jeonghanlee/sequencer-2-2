@@ -27,7 +27,7 @@ Releases are available here:
 
    http://www-csr.bessy.de/control/SoftDist/sequencer/releases/
 
-The current stable release is `2.0.13`_.
+The current stable release is `2.0.14`_.
 
 Development snapshots are available under the name
 
