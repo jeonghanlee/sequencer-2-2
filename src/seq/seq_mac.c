@@ -131,7 +131,10 @@ void seqMacParse(SPROG *sp, const char *macStr)
 			break;		/* finished or error */
 		name = newArray(char, nChar+1);
 		if (name == NULL)
+		{
+			errlogSevPrintf(errlogFatal, "seqMacParse: calloc failed\n");
 			break;
+		}
 		memcpy(name, macStr, nChar);
 		name[nChar] = '\0';
 
@@ -173,7 +176,10 @@ void seqMacParse(SPROG *sp, const char *macStr)
 		/* Copy value string into newly allocated space */
 		value = newArray(char, nChar+1);
 		if (value == NULL)
+		{
+			errlogSevPrintf(errlogFatal, "seqMacParse: calloc failed\n");
 			break;
+		}
 		mac->value = value;
 		memcpy(value, macStr, nChar);
 		value[nChar] = '\0';
