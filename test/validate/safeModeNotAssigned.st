@@ -1,4 +1,4 @@
-program SafeModeTest
+program safeModeNotAssignedTest
 
 %%#include "../testSupport.h"
 
