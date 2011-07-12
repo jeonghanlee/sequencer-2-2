@@ -539,8 +539,8 @@ void seq_free(SPROG *sp)
 
 		free(ss->delay);
 		free(ss->delayExpired);
-		free(ss->dirty);
-		free(ss->var);
+		if (sp->options & OPT_SAFE) free(ss->dirty);
+		if (sp->options & OPT_SAFE) free(ss->var);
 	}
 
 	free(sp->ss);
@@ -569,6 +569,6 @@ void seq_free(SPROG *sp)
 	free(sp->queues);
 
 	free(sp->evFlags);
-	free(sp->var);
+	if (sp->options & OPT_REENT) free(sp->var);
 	free(sp);
 }
