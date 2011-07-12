@@ -7,7 +7,7 @@ include $(TOP)/configure/CONFIG
 #  Device support declarations
 DBD = devSequencer.dbd
 
-USR_CFLAGS += -I../../seq
+USR_CFLAGS += -I$(TOP)/src/seq
 
 LIBRARY = seqDev
 seqDev_LIBS += seq pv 

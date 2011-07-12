@@ -2,6 +2,7 @@
    (see file Copyright.HZB included in this distribution)
 */
 #include "seq.h"
+#include "seq_debug.h"
 
 struct seqQueue {
     size_t          wr;
@@ -44,6 +45,7 @@ epicsShareFunc QUEUE seqQueueCreate(size_t numElems, size_t elemSize)
         errlogSevPrintf(errlogFatal, "seqQueueCreate: out of memory\n");
         return 0;
     }
+    DEBUG("%s:%d:calloc(%u,%u)\n",__FILE__,__LINE__,numElems, elemSize);
     q->buffer = (char *)calloc(numElems, elemSize);
     if (!q->buffer) {
         errlogSevPrintf(errlogFatal, "seqQueueCreate: out of memory\n");

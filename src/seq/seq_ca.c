@@ -92,7 +92,7 @@ pvStat seq_connect(SPROG *sp, boolean wait)
 				ch->dbch->dbName,	/* PV name */
 				seq_conn_handler,	/* connection handler routine */
 				ch,			/* private data is CHAN struc */
-				0,			/* debug level (inherited) */
+				sp->debug,		/* debug level (inherited) */
 				&dbch->pvid);		/* ptr to PV id */
 		if (status != pvStatOK)
 		{

@@ -55,6 +55,7 @@
 #include "pv.h"
 #include "seqCom.h"
 #include "seqPvt.h"
+#include "seq_debug.h"
 
 typedef struct {
     long	number;

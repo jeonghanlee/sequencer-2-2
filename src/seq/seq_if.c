@@ -551,7 +551,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvAssign(SS_ID ss, VAR_ID varId, const c
 			dbch->dbName,		/* DB channel name */
 			seq_conn_handler,	/* connection handler routine */
 			ch,			/* user ptr is CHAN structure */
-			0,			/* debug level (inherited) */
+			sp->debug,		/* debug level (inherited) */
 			&dbch->pvid);		/* ptr to pvid */
 		if (status != pvStatOK)
 		{

@@ -60,8 +60,10 @@
 #define max(x, y)		(((x) < (y)) ? (y) : (x))
 #endif
 
+#define free(p)			{DEBUG("%s:%d:free(%p)\n",__FILE__,__LINE__,p); free(p); p=0;}
+
 /* Generic allocation */
-#define newArray(type,count)	(type *)calloc(count, sizeof(type))
+#define newArray(type,count)	(DEBUG("%s:%d:calloc(%u,%u)\n",__FILE__,__LINE__,count,sizeof(type)),(type *)calloc(count, sizeof(type)))
 #define new(type)		newArray(type,1)
 
 typedef struct db_channel	DBCHAN;
