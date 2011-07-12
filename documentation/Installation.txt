@@ -47,6 +47,7 @@ or by following the links here:
    ============== ===========================
    Version        Release Notes
    -------------- ---------------------------
+   `2.1.0-rc2`_   :ref:`Release_Notes_2.1.0`
    `2.1.0-rc1`_   :ref:`Release_Notes_2.1.0`
    `2.0.99`_      :ref:`Release_Notes_2.0.99`
    `2.0.98`_      n/a
@@ -83,6 +84,7 @@ See `Contribute`_ for a short description how to record and send
 patches.
 
 .. _latest snapshot: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-snapshot-latest.tar.gz
+.. _2.1.0-rc2: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2.1.0-rc2.tar.gz
 .. _2.1.0-rc1: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2.1.0-rc1.tar.gz
 .. _2.0.99: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2.0.99.tar.gz
 .. _2.0.98: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2.0.98.tar.gz
