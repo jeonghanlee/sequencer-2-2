@@ -278,15 +278,11 @@ void seqMacFree(SPROG *sp)
 
 	foreach(mac, sp->macros)
 	{
-		if (mac->name != NULL)
-			free(mac->name);
-		if (mac->value != NULL)
-			free(mac->value);
-		if (lastMac != NULL)
-			free(lastMac);
+		free(mac->name);
+		free(mac->value);
+		free(lastMac);
 		lastMac = mac;
 	}
-	if (lastMac != NULL)
-		free(lastMac);
+	free(lastMac);
 	sp->macros = 0;
 }

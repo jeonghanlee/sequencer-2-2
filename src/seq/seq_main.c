@@ -39,7 +39,7 @@ epicsShareFunc void epicsShareAPI seq(
 	printf(SEQ_VERSION "\n");
 
 	/* Exit if no parameters specified */
-	if (seqProg == 0)
+	if (!seqProg)
 	{
 		errlogSevPrintf(errlogFatal, "seq: bad first argument seqProg (is NULL)\n");
 		return;
@@ -148,18 +148,14 @@ static boolean init_sprog(SPROG *sp, seqProgram *seqProg)
 	sp->numQueues = seqProg->numQueues;
 
 	/* Allocate user variable area if reentrant option (+r) is set */
-	if (sp->options & OPT_REENT)
+	if ((sp->options & OPT_REENT) && sp->varSize > 0)
 	{
-		sp->var = (USER_VAR *)calloc(1, sp->varSize);
+		sp->var = (USER_VAR *)newArray(char, sp->varSize);
 		if (!sp->var)
 		{
 			errlogSevPrintf(errlogFatal, "init_sprog: calloc failed\n");
 			return FALSE;
 		}
-	}
-	else
-	{
-		sp->var = NULL;
 	}
 
 	DEBUG("init_sprog: numSS=%d, numChans=%d, numEvFlags=%u, "
@@ -189,6 +185,7 @@ static boolean init_sprog(SPROG *sp, seqProgram *seqProg)
 	/* Allocate an array for event flag bits. Note this does
 	   *not* reserve space for all event numbers (i.e. including
 	   channels), only for event flags. */
+	assert(NWORDS(sp->numEvFlags) > 0);
 	sp->evFlags = newArray(bitMask, NWORDS(sp->numEvFlags));
 	if (!sp->evFlags)
 	{
@@ -215,11 +212,14 @@ static boolean init_sprog(SPROG *sp, seqProgram *seqProg)
 	}
 
 	/* Allocate array of state set structs and initialize it */
-	sp->ss = newArray(SSCB, sp->numSS);
-	if (!sp->ss)
+	if (sp->numSS > 0)
 	{
-		errlogSevPrintf(errlogFatal, "init_sprog: calloc failed\n");
-		return FALSE;
+		sp->ss = newArray(SSCB, sp->numSS);
+		if (!sp->ss)
+		{
+			errlogSevPrintf(errlogFatal, "init_sprog: calloc failed\n");
+			return FALSE;
+		}
 	}
 	for (nss = 0; nss < sp->numSS; nss++)
 	{
@@ -228,11 +228,14 @@ static boolean init_sprog(SPROG *sp, seqProgram *seqProg)
 	}
 
 	/* Allocate array of channel structs and initialize it */
-	sp->chan = newArray(CHAN, sp->numChans);
-	if (!sp->chan)
+	if (sp->numChans > 0)
 	{
-		errlogSevPrintf(errlogFatal, "init_sprog: calloc failed\n");
-		return FALSE;
+		sp->chan = newArray(CHAN, sp->numChans);
+		if (!sp->chan)
+		{
+			errlogSevPrintf(errlogFatal, "init_sprog: calloc failed\n");
+			return FALSE;
+		}
 	}
 	for (nch = 0; nch < sp->numChans; nch++)
 	{
@@ -254,17 +257,20 @@ static boolean init_sscb(SPROG *sp, SSCB *ss, seqSS *seqSS)
 	ss->numStates = seqSS->numStates;
 	ss->maxNumDelays = seqSS->numDelays;
 
-	ss->delay = newArray(double, ss->maxNumDelays);
-	if (!ss->delay)
+	if (ss->maxNumDelays > 0)
 	{
-		errlogSevPrintf(errlogFatal, "init_sscb: calloc failed\n");
-		return FALSE;
-	}
-	ss->delayExpired = newArray(boolean, ss->maxNumDelays);
-	if (!ss->delayExpired)
-	{
-		errlogSevPrintf(errlogFatal, "init_sscb: calloc failed\n");
-		return FALSE;
+		ss->delay = newArray(double, ss->maxNumDelays);
+		if (!ss->delay)
+		{
+			errlogSevPrintf(errlogFatal, "init_sscb: calloc failed\n");
+			return FALSE;
+		}
+		ss->delayExpired = newArray(boolean, ss->maxNumDelays);
+		if (!ss->delayExpired)
+		{
+			errlogSevPrintf(errlogFatal, "init_sscb: calloc failed\n");
+			return FALSE;
+		}
 	}
 	ss->currentState = 0; /* initial state */
 	ss->nextState = 0;
@@ -281,11 +287,20 @@ static boolean init_sscb(SPROG *sp, SSCB *ss, seqSS *seqSS)
 		return FALSE;
 	}
 
-	ss->getSemId = newArray(epicsEventId, sp->numChans);
-	if (!ss->getSemId)
+	if (sp->numChans > 0)
 	{
-		errlogSevPrintf(errlogFatal, "init_sscb: calloc failed\n");
-		return FALSE;
+		ss->getSemId = newArray(epicsEventId, sp->numChans);
+		if (!ss->getSemId)
+		{
+			errlogSevPrintf(errlogFatal, "init_sscb: calloc failed\n");
+			return FALSE;
+		}
+		ss->putSemId = newArray(epicsEventId, sp->numChans);
+		if (!ss->putSemId)
+		{
+			errlogSevPrintf(errlogFatal, "init_sscb: calloc failed\n");
+			return FALSE;
+		}
 	}
 	for (nch = 0; nch < sp->numChans; nch++)
 	{
@@ -295,16 +310,6 @@ static boolean init_sscb(SPROG *sp, SSCB *ss, seqSS *seqSS)
 			errlogSevPrintf(errlogFatal, "init_sscb: epicsEventCreate failed\n");
 			return FALSE;
 		}
-	}
-
-	ss->putSemId = newArray(epicsEventId, sp->numChans);
-	if (!ss->putSemId)
-	{
-		errlogSevPrintf(errlogFatal, "init_sscb: calloc failed\n");
-		return FALSE;
-	}
-	for (nch = 0; nch < sp->numChans; nch++)
-	{
 		ss->putSemId[nch] = epicsEventCreate(epicsEventFull);
 		if (!ss->putSemId[nch])
 		{
@@ -326,17 +331,23 @@ static boolean init_sscb(SPROG *sp, SSCB *ss, seqSS *seqSS)
 	/* Allocate separate user variable area if safe mode option (+s) is set */
 	if (sp->options & OPT_SAFE)
 	{
-		ss->dirty = newArray(boolean, sp->numChans);
-		if (!ss->dirty)
+		if (sp->numChans > 0)
 		{
-			errlogSevPrintf(errlogFatal, "init_sscb: calloc failed\n");
-			return FALSE;
+			ss->dirty = newArray(boolean, sp->numChans);
+			if (!ss->dirty)
+			{
+				errlogSevPrintf(errlogFatal, "init_sscb: calloc failed\n");
+				return FALSE;
+			}
 		}
-		ss->var = (USER_VAR *)calloc(1, sp->varSize);
-		if (!ss->var)
+		if (sp->varSize > 0)
 		{
-			errlogSevPrintf(errlogFatal, "init_sscb: calloc failed\n");
-			return FALSE;
+			ss->var = (USER_VAR *)newArray(char, sp->varSize);
+			if (!ss->var)
+			{
+				errlogSevPrintf(errlogFatal, "init_sscb: calloc failed\n");
+				return FALSE;
+			}
 		}
 	}
 	else
@@ -398,7 +409,7 @@ static boolean init_chan(SPROG *sp, CHAN *ch, seqChan *seqChan)
 				errlogSevPrintf(errlogFatal, "init_chan: epicsStrDup failed\n");
 				return FALSE;
 			}
-			if (sp->options & OPT_SAFE)
+			if ((sp->options & OPT_SAFE) && sp->numSS > 0)
 			{
 				dbch->ssMetaData = newArray(PVMETA, sp->numSS);
 				if (!dbch->ssMetaData)
@@ -508,7 +519,7 @@ static PVTYPE *find_type(const char *userType)
 /* Free all allocated memory in a program structure */
 void seq_free(SPROG *sp)
 {
-	unsigned nss, nch;
+	unsigned nss, nch, nq;
 
 	/* Delete state sets */
 	for (nss = 0; nss < sp->numSS; nss++)
@@ -526,15 +537,17 @@ void seq_free(SPROG *sp)
 
 		epicsEventDestroy(ss->dead);
 
-                if (ss->delay) free(ss->delay);
-                if (ss->delayExpired) free(ss->delayExpired);
-                if (ss->dirty) free(ss->dirty);
-		if (ss->var) free(ss->var);
+		free(ss->delay);
+		free(ss->delayExpired);
+		free(ss->dirty);
+		free(ss->var);
 	}
+
+	free(sp->ss);
 
 	/* Delete program-wide semaphores */
 	epicsMutexDestroy(sp->programLock);
-	if (sp->ready) epicsEventDestroy(sp->ready);
+	epicsEventDestroy(sp->ready);
 
 	seqMacFree(sp);
 
@@ -544,22 +557,18 @@ void seq_free(SPROG *sp)
 
 		if (ch->dbch)
 		{
-			if (ch->dbch->ssMetaData)
-				free(ch->dbch->ssMetaData);
-			if (ch->dbch->dbName)
-				free(ch->dbch->dbName);
+			free(ch->dbch->ssMetaData);
+			free(ch->dbch->dbName);
 			free(ch->dbch);
 		}
 	}
 	free(sp->chan);
-	free(sp->ss);
-	if (sp->queues) {
-		unsigned nq;
-		for (nq = 0; nq < sp->numQueues; nq++)
-			seqQueueDestroy(sp->queues[nq]);
-		free(sp->queues);
-	}
-	if (sp->evFlags) free(sp->evFlags);
-	if (sp->var) free(sp->var);
+
+	for (nq = 0; nq < sp->numQueues; nq++)
+		seqQueueDestroy(sp->queues[nq]);
+	free(sp->queues);
+
+	free(sp->evFlags);
+	free(sp->var);
 	free(sp);
 }
