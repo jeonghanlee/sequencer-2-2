@@ -26,16 +26,15 @@ static const int impossible = 0;
 struct const_symbol
 {
 	const char	*name;
-	int		value;
 };
 
 static struct const_symbol const_symbols[] =
 {
-	{"TRUE",	1},
-	{"FALSE",	0},
-	{"SYNC",	2},
-	{"ASYNC",	1},
-	{NULL,		0}
+	{"TRUE"},
+	{"FALSE"},
+	{"SYNC"},
+	{"ASYNC"},
+	{NULL}
 };
 
 enum
@@ -693,7 +692,7 @@ static int gen_builtin_const(int context, Expr *ep)
 
 	if (sym == NULL)
 		return FALSE;
-	printf("%d", sym->value);
+	printf("%s", const_name);
 	return TRUE;
 }
 
