@@ -956,6 +956,97 @@ comma operator, which is why application of the comma operator in an
 argument list must be grouped by parentheses.
 
 
+Built-in Constants
+------------------
+
+Some of the built-in functions use (i.e. accept or return) values of
+certain enumeration types and constants. These are also available to C
+code and defined in the header files pvAlarm.h and seqCom.h.
+
+.. versionadded:: 2.2
+
+The pvStat and pvSevr constants are now known to the compiler, so you
+no longer have to declare them as ``foreign`` in the SNL code.
+
+pvStat
+^^^^^^
+
+::
+
+   typedef enum {
+       /* generic OK and error statuses */
+       pvStatOK           = 0,
+       pvStatERROR        = -1,
+       pvStatDISCONN      = -2,
+
+       /* correspond to EPICS statuses */
+       pvStatREAD         = 1,
+       pvStatWRITE        = 2,
+       pvStatHIHI         = 3,
+       pvStatHIGH         = 4,
+       pvStatLOLO         = 5,
+       pvStatLOW          = 6,
+       pvStatSTATE        = 7,
+       pvStatCOS          = 8,
+       pvStatCOMM         = 9,
+       pvStatTIMEOUT      = 10,
+       pvStatHW_LIMIT     = 11,
+       pvStatCALC         = 12,
+       pvStatSCAN         = 13,
+       pvStatLINK         = 14,
+       pvStatSOFT         = 15,
+       pvStatBAD_SUB      = 16,
+       pvStatUDF          = 17,
+       pvStatDISABLE      = 18,
+       pvStatSIMM         = 19,
+       pvStatREAD_ACCESS  = 20,
+       pvStatWRITE_ACCESS = 21
+   } pvStat;
+
+pvSevr
+^^^^^^
+
+::
+
+   typedef enum {
+       /* generic OK and error severities */
+       pvSevrOK      = 0,
+       pvSevrERROR   = -1,
+
+       /* correspond to EPICS severities */
+       pvSevrNONE    = 0,
+       pvSevrMINOR   = 1,
+       pvSevrMAJOR   = 2,
+       pvSevrINVALID = 3
+   } pvSevr;
+
+compType
+^^^^^^^^
+
+::
+
+   enum compType {
+       DEFAULT,
+       ASYNC,
+       SYNC
+   };
+
+.. note::
+   Only ``SYNC`` and ``ASYNC`` are SNL built-in constants (i.e.
+   known to *snc*). The constant ``DEFAULT`` is for use in C code
+   (to represent a missing optional argument).
+
+boolean
+^^^^^^^
+
+::
+
+   typedef int boolean;
+
+   #define TRUE   1
+   #define FALSE  0
+
+
 .. _BuiltinFunctions:
 
 Built-in Functions
