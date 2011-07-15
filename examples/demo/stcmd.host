@@ -2,4 +2,4 @@ dbLoadDatabase "../../dbd/demo.dbd"
 demo_registerRecordDeviceDriver(pdbbase)
 dbLoadRecords "demo.db"
 iocInit
-seq &demo
+seq &demo "debug=0"

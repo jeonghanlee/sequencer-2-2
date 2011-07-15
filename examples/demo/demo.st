@@ -27,7 +27,7 @@
 
 #endif
 
-program demo( PVSYS ",debug=1" )
+program demo( PVSYS )
 
 %%#include "errlog.h"
 
