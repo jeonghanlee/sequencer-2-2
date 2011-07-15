@@ -47,27 +47,20 @@ record(bo,"demo:light") {
     field(ZSV,"MINOR")
 }
 
-record(stringin,"ss0") {
+record(stringin,"demo:ss_light") {
     field(DTYP,"Sequencer Internals")
-    field(INP,"@demo 0")
+    field(INP,"@demo light")
     field(SCAN,"1 second")
 }
 
-record(stringin,"ss1") {
+record(stringin,"demo:ss_ramp") {
     field(DTYP,"Sequencer Internals")
-    field(INP,"@demo 1")
+    field(INP,"@demo ramp")
     field(SCAN,"1 second")
 }
 
-record(waveform,"apple")
-{
-    field(PREC,6)
-    field(NELM,100)
+record(stringin,"demo:ss_limit") {
+    field(DTYP,"Sequencer Internals")
+    field(INP,"@demo limit")
+    field(SCAN,"1 second")
 }
-
-record(waveform,"orange")
-{
-    field(PREC,6)
-    field(NELM,100)
-}
-
