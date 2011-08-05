@@ -1,10 +1,12 @@
-/**************************************************************************
-	Copyright, 2010, Helmholtz-Zentrum Berlin f. Materialien
-		und Energie GmbH, Germany (HZB)
-		(see file Copyright.HZB included in this distribution)
-***************************************************************************
-		Lexer specification/implementation
-***************************************************************************/
+/*************************************************************************\
+Copyright (c) 2010-2011 Helmholtz-Zentrum Berlin f. Materialien
+                        und Energie GmbH, Germany (HZB)
+This file is distributed subject to a Software License Agreement found
+in the file LICENSE that is included with this distribution.
+\*************************************************************************/
+/*************************************************************************\
+                    Lexer specification/implementation
+\*************************************************************************/
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>

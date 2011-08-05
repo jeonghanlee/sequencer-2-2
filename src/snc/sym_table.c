@@ -1,10 +1,12 @@
-/**************************************************************************
-	Copyright, 2010, Helmholtz-Zentrum Berlin f. Materialien
-		und Energie GmbH, Germany (HZB)
-		(see file Copyright.HZB included in this distribution)
-***************************************************************************
-		Symbol table
-***************************************************************************/
+/*************************************************************************\
+Copyright (c) 2010-2011 Helmholtz-Zentrum Berlin f. Materialien
+                        und Energie GmbH, Germany (HZB)
+This file is distributed subject to a Software License Agreement found
+in the file LICENSE that is included with this distribution.
+\*************************************************************************/
+/*************************************************************************\
+                                Symbol table
+\*************************************************************************/
 #include <stdio.h>	/* gpHash.h mentions FILE but does not include stdio */
 #include <gpHash.h>
 #include <assert.h>

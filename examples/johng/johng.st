@@ -1,3 +1,7 @@
+/*************************************************************************\
+This file is distributed subject to a Software License Agreement found
+in the file LICENSE that is included with this distribution.
+\*************************************************************************/
 /* Demo Unix/KTL EPICS sequencer for John G (doesn't do anything useful) */
 
 /* select KTL message system */

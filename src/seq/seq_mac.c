@@ -1,17 +1,17 @@
-/**************************************************************************
-			GTA PROJECT   AT division
-	Copyright, 1990, The Regents of the University of California.
-		         Los Alamos National Laboratory
+/*************************************************************************\
+Copyright (c) 1990      The Regents of the University of California
+                        and the University of Chicago.
+                        Los Alamos National Laboratory
+Copyright (c) 2010-2011 Helmholtz-Zentrum Berlin f. Materialien
+                        und Energie GmbH, Germany (HZB)
+This file is distributed subject to a Software License Agreement found
+in the file LICENSE that is included with this distribution.
+\*************************************************************************/
+/*************************************************************************\
+                    Macro routines for Sequencer
 
-	Copyright, 2010, Helmholtz-Zentrum Berlin f. Materialien
-		und Energie GmbH, Germany (HZB)
-		(see file Copyright.HZB included in this distribution)
-
-	Macro routines for Sequencer.
-	The macro table contains name & value pairs.  These are both pointers
-	to strings.
-        TODO: Get rid of this and use the macLib from EPICS base.
-***************************************************************************/
+TODO: Get rid of this and use the macLib from EPICS base.
+\*************************************************************************/
 #include "seq.h"
 #include "seq_debug.h"
 

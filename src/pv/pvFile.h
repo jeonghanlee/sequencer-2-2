@@ -1,3 +1,7 @@
+/*************************************************************************\
+This file is distributed subject to a Software License Agreement found
+in the file LICENSE that is included with this distribution.
+\*************************************************************************/
 /* Definitions for demonstration EPICS sequencer file library (pvFile)
  *
  * William Lupton, W. M. Keck Observatory

@@ -1,7 +1,7 @@
-/*	Copyright, 2010, Helmholtz-Zentrum Berlin f. Materialien
-		und Energie GmbH, Germany (HZB)
-		(see file Copyright.HZB included in this distribution)
-*/
+/*************************************************************************\
+This file is distributed subject to a Software License Agreement found
+in the file LICENSE that is included with this distribution.
+\*************************************************************************/
 /* Device support to permit database access to sequencer internals
  *
  * This is experimental only. Note the following:

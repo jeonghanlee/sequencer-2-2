@@ -1,3 +1,7 @@
+/*************************************************************************\
+This file is distributed subject to a Software License Agreement found
+in the file LICENSE that is included with this distribution.
+\*************************************************************************/
 program exitOptxTest
 /* snc test program to test entry and exit condition execution, with -e
  * option. Test -e, that entry will be executed on each iteration.

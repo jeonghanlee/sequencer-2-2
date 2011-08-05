@@ -1,16 +1,18 @@
+/*************************************************************************\
+Copyright (c) 1991-1994 The Regents of the University of California
+                        and the University of Chicago.
+                        Los Alamos National Laboratory
+Copyright (c) 2010-2011 Helmholtz-Zentrum Berlin f. Materialien
+                        und Energie GmbH, Germany (HZB)
+This file is distributed subject to a Software License Agreement found
+in the file LICENSE that is included with this distribution.
+\*************************************************************************/
 /*	Interface functions from state program to run-time sequencer.
  *
  *	Author:  Andy Kozubal
  *	Date:    1 March, 1994
  *
  *	Experimental Physics and Industrial Control System (EPICS)
- *
- *	Copyright 1991-1994, the Regents of the University of California,
- *	and the University of Chicago Board of Governors.
- *
- *	Copyright, 2010, Helmholtz-Zentrum Berlin f. Materialien
- *		und Energie GmbH, Germany (HZB)
- *		(see file Copyright.HZB included in this distribution)
  *
  *	This software was produced under  U.S. Government contracts:
  *	(W-7405-ENG-36) at the Los Alamos National Laboratory,

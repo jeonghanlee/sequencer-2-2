@@ -1,3 +1,9 @@
+/*************************************************************************\
+Copyright (c) 2010-2011 Helmholtz-Zentrum Berlin f. Materialien
+                        und Energie GmbH, Germany (HZB)
+This file is distributed subject to a Software License Agreement found
+in the file LICENSE that is included with this distribution.
+\*************************************************************************/
 /*
  * ss write: Put increasing numbers to (monitored and ef synced) PV, wait for reply,
  *  then check sent and received are equal, then sleep a bit, check again, then

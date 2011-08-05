@@ -1,3 +1,7 @@
+/*************************************************************************\
+This file is distributed subject to a Software License Agreement found
+in the file LICENSE that is included with this distribution.
+\*************************************************************************/
 /* Definitions for EPICS sequencer message system-independent types.
  *
  * William Lupton, W. M. Keck Observatory

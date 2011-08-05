@@ -1,12 +1,11 @@
-/* demoMain.c */
+/*************************************************************************\
+Copyright (c) 1990-1994 The Regents of the University of California
+                        and the University of Chicago.
+                        Los Alamos National Laboratory
+This file is distributed subject to a Software License Agreement found
+in the file LICENSE that is included with this distribution.
+\*************************************************************************/
 /* Author:  Marty Kraimer Date:    17MAR2000 */
-
-/********************COPYRIGHT NOTIFICATION**********************************
-This software was developed under a United States Government license
-described on the COPYRIGHT_UniversityOfChicago file included as part
-of this distribution.
-****************************************************************************/
-
 /*
  * Main program for demo sequencer
  */

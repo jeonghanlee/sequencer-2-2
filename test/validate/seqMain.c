@@ -1,13 +1,13 @@
 /*************************************************************************\
-* Copyright (c) 2008 UChicago Argonne LLC, as Operator of Argonne
-*     National Laboratory.
-* Copyright (c) 2003 The Regents of the University of California, as
-*     Operator of Los Alamos National Laboratory.
-* EPICS BASE is distributed subject to the Software License Agreement
-* found in the file LICENSE that is included with this distribution.
+Copyright (c) 2003      The Regents of the University of California, as
+                        Operator of Los Alamos National Laboratory
+Copyright (c) 2008      UChicago Argonne LLC, as Operator of Argonne
+                        National Laboratory
+Copyright (c) 2010-2011 Helmholtz-Zentrum Berlin f. Materialien
+                        und Energie GmbH, Germany (HZB)
+This file is distributed subject to a Software License Agreement found
+in the file LICENSE that is included with this distribution.
 \*************************************************************************/
-
-/* Revision-Id: anj@aps.anl.gov-20101005192737-disfz3vs0f3fiixd */
 
 /* Author: Andrew Johnson	Date: 2003-04-08 */
 /* Adapted to serve as alternative seqMain.c for seq testing by Ben Franksen */

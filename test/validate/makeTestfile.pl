@@ -1,11 +1,13 @@
 #!/usr/bin/perl
 #*************************************************************************
-# Copyright (c) 2008 UChicago Argonne LLC, as Operator of Argonne
-#     National Laboratory.
-# Copyright (c) 2002 The Regents of the University of California, as
-#     Operator of Los Alamos National Laboratory.
-# EPICS BASE is distributed subject to a Software License Agreement found
-# in file LICENSE that is included with this distribution. 
+# Copyright (c) 2002      The Regents of the University of California, as
+#                         Operator of Los Alamos National Laboratory.
+# Copyright (c) 2008      UChicago Argonne LLC, as Operator of Argonne
+#                         National Laboratory.
+# Copyright (c) 2010-2011 Helmholtz-Zentrum Berlin f. Materialien
+#                         und Energie GmbH, Germany (HZB)
+# This file is distributed subject to a Software License Agreement found
+# in file LICENSE that is included with this distribution.
 #*************************************************************************
 
 # The makeTestfile.pl script generates a file $target.t which is needed

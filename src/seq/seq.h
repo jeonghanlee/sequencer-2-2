@@ -1,12 +1,18 @@
+/*************************************************************************\
+Copyright (c) 1991-1993 The Regents of the University of California
+                        and the University of Chicago.
+                        Los Alamos National Laboratory
+Copyright (c) 2010-2011 Helmholtz-Zentrum Berlin f. Materialien
+                        und Energie GmbH, Germany (HZB)
+This file is distributed subject to a Software License Agreement found
+in the file LICENSE that is included with this distribution.
+\*************************************************************************/
 /*      Definitions for the run-time sequencer
  *
  *      Author:         Andy Kozubal
  *      Date:           
  *
  *      Experimental Physics and Industrial Control System (EPICS)
- *
- *      Copyright 1991,2,3, the Regents of the University of California,
- *      and the University of Chicago Board of Governors.
  *
  *      This software was produced under  U.S. Government contracts:
  *      (W-7405-ENG-36) at the Los Alamos National Laboratory,

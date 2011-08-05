@@ -19,52 +19,14 @@ Eric Norum, Janet Anderson, and Marty Kraimer (APS) made the initial
 port to EPICS 3.14 that led to the 2.0.x series. Eric Norum and Andrew
 Johnson (APS) provided lots of patches up to release 2.0.12.
 
-Copyright
----------
+Copying and Distribution
+------------------------
 
-This software was produced under U.S. Government contract at Los Alamos
-National Laboratory and at Argonne National Laboratory. The EPICS
-software is copyright by the Regents of the University of California
-and the University of Chicago.
+The EPICS Sequencer is distributed subject to a Software License
+Agreement found in the file LICENSE that is included with this
+distribution.
 
-The original version of this documentation contained the following
-sentence: "This document may be reproduced and distributed without
-restrictions, provided it is reproduced in its entirety, including the
-cover page." The reader may judge for himself how to fill this with
-sense, considering that in the meantime the documentation has been
-converted to reStructuredText, largely rewritten, restructured, and
-automatically processed to generate web pages.
-
-Since Ben Franksen, employed by the Helmholtz-Zentrum Berlin f.
-Materialien und Energie (HZB) made significant changes to the software
-and documentation, the copyright is extended accordingly. This is
-the standard disclaimer:
-
-  This software is copyrighted by the HELMHOLTZ-ZENTRUM BERLIN FUER
-  MATERIALIEN UND ENERGIE G.M.B.H., BERLIN, GERMANY (HZB).
-  The following terms apply to all files associated with the
-  software.
-
-  HZB hereby grants permission to use, copy, and modify this
-  software and its documentation for non-commercial educational or
-  research purposes, provided that existing copyright notices are
-  retained in all copies.
-
-  The receiver of the software provides HZB with all enhancements,
-  including complete translations, made by the receiver.
-
-  IN NO EVENT SHALL HZB BE LIABLE TO ANY PARTY FOR DIRECT,
-  INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES ARISING
-  OUT OF THE USE OF THIS SOFTWARE, ITS DOCUMENTATION, OR ANY
-  DERIVATIVES THEREOF, EVEN IF HZB HAS BEEN ADVISED OF THE
-  POSSIBILITY OF SUCH DAMAGE.
-
-  HZB SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT
-  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR
-  A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.  THIS SOFTWARE IS
-  PROVIDED ON AN "AS IS" BASIS, AND HZB HAS NO OBLIGATION TO
-  PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
-  MODIFICATIONS.
+.. include:: ../LICENSE
 
 Note on Versions
 ----------------

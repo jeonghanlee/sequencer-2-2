@@ -1,3 +1,9 @@
+/*************************************************************************\
+Copyright (c) 2010-2011 Helmholtz-Zentrum Berlin f. Materialien
+                        und Energie GmbH, Germany (HZB)
+This file is distributed subject to a Software License Agreement found
+in the file LICENSE that is included with this distribution.
+\*************************************************************************/
 /*
  * Test proper rejection of variables whose type is too long
  * to allow faithfull representation in CA, i.e. 64 bit types.

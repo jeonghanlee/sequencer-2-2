@@ -1,15 +1,19 @@
-/* Copyright 2010 Helmholtz-Zentrum Berlin f. Materialien und Energie GmbH
-   (see file Copyright.HZB included in this distribution)
-*/
-/* This module implements fifo queues, similar to and inspired by
-   epicsRingBytes, but with a fixed element size and such that a put
-   overwrites the last element if the queue is full. Put and get
-   operations always work on a single element.
+/*************************************************************************\
+Copyright (c) 2010-2011 Helmholtz-Zentrum Berlin f. Materialien
+                        und Energie GmbH, Germany (HZB)
+This file is distributed subject to a Software License Agreement found
+in the file LICENSE that is included with this distribution.
+\*************************************************************************/
+/*************************************************************************\
+This module implements fifo queues, similar to and inspired by
+epicsRingBytes, but with a fixed element size and such that a put
+overwrites the last element if the queue is full. Put and get
+operations always work on a single element.
 
-   The implementation allows one reader and one writer to access the queue
-   without taking a mutex, except where unavoidable, i.e. when the queue is
-   full.
-*/
+The implementation allows one reader and one writer to access the queue
+without taking a mutex, except where unavoidable, i.e. when the queue is
+full.
+\*************************************************************************/
 #ifndef INCLseq_queueh
 #define INCLseq_queueh
 

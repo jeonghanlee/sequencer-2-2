@@ -1,13 +1,12 @@
-/**************************************************************************
-			GTA PROJECT   AT division
-	Copyright, 1990-1994, The Regents of the University of California
-	and the University of Chicago.
-	Los Alamos National Laboratory
-
-	Copyright, 2010, Helmholtz-Zentrum Berlin f. Materialien
-		und Energie GmbH, Germany (HZB)
-		(see file Copyright.HZB included in this distribution)
-***************************************************************************/
+/*************************************************************************\
+Copyright (c) 1990-1994 The Regents of the University of California
+                        and the University of Chicago.
+                        Los Alamos National Laboratory
+Copyright (c) 2010-2011 Helmholtz-Zentrum Berlin f. Materialien
+                        und Energie GmbH, Germany (HZB)
+This file is distributed subject to a Software License Agreement found
+in the file LICENSE that is included with this distribution.
+\*************************************************************************/
 #include "seq.h"
 #include "seq_debug.h"
 
