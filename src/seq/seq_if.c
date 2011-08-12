@@ -517,9 +517,10 @@ epicsShareFunc pvStat epicsShareAPI seq_pvAssign(SS_ID ss, VAR_ID varId, const c
 
 	epicsMutexMustLock(sp->programLock);
 
-	if (dbch)	/* Disconnect this PV */
+	if (dbch)	/* disconnect if connected */
 	{
 		status = pvVarDestroy(dbch->pvid);
+		dbch->pvid = NULL;
 		if (status != pvStatOK)
 		{
 			errlogSevPrintf(errlogFatal, "pvAssign: pvVarDestroy() %s failure: "
@@ -528,16 +529,15 @@ epicsShareFunc pvStat epicsShareAPI seq_pvAssign(SS_ID ss, VAR_ID varId, const c
 		free(dbch->dbName);
 	}
 
-	if (pvName[0] == 0)
+	if (pvName == NULL || pvName[0] == 0)
 	{
-		free(dbch);
-		ch->dbch = NULL;
 		sp->assignCount -= 1;
 		if (dbch->connected)
 		{
 			dbch->connected = FALSE;
 			sp->connectCount -= 1;
 		}
+		free(ch->dbch);
 	}
 	else		/* Connect */
 	{

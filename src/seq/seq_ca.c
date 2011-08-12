@@ -89,6 +89,7 @@ pvStat seq_connect(SPROG *sp, boolean wait)
 		DEBUG("seq_connect: connect %s to %s\n", ch->varName,
 			dbch->dbName);
 		/* Connect to it */
+		dbch->pvid = NULL;
 		status = pvVarCreate(
 				sp->pvSys,		/* PV system context */
 				ch->dbch->dbName,	/* PV name */
@@ -325,6 +326,7 @@ void seq_disconnect(SPROG *sp)
  			ch->varName, dbch->dbName);
 		/* Disconnect this PV */
 		status = pvVarDestroy(dbch->pvid);
+		dbch->pvid = NULL;
 		if (status != pvStatOK)
 		    errlogSevPrintf(errlogFatal, "seq_disconnect: pvVarDestroy() %s failure: "
 				"%s\n", dbch->dbName, pvVarGetMess(dbch->pvid));
@@ -381,13 +383,11 @@ void seq_conn_handler(void *var, int connected)
 	assert(dbch != NULL);
 
 	/* Note that CA may call this while pvVarCreate is still running,
-	   so dbch->pvid may not yet be initialized. Since the call
-	   to seq_monitor below uses it we have to prepone initialization
-	   at this point.
-	  */
+	   so dbch->pvid may not yet be initialized. */
 	if (!dbch->pvid)
 		dbch->pvid = var;
 
+	DEBUG("seq_conn_handler(%p,%d), dbch->pvid=%p\n", var, connected, dbch->pvid);
 	assert(dbch->pvid == var);
 	if (!connected)
 	{
