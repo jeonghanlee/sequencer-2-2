@@ -206,7 +206,8 @@ int main(int argc, char *argv[])
     if (startIocsh) {
 	iocsh(NULL);
     } else {
-        epicsThreadExitMain();
+        while(1) epicsThreadSleep(1);
+        /* epicsThreadExitMain(); */
     }
     epicsExit(EXIT_SUCCESS);
     /*Note that the following statement will never be executed*/
