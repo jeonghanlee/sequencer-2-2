@@ -19,7 +19,7 @@ assign s1 to "syncq";
 monitor s1;
 evflag ef_s1;
 sync s1 to ef_s1;
-syncq s1;
+syncq s1 5;
 
 int n = 0;
 assign n;
