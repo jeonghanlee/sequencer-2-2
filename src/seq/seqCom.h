@@ -108,7 +108,7 @@ typedef struct seqProgram seqProgram;
 struct seqChan
 {
 	const char	*chName;	/* assigned channel name */
-	ptrdiff_t	offset;		/* offset to value */
+	size_t		offset;		/* offset to value */
 	const char	*varName;	/* variable name, including subscripts*/
 	const char	*varType;	/* variable type, e.g. "int" */
 	unsigned	count;		/* element count for arrays */

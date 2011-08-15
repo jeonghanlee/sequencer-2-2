@@ -365,7 +365,6 @@ static boolean init_chan(SPROG *sp, CHAN *ch, seqChan *seqChan)
 	DEBUG("init_chan: ch=%p\n", ch);
 	ch->sprog = sp;
 	ch->varName = seqChan->varName;
-	assert(seqChan->offset >= 0);
 	ch->offset = seqChan->offset;
 	ch->count = seqChan->count;
 	if (ch->count == 0) ch->count = 1;

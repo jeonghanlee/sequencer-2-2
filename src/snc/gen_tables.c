@@ -147,7 +147,7 @@ static void gen_channel(Chan *cp, uint num_event_flags, int opt_reent)
 	}
 	else
 	{
-		printf("(ptrdiff_t)&");
+		printf("(size_t)&");
 		gen_var_name(vp);
 		printf("%s, ", elem_str);
 	}

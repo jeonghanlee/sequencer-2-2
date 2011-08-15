@@ -82,7 +82,7 @@ typedef struct pv_meta_data	PVMETA;
 struct channel
 {
 	/* static channel data (assigned once on startup) */
-	ptrdiff_t	offset;		/* offset to value (e.g. in sprog->var) */
+	size_t		offset;		/* offset to value (e.g. in sprog->var) */
 	const char	*varName;	/* variable name */
 	unsigned	count;		/* number of elements in array */
 	unsigned	eventNum;	/* event number */
