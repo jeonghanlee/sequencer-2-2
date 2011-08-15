@@ -531,13 +531,15 @@ epicsShareFunc pvStat epicsShareAPI seq_pvAssign(SS_ID ss, VAR_ID varId, const c
 
 	if (pvName == NULL || pvName[0] == 0)
 	{
-		sp->assignCount -= 1;
-		if (dbch->connected)
-		{
-			dbch->connected = FALSE;
-			sp->connectCount -= 1;
+		if (dbch) {
+			sp->assignCount -= 1;
+			if (dbch->connected)
+			{
+				dbch->connected = FALSE;
+				sp->connectCount -= 1;
+			}
+			free(ch->dbch);
 		}
-		free(ch->dbch);
 	}
 	else		/* Connect */
 	{

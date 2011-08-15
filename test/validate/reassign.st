@@ -8,8 +8,9 @@ program reassignTest
 
 %%#include "../testSupport.h"
 
-int x;
+int x, y;
 assign x to "pv1";
+assign y to "";
 
 #define NTESTS 1
 
@@ -23,6 +24,8 @@ ss reassign {
             pvAssign(x,"");
             pvAssign(x,"pv1");
             pvAssign(x,"pv2");
+            pvAssign(y,"");
+            pvAssign(y,"pv1");
         } state done
     }
     state done {
