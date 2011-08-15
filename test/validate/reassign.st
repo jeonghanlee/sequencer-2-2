@@ -26,6 +26,7 @@ ss reassign {
             pvAssign(x,"pv2");
             pvAssign(y,"");
             pvAssign(y,"pv1");
+            seqShow(epicsThreadGetIdSelf());
         } state done
     }
     state done {
