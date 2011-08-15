@@ -188,7 +188,7 @@ If, in addition, you want a printable version (pdf), do::
    > make docs=1 pdf=1
 
 This generates a pdf file named ``Manual.pdf`` and also puts it into the
-``html`` subdirectory. Note that pdf generattion is done via latex, so
+``html`` subdirectory. Note that pdf generation is done via latex, so
 you need to have a working latex installation. On my system (kubuntu
 karmic) I also needed to install the package tetex-extra.
 

@@ -609,3 +609,33 @@ this::
   }
   pvPut(wf);
   ...
+
+What's Happening at Run Time
+----------------------------
+
+At run time the sequencer blocks until something "interesting" occurs,
+where "interesting" means things like  receiving a monitor from  a PV
+used in a ``when`` statement, an event flag changing state, or a delay
+timer expiring. The sequencer then scans the list of ``when``
+statements for the current state and evaluates each expression in
+turn.  If a ``when`` expression evaluates to non-zero the actions
+within that ``when`` block are executed and the sequencer enters the
+state specified by that ``when`` statement.  The sequencer then blocks
+again waiting for something "interesting" to happen.  A complete list
+of these conditions can be found in section 6.5.
+
+A common misconception among new state notation language programmers
+is that the sequencer somehow blocks inside the ``delay`` functions
+within ``when`` statements.  This interpretation of the ``delay``
+function is incorrect but understandable given the name.  A ``delay``
+function does not block the sequencer.  Instead it tells the sequencer
+to compare the value specified by the ``delay`` expression with a
+timer that is reset whenever the state is entered or whenever the
+state is entered from another state.  If the timer matches or exceeds
+the value of the expression the ``delay`` function returns ``TRUE``
+otherwise it returns ``FALSE``.
+
+If your action statements have any sort of polling loops or calls to
+``epicsThreadSleep`` you should reconsider your design.   The presence
+of such operations is a strong indication that you're not using the
+sequencer as intended.

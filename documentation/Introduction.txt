@@ -34,7 +34,7 @@ Note on Versions
 This text is supposed to describe version 2.1. Version 2.1 adds
 support for local definitions (including variable declarations) at all
 levels, a significantly improved compiler that employs new lexer and
-parser generators, lots of bugfixes, and a new *safe mode* to avoid
+parser generators, lots of bug fixes, and a new *safe mode* to avoid
 variable corruption due to race conditions.
 See :ref:`Release_Notes_2.1.0` and :ref:`Release_Notes_2.0.99` for
 details.

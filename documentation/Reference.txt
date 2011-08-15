@@ -167,7 +167,7 @@ first state set. This means that in :ref:`safe mode` changes to global
 variables made from inside the entry block are not visible to state sets
 other than the first unless explicitly communicated (e.g. by calling pvPut).
 The fact that the first state set plays a special role is a historical
-accident, rather than concious design. I might be tempted to redesign this
+accident, rather than conscious design. I might be tempted to redesign this
 aspect in a future version, for instance by giving entry and exit blocks
 their own dedicated virtual state set.
 
@@ -283,7 +283,7 @@ The type :token:`string` is defined in C as::
 where ``MAX_STRING_SIZE`` is a constant defined in one of the
 included header files from EPICS base. I know of no EPICS version
 where it is different from 40, but to be on the safe side I
-reccommend not to rely too much on the numeric value. (You can use
+recommend not to rely too much on the numeric value. (You can use
 ``sizeof(string)`` in SNL expressions.)
 
 .. note:: In contrast to C, in SNL ``string s`` is *not* a synonym for
@@ -531,7 +531,7 @@ maximum number of elements that can be stored in the queue. A
 missing size means that it defaults to 100 elements. The variable can
 be an array, and may be associated with multiple process variables, in
 which case there is still only one queue, but any change in any of the
-incolved PVs will add an entry to the queue.
+involved PVs will add an entry to the queue.
 
 .. versionadded:: 2.1
 
@@ -745,7 +745,7 @@ Transitions
    opt_expr: 
 
 A state transition starts with the keyword "when", followed by a
-condition (in parantheses), followed by a block, and finally the
+condition (in parentheses), followed by a block, and finally the
 keyword "state" and then the name
 of the target state (which must be any state of the same state set).
 
@@ -815,8 +815,8 @@ specified new state (given after the block) with its state argument.
 Expressions
 ^^^^^^^^^^^
 
-Formation rules for expressions are listed in groups of decending order
-of precendence.
+Formation rules for expressions are listed in groups of descending order
+of precedence.
 
 Atomic Expression
 ~~~~~~~~~~~~~~~~~
@@ -1088,7 +1088,7 @@ In :ref:`safe mode`, if ``ASYNC`` is specified and the variable is not
 monitored, then the state set local copy of the variable will not be updated
 until a call to pvGetComplete is made and returns ``TRUE`` or, if the
 variable is monitored, until the state set waits for events in a :token:`when`
-clause. Note that anonymous PVs behave exactly in teh same way.
+clause. Note that anonymous PVs behave exactly in the same way.
 
 pvGetComplete
 ^^^^^^^^^^^^^
@@ -1612,7 +1612,7 @@ Calling pvGet etc. from C
 
 The built-in SNL functions such as :c:func:`pvGet` cannot be directly used
 in user-supplied functions. However, most of the built-in functions
-have a C language equivalent with teh same name, except that the prefix ``seq_``
+have a C language equivalent with the same name, except that the prefix ``seq_``
 is added (e.g. ``pvGet`` becomes ``seq_pvGet``). These C functions expect an
 additional first argument identifying the calling state set, which is
 available in action code under the name ``ssId``. If a process

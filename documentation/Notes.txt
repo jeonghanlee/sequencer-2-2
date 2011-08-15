@@ -274,7 +274,7 @@ Internals
 The compiler is not a re-write from scratch, but changes are numerous
 and pervasive.
 
-The ancient versions of yacc and lexx that are bundled with EPICS base
+The ancient versions of yacc and lex that are bundled with EPICS base
 (in a modified version and thus never upgraded) are no longer used.
 Since lex/yacc suffers from severe backward compatibility disease
 (witness all the traditional-C stuff they still carry around, global
@@ -282,7 +282,7 @@ vars and everything), I decided to look for something better. Shying
 away from more radical steps (for instance, it would have been much,
 much easier to re-implement the whole compiler in Haskell) because of
 all the usual issues involved (portability, nobody else would
-understand the code, etc, etc), I chose a more conservative approch:
+understand the code, etc, etc), I chose a more conservative approach:
 the new snc version uses re2c as the lexer generator, and lemon as the
 parser generator. Re2c is available for many platforms (including
 Windows), whereas lemon consists of just one source file (plus one
@@ -365,7 +365,7 @@ Release 2.0.12
 Release 2.0.11
 ^^^^^^^^^^^^^^
 
--  A bugfix in src/seq/seq_ca.c found by Stephanie Allison and Till
+-  A bug fix in src/seq/seq_ca.c found by Stephanie Allison and Till
    Straumann.
 
 -  Moved the PV build configuration variables from configure/RELEASE to
@@ -401,9 +401,9 @@ Release 2.0.8
 -  seq_main.c was casting a pointer to an int. On some architectures
    this caused a warning message.
 
--  Support for cygwin32 om windows was added.
+-  Support for cygwin32 on windows was added.
 
--  test/pv/ was still still using osiThread.h. This is replaced bt
+-  test/pv/ was still still using osiThread.h. This is replaced by
    epicsThread.
 
 -  test/simple and test/validate now use EPICS_BASE_IOC_LIBS instead of
@@ -556,7 +556,7 @@ Comments about changes made for release 2.0.1
 
 -  in src/seq
    *  seq now returns an epicsThreadId
-   *  all addesses now printed with %p
+   *  all addresses now printed with %p
    *  several epicsPrintf replaced with printf.
    *  Got rid of simple shell supplied by seq. No longer needed.
 
@@ -564,7 +564,7 @@ Comments about changes made for release 2.0.1
 
    *  Only LIBRARY = pv is generated. It includes the stuff
       that was in pvKtl, pvCa, and pvFile if they are requested.
-   *  This was done because the old way caused a circircular dependency
+   *  This was done because the old way caused a circular dependency
       that is not accepted by windows.
 
 
@@ -620,7 +620,7 @@ Entry handler
 Entry and exit actions
    The :token:`entry` block of a state is executed each time the state is
    entered; the :token:`exit` block is executed each time the state is left.
-   Note that these blocks are aassociated with a state and are not the
+   Note that these blocks are associated with a state and are not the
    same as the one-off entry and exit handlers. See
    :ref:`state entry and exit blocks`.
 
@@ -648,7 +648,7 @@ Queueable monitors
 
 Device support
    An device support module has been added. This allows EPICS records
-   to refererence sequencer internals. At present this is very basic
+   to reference sequencer internals. At present this is very basic
    and can only return state-set names. See
    :ref:`Verifyingtheinstallation` for a well-hidden example (look for
    ``caget ss0``).
