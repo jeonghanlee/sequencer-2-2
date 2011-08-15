@@ -227,6 +227,8 @@ The remain some limitations:
 
 Some of these restrictions may be lifted in future versions.
 
+.. _Types:
+
 Types
 ~~~~~
 
@@ -960,8 +962,8 @@ calling :c:func:`delay` in action code does *not* introduce a delay at this
 point. Later versions of *snc* may output a warning or even stop with an
 error.
 
-delay
-^^^^^
+delay expired
+^^^^^^^^^^^^^
 
 .. c:function::
    boolean delay(double delay_in_seconds)

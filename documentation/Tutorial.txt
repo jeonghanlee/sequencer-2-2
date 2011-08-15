@@ -48,9 +48,9 @@ that is similar to the C language. In fact the SNL uses its own
 syntax plus a subset of C, such as expressions, assignment
 statements, and function calls. This example contains two code
 blocks that define states: ``light_off`` and ``light_on`` . Within
-these blocks are ``when`` statements that define the events
+these blocks are :token:`when` statements that define the events
 (``v > 5.0`` and ``v < 3.0``). Following these statements are
-blocks containing actions (C statements). The ``pvPut`` function
+blocks containing actions (C statements). The :c:func:`pvPut` function
 writes or puts the value in the variable ``light`` to the appropriate
 process variables. Finally, the next states are specified
 following the action blocks.
@@ -64,7 +64,7 @@ variables using the following declarations::
   assign v to "Input_voltage";
   assign light to "Indicator_light";
 
-The above ``assign`` statements associate the variables ``v`` and
+The above :token:`assign` statements associate the variables ``v`` and
 ``light`` with the process variables "Input\_voltage" and
 "Indicator\_light" respectively. We want the value of ``v`` to be
 updated automatically whenever it changes. This is accomplished
@@ -158,28 +158,28 @@ Next we add the following lines after the first state set::
   }
 
 The above example exhibits several concepts. First, note that the
-``when`` statement in state ``init`` contains an empty event
+:token:`when` statement in state ``init`` contains an empty event
 expression. This means unconditional execution of the transition.
-Because ``init`` is the first state in the state set, it is assumed
-to be the initial state. You will find this to be a convenient
-method for initialization. Also, notice that the ``ramp`` state
-always returns to itself. This is a permissible and often useful
-construct. The structure of this state set is shown in the following STD:
+Because ``init`` is the first state in the state set, it is assumed to
+be the initial state. You will find this to be a convenient method for
+initialization. Also, notice that the ``ramp`` state always returns to
+itself. This is a permissible and often useful construct. The
+structure of this state set is shown in the following STD:
 
 .. image:: Figure2-2.png
 
-The final concept introduced in the last example is the ``delay``
-function. This function returns a ``TRUE`` value after a specified
-time interval from when the state was entered. The parameter to
-``delay`` specifies the number of seconds, and must be a floating
-point value (constant or expression).
+The final concept introduced in the last example is the
+:c:func:`delay` function. This function returns a ``TRUE`` value after
+a specified time interval from when the state was entered. The
+parameter to :c:func:`delay` specifies the number of seconds, and must
+be a floating point value (constant or expression).
 
-At this point, you may wish to try an example with the two state
-sets. You can jump ahead and read parts of Chapters 3-5. You
-probably want to pick unique names for your process
-variables, rather than the ones used above. You may also wish to
-replace the ``pvPut`` statements with ``printf`` statements to display
-"High" and "Low" on your console.
+At this point, you may wish to try an example with the two state sets.
+You can jump ahead and read parts of Chapters 3-5. You probably want
+to pick unique names for your process variables, rather than the ones
+used above. You may also wish to replace the :c:func:`pvPut`
+statements with ``printf`` statements to display "High" and "Low" on
+your console.
 
 Variable Names Using Macros
 ---------------------------
@@ -187,7 +187,7 @@ Variable Names Using Macros
 One of the features of the SNL and run-time sequencer is the
 ability to specify the names of process variables at
 run-time. This is done by using macro substitution. In our example
-we could replace the ``assign`` statements with the following::
+we could replace the :token:`assign` statements with the following::
 
   assign v to "{unit}:ai1";
   assign vout to "{unit}:ao1";
@@ -205,21 +205,22 @@ Data Types
 ----------
 
 The allowable variable declaration types correspond to the C types:
-``char`` , ``unsigned char`` , ``short`` , ``unsigned short`` , ``int`` ,
-``unsigned int`` , ``long`` , ``unsigned long`` , ``float`` , and ``double``
-. In addition there is the type ``string`` , which is a fixed array
-size of type ``char`` (at the time of writing, a string can hold 40
-characters). Sequencer variables having any of these types may be
-assigned to a process variable. The type declared does not
-have to be the same as the native control system value type. The
-conversion between types is performed at run-time.
+``char``, ``unsigned char``, ``short``, ``unsigned short``, ``int``,
+``unsigned int``, ``long``, ``unsigned long``, ``float`` , and
+``double``. In addition there is the type ``string``, which is a fixed
+array size of type ``char`` (at the time of writing, a string can hold
+40 characters). Sequencer variables having any of these types may be
+assigned to a process variable. The type declared does not have to be
+the same as the native control system value type. The conversion
+between types is performed at run-time. For more details see the
+:ref:`corresponding section in the reference <Types>`.
 
 You may specify array variables as follows::
 
   long arc_wf[1000];
 
 When assigned to a process variable, operations such as
-``pvPut`` are performed for the entire array.
+:c:func:`pvPut` are performed for the entire array.
 
 Arrays of Variables
 -------------------
@@ -269,19 +270,18 @@ Double subscripts offer additional options::
   assign X to {"apple", "orange"};
 
 The declaration creates an array with 200 elements. The first 100
-elements of ``X`` are assigned to (array) "apple" , and the second
+elements of ``X`` are assigned to (array) "apple", and the second
 100 elements are assigned to (array) "orange" .
 
 It is important to understand the distinction between the first and
-second array indices here. The first index defines a 2-element
-array of which each element is associated with a process
-variable. The second index defines a 100-element double array to
-hold the value of each of the two process variables. When
-used in a context where a number is expected, both indices must be
-specified, e.g. ``X[1][49]`` is the 50th element of the value of
-"orange" . When used in a context where a process variable
-is expected, e.g. with ``pvPut`` , then only the first index should
-be specified, e.g. ``X[1]`` for "orange" .
+second array indices here. The first index defines a 2-element array
+of which each element is associated with a process variable. The
+second index defines a 100-element double array to hold the value of
+each of the two process variables. When used in a context where a
+number is expected, both indices must be specified, e.g. ``X[1][49]``
+is the 50th element of the value of "orange" . When used in a context
+where a process variable is expected, e.g. with :c:func:`pvPut`, then
+only the first index should be specified, e.g. ``X[1]`` for "orange" .
 
 Dynamic Assignment
 ------------------
@@ -309,12 +309,12 @@ Likewise, an empty string can de-assign a variable::
   pvAssign(Xmotor, "");
 
 The current assignment status of a variable is returned by the
-``pvAssigned`` function as follows::
+:c:func:`pvAssigned` function as follows::
 
   isAssigned = pvAssigned(Xmotor);
 
-The number of assigned variables is returned by the ``pvAssignCount``
-function as follows::
+The number of assigned variables is returned by the
+:c:func:`pvAssignCount` function as follows::
 
   numAssigned = pvAssignCount();
 
@@ -329,9 +329,9 @@ before using it (although it is OK to monitor it). See
 Status of Process Variables
 ---------------------------
 
-Process variables have an associated status, severity and
-time stamp. You can obtain these with the ``pvStatus`` , ``pvSeverity``
-and ``pvTimeStamp`` functions. For example::
+Process variables have an associated status, severity and time stamp.
+You can obtain these with the :c:func:`pvStatus`, :c:func:`pvSeverity`
+and :c:func:`pvTimeStamp` functions. For example::
 
   when (pvStatus(x_motor) != pvStatOK) {
   printf("X motor status=%d, severity=%d, timestamp=%d\\n",
@@ -339,35 +339,34 @@ and ``pvTimeStamp`` functions. For example::
   pvTimeStamp(x_motor).secPastEpoch);
   ...
 
-These routines are described in :ref:`BuiltinFunctions`. The
-values for status and severity are defined in the include file
-*pvAlarm.h* , and the time stamp is returned as a standard EPICS
-``TS_STAMP`` structure, which is defined in *tsStamp.h* . Both these
-files are automatically included when compiling sequences (but the SNL
-compiler doesn't know about them, so you will get warnings when using
-constants like ``pvStatOK`` or tags like ``secPastEpoch`` ).
+These routines are described in :ref:`BuiltinFunctions`. The values
+for status and severity are defined in the include file *pvAlarm.h*,
+and the time stamp is returned as a standard EPICS ``TS_STAMP``
+structure, which is defined in *tsStamp.h* . Both these files are
+automatically included when compiling sequences (but the SNL compiler
+doesn't know about them, so you will get warnings when using constants
+like ``pvStatOK`` or tags like ``secPastEpoch`` ).
 
 .. _EventFlags:
 
 Synchronizing State Sets with Event Flags
 -----------------------------------------
 
-State sets within a state program may be synchronized through the
-use of event flags. Typically, one state set will set an event
-flag, and another state set will test that event flag within a
-``when`` clause. The ``sync`` statement may also be used to associate
-an event flag with a process variable that is being
-monitored. In that case, whenever a monitor is delivered, the
-corresponding event flag is set. Note that this provides an
-alternative to testing the value of the monitored channel and is
-particularly valuable when the channel being tested is an array or
-when it can have multiple values and an action must occur for any
-change.
+State sets within a state program may be synchronized through the use
+of event flags. Typically, one state set will set an event flag, and
+another state set will test that event flag within a :token:`when`
+clause. The :token:`sync` statement may also be used to associate an
+event flag with a process variable that is being monitored. In that
+case, whenever a monitor is delivered, the corresponding event flag is
+set. Note that this provides an alternative to testing the value of
+the monitored channel and is particularly valuable when the channel
+being tested is an array or when it can have multiple values and an
+action must occur for any change.
 
 This example shows a state set that forces a low limit always to be
-less than or equal to a high limit. The first ``when`` clause fires
-when the low limit changes and someone has attempted to set it
-above the high limit. The second ``when`` clause fires when the
+less than or equal to a high limit. The first :token:`when` clause
+fires when the low limit changes and someone has attempted to set it
+above the high limit. The second :token:`when` clause fires when the
 opposite situation occurs.
 
 ::
@@ -409,24 +408,24 @@ element of that array.
 Queuing Monitors
 ----------------
 
-Neither testing the value of a monitored channel in a ``when`` clause
-nor associating the channel with an event flag and then testing the
-event flag can guarantee that the sequence is aware of all monitors
-posted on the channel. Often this doesn't matter, but sometimes it
-does. For example, a variable may transition to 1 and then back to
-0 to indicate that a command is active and has completed. These
-transitions may occur in rapid succession. This problem can be
-avoided by using the ``syncQ`` statement to associate a variable with
-both a queue and an event flag. The ``pvGetQ`` function retrieves and
-removes the head of queue.
+Neither testing the value of a monitored channel in a :token:`when`
+clause nor associating the channel with an event flag and then testing
+the event flag can guarantee that the sequence is aware of all
+monitors posted on the channel. Often this doesn't matter, but
+sometimes it does. For example, a variable may transition to 1 and
+then back to 0 to indicate that a command is active and has completed.
+These transitions may occur in rapid succession. This problem can be
+avoided by using the :token:`syncQ` statement to associate a variable
+with both a queue and an event flag. The :c:func:`pvGetQ` function
+retrieves and removes the head of queue.
 
-This example illustrates a typical use of ``pvGetQ`` : setting a
+This example illustrates a typical use of :c:func:`pvGetQ` : setting a
 command variable to 1 and then changing state as an active flag
-transitions to 1 and then back to 0. Note the use of ``pvFreeQ`` to
-clear the queue before sending the command. Note also that, if
-``pvGetQ`` hadn't been used then the active flag's transitions from 0
-to 1 and back to 0 might both have occurred before the ``when``
-clause in the ``sent`` state fired::
+transitions to 1 and then back to 0. Note the use of :c:func:`pvFreeQ`
+to clear the queue before sending the command. Note also that, if
+:c:func:`pvGetQ` hadn't been used then the active flag's transitions
+from 0 to 1 and back to 0 might both have occurred before the
+:token:`when` clause in the ``sent`` state fired::
 
   long command; assign command to "commandVar";
 
@@ -462,17 +461,18 @@ on any of the underlying control system ``active`` flags.
 Asynchronous Use of pvGet
 -------------------------
 
-Normally the ``pvGet`` operation completes before the function
-returns, thus ensuring data integrity. However, it is possible to
-use these functions asynchronously by specifying the :option:`+a` compiler
-flag (see :ref:`CompilerOptions`). The
-operation might not be initiated until the action statements in the
-current transition have been completed and it could complete at any
-later time. To test for completion use the function ``pvGetComplete``,
-which is described in :ref:`BuiltinFunctions`.
+Normally the :c:func:`pvGet` operation completes before the function
+returns, thus ensuring data integrity. However, it is possible to use
+these functions asynchronously by specifying the :option:`+a` compiler
+flag (see :ref:`CompilerOptions`). The operation might not be
+initiated until the action statements in the current transition have
+been completed and it could complete at any later time. To test for
+completion use the function :c:func:`pvGetComplete`, which is
+described in :ref:`BuiltinFunctions`.
 
-``pvGet`` also accepts an optional ``SYNC`` or ``ASYNC`` argument, which
-overrides the :option:`+a` compiler flag. For example::
+:c:func:`pvGet` also accepts an optional ``SYNC`` or ``ASYNC``
+argument, which overrides the :option:`+a` compiler flag. For
+example::
 
   pvGet( initActive[i], ASYNC );
 
@@ -481,20 +481,20 @@ overrides the :option:`+a` compiler flag. For example::
 Asynchronous Use of pvPut
 -------------------------
 
-Normally the ``pvPut`` operation completes asynchronously. In the
-past it has been the responsibility of the programmer to ensure
+Normally the :c:func:`pvPut` operation completes asynchronously. In
+the past it has been the responsibility of the programmer to ensure
 that the operation completed (typically by monitoring other
-variables). However, the function ``pvPutComplete`` can now be used
-for this. Also, while the :option:`+a` compiler flag does not affect put
-operations, ``pvPut`` , like ``pvGet`` , accepts an optional ``SYNC`` or
-``ASYNC`` argument, which forces a synchronous or asynchronous put.
-For example::
+variables). However, the function :c:func:`pvPutComplete` can now be
+used for this. Also, while the :option:`+a` compiler flag does not
+affect put operations, :c:func:`pvPut`, like :c:func:`pvGet`, accepts
+an optional ``SYNC`` or ``ASYNC`` argument, which forces a synchronous
+or asynchronous put. For example::
 
   pvPut( init[i], SYNC );
 
-``pvPutComplete`` supports arrays and can be used to check whether a
-set of puts have all completed. This example illustrates how to
-manage a set of parallel commands.
+:c:func:`pvPutComplete` supports arrays and can be used to check
+whether a set of puts have all completed. This example illustrates how
+to manage a set of parallel commands.
 
 ::
 
@@ -520,14 +520,14 @@ manage a set of parallel commands.
     } state timeout
   }
 
-``pvPutComplete`` also supports optional arguments to wake up the
-state set as each put completes. The following could be inserted
-before the first ``when`` clause in the ``active`` state above. The
-``TRUE`` argument causes ``pvPutComplete`` to return ``TRUE`` when any
-command completed (rather than only when all commands complete).
-The ``done`` argument is the address of a ``long`` array of the same
-size as ``init`` ; its elements are set to 0 for puts that are not
-yet complete and to 1 for puts that are complete.
+:c:func:`pvPutComplete` also supports optional arguments to wake up
+the state set as each put completes. The following could be inserted
+before the first :token:`when` clause in the ``active`` state above.
+The ``TRUE`` argument causes :c:func:`pvPutComplete` to return
+``TRUE`` when any command completed (rather than only when all
+commands complete). The ``done`` argument is the address of a ``long``
+array of the same size as ``init`` ; its elements are set to 0 for
+puts that are not yet complete and to 1 for puts that are complete.
 
 ::
 
@@ -540,22 +540,22 @@ yet complete and to 1 for puts that are complete.
 Connection Management
 ---------------------
 
-All process variable connections are handled by the
-sequencer via the PV API. Normally the state programs are not run
-until all process variables are connected. However, with the
-:option:`-c` compiler flag, execution begins while the connections are
-being established. The program can test for each variable's
-connection status with the ``pvConnected`` routine, or it can test
-for all variables connected with the following comparison (if not
-using dynamic assignment, see `Dynamic Assignment`_, ``pvAssignCount``
-will be the same as ``pvChannelCount``)::
+All process variable connections are handled by the sequencer via the
+PV API. Normally the state programs are not run until all process
+variables are connected. However, with the :option:`-c` compiler flag,
+execution begins while the connections are being established. The
+program can test for each variable's connection status with the
+:c:func:`pvConnected` routine, or it can test for all variables
+connected with the following comparison (if not using dynamic
+assignment, see `Dynamic Assignment`_, :c:func:`pvAssignCount` will be
+the same as :c:func:`pvChannelCount`)::
 
   pvConnectCount() == pvAssignCount()
 
 These routines are described in :ref:`BuiltinFunctions`. If a variable
 disconnects or re-connects during execution of a state program, the
 sequencer updates the connection status appropriately; this can be
-tested in a ``when`` clause, as in::
+tested in a :token:`when` clause, as in::
 
   when (pvConnectCount() < pvAssignCount()) {
   } state disconnected
@@ -580,24 +580,23 @@ Multiple Instances and Reentrant Object Code
 --------------------------------------------
 
 Occasionally you will create a state program that can be used in
-multiple instances. If these instances run in separate address
-spaces, there is no problem. However, if more than one instance
-must be executed simultaneously in a single address space, then the
-objects must be made reentrant using the :option:`+r` compiler flag. With
-this flag all variables are allocated dynamically at run time;
-otherwise they are declared static. With the :option:`+r` flag all
-variables become elements of a common data structure, and therefore
-access to variables is slightly less efficient.
+multiple instances. If these instances run in separate address spaces,
+there is no problem. However, if more than one instance must be
+executed simultaneously in a single address space, then the objects
+must be made reentrant using the :option:`+r` compiler flag. With this
+flag all variables are allocated dynamically at run time; otherwise
+they are declared static. With the :option:`+r` flag all variables
+become elements of a common data structure, and therefore access to
+variables is slightly less efficient.
 
 Process Variable Element Count
 ------------------------------
 
-All requests for process variables that are arrays assume
-the array size for the element count. However, if the process
-variable has a smaller count than the array size, the
-smaller number is used for all requests. This count is available
-with the ``pvCount`` function. The following example illustrates
-this::
+All requests for process variables that are arrays assume the array
+size for the element count. However, if the process variable has a
+smaller count than the array size, the smaller number is used for all
+requests. This count is available with the :c:func:`pvCount` function.
+The following example illustrates this::
 
   float wf[2000];
   assign wf to "{unit}:CavField.FVAL";
@@ -614,28 +613,30 @@ What's Happening at Run Time
 ----------------------------
 
 At run time the sequencer blocks until something "interesting" occurs,
-where "interesting" means things like  receiving a monitor from  a PV
-used in a ``when`` statement, an event flag changing state, or a delay
-timer expiring. The sequencer then scans the list of ``when``
-statements for the current state and evaluates each expression in
-turn.  If a ``when`` expression evaluates to non-zero the actions
-within that ``when`` block are executed and the sequencer enters the
-state specified by that ``when`` statement.  The sequencer then blocks
-again waiting for something "interesting" to happen.  A complete list
-of these conditions can be found in section 6.5.
+where "interesting" means things like receiving a monitor from a PV
+used in a :token:`when` statement, an event flag changing state, or a
+delay timer expiring. The sequencer then scans the list of
+:token:`when` statements for the current state and evaluates each
+expression in turn. If a :token:`when` expression evaluates to
+non-zero the actions within that :token:`when` block are executed and
+the sequencer enters the state specified by that :token:`when`
+statement. The sequencer then blocks again waiting for something
+"interesting" to happen. A complete list of these conditions can be
+found in section 6.5.
 
 A common misconception among new state notation language programmers
-is that the sequencer somehow blocks inside the ``delay`` functions
-within ``when`` statements.  This interpretation of the ``delay``
-function is incorrect but understandable given the name.  A ``delay``
-function does not block the sequencer.  Instead it tells the sequencer
-to compare the value specified by the ``delay`` expression with a
-timer that is reset whenever the state is entered or whenever the
-state is entered from another state.  If the timer matches or exceeds
-the value of the expression the ``delay`` function returns ``TRUE``
-otherwise it returns ``FALSE``.
+is that the sequencer somehow blocks inside the :c:func:`delay`
+functions within :token:`when` statements. This interpretation of the
+:c:func:`delay` function is incorrect but understandable given the
+name. A :c:func:`delay` function does not block the sequencer. Instead
+it tells the sequencer to compare the value specified by the
+:c:func:`delay` expression with a timer that is reset whenever the
+state is entered or whenever the state is entered from another state.
+If the timer matches or exceeds the value of the expression the
+:c:func:`delay` function returns ``TRUE`` otherwise it returns
+``FALSE``.
 
 If your action statements have any sort of polling loops or calls to
-``epicsThreadSleep`` you should reconsider your design.   The presence
+``epicsThreadSleep`` you should reconsider your design. The presence
 of such operations is a strong indication that you're not using the
 sequencer as intended.
