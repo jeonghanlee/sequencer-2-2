@@ -1,33 +1,53 @@
 Tutorial
 ========
 
-This chapter gives a gentle introduction to State Notation Language.
+This chapter gives a gentle introduction to State Notation Language
+(SNL).
 
-The State Transition Diagram
-----------------------------
+Introduction
+------------
 
-The state transition diagram or STD is a graphical notation for
-specifying the behavior of a control system in terms of control
-transformations. The STD serves to represent the action taken by
-the control system in response to both the present internal state
-and some external event or condition. To understand the state
-notation language one must first understand the STD schema.
+SNL is a programming language specifically designed for programming
+*finite state machines* in such a way that it is easy for the program
+to interact with EPICS *process variables* (PVs), allowing to read and
+to write them and to react to changes in their value or status.
+
+An SNL program consists of a number of *state sets*, each one
+representing an independent state machine. The state set lists all the
+possible *states* that are allowed for this state set, along with
+conditions for transitions to other states of the same state set and
+code that is executed when the state transition take place.
+
+
+State Transition Diagrams
+-------------------------
+
+A *state transition diagram* (STD) is a graphical notation for
+specifying state machines. In the STD, states are represented by oval
+boxes, transitions by arrows. State transitions can happen in response
+to both the present internal state and some external event or
+condition; this is represented by annotating the state transition
+arrow with a horizontal bar: the condition is noted above the line and
+the action to be taken when the transition happens below the line.
 
 A simple STD is shown in Figure 2-1. In this example the level of an
-input voltage is sensed, and a light is turned on if the voltage is
-greater than 5 volts and turned off if the voltage becomes less
-than 3 volts. Note that the output or action depends not only on
-the input or condition, but also on the current memory or state.
-For instance, specifying an input of 4.2 volts does not directly
-specify the output; that depends on the current state.
+input voltage is sensed; a light is turned on if the voltage is
+greater than 5 volts and the state is "Light is Off"; conversely, the
+light is turned off if the voltage becomes less than 3 volts and the
+state is "Light is On".
+
+Note that the output or action depends not only on the input or
+condition, but also on the current state. For instance, an input ``v``
+of 4.2 volts does not alone determine the output (``light``), the
+current state matters, too.
 
 .. image:: Figure2-1.png
+
 
 Elements of the State Notation Language
 ---------------------------------------
 
-The following SNL code segment expresses the STD in `The
-State Transition Diagram`_ ::
+The following SNL code segment expresses the STD in Figure 2-1::
 
   state light_off {
     when (v > 5.0) {
@@ -44,45 +64,51 @@ State Transition Diagram`_ ::
   }
 
 You will notice that the SNL appears to have a structure and syntax
-that is similar to the C language. In fact the SNL uses its own
-syntax plus a subset of C, such as expressions, assignment
-statements, and function calls. This example contains two code
-blocks that define states: ``light_off`` and ``light_on`` . Within
-these blocks are :token:`when` statements that define the events
-(``v > 5.0`` and ``v < 3.0``). Following these statements are
-blocks containing actions (C statements). The :c:func:`pvPut` function
-writes or puts the value in the variable ``light`` to the appropriate
-process variables. Finally, the next states are specified
-following the action blocks.
+that is similar to the C language. In fact the SNL uses its own syntax
+plus a subset of C, such as expressions, assignments, and function
+calls. This example contains two code blocks that define two states:
+``light_off`` and ``light_on``. Within each state block are
+:token:`when` clauses that define events or conditions (``v > 5.0``
+and ``v < 3.0``) that lead to a state change. Following each condition
+is a block containing actions (C statements). The :c:func:`pvPut`
+function writes or puts the value in the variable ``light`` to the
+appropriate process variable. Following the action block, the next
+state is specified.
 
-For the previous example to execute properly the variables ``v`` and
-``light`` must be declared and associated with process
-variables using the following declarations::
+The variables (in our example ``v`` and ``light``) must be declared
+and associated with process variables::
 
   float v;
   short light;
   assign v to "Input_voltage";
   assign light to "Indicator_light";
 
-The above :token:`assign` statements associate the variables ``v`` and
-``light`` with the process variables "Input\_voltage" and
-"Indicator\_light" respectively. We want the value of ``v`` to be
-updated automatically whenever it changes. This is accomplished
-with the following declaration::
+The above :token:`assign` clause associate the variables ``v`` and
+``light`` with the process variables "Input_voltage" and
+"Indicator_light" respectively. We want the value of ``v`` to be
+updated automatically whenever it changes. This is accomplished with
+the following declaration::
 
   monitor v;
 
-Whenever the value in the control system changes, the value of ``v``
-will likewise change (within the time constraints of the underlying
-system).
+Whenever the value in the control system (the EPICS database) changes,
+the value of ``v`` will likewise change. Note however that this
+depends on the underlying system sending update messages for the value
+in question. When and how often such updates are communicated by the
+underlying system may depend on the configuration of the PV. For
+instance if the PV "Input_voltage" is the VAL field of an ai (analog
+input) record, then the value of the MDEL field of the same record
+specifies the amount of change that the designer considers a
+"relevant" change; smaller changes will not cause an event to be sent,
+and accordingly will not cause a state change in the above program.
 
-.. _ACompleteStateProgram:
+
+.. _A Complete State Program:
 
 A Complete State Program
 ------------------------
 
-Here is what the complete state program for our example looks
-like::
+Here is what the complete program for our example looks like::
 
   program level_check
 
@@ -110,18 +136,16 @@ like::
     }
   }
 
-To distinguish a state program from other state programs it must be
-assigned a name. This was done in the above example with the
-statement::
+Each program must start with the word "program", followed by the name
+of the program (an identifier)::
 
   program level_check
 
-As we'll see in the next example, we can have multiple state
-transition diagrams in one state program. In SNL terms these are
-referred to as *state sets*. Each state program may have one or
-more named state sets. This was denoted by the statement block::
+After that come declarations and then the state sets. Each state set
+must have name, which comes after the word "ss"::
 
   ss volt_check { ... }
+
 
 Adding a Second State Set
 -------------------------
@@ -158,13 +182,14 @@ Next we add the following lines after the first state set::
   }
 
 The above example exhibits several concepts. First, note that the
-:token:`when` statement in state ``init`` contains an empty event
-expression. This means unconditional execution of the transition.
-Because ``init`` is the first state in the state set, it is assumed to
-be the initial state. You will find this to be a convenient method for
-initialization. Also, notice that the ``ramp`` state always returns to
-itself. This is a permissible and often useful construct. The
-structure of this state set is shown in the following STD:
+:token:`when` clause in state ``init`` contains an empty event
+expression. This means unconditional execution of the transition. The
+first state in each state set is always the initial state, so we give
+it the name ``init``. From this first state there is an immediate
+unconditional transition to the state ``ramp``, initializing some
+variables during the transition. Note that the ``ramp`` state always
+returns to itself. The structure of this state set is shown in the
+following STD:
 
 .. image:: Figure2-2.png
 
@@ -181,13 +206,52 @@ used above. You may also wish to replace the :c:func:`pvPut`
 statements with ``printf`` statements to display "High" and "Low" on
 your console.
 
+
+Variable Initialization and Entry Blocks
+----------------------------------------
+
+Since version 2.1 is has become simpler to initialize variables: you
+can use the same syntax as in C, i.e. initialize together with the
+declaration::
+
+  float vout = 0.0;
+  float delta = 0.2;
+
+More complicated initialization can also be done using an
+:token:`entry` block instead of using a separate state::
+
+  ss generate_voltage {
+    state ramp {
+      option -e;
+      entry {
+        pvPut(vout);
+      }
+      when (delay(0.1)) {
+        ...
+      } state ramp;
+    }
+  }
+
+The actions in an entry block in a state declaration are executed
+whenever the state is enetered. The state option ::
+
+  option -e;
+
+specifies that this action block is *not* executed if coming from the
+same state; in this case this ensures that the ::
+
+  pvPut(vout);
+
+that appears inside the entry block is executed only once when the
+state is entered for the first time.
+
+
 Variable Names Using Macros
 ---------------------------
 
-One of the features of the SNL and run-time sequencer is the
-ability to specify the names of process variables at
-run-time. This is done by using macro substitution. In our example
-we could replace the :token:`assign` statements with the following::
+You can specify the names of process variables or parts of them at
+run-time. This is done by using macro substitution. In our example we
+could replace the :token:`assign` statements with the following::
 
   assign v to "{unit}:ai1";
   assign vout to "{unit}:ao1";
@@ -196,10 +260,11 @@ The string within the curly brackets is a macro which has a name
 ("unit" in this case). At run-time you give the macro a value,
 which is substituted in the above string to form a complete process
 variable name. For example, if the macro "unit" is given
-a name "DTL\_6:CM\_2", then the run-time variable name is
-"DTL\_6:CM\_2:ai1". More than one macro may be specified within
+a name "DTL_6:CM_2", then the run-time variable name is
+"DTL_6:CM_2:ai1". More than one macro may be specified within
 a string, and the entire string may be a macro. See
 :ref:`run time parameters` for more on macros.
+
 
 Data Types
 ----------
@@ -221,6 +286,7 @@ You may specify array variables as follows::
 
 When assigned to a process variable, operations such as
 :c:func:`pvPut` are performed for the entire array.
+
 
 Arrays of Variables
 -------------------
@@ -352,7 +418,7 @@ like ``pvStatOK`` or tags like ``secPastEpoch`` ).
 Synchronizing State Sets with Event Flags
 -----------------------------------------
 
-State sets within a state program may be synchronized through the use
+State sets within a program may be synchronized through the use
 of event flags. Typically, one state set will set an event flag, and
 another state set will test that event flag within a :token:`when`
 clause. The :token:`sync` statement may also be used to associate an
@@ -541,7 +607,7 @@ Connection Management
 ---------------------
 
 All process variable connections are handled by the sequencer via the
-PV API. Normally the state programs are not run until all process
+PV API. Normally the programs are not run until all process
 variables are connected. However, with the :option:`-c` compiler flag,
 execution begins while the connections are being established. The
 program can test for each variable's connection status with the
@@ -553,7 +619,7 @@ the same as :c:func:`pvChannelCount`)::
   pvConnectCount() == pvAssignCount()
 
 These routines are described in :ref:`BuiltinFunctions`. If a variable
-disconnects or re-connects during execution of a state program, the
+disconnects or re-connects during execution of a program, the
 sequencer updates the connection status appropriately; this can be
 tested in a :token:`when` clause, as in::
 
@@ -579,7 +645,7 @@ flag and wait for the event flag to be set before proceeding. See
 Multiple Instances and Reentrant Object Code
 --------------------------------------------
 
-Occasionally you will create a state program that can be used in
+Occasionally you will create a program that can be used in
 multiple instances. If these instances run in separate address spaces,
 there is no problem. However, if more than one instance must be
 executed simultaneously in a single address space, then the objects
