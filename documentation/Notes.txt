@@ -488,12 +488,12 @@ documentation changes needed for the 2.0.0 reference manual.
 -  New Compiler Options
 
    *  +i Code will be generated to automatically register sequence
-      functions and state programs. This is the default
+      functions and programs. This is the default
 
    *  -i Do not generate registration code. Only useful on vxWorks to
       save a small amount of memory.
 
--  Compiling and linking a state program under Unix.
+-  Compiling and linking a program under Unix.
 
 -  The exampleApp supplied with base demonstrates how to build sequence
    programs that work with epics databases. It also shows how to build
@@ -584,7 +584,7 @@ required.
 Portability changes
 ^^^^^^^^^^^^^^^^^^^
 
-These changes allow state programs to run unchanged on hosts and
+These changes allow programs to run unchanged on hosts and
 IOCs.
 
 Replaced VxWorks dependencies with OSI routines
@@ -805,7 +805,7 @@ Pointers
 
 seqShow
    We enhanced the ``seqShow`` command to present more relevant
-   information about the running state programs.
+   information about the running programs.
 
 seqChanShow
    The ``seqChanShow`` command now allows specification of a search

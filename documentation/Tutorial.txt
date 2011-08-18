@@ -103,10 +103,10 @@ specifies the amount of change that the designer considers a
 and accordingly will not cause a state change in the above program.
 
 
-.. _A Complete State Program:
+.. _A Complete Program:
 
-A Complete State Program
-------------------------
+A Complete Program
+------------------
 
 Here is what the complete program for our example looks like::
 

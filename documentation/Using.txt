@@ -7,8 +7,8 @@ Using the Run Time Sequencer
    missing, and some is plainly wrong.
 
 In the previous chapter you learned how to create and compile some
-simple state programs. In this chapter you will be introduced to
-the run-time sequencer so that you can execute your state program.
+simple programs. In this chapter you will be introduced to
+the run-time sequencer so that you can execute your program.
 
 VxWorks-specific instructions
 -----------------------------
@@ -41,8 +41,8 @@ such as the VxWorks start-up file.
 Executing the State Program
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Let's assume that the program name (from the ``program`` statement in
-the state program) is "level\_check". Then to execute the program
+Let's assume that the program name (from the ``program`` statement)
+is "level\_check". Then to execute the program
 under VxWorks you would use the following command::
 
   seq &level_check
@@ -54,14 +54,14 @@ out which tasks are running by using the VxWorks ``i`` command.
 Examining the State Program
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-You can examine the state program by typing::
+You can examine the program by typing::
 
   seqShow level_check
 
 This will display information about each state set (e.g. state
 set names, current state, previous state). You can display
 information about the process variables associated with this
-state program by typing either of::
+program by typing either of::
 
   seqChanShow level_check
   seqChanShow level_check, "DTL_6:CM_2:ai1"
@@ -73,7 +73,7 @@ You can display information about monitor queues by typing::
 
 The first parameter to ``seqShow`` , ``seqChanShow`` and ``seqQueueShow``
 is either the task identifier (tid) or the *unquoted* task name of
-the state program task. If the state program has more than one tid
+the program task. If the program has more than one tid
 or name, then any one of these can be used. The second parameter is
 a valid channel name, or ``-`` to show only those channels which
 are disconnected, or ``+`` to show only those channels which are
@@ -83,7 +83,7 @@ enter *<Enter>* or a signed number to view more channels or queues;
 enter ``q`` to quit.
 
 If you wish to see the task names, state set names, and task
-identifiers for all state programs type::
+identifiers for all programs type::
 
   seqShow
 
@@ -92,15 +92,15 @@ identifiers for all state programs type::
 Stopping the State Program Tasks
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-You should not directly delete state program tasks. Instead, use
+You should not directly delete program tasks. Instead, use
 the ``seqStop`` command::
 
   seqStop level_check
 
 The parameter to ``seqStop`` is either the task identifier (tid) or
-the task name of the state program task.
+the task name of the program task.
 
-A state program can also terminate itself, see :ref:`Transitions`.
+A program can also terminate itself, see :ref:`Transitions`.
 
 Unix-specific instructions
 --------------------------
@@ -108,7 +108,7 @@ Unix-specific instructions
 Executing the State Program
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Under Unix, you execute the state program directly. You might type
+Under Unix, you execute the program directly. You might type
 the following::
 
   level_check
@@ -116,7 +116,7 @@ the following::
 Once the state set threads have been created, the console remains
 active and you can type commands as described below.
 
-Examining the state program
+Examining the program
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The following commands can be issued under Unix (hit ``?`` to
@@ -153,7 +153,7 @@ As you see, all commands can be abbreviated to a single character.
 Stopping the State Program Tasks
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-A state program may be killed by sending it a ``SIGTERM`` (*Ctrl-C*)
+A program may be killed by sending it a ``SIGTERM`` (*Ctrl-C*)
 signal (this is an untidy exit, but who cares?) or by entering an
 *<EOF>* (*Ctrl-D*) character. The latter calls ``seqStop`` and is a
 tidy exit.
@@ -168,10 +168,10 @@ serve three purposes:
 
 
 #. macro substitution in process variable names,
-#. for use by your state program, and
+#. for use by your program, and
 #. as special parameters to the sequencer.
 
-You can pass parameters to your state program at run time by
+You can pass parameters to your program at run time by
 including them in a string with the following format::
 
   "<param1>=<value1>, <param2>=<value2>, ..."
@@ -212,7 +212,7 @@ used in user code::
   logfile = <filename>
 
 This parameter specifies the name of the logging file for the
-run-time tasks associated with the state program. If none is
+run-time tasks associated with the program. If none is
 specified then all log messages are written to ``stdout``::
 
   name = <thread_name>
@@ -236,7 +236,7 @@ Sequencer Logging
 -----------------
 
 The sequencer logs various information that could help a user
-determine the health of a state program. Logging uses the
+determine the health of a program. Logging uses the
 ``errlogPrintf`` function and will be directed to the IOC log file if
 the IOC log facility has been initialized. Under VxWorks this is
 done automatically but under Unix it must be done by the

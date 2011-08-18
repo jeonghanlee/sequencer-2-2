@@ -43,7 +43,7 @@ Option  Description
   -s    Traditional (non-safe) mode. This is the default for
         compatibility.
   +r    Make the generated code reentrant, thus allowing more than one
-        instance of the state program to run on an IOC.
+        instance of the program to run on an IOC.
   -r    Generated code is not reentrant. This is the default.
   +w    Display SNC warning messages. This is the default.
   -w    Suppress SNC warnings.
