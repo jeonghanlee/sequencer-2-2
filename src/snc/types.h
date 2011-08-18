@@ -160,10 +160,13 @@ struct variable				/* variable definition */
 	uint	index;			/* index (base) in seqChan array */
 };
 /* Laws (Invariants):
-L1: sync == M_MULTI || syncq == M_MULTI => monitor == M_MULTI => assign == M_MULTI
-L2: assign == M_NONE => monitor == M_NONE => sync == M_NONE && syncq == M_NONE
-L3: assign == M_MULTI => type->tag == V_ARRAY
-L4: sync == M_SINGLE || syncq == M_SINGLE => monitor == M_SINGLE
+L1a:	monitor	== M_MULTI	=> assign == M_MULTI
+L1b:	sync	== M_MULTI	=> assign == M_MULTI
+L1c:	syncq	== M_MULTI	=> assign == M_MULTI
+L2a:	assign	== M_NONE	=> monitor == M_NONE
+L2b:	assign	== M_NONE	=> sync == M_NONE
+L2c:	assign	== M_NONE	=> syncq == M_NONE
+L3:	assign	== M_MULTI	=> type->tag == V_ARRAY
 */
 
 struct channel				/* channel assignment info */

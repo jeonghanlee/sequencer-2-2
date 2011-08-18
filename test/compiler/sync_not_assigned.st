@@ -7,7 +7,7 @@ in the file LICENSE that is included with this distribution.
 program p
 
 int x;
-assign x;
-syncq x 1; /* ok: not monitored */
+evflag f;
+sync x to f; /* error: not assigned */
 
 #include "simple.st"

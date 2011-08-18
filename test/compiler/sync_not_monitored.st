@@ -8,6 +8,7 @@ program p
 
 int x;
 assign x;
-syncq x 1; /* ok: not monitored */
+evflag f;
+sync x to f; /* ok: not monitored */
 
 #include "simple.st"

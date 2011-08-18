@@ -5,7 +5,9 @@ use strict;
 use Test::More;
 
 my $success = {
-  sncExOpt_DuplOpt => undef,
+  sncExOpt_DuplOpt => 0,
+  sync_not_monitored => 0,
+  syncq_not_monitored => 0,
 };
 
 my $warning = {
@@ -20,8 +22,8 @@ my $error = {
   foreignGlobal => 3,
   misplacedExit => 2,
   pvNotAssigned => 20,
+  sync_not_assigned => 1,
   syncq_not_assigned => 1,
-  syncq_not_monitored => 1,
   syncq_size_out_of_range => 1,
 };
 
