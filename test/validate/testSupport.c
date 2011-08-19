@@ -14,15 +14,22 @@ in the file LICENSE that is included with this distribution.
 
 static epicsEventId this_test_done;
 
+static seqProgram *prog;
+
+static int doit(void)
+{
+    seq(prog,0,0);
+    return 0;
+}
+
 void run_seq_test(seqProgram *seqProg)
 {
     if (!this_test_done) {
         this_test_done = epicsEventMustCreate(epicsEventEmpty);
-    } else {
-        epicsEventWait(this_test_done);
     }
-    epicsThreadSleep(2.0);
-    seq(seqProg,0,0);
+    prog = seqProg;
+    runTestFunc(seqProg->progName, doit);
+    epicsEventWait(this_test_done);
 }
 
 void seq_test_done(void)
