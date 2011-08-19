@@ -4,7 +4,9 @@ and runtime sequencer.
 For more information see the .txt files under documentation:
 
 Introduction.txt
-   What all this is about, release notes, and other trivia
+   What all this is about, licensing, and other trivia
+Notes.txt
+   Release notes
 Installation.txt
    How to download, build, etc
 Tutorial.txt
