@@ -8,6 +8,12 @@ Notes on Release 2.1.1
 
 * sync and syncq clauses no longer require monitors
 
+  This was a regression against the 2.0.x branch. The feature fell victim
+  to an attempt at simplifying detection of nonsensical combinations of
+  assign/monitor/sync/syncq at compile time. However, the rules did not
+  take the dynamic pvAssign, pvMonitor etc. into account. The rules have
+  been revised accordingly.
+
 * seq: in seqShow, call pvXxxComplete only if in safe mode or variable is
   assigned
 
