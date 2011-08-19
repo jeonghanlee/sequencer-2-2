@@ -1,6 +1,53 @@
 Release Notes
 =============
 
+.. _Release_Notes_2.1.1:
+
+Notes on Release 2.1.1
+----------------------
+
+* sync and syncq clauses no longer require monitors
+
+* seq: in seqShow, call pvXxxComplete only if in safe mode or variable is
+  assigned
+
+  This avoids annoying (and misleading) error messages intrrupting the
+  output of seqShow.
+
+* seq,snc: change type of member 'offset' of channel structure from
+  ptrdiff_t to size_t, in non-reentrant mode, cast address of variable to
+  size_t instead of subtracting (char*)0
+
+  Clang complained about the expression "(char*)x - (char*)0" not being
+  constant (even though it obviously is), so to make it happy we remove the
+  " - (char*)0" part and cast to size_t.
+
+  (Incidentally, this makes the code more robust, too, as the address could
+  be greater than the maximum of the (signed) ptrdiff_t type, leading to an
+  overflow. This can now no longer happen.)
+
+* fixed built-in function pvAssign
+
+  There were a number of bugs leading to crashes and/or assertion failures.
+
+* run regression tests under valgrind if available
+
+  Among other things this ensures that each call to malloc results in a
+  different pointer, which is necessary to check for certain subtle bugs.
+  Under windows this leads to a number of extra messages (valgrind: command
+  not found), which is harmless.
+
+* documentation changes:
+
+  - overhaul of the first few subsections of the tutorial
+
+  - added many cross references to the tutorial
+
+  - clean up some typos, add subsection about run time behaviour
+
+* changed license to EPICS Open License
+
+
 .. _Release_Notes_2.1.0:
 
 Notes on Release 2.1.0
