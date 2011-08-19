@@ -13,5 +13,6 @@ Users' Guide
    Reference
    PV-API
    Examples
+   Plans
 
 * :ref:`Index <genindex>`

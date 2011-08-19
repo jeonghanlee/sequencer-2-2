@@ -1,3 +1,9 @@
+Plans for the Future
+====================
+
+This is just a simple bullet list of things that are on my (long term) TODO
+list. Comments are welcome, as usual.
+
 * Check whether it makes sense to let users specify the communication
   (request) type. This is currently baked-in to be inferred from the
   variable's type as specified in the program text. 
@@ -29,7 +35,7 @@
   in SNL code. The "typename" would of course not be included in the
   generated C code.
 
-  We could also allow to use named struct, union, or enum types, e.g.
+  We could also allow to use named struct, union, or enum types, e.g. ::
 
     struct epicsTimeStamp ts = pvTimestamp(var);
 
@@ -50,7 +56,7 @@
     but does not have to know in advance which integer value corresponds
     to which choice.
 
-    Maybe something very simple suffices, like a built-in function
+    Maybe something very simple suffices, like a built-in function ::
 
       int pvChoice(var, char *choice_name);
 
@@ -71,7 +77,7 @@
   - Go even further and invent a syntax for assign, monitor, sync, etc.
     The idea is to provide an alternative to the usual macros. Every
     SNL programmer uses her own self-made macros to simplify declaration blocks
-    like
+    like ::
 
       int x;
       assign x to "bla";
