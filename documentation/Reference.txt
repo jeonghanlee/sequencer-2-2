@@ -799,12 +799,12 @@ Statements
    statement: "state" `identifier` ";"
    statement: `c_code`
    statement: `block`
-   statement: "if" "(" `expr` ")" `statement`
-   statement: "if" "(" `expr` ")" `statement` "else" `statement`
-   statement: "while" "(" `expr` ")" `statement`
+   statement: "if" "(" `comma_expr` ")" `statement`
+   statement: "if" "(" `comma_expr` ")" `statement` "else" `statement`
+   statement: "while" "(" `comma_expr` ")" `statement`
    statement: `for_statement`
    statement: `opt_expr` ";"
-   for_statement: "for" "(" `exprs` ";" `opt_expr` ";" `exprs` ")" `statement`
+   for_statement: "for" "(" `opt_expr` ";" `opt_expr` ";" `opt_expr` ")" `statement`
 
 As can be seen, most C statements are supported. Not supported are
 the switch/case statement and the return statement.
@@ -836,14 +836,14 @@ Parenthesized Expression
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. productionlist::
-   expr: "(" `expr` ")"
+   expr: "(" `comma_expr` ")"
 
 Primary Expression Operators
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. productionlist::
-   expr: `identifier` "(" `exprs` ")"
-   expr: "exit" "(" `exprs` ")"
+   expr: `identifier` "(" `args` ")"
+   expr: "exit" "(" `args` ")"
    expr: `expr` "[" `expr` "]"
    expr: `expr` "." `expr`
    expr: `expr` "->" `expr`
@@ -924,17 +924,30 @@ Assignment Operators
 
 These operators are right-associative.
 
-Expression List
-~~~~~~~~~~~~~~~
+Comma Operator
+~~~~~~~~~~~~~~
 
 .. productionlist::
-   exprs: `exprs` "," `expr`
-   exprs: `expr`
-   exprs: 
+   comma_expr: `comma_expr` "," `expr`
+   comma_expr: `expr`
+   opt_expr: `comma_expr`
+   opt_expr: 
 
-Comma separated expression lists are not expressions (in SNL), since
-SNL does not support the comma operator. However, they appear as parts
-of expressions and statements, and then have the same meaning as in C.
+The comma operator is left associative. An :token:`opt_expr` is
+an optional :token:`comma_expr`; it appears, for instance, inside
+a :token:`for_statement`.
+
+Argument List
+~~~~~~~~~~~~~
+
+.. productionlist::
+   args: `args` "," `expr`
+   args: `expr`
+   args: 
+
+Function argument lists look exactly like chained application of the
+comma operator, which is why application of the comma operator in an
+argument list must be grouped by parentheses.
 
 
 .. _BuiltinFunctions:
