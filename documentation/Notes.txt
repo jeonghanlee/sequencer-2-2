@@ -1,6 +1,16 @@
 Release Notes
 =============
 
+.. _Release_Notes_2.1.2:
+
+Notes on Release 2.1.2
+----------------------
+
+* re-added support for the C comma operator
+
+  As turned out, the 2.0.x branch supported this, so it has been added
+  for compatibility.
+
 .. _Release_Notes_2.1.1:
 
 Notes on Release 2.1.1
