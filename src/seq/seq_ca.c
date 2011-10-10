@@ -108,27 +108,45 @@ pvStat seq_connect(SPROG *sp, boolean wait)
 
 	if (wait)
 	{
+		boolean firstTime = TRUE;
+
 		do {
+			unsigned ac,mc,cc,fmc;
 			/* Check whether we have been asked to exit */
 			if (sp->die)
 				return pvStatERROR;
 
 			epicsMutexMustLock(sp->programLock);
-			ready = sp->connectCount == sp->assignCount;
+			ac = sp->assignCount;
+			mc = sp->monitorCount;
+			cc = sp->connectCount;
+			fmc = sp->firstMonitorCount;
 			epicsMutexUnlock(sp->programLock);
 
-			if (!ready) {
-				epicsEventWaitStatus status = epicsEventWaitWithTimeout(
-					sp->ready, (double)delay);
-				if (status == epicsEventWaitError || sp->die)
+			ready = ac == cc && mc == fmc;
+			if (!ready)
+			{
+				if (!firstTime)
+				{
+					errlogSevPrintf(errlogMinor,
+						"%s[%d]: assigned=%d, connected=%d, "
+						"monitored=%d, got monitor=%d\n",
+						sp->progName, sp->instance,
+						ac, cc, mc, fmc);
+					firstTime = FALSE;
+				}
+				if (epicsEventWaitWithTimeout(
+					sp->ready, (double)delay) == epicsEventWaitError)
+				{
+					errlogSevPrintf(errlogFatal, "seq_connect: "
+						"epicsEventWaitWithTimeout failure\n");
 					return pvStatERROR;
+				}
 				if (delay < 60) delay += 10;
-				errlogSevPrintf(errlogInfo,
-					"%s[%d]: assignCount=%d, connectCount=%d, monitorCount=%d\n",
-					sp->progName, sp->instance,
-					sp->assignCount, sp->connectCount, sp->monitorCount);
 			}
 		} while (!ready);
+		printf("%s[%d]: all channels connected & received 1st monitor\n",
+			sp->progName, sp->instance);
 	}
 	return pvStatOK;
 }
@@ -323,12 +341,12 @@ void seq_disconnect(SPROG *sp)
 		if (!dbch)
 			continue;
 		DEBUG("seq_disconnect: disconnect %s from %s\n",
- 			ch->varName, dbch->dbName);
+			ch->varName, dbch->dbName);
 		/* Disconnect this PV */
 		status = pvVarDestroy(dbch->pvid);
 		dbch->pvid = NULL;
 		if (status != pvStatOK)
-		    errlogSevPrintf(errlogFatal, "seq_disconnect: pvVarDestroy() %s failure: "
+			errlogSevPrintf(errlogFatal, "seq_disconnect: pvVarDestroy() %s failure: "
 				"%s\n", dbch->dbName, pvVarGetMess(dbch->pvid));
 
 		/* Clear monitor & connect indicators */
@@ -350,6 +368,7 @@ pvStat seq_monitor(CHAN *ch, boolean on)
 	if (on == (dbch->monid != NULL))			/* already done */
 		return pvStatOK;
 	DEBUG("calling pvVarMonitor%s(%p)\n", on?"On":"Off", dbch->pvid);
+	dbch->gotOneMonitor = FALSE;
 	if (on)
 		status = pvVarMonitorOn(
 				dbch->pvid,		/* pvid */
