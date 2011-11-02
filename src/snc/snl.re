@@ -7,6 +7,7 @@ in the file LICENSE that is included with this distribution.
 /*************************************************************************\
                     Lexer specification/implementation
 \*************************************************************************/
+#include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -47,6 +48,7 @@ typedef unsigned char uchar;
 typedef struct Scanner {
 	uchar	*bot;	/* pointer to bottom (start) of buffer */
 	uchar	*tok;	/* pointer to start of current token */
+	uchar	*end;	/* pointer to (temporary) end of current token */
 	uchar	*ptr;	/* marker for backtracking (always > tok) */
 	uchar	*cur;	/* saved scan position between calls to scan() */
 	uchar	*lim;	/* pointer to one position after last read char */
@@ -101,6 +103,7 @@ static uchar *fill(Scanner *s, uchar *cursor) {
 			s->ptr -= garbage;
 			cursor -= garbage;
 			s->lim -= garbage;
+			s->end -= garbage;
 			/* invariant: s->bot, s->top, s->eof, s->lim - s->tok */
 		}
 		/* increase the buffer size if necessary, ensuring that we have
@@ -112,6 +115,7 @@ static uchar *fill(Scanner *s, uchar *cursor) {
 #endif
 			memcpy(buf, token, valid);
 			s->tok = buf;
+			s->end = &buf[s->end - s->bot];
 			s->ptr = &buf[s->ptr - s->bot];
 			cursor = &buf[cursor - s->bot];
 			s->lim = &buf[s->lim - s->bot];
@@ -140,10 +144,12 @@ static uchar *fill(Scanner *s, uchar *cursor) {
 /* alias strdup_from_to: duplicate string from start to (exclusive) stop */
 static char *strdupft(uchar *start, uchar *stop) {
 	char *result;
-	char c = *stop;
-	*stop = 0;
-	result = strdup((char*)start);
-	*stop = c;
+        size_t n;
+	assert (stop - start >= 0);
+	n = (size_t)(stop - start);
+	result = malloc(n+1);
+	memcpy(result, start, n);
+	result[n] = 0;
 	return result;
 }
 
@@ -164,7 +170,6 @@ static char *strdupft(uchar *start, uchar *stop) {
 
 static int scan(Scanner *s, Token *t) {
 	uchar *cursor = s->cur;
-	uchar *end = cursor;
 	int in_c_code = 0;
 	/*
 	Note: Must use a temporary offset for (parts of) line_marker.
@@ -172,7 +177,9 @@ static int scan(Scanner *s, Token *t) {
 	can appear nested inside c_code block tokens, so using s->tok for
 	line_markers would destroy them.
 	*/
-        int line_marker_part = 0;
+	int line_marker_part = 0;
+
+	s->end = 0;
 
 snl:
 	if (in_c_code)
@@ -188,7 +195,7 @@ snl:
 				goto snl;
 			}
 	["]		{
-				s->tok = end = cursor;
+				s->tok = s->end = cursor;
 				goto string_const;
 			}
 	"/*"		{ goto comment; }
@@ -205,7 +212,7 @@ snl:
 				goto c_code;
 			}
 	"%%" SPC*	{
-				s->tok = end = cursor;
+				s->tok = s->end = cursor;
 				goto c_code_line;
 			}
 	"assign"	{ KEYWORD(ASSIGN,	"assign"); }
@@ -312,7 +319,7 @@ string_const:
 	(ESC | [^"\n\\])*
 			{ goto string_const; }
 	["]		{
-				end = cursor - 1;
+				s->end = cursor - 1;
 				goto string_cat;
 			}
 	ANY		{ scan_report(s, "invalid character in string constant\n"); DONE; }
@@ -324,20 +331,20 @@ string_cat:
 	"\n"		{
 				if (cursor == s->eof) {
 					cursor -= 1;
-					LITERAL(STRCON, string_literal, strdupft(s->tok, end));
+					LITERAL(STRCON, string_literal, strdupft(s->tok, s->end));
 				}
 				s->line++;
 				goto string_cat;
 			}
 	["]		{
-				uint len = end - s->tok;
+				uint len = s->end - s->tok;
 				memmove(cursor - len, s->tok, len);
 				s->tok = cursor - len;
 				goto string_const;
 			}
 	ANY		{
 				cursor -= 1;
-				LITERAL(STRCON, string_literal, strdupft(s->tok, end));
+				LITERAL(STRCON, string_literal, strdupft(s->tok, s->end));
 			}
 */
 
@@ -421,7 +428,7 @@ c_code:
 c_code_line:
 /*!re2c
 	.		{
-				end = cursor;
+				s->end = cursor;
 				goto c_code_line;
 			}
 	SPC* "\n"	{
@@ -429,8 +436,8 @@ c_code_line:
 					cursor -= 1;
 				}
 				s->line++;
-				if (end > s->tok) {
-					LITERAL(CCODE, embedded_c_code, strdupft(s->tok, end));
+				if (s->end > s->tok) {
+					LITERAL(CCODE, embedded_c_code, strdupft(s->tok, s->end));
 				}
 				goto snl;
 			}
