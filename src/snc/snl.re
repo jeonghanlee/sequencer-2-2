@@ -156,7 +156,8 @@ static char *strdupft(uchar *start, uchar *stop) {
 /*!re2c
 	re2c:yyfill:parameter	= 0;
 
-	ANY	= .|"\n";
+	NL	= [\n];
+	ANY	= [^];
 	SPC	= [ \t];
 	OCT	= [0-7];
 	DEC	= [0-9];
@@ -189,7 +190,7 @@ snl:
 	s->tok = cursor;
 
 /*!re2c
-	"\n"		{
+	NL		{
 				if(cursor == s->eof) DONE;
 				s->line++;
 				goto snl;
@@ -328,7 +329,7 @@ string_const:
 string_cat:
 /*!re2c
 	SPC+		{ goto string_cat; }
-	"\n"		{
+	NL		{
 				if (cursor == s->eof) {
 					cursor -= 1;
 					LITERAL(STRCON, string_literal, strdupft(s->tok, s->end));
@@ -374,7 +375,7 @@ line_marker_str:
 				cursor[-1] = saved;
 				goto line_marker_skip;
 			}
-	"\n"		{
+	NL		{
 				cursor -= 1;
 				goto line_marker_skip;
 			}
@@ -384,14 +385,14 @@ line_marker_str:
 line_marker_skip:
 /*!re2c
 	.*		{ goto snl; }
-	"\n"		{ cursor -= 1; goto snl; }
+	NL		{ cursor -= 1; goto snl; }
 */
 
 comment:
 /*!re2c
 	"*/"		{ goto snl; }
 	.		{ goto comment; }
-	"\n"		{
+	NL		{
 				if (cursor == s->eof) {
 					scan_report(s, "at eof: unterminated comment\n");
 					DONE;
@@ -415,7 +416,7 @@ c_code:
 				line_marker_part = cursor - s->tok;
 				goto line_marker;
 			}
-	"\n"		{
+	NL		{
 				if (cursor == s->eof) {
 					scan_report(s, "at eof: unterminated literal c-code section\n");
 					DONE;
@@ -431,7 +432,7 @@ c_code_line:
 				s->end = cursor;
 				goto c_code_line;
 			}
-	SPC* "\n"	{
+	SPC* NL	{
 				if (cursor == s->eof) {
 					cursor -= 1;
 				}
