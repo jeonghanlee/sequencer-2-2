@@ -10,10 +10,6 @@ in the file LICENSE that is included with this distribution.
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <osiUnistd.h>
-#ifdef _WIN32
-#include <io.h>
-#endif
 #include <stdarg.h>
 
 #include "snl.h"
@@ -49,7 +45,6 @@ typedef unsigned char uchar;
 #define DONE			RET(EOI,0)
 
 typedef struct Scanner {
-	int	fd;	/* file descriptor */
 	uchar	*bot;	/* pointer to bottom (start) of buffer */
 	uchar	*tok;	/* pointer to start of current token */
 	uchar	*ptr;	/* marker for backtracking (always > tok) */
@@ -126,10 +121,16 @@ static uchar *fill(Scanner *s, uchar *cursor) {
 		}
 		/* fill the buffer, starting at s->lim, by reading a chunk of
 		   BSIZE bytes (or less if eof is encountered) */
-		if ((read_cnt = read(s->fd, (char*) s->lim, BSIZE)) != BSIZE) {
-			s->eof = &s->lim[read_cnt];
-			/* insert sentinel and increase s->eof */
-			*(s->eof)++ = '\n';
+		if ((read_cnt = fread(s->lim, sizeof(uchar), BSIZE, stdin)) != BSIZE) {
+			if (ferror(stdin)) {
+				perror("error reading input");
+				exit(EXIT_FAILURE);
+			}
+			if (feof(stdin)) {
+				s->eof = &s->lim[read_cnt];
+				/* insert sentinel and increase s->eof */
+				*(s->eof)++ = '\n';
+			}
 		}
 		s->lim += read_cnt;	/* adjust limit */
 	}
