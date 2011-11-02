@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
 	if (infp == NULL)
 	{
 		perror(in_file);
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	/* Redirect output stream to specified file */
@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
 	if (outfp == NULL)
 	{
 		perror(out_file);
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	/* stdin, i.e. the input file should be unbuffered,
@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
 	if (err_cnt == 0)
 		generate_code(prg);
 
-	exit(err_cnt?1:0);
+	exit(err_cnt ? EXIT_FAILURE : EXIT_SUCCESS);
 }
 
 /* Initialize options, in_file, and out_file from arguments. */
@@ -91,7 +91,7 @@ static void parse_args(int argc, char *argv[])
 	if (argc < 2)
 	{
 		print_usage();
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	for (i=1; i<argc; i++)
@@ -104,7 +104,7 @@ static void parse_args(int argc, char *argv[])
 			{
 				report("missing filename after option -o\n");
 				print_usage();
-				exit(1);
+				exit(EXIT_FAILURE);
 			}
 			else
 			{
@@ -131,7 +131,7 @@ static void parse_args(int argc, char *argv[])
 	{
 		report("no input file argument given\n");
 		print_usage();
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	if (!out_file)	/* no -o option given */
