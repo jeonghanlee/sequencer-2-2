@@ -35,8 +35,7 @@ static void parse_option(char *s);
 static void print_usage(void);
 
 /* The streams stdin and stdout are redirected to files named in the
-   command parameters.  This accomodates the use by lex of stdin for input
-   and permits printf() to be used for output. */
+   command parameters. */
 int main(int argc, char *argv[])
 {
 	FILE	*infp, *outfp;
@@ -62,13 +61,16 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
-	/* Use line buffered output */
-	setvbuf(stdout, NULL, _IOLBF, BUFSIZ);
-	setvbuf(stderr, NULL, _IOLBF, BUFSIZ);
+	/* stdin, i.e. the input file should be unbuffered,
+           since the re2c generated lexer works fastest when
+           it maintains its own buffer */
+	setvbuf(stdin, NULL, _IONBF, 0);
+	/* stdout, i.e. the generated C program should be
+           block buffered with standard buffer size */
+	setvbuf(stdout, NULL, _IOFBF, BUFSIZ);
+	/* stderr, i.e. messages should be output immediately */
+	setvbuf(stderr, NULL, _IONBF, 0);
 
-#if 0
-	printf("/* %s: %s */\n", SEQ_VERSION, in_file);
-#endif
 	printf("/* Generated with snc from %s */\n", in_file);
 
 	exp = parse_program(in_file);
