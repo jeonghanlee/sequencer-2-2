@@ -808,10 +808,6 @@ static void syncq_var(Expr *defn, Var *vp, SyncQ *qp)
 	assert(qp);				/* call */
 	assert(vp->syncq != M_SINGLE);		/* call */
 
-#ifdef DEBUG
-	report("syncq %s to %s;\n", vp->name, qp->ef_var->name);
-#endif
-
 	if (vp->syncq == M_MULTI)
 	{
 		error_at_expr(defn, "some array elements of '%s' already syncq'd\n",
@@ -855,10 +851,6 @@ static void syncq_elem(Expr *defn, Var *vp, Expr *subscr, SyncQ *qp)
 	assert(qp);					/* call */
 
 	assert(vp->syncq != M_SINGLE);			/* call */
-
-#ifdef DEBUG
-	report("syncq %s[%d] to %s;\n", vp->name, subscr->value, qp->ef_var->name);
-#endif
 
 	if (vp->type->tag != V_ARRAY)	/* establish L3 */
 	{
