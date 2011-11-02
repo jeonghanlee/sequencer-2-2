@@ -252,7 +252,7 @@ snl:
 	"SYNC"		{ LITERAL(INTCON, integer_literal, "SYNC"); }
 
 	LET (LET|DEC)*	{ IDENTIFIER(NAME, identifier, strdupft(s->tok, cursor)); }
-	("0" [xX] HEX+ IS?) | ("0" DEC+ IS?) | (DEC+ IS?) | (['] (ESC|ANY\[\n\\'])* ['])
+	("0" [xX] HEX+ IS?) | ("0" OCT+ IS?) | (DEC+ IS?) | (['] (ESC|[^\n\\'])* ['])
 			{ LITERAL(INTCON, integer_literal, strdupft(s->tok, cursor)); }
 
 	(DEC+ EXP FS?) | (DEC* "." DEC+ EXP? FS?) | (DEC+ "." DEC* EXP? FS?)
@@ -353,7 +353,7 @@ line_marker:
 
 line_marker_str:
 /*!re2c
-	(["] (ESC|ANY\[\n\\"])* ["])
+	(["] (ESC|[^\n\\"])* ["])
 			{
 				uchar saved = cursor[-1];
 				char *str = (char *)(s->tok + line_marker_part + 1);
