@@ -185,7 +185,7 @@ static void gen_state_table(Expr *ss_list, uint num_event_flags, uint num_channe
 #if (__STDC_VERSION__ >= 199901L) || defined(__GNUC__)
 	bitMask	event_mask[num_event_words];
 #else
-	bitMask	*event_mask = (bitMask *)alloca(num_event_words);
+	bitMask	*event_mask = (bitMask *)alloca(num_event_words*sizeof(bitMask));
 #endif
 
 	/* NOTE: Bit zero of event mask is not used. Bit 1 to num_event_flags
