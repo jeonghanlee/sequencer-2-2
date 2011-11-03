@@ -57,7 +57,6 @@ in the file LICENSE that is included with this distribution.
 #undef epicsAssertAuthor
 #endif
 #define epicsAssertAuthor "benjamin.franksen@bessy.de"
-#include "seqCom.h"
 #include "seqPvt.h"
 
 #endif /*INCLseqh*/

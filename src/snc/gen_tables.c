@@ -22,6 +22,8 @@ in the file LICENSE that is included with this distribution.
 #endif
 
 #include "seqCom.h"
+#define boolean seqBool
+#define bitMask seqMask
 #include "analysis.h"
 #include "main.h"
 #include "sym_table.h"
@@ -199,7 +201,7 @@ static void gen_state_table(Expr *ss_list, uint num_event_flags, uint num_channe
 		foreach (sp, ssp->ss_states)
 		{
 			gen_state_event_mask(sp, num_event_flags, event_mask, num_event_words);
-			printf("static const bitMask\tEM_%s_%s[] = {\n",
+			printf("static const seqMask\tEM_%s_%s[] = {\n",
 				ssp->value, sp->value);
 			for (n = 0; n < num_event_words; n++)
 				printf("\t0x%08x,\n", event_mask[n]);

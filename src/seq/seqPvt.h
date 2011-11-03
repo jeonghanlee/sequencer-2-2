@@ -33,8 +33,11 @@ in the file LICENSE that is included with this distribution.
 #ifndef	INCLseqPvth
 #define	INCLseqPvth
 
-#include "seq_queue.h"
 #include "seqCom.h"
+#define boolean seqBool
+#define bitMask seqMask
+
+#include "seq_queue.h"
 
 #define valPtr(ch,ss)		((char*)(ss)->var+(ch)->offset)
 #define bufPtr(ch)		((char*)(ch)->sprog->var+(ch)->offset)
