@@ -27,7 +27,7 @@ typedef unsigned char uchar;
 #define	YYCURSOR		cursor
 #define	YYLIMIT			s->lim
 #define	YYMARKER		s->ptr
-#define	YYFILL			cursor = fill(s, cursor);
+#define	YYFILL(dummy)		cursor = fill(s, cursor);
 #define	YYDEBUG(state, current) report("state = %d, current = %c\n", state, current);
 
 #define	RET(i,r) {\
@@ -144,7 +144,7 @@ static uchar *fill(Scanner *s, uchar *cursor) {
 /* alias strdup_from_to: duplicate string from start to (exclusive) stop */
 static char *strdupft(uchar *start, uchar *stop) {
 	char *result;
-        size_t n;
+	size_t n;
 	assert (stop - start >= 0);
 	n = (size_t)(stop - start);
 	result = malloc(n+1);
@@ -154,8 +154,6 @@ static char *strdupft(uchar *start, uchar *stop) {
 }
 
 /*!re2c
-	re2c:yyfill:parameter	= 0;
-
 	NL	= [\n];
 	ANY	= [^];
 	SPC	= [ \t];
@@ -443,6 +441,7 @@ c_code_line:
 				goto snl;
 			}
 */
+	DONE;		/* dead code, only here to make compiler warning go away */
 }
 
 #ifdef TEST_LEXER

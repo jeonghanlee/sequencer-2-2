@@ -8,10 +8,11 @@ You need to have an `EPICS-3.14`_ base and its dependencies (`GNU
 make`_, `Perl`_) installed.
 
 From 2.0.98 onwards, building the sequencer requires the lexer
-generator tool `re2c`_. If you are on a Linux system, you will probably
-want to use the re2c package your distribution provides, otherwise
-sources and windows binaries are available from the `re2c download`_
-page.
+generator tool `re2c`_. If you are on a Linux system, you will
+probably want to use the re2c package your distribution provides,
+otherwise sources and windows binaries are available from the `re2c
+download`_ page. The minimum version required is 0.9.9, but I
+recommend using the latest version that is avaliable for your system.
 
 .. _EPICS-3.14: http://www.aps.anl.gov/epics/base/R3-14/
 .. _GNU make: http://www.gnu.org/software/make/
