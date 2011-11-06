@@ -52,7 +52,7 @@ snl.c snl.h: snl.lem snl.lt $(LEMON)
 vpath %.re ..
 
 lexer.c: snl.re snl.h
-	$(RE2C) -o $@ $<
+	$(RE2C) -s -b -o $@ $<
 
 $(COMMON_DIR)/snl.bnf: snl.lem
 	$(RM) $@
