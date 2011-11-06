@@ -94,7 +94,7 @@ static uchar *fill(Scanner *s, uchar *cursor) {
 #endif
 			if (!need_alloc) {
 				/* shift valid buffer content down to bottom of buffer */
-				memcpy(s->bot, token, valid);
+				memmove(s->bot, token, valid);
 			}
 			/* adjust pointers */
 			s->tok = s->bot;	/* same as s->tok -= garbage */
