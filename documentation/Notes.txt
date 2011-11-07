@@ -6,8 +6,53 @@ Release Notes
 Notes on Release 2.1.3
 ----------------------
 
-* seq: fixed wait for initial connect and monitor
-* made 3.14.12.1 the default base release
+* snc: several more or less necessary changes to the lexer
+
+  - make lexer spec compatible with re2c 0.9.9
+
+  - run re2c with options -s and -b (for efficiency)
+
+  - fixed line marker parsing on windows, so that
+    error and warning refer to the original source file
+
+  - allow whitespace before and after the '#' in line markers
+
+  - allow only octal digits in '\ooo' char constants
+
+  - replace memcpy with memmove when collecting garbage in the buffer
+
+  - read input with stdio, not the low-level io calls; fix eof and read error handling
+
+  - fixed a bug in the lexer which only becomes apparent
+    when compiling long source files with many macros
+
+  - input and stderr are now unbuffered, output is block buffered;
+    note that windows does not support line buffering
+    which was used for stdout and stderr before
+
+  - fixed a big bad buffer overrun bug in gen_tables.c which caused
+    snc to crash when fed with programs that
+    use more than a few hands full of assigned variables.
+
+* seq:
+
+  - fixed wait for initial connect and monitor
+
+  - replaced boolean -> seqBool, bitMask -> seqMask in public interface (seqCom.h)
+
+* tests:
+
+  - added regression test for clean compilation when including windows.h
+    (thanks to Mark Rivers who suggested this test)
+
+* docs:
+
+  - document 0.9.9 as the minimum re2c version required
+
+* configure:
+
+  - made 3.14.12.1 the default base release
+
 
 .. _Release_Notes_2.1.2:
 
