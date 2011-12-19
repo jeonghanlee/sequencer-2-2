@@ -20,7 +20,7 @@
  *
  * Description:	
  */
-epicsShareFunc pvSystem::pvSystem( int debug ) :
+pvSystem::pvSystem( int debug ) :
 
     magic_( PV_MAGIC ),
     debug_( debug ),
@@ -43,7 +43,7 @@ epicsShareFunc pvSystem::pvSystem( int debug ) :
  *
  * Description:	
  */
-epicsShareFunc pvSystem::~pvSystem()
+pvSystem::~pvSystem()
 {
     if ( getDebug() > 0 )
 	printf( "%8p: pvSystem::~pvSystem()\n", (void *)this );
@@ -59,7 +59,7 @@ epicsShareFunc pvSystem::~pvSystem()
  *
  * Function value:
  */
-epicsShareFunc void pvSystem::lock()
+void pvSystem::lock()
 {
     epicsMutexMustLock( lock_ );
 
@@ -67,7 +67,7 @@ epicsShareFunc void pvSystem::lock()
 	printf( "%8p: pvSystem::lock()\n", (void *)this );
 }
 
-epicsShareFunc void pvSystem::unlock()
+void pvSystem::unlock()
 {
     epicsMutexUnlock( lock_ );
 
@@ -85,7 +85,7 @@ epicsShareFunc void pvSystem::unlock()
  *
  * Function value:
  */
-epicsShareFunc void pvSystem::setError( int status, pvSevr sevr, pvStat stat,
+void pvSystem::setError( int status, pvSevr sevr, pvStat stat,
 			 const char *mess )
 {
     status_ = status;

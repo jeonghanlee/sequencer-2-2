@@ -61,7 +61,7 @@ static void copyFromCA( int type, unsigned count,
  *
  * Description:	
  */
-epicsShareFunc caSystem::caSystem( int debug ) :
+caSystem::caSystem( int debug ) :
     pvSystem( debug ),
     context_( NULL )
 {
@@ -79,7 +79,7 @@ epicsShareFunc caSystem::caSystem( int debug ) :
  *
  * Description:	
  */
-epicsShareFunc caSystem::~caSystem()
+caSystem::~caSystem()
 {
     if ( getDebug() > 0 )
 	printf( "%8p: caSystem::~caSystem()\n", this );
@@ -94,7 +94,7 @@ epicsShareFunc caSystem::~caSystem()
  *
  * Description:
  */
-epicsShareFunc pvStat caSystem::attach()
+pvStat caSystem::attach()
 {
     if ( getDebug() > 0 )
         printf( "%8p: caSystem::attach()\n", this );
@@ -110,7 +110,7 @@ epicsShareFunc pvStat caSystem::attach()
  *
  * Description:
  */
-epicsShareFunc pvStat caSystem::flush()
+pvStat caSystem::flush()
 {
     if ( getDebug() > 0 )
         printf( "%8p: caSystem::flush()\n", this );
@@ -126,7 +126,7 @@ epicsShareFunc pvStat caSystem::flush()
  *
  * Description:
  */
-epicsShareFunc pvStat caSystem::pend( double seconds, int wait )
+pvStat caSystem::pend( double seconds, int wait )
 {
     if ( getDebug() > 1 )
         printf( "%8p: caSystem::pend( %g, %d )\n", this, seconds, wait );
@@ -143,7 +143,7 @@ epicsShareFunc pvStat caSystem::pend( double seconds, int wait )
  *
  * Description:
  */
-epicsShareFunc pvVariable *caSystem::newVariable( const char *name, pvConnFunc func, void *priv,
+pvVariable *caSystem::newVariable( const char *name, pvConnFunc func, void *priv,
 				   int debug )
 {
     if ( getDebug() > 0 )
@@ -161,7 +161,7 @@ epicsShareFunc pvVariable *caSystem::newVariable( const char *name, pvConnFunc f
  *
  * Description:
  */
-epicsShareFunc caVariable::caVariable( caSystem *system, const char *name, pvConnFunc func,
+caVariable::caVariable( caSystem *system, const char *name, pvConnFunc func,
 		        void *priv, int debug ) :
     pvVariable( system, name, func, priv, debug ),
     chid_( NULL )
@@ -183,7 +183,7 @@ epicsShareFunc caVariable::caVariable( caSystem *system, const char *name, pvCon
  *
  * Description:
  */
-epicsShareFunc caVariable::~caVariable()
+caVariable::~caVariable()
 {
     if ( getDebug() > 0 )
         printf( "%8p: caVariable::~caVariable()\n", this );
@@ -198,7 +198,7 @@ epicsShareFunc caVariable::~caVariable()
  *
  * Description:
  */
-epicsShareFunc pvStat caVariable::get( pvType type, unsigned count, pvValue *value )
+pvStat caVariable::get( pvType type, unsigned count, pvValue *value )
 {
     if ( getDebug() > 0 )
         printf( "%8p: caVariable::get( %d, %d )\n", this, type, count );
@@ -226,7 +226,7 @@ epicsShareFunc pvStat caVariable::get( pvType type, unsigned count, pvValue *val
  *
  * Description:
  */
-epicsShareFunc pvStat caVariable::getNoBlock( pvType type, unsigned count, pvValue *value )
+pvStat caVariable::getNoBlock( pvType type, unsigned count, pvValue *value )
 {
     if ( getDebug() > 0 )
         printf( "%8p: caVariable::getNoBlock( %d, %d )\n", this,
@@ -244,7 +244,7 @@ epicsShareFunc pvStat caVariable::getNoBlock( pvType type, unsigned count, pvVal
  *
  * Description:
  */
-epicsShareFunc pvStat caVariable::getCallback( pvType type, unsigned count,
+pvStat caVariable::getCallback( pvType type, unsigned count,
 			        pvEventFunc func, void *arg )
 {
     if ( getDebug() > 0 )
@@ -266,7 +266,7 @@ epicsShareFunc pvStat caVariable::getCallback( pvType type, unsigned count,
  *
  * Description:
  */
-epicsShareFunc pvStat caVariable::put( pvType type, unsigned count, pvValue *value )
+pvStat caVariable::put( pvType type, unsigned count, pvValue *value )
 {
     if ( getDebug() > 0 )
         printf( "%8p: caVariable::put( %d, %d )\n", this, type, count );
@@ -291,7 +291,7 @@ epicsShareFunc pvStat caVariable::put( pvType type, unsigned count, pvValue *val
  *
  * Description:
  */
-epicsShareFunc pvStat caVariable::putNoBlock( pvType type, unsigned count, pvValue *value )
+pvStat caVariable::putNoBlock( pvType type, unsigned count, pvValue *value )
 {
     if ( getDebug() > 0 )
         printf( "%8p: caVariable::putNoBlock( %d, %d )\n", this,
@@ -315,7 +315,7 @@ epicsShareFunc pvStat caVariable::putNoBlock( pvType type, unsigned count, pvVal
  *
  * Description:
  */
-epicsShareFunc pvStat caVariable::putCallback( pvType type, unsigned count, pvValue *value,
+pvStat caVariable::putCallback( pvType type, unsigned count, pvValue *value,
 			        pvEventFunc func, void *arg )
 {
     if ( getDebug() > 0 )
@@ -337,7 +337,7 @@ epicsShareFunc pvStat caVariable::putCallback( pvType type, unsigned count, pvVa
  *
  * Description:
  */
-epicsShareFunc pvStat caVariable::monitorOn( pvType type, unsigned count, pvEventFunc func,
+pvStat caVariable::monitorOn( pvType type, unsigned count, pvEventFunc func,
 			      void *arg, pvCallback **pCallback )
 {
     if ( getDebug() > 0 )
@@ -365,7 +365,7 @@ epicsShareFunc pvStat caVariable::monitorOn( pvType type, unsigned count, pvEven
  *
  * Description:
  */
-epicsShareFunc pvStat caVariable::monitorOff( pvCallback *callback )
+pvStat caVariable::monitorOff( pvCallback *callback )
 {
     if ( getDebug() > 0 )
         printf( "%8p: caVariable::monitorOff()\n", this );
@@ -387,7 +387,7 @@ epicsShareFunc pvStat caVariable::monitorOff( pvCallback *callback )
  *
  * Description:
  */
-epicsShareFunc int caVariable::getConnected() const
+int caVariable::getConnected() const
 {
     if ( getDebug() > 1 )
         printf( "%8p: caVariable::getConnected()\n", this );
@@ -402,7 +402,7 @@ epicsShareFunc int caVariable::getConnected() const
  *
  * Description:
  */
-epicsShareFunc pvType caVariable::getType() const
+pvType caVariable::getType() const
 {
     if ( getDebug() > 1 )
         printf( "%8p: caVariable::getType()\n", this );
@@ -417,7 +417,7 @@ epicsShareFunc pvType caVariable::getType() const
  *
  * Description:
  */
-epicsShareFunc unsigned caVariable::getCount() const
+unsigned caVariable::getCount() const
 {
     if ( getDebug() > 1 )
         printf( "%8p: caVariable::getCount()\n", this );

@@ -22,14 +22,14 @@ in the file LICENSE that is included with this distribution.
 class caSystem : public pvSystem {
 
 public:
-    epicsShareFunc caSystem( int debug = 0 );
-    epicsShareFunc ~caSystem();
+    caSystem( int debug = 0 );
+    ~caSystem();
 
-    epicsShareFunc virtual pvStat attach();
-    epicsShareFunc virtual pvStat flush();
-    epicsShareFunc virtual pvStat pend( double seconds = 0.0, int wait = FALSE );
+    virtual pvStat attach();
+    virtual pvStat flush();
+    virtual pvStat pend( double seconds = 0.0, int wait = FALSE );
 
-    epicsShareFunc virtual pvVariable *newVariable( const char *name, pvConnFunc func = NULL,
+    virtual pvVariable *newVariable( const char *name, pvConnFunc func = NULL,
 				     void *priv = NULL, int debug = 0 );
 
 private:
@@ -42,26 +42,26 @@ private:
 class caVariable : public pvVariable {
 
 public:
-    epicsShareFunc caVariable( caSystem *system, const char *name, pvConnFunc func = NULL,
+    caVariable( caSystem *system, const char *name, pvConnFunc func = NULL,
 		void *priv = NULL, int debug = 0 );
-    epicsShareFunc ~caVariable();
+    ~caVariable();
 
-    epicsShareFunc virtual pvStat get( pvType type, unsigned count, pvValue *value );
-    epicsShareFunc virtual pvStat getNoBlock( pvType type, unsigned count, pvValue *value );
-    epicsShareFunc virtual pvStat getCallback( pvType type, unsigned count,
+    virtual pvStat get( pvType type, unsigned count, pvValue *value );
+    virtual pvStat getNoBlock( pvType type, unsigned count, pvValue *value );
+    virtual pvStat getCallback( pvType type, unsigned count,
 		pvEventFunc func, void *arg = NULL );
-    epicsShareFunc virtual pvStat put( pvType type, unsigned count, pvValue *value );
-    epicsShareFunc virtual pvStat putNoBlock( pvType type, unsigned count, pvValue *value );
-    epicsShareFunc virtual pvStat putCallback( pvType type, unsigned count, pvValue *value,
+    virtual pvStat put( pvType type, unsigned count, pvValue *value );
+    virtual pvStat putNoBlock( pvType type, unsigned count, pvValue *value );
+    virtual pvStat putCallback( pvType type, unsigned count, pvValue *value,
 		pvEventFunc func, void *arg = NULL );
-    epicsShareFunc virtual pvStat monitorOn( pvType type, unsigned count,
+    virtual pvStat monitorOn( pvType type, unsigned count,
 		pvEventFunc func, void *arg = NULL,
 		pvCallback **pCallback = NULL );
-    epicsShareFunc virtual pvStat monitorOff( pvCallback *callback = NULL );
+    virtual pvStat monitorOff( pvCallback *callback = NULL );
 
-    epicsShareFunc virtual int getConnected() const;
-    epicsShareFunc virtual pvType getType() const;
-    epicsShareFunc virtual unsigned getCount() const;
+    virtual int getConnected() const;
+    virtual pvType getType() const;
+    virtual unsigned getCount() const;
 
 private:
     chid chid_;		/* channel access id */
