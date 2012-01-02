@@ -82,7 +82,9 @@ Line markers are interpreted by *snc* exactly as in C, i.e. they indicate
 that the following symbols are really located in the given source file (if
 any) at the given line.
 
-.. note:: :token:`line_number` may only contain decimal numbers, and
+.. note::
+
+   :token:`line_number` may only contain decimal numbers, and
    :token:`file_name` must be a single string (no automatic string
    concatenation).
 
@@ -428,9 +430,10 @@ Parameter`_). If the process variable name is an empty string, then no
 actual assignment to any process variable is performed, but the variable
 is marked for potential (dynamic) assignment with :c:func:`pvAssign`.
 
-.. note:: An :token:`assign` clause using an empty string for the PV name
-   is interpreted differently in :ref:`safe mode`, see
-   :ref:`anonymous pvs`.
+.. note::
+
+   An :token:`assign` clause using an empty string for the PV name is
+   interpreted differently in :ref:`safe mode`, see :ref:`anonymous pvs`.
 
 .. todo:: In safe mode it might make sense to implicitly declare every
    global variable as assigned (wholesale, if it is an array) by default.
@@ -853,8 +856,10 @@ Primary Expression Operators
 These are: function call, array subscript, record selection, pointer to
 record selection, and postfix operators (increment and decrement).
 
-.. note:: :token:`exit` is listed explicitly because it is a keyword, not
-   an identifier, but can also be used as a function.
+.. note::
+
+   :token:`exit` is listed explicitly because it is a keyword, not an
+   identifier, but can also be used as a function.
 
 .. note:: SNL makes no use of the semantics of structure member access and
    struct tags are treated as if they were expressions (variables, in
@@ -1200,9 +1205,11 @@ variable). In :ref:`safe mode`, it causes assignment to an anonymous PV.
 
 As usual, ``assigned_var`` can also be an array element.
 
-.. note:: :c:func:`pvAssign` can only be called on variables (or array
-   elements) that have been statically marked as process variables using
-   the :token:`assign` syntax. An empty string may be used for the initial
+.. note::
+
+   :c:func:`pvAssign` can only be called on variables (or array elements)
+   that have been statically marked as process variables using the
+   :token:`assign` syntax. An empty string may be used for the initial
    assignment, or (from version 2.1. onward) the simplified form
    ``assign var``.
 
@@ -1681,7 +1688,9 @@ Reference to variable ``sw1`` is made as ::
 This conversion is automatically performed by the SNC for all SNL
 statements, but you will have to handle escaped C code yourself.
 
-.. note:: :ref:`safe mode` (enabled with the :option:`+s` option) implies
+.. note::
+
+   :ref:`safe mode` (enabled with the :option:`+s` option) implies
    reentrant mode. In safe mode, each state set has its own copy of the
    ``UserVar`` struct. You can operate on its members in any way you like,
    including taking the address of variables and passing them to C
