@@ -154,7 +154,7 @@ run in the context of the first state set thread.
 :ref:`state entry and exit blocks`, which have the same syntax but are
 executed at each transition from/to a new state.)
 
-The entry or exit code is a regular SNL code block an thus can contain local
+The entry or exit code is a regular SNL code block and thus can contain local
 variable declarations. Global entry code is always executed after initiating
 connections to (named) PVs, and exit code is executed before connections are
 shut down. Furthermore, if the global :option:`+c` option is in effect, the
