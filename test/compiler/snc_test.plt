@@ -9,6 +9,7 @@ my $success = {
   sync_not_monitored => 0,
   syncq_not_monitored => 0,
   include_windows_h => 0,
+  nesting_depth => 0,
 };
 
 my $warning = {
