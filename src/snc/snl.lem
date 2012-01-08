@@ -31,6 +31,15 @@ in the file LICENSE that is included with this distribution.
 		"syntax error near token '%s'\n", TOKEN.str);
 }
 
+// %stack_overflow {
+// 	   report("parser stack overflow\n");
+// }
+
+// A stack size of 0 (zero) means stack size gets dynamically increased
+// on demand i.e. stack size is essentially unlimited. This is important
+// because some rules like the one for IF/ELSE statements employ left-recursion.
+%stack_size 0
+
 %token_type { Token }
 %default_type { Expr* }
 
