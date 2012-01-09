@@ -1,6 +1,27 @@
 Release Notes
 =============
 
+.. _Release_Notes_2.1.4:
+
+Notes on Release 2.1.4
+----------------------
+
+* snc: fixed parser stack overflow
+
+  This appeared when compiling deeply nested statements.
+  The solution is to use a dynamically growing stack.
+
+* pv: only install public interface header files
+
+* pv: fixed a build problem on mingw32
+
+  The solution is to use epicsShareClass on class
+  declarations, instead of epicsShareFunc on methods.
+
+* docs: fixed some typos and a build problem with note:: directives
+
+* configure: made 3.14.12.2 the default base release
+
 .. _Release_Notes_2.1.3:
 
 Notes on Release 2.1.3

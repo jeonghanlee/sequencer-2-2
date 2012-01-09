@@ -29,4 +29,4 @@ EPICS_HAS_UNIT_TEST := $(shell $(PERL) -e 'print($(EPICS_MODIFICATION) >= 10)')
 
 ECHO := $(if $(findstring s,$(MAKEFLAGS)),$(NOP),@echo)
 
-SEQ_VERSION = 2.1.3
+SEQ_VERSION = 2.1.4

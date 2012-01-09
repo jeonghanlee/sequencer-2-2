@@ -17,7 +17,7 @@ DIRS += documentation
 documentation_DEPEND_DIRS = src
 endif
 
-DEFAULT_REPO = /opt/repositories/controls/darcs/epics/support/seq/trunk
+DEFAULT_REPO = /opt/repositories/controls/darcs/epics/support/seq/branch-2-1
 SEQ_PATH = www/control/SoftDist/sequencer
 USER_AT_HOST = wwwcsr@www-csr.bessy.de
 DATE = $(shell date -I)
