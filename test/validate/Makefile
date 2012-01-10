@@ -128,6 +128,7 @@ $(COMMON_DIR)/vxTestHarness.db: $(REGRESSION_TESTS_WITH_DB:%=../%.db)
 st.cmd: ../st.cmd.vxWorks ../makeStCmd.pl
 	$(RM) $@.tmp
 	$(CP) ../st.cmd.vxWorks $@.tmp
+	$(PERL) -MExtUtils::Command -e chmod 644 $@.tmp
 	$(PERL) ../makeStCmd.pl $(REGRESSION_TESTS) >> $@.tmp
 	$(MV) $@.tmp $@
 
