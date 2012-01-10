@@ -19,9 +19,10 @@ Eric Norum, Janet Anderson, and Marty Kraimer (APS) made the initial
 port to EPICS 3.14 that led to the 2.0.x series. Eric Norum and Andrew
 Johnson (APS) provided lots of patches up to release 2.0.12.
 
-Thanks to Mark Rivers for a number of useful suggestions and for
-testing version 2.1 with several sets of existing programs on various
-platforms.
+Mark Rivers made a number of useful suggestions and tested version 2.1
+with several sets of existing programs on various platforms. J. Lewis
+Muir provided documentation patches.
+
 
 Copying and Distribution
 ------------------------
