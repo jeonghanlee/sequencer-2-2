@@ -18,6 +18,8 @@ Notes on Release 2.1.4
   The solution is to use epicsShareClass on class
   declarations, instead of epicsShareFunc on methods.
 
+* test: fix Makefile to allow building if sources are read-only
+
 * docs: fixed some typos and a build problem with note:: directives
 
 * configure: made 3.14.12.2 the default base release
