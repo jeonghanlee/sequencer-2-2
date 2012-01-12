@@ -406,7 +406,7 @@ The second one assigns a single element of an array variable to a
 single process variable. The third one assigns elements of an array
 variable to separate process variables.
 
-..versionadded:: 2.1
+.. versionadded:: 2.1
 
 The fourth variant serves as an abbreviation for
 the first variant, in the special case where the PV name is empty (``""``).
