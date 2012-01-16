@@ -538,6 +538,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvAssign(SS_ID ss, VAR_ID varId, const c
 				dbch->connected = FALSE;
 				sp->connectCount -= 1;
 			}
+			free(ch->dbch->ssMetaData);
 			free(ch->dbch);
 		}
 	}
@@ -545,10 +546,29 @@ epicsShareFunc pvStat epicsShareAPI seq_pvAssign(SS_ID ss, VAR_ID varId, const c
 	{
 		if (!dbch)
 		{
-			ch->dbch = dbch = new(DBCHAN);
+			dbch = new(DBCHAN);
+			if (!dbch)
+			{
+				errlogSevPrintf(errlogFatal, "pvAssign: calloc failed\n");
+				return pvStatERROR;
+			}
 		}
 		dbch->dbName = epicsStrDup(pvName);
-
+		if (!dbch->dbName)
+		{
+			errlogSevPrintf(errlogFatal, "pvAssign: epicsStrDup failed\n");
+			return pvStatERROR;
+		}
+		if ((sp->options & OPT_SAFE) && sp->numSS > 0)
+		{
+			dbch->ssMetaData = newArray(PVMETA, sp->numSS);
+			if (!dbch->ssMetaData)
+			{
+				errlogSevPrintf(errlogFatal, "pvAssign: calloc failed\n");
+				return pvStatERROR;
+			}
+		}
+		ch->dbch = dbch;
 		sp->assignCount += 1;
 		status = pvVarCreate(
 			sp->pvSys,		/* PV system context */
