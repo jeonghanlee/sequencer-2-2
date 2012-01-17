@@ -1715,7 +1715,7 @@ variable, and then does a pvPut::
    int i;
    assign i to "counter";
 
-   foreign pVar, ssId;
+   foreign ssId;
 
    ss myss {
        state doit {
