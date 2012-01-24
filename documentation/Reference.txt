@@ -1300,7 +1300,7 @@ pvTimeStamp
 .. c:function::
    epicsTimeStamp pvTimeStamp(assigned_var)
 
-Returns the time stamp for the last :c:func`pvGet` completion or monitor
+Returns the time stamp for the last :c:func:`pvGet` completion or monitor
 event for this variable. The SNL compiler does not recognize type epicsTimeStamp.
 Therefore, variable declarations for this type should be in escaped
 C code. This will generate a compiler warning, which can be
