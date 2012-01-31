@@ -6,11 +6,11 @@ and for the built-in functions.
 
 Formal syntax is given in `BNF`_. Multiple rules for the same
 `nonterminal symbol`_ mean that any of the given rules may apply. `Terminal
-symbol`_\s are enclosed in double quotes.
+symbols`_ are enclosed in double quotes.
 
 .. _BNF: http://en.wikipedia.org/wiki/Backus-Naur_Form
 .. _nonterminal symbol: http://en.wikipedia.org/wiki/Terminal_and_nonterminal_symbols#Nonterminal_symbols
-.. _terminal symbol: http://en.wikipedia.org/wiki/Terminal_and_nonterminal_symbols#Terminal_symbols
+.. _terminal symbols: http://en.wikipedia.org/wiki/Terminal_and_nonterminal_symbols#Terminal_symbols
 
 Lexical Syntax
 --------------
