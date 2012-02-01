@@ -1150,8 +1150,8 @@ careful when combining a call to pvGetQ with other conditions in the same
         } state ...
 
 would remove the head from the queue every time the when clause gets
-evaluated, regardless of whether the ``other_condition`` is met. This is most
-probably is not the desired effect, as you would loose an
+evaluated, regardless of whether ``other_condition`` is ``TRUE``. This is most
+probably not the desired effect, as you would lose an
 unknown number of messages. (Of course it *could* be exactly what you want,
 especially if ``other_condition`` were in fact ``!suppress_output``.)
 Whereas ::
