@@ -63,19 +63,6 @@ pvStat seq_connect(SPROG *sp, boolean wait)
 	int		delay = 10;
 	boolean		ready = FALSE;
 
-	for (nch = 0; nch < sp->numChans; nch++)
-	{
-		CHAN *ch = sp->chan + nch;
-
-		if (ch->dbch == NULL)
-			continue;		/* skip anonymous pvs */
-		/* Note: need not take programLock because state sets not yet
-		   running and CA channels not yet created */
-		sp->assignCount += 1;
-		if (ch->monitored)
-			sp->monitorCount++;	/* do it before pvVarCreate */
-	}
-
 	/*
 	 * For each channel: create pv object, then subscribe if monitored.
 	 */

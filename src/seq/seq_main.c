@@ -389,12 +389,12 @@ static boolean init_chan(SPROG *sp, CHAN *ch, seqChan *seqChan)
 		ch->type, ch->type->typeStr,
 		ch->type->putType, ch->type->getType, ch->type->size);
 
-	if (seqChan->chName)
+	if (seqChan->chName)	/* skip anonymous PVs */
 	{
 		char name_buffer[100];
 
 		seqMacEval(sp, seqChan->chName, name_buffer, sizeof(name_buffer));
-		if (name_buffer[0])
+		if (name_buffer[0])	/* skip anonymous PVs */
 		{
 			DBCHAN	*dbch = new(DBCHAN);
 			if (!dbch)
@@ -418,6 +418,9 @@ static boolean init_chan(SPROG *sp, CHAN *ch, seqChan *seqChan)
 				}
 			}
 			ch->dbch = dbch;
+			sp->assignCount++;
+			if (ch->monitored)
+				sp->monitorCount++;
 			DEBUG("  assigned name=%s, expanded name=%s\n",
 				seqChan->chName, ch->dbch->dbName);
 		}
