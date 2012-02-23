@@ -3,8 +3,10 @@ Release Notes
 
 .. _Release_Notes_2.1.4:
 
-Notes on Release 2.1.4
-----------------------
+Release 2.1.4
+-------------
+
+:ref:`Known_Problems_2.1.4`
 
 * snc: fixed parser stack overflow
 
@@ -26,8 +28,8 @@ Notes on Release 2.1.4
 
 .. _Release_Notes_2.1.3:
 
-Notes on Release 2.1.3
-----------------------
+Release 2.1.3
+-------------
 
 * snc: several more or less necessary changes to the lexer
 
@@ -79,8 +81,8 @@ Notes on Release 2.1.3
 
 .. _Release_Notes_2.1.2:
 
-Notes on Release 2.1.2
-----------------------
+Release 2.1.2
+-------------
 
 * re-added support for the C comma operator
 
@@ -89,8 +91,8 @@ Notes on Release 2.1.2
 
 .. _Release_Notes_2.1.1:
 
-Notes on Release 2.1.1
-----------------------
+Release 2.1.1
+-------------
 
 * sync and syncq clauses no longer require monitors
 
@@ -142,8 +144,8 @@ Notes on Release 2.1.1
 
 .. _Release_Notes_2.1.0:
 
-Notes on Release 2.1.0
-----------------------
+Release 2.1.0
+-------------
 
 Safe Mode
 ^^^^^^^^^
@@ -267,8 +269,8 @@ Separated example programs from test programs.
 
 .. _Release_Notes_2.0.99:
 
-Notes on Release 2.0.99
------------------------
+Release 2.0.99
+--------------
 
 This is a beta release for version 2.1.0.
 
@@ -455,8 +457,8 @@ Other internal changes include:
   argument is needed for the action callback
 
 
-Notes on Releases 2.0.x
------------------------
+Releases 2.0.x
+--------------
 
 .. _Release_Notes_2.0.14:
 
@@ -709,8 +711,8 @@ Comments about changes made for release 2.0.1
 
 .. _Release_Notes_2.0:
 
-Notes on Release 2.0
---------------------
+Release 2.0
+-----------
 
 Version 2.0 of the sequencer and state notation compiler is
 available for EPICS release R3.14 and later. We have added several
@@ -908,8 +910,8 @@ Hierarchical states
 
 .. _Release_Notes_1.9:
 
-Notes on Release 1.9
---------------------
+Release 1.9
+-----------
 
 With version 1.9, we have incorporated many extensions to
 the state notation language. Some of these changes offer

@@ -1,0 +1,17 @@
+Known Problems
+==============
+
+.. _Known_Problems_2.1.4:
+
+Known Problems in Release 2.1.4
+-------------------------------
+
+The builtin procedure pvAssign has several bugs:
+
+* In safe mode, if an initially unassigned variable gets assigned
+  at runtime using pvAssign, a subsequent pvGet crashes the program.
+
+* When re-assigning a variable that is already connected to a PV, then
+  you get warning messages like
+  "sevr=minor XYZ connect event but already connected". It also looks as
+  if not all resources associated with teh channel are correctly freed.

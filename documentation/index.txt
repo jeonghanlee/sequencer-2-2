@@ -20,7 +20,6 @@ download, build, and install the software.
    Home <self>
    Manual
    Introduction
-   Notes
    Installation
    Tutorial
    Compiling
@@ -28,6 +27,8 @@ download, build, and install the software.
    Reference
    PV-API
    Examples
+   Notes
+   KnownProblems
    Plans
 
 .. :ref:`genindex`

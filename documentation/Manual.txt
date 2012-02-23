@@ -5,7 +5,6 @@ Users' Guide
    :maxdepth: 2
 
    Introduction
-   Notes
    Installation
    Tutorial
    Compiling
@@ -13,6 +12,8 @@ Users' Guide
    Reference
    PV-API
    Examples
+   Notes
+   KnownProblems
    Plans
 
 * :ref:`Index <genindex>`
