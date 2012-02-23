@@ -65,7 +65,7 @@ in the file LICENSE that is included with this distribution.
 #define max(x, y)		(((x) < (y)) ? (y) : (x))
 #endif
 
-#define free(p)			{DEBUG("%s:%d:free(%p)\n",__FILE__,__LINE__,p); free(p); p=0;}
+#define free(p)			{DEBUG("%s:%d:free(%p)\n",__FILE__,__LINE__,p); if(p){free(p); p=0;}}
 
 /* Generic allocation */
 #define newArray(type,count)	(DEBUG("%s:%d:calloc(%u,%u)\n",__FILE__,__LINE__,count,sizeof(type)),(type *)calloc(count, sizeof(type)))
