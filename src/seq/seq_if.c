@@ -557,6 +557,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvAssign(SS_ID ss, VAR_ID varId, const c
 		if (!dbch->dbName)
 		{
 			errlogSevPrintf(errlogFatal, "pvAssign: epicsStrDup failed\n");
+			free(dbch);
 			return pvStatERROR;
 		}
 		if ((sp->options & OPT_SAFE) && sp->numSS > 0)
@@ -565,6 +566,8 @@ epicsShareFunc pvStat epicsShareAPI seq_pvAssign(SS_ID ss, VAR_ID varId, const c
 			if (!dbch->ssMetaData)
 			{
 				errlogSevPrintf(errlogFatal, "pvAssign: calloc failed\n");
+				free(dbch->dbName);
+				free(dbch);
 				return pvStatERROR;
 			}
 		}
@@ -581,6 +584,10 @@ epicsShareFunc pvStat epicsShareAPI seq_pvAssign(SS_ID ss, VAR_ID varId, const c
 		{
 			errlogSevPrintf(errlogFatal, "pvAssign: pvVarCreate() %s failure: "
 				"%s\n", dbch->dbName, pvVarGetMess(dbch->pvid));
+			if (ch->dbch->ssMetaData)
+				free(ch->dbch->ssMetaData);
+			free(ch->dbch->dbName);
+			free(ch->dbch);
 		}
 	}
 

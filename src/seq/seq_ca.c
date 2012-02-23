@@ -88,6 +88,10 @@ pvStat seq_connect(SPROG *sp, boolean wait)
 		{
 			errlogSevPrintf(errlogFatal, "seq_connect: pvVarCreate() %s failure: "
 				"%s\n", dbch->dbName, pvVarGetMess(dbch->pvid));
+			if (ch->dbch->ssMetaData)
+				free(ch->dbch->ssMetaData);
+			free(ch->dbch->dbName);
+			free(ch->dbch);
 			continue;
 		}
 	}
