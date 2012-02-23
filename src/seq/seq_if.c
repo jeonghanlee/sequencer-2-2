@@ -517,10 +517,24 @@ epicsShareFunc pvStat epicsShareAPI seq_pvAssign(SS_ID ss, VAR_ID varId, const c
 
 	epicsMutexMustLock(sp->programLock);
 
-	if (dbch)	/* disconnect if connected */
+	if (dbch)	/* was assigned to a named PV */
 	{
 		status = pvVarDestroy(dbch->pvid);
 		dbch->pvid = NULL;
+
+		sp->assignCount -= 1;
+
+		if (dbch->connected)	/* see connection handler */
+		{
+			dbch->connected = FALSE;
+			sp->connectCount--;
+
+			if (ch->monitored)
+			{
+				seq_monitor(ch, FALSE);
+			}
+		}
+
 		if (status != pvStatOK)
 		{
 			errlogSevPrintf(errlogFatal, "pvAssign: pvVarDestroy() %s failure: "
@@ -529,20 +543,14 @@ epicsShareFunc pvStat epicsShareAPI seq_pvAssign(SS_ID ss, VAR_ID varId, const c
 		free(dbch->dbName);
 	}
 
-	if (pvName == NULL || pvName[0] == 0)
+	if (pvName == NULL || pvName[0] == 0)	/* new name is empty -> free resources */
 	{
 		if (dbch) {
-			sp->assignCount -= 1;
-			if (dbch->connected)
-			{
-				dbch->connected = FALSE;
-				sp->connectCount -= 1;
-			}
 			free(ch->dbch->ssMetaData);
 			free(ch->dbch);
 		}
 	}
-	else		/* Connect */
+	else		/* new name is non-empty -> create resources */
 	{
 		if (!dbch)
 		{
@@ -572,7 +580,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvAssign(SS_ID ss, VAR_ID varId, const c
 			}
 		}
 		ch->dbch = dbch;
-		sp->assignCount += 1;
+		sp->assignCount++;
 		status = pvVarCreate(
 			sp->pvSys,		/* PV system context */
 			dbch->dbName,		/* DB channel name */
