@@ -1,6 +1,32 @@
 Release Notes
 =============
 
+.. _Release_Notes_2.1.5:
+
+Release 2.1.5
+-------------
+
+* fixed two bugs in pvAssign:
+
+  - after an initially unassigned variable gets assigned using
+    pvAssign in safe mode, pvGet crashed the program
+
+  - when pvAssign was used to re-assign an already connected PV,
+    this was not correctly accounted for and a wrong warning
+    message was issued
+
+* extended the 'reassign' test to cover these issues
+
+* functions pvAssign and seq_connect (internal) leaked memory
+  when something fails; this has been fixed
+
+* several documentation fixes (thanks to Lewis Muir)
+
+* know problems of published releases will from now on be
+  listed on an extra documentation page, with a link from the
+  release notes
+
+
 .. _Release_Notes_2.1.4:
 
 Release 2.1.4
@@ -25,6 +51,7 @@ Release 2.1.4
 * docs: fixed some typos and a build problem with note:: directives
 
 * configure: made 3.14.12.2 the default base release
+
 
 .. _Release_Notes_2.1.3:
 
