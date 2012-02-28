@@ -33,7 +33,7 @@ in the file LICENSE that is included with this distribution.
 #include "epicsThread.h"
 #include "epicsTime.h"
 
-#include "seqVersion.h"
+#include "seq_release.h"
 
 #ifdef __cplusplus
 extern "C" {

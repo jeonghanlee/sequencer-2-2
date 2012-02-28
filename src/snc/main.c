@@ -21,7 +21,7 @@ in the file LICENSE that is included with this distribution.
 #include	"gen_code.h"
 #include	"main.h"
 
-#include <seqVersion.h>
+#include <seq_release.h>
 
 static Options options = DEFAULT_OPTIONS;
 
@@ -199,7 +199,7 @@ static void parse_option(char *s)
 
 static void print_usage(void)
 {
-	report("%s\n", SEQ_VERSION);
+	report("%s\n", SEQ_RELEASE);
 	report("usage: snc <options> <infile>\n");
 	report("options:\n");
 	report("  -o <outfile> - override name of output file\n");

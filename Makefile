@@ -22,7 +22,7 @@ SEQ_PATH = www/control/SoftDist/sequencer
 USER_AT_HOST = wwwcsr@www-csr.bessy.de
 DATE = $(shell date -I)
 SNAPSHOT = seq-snapshot-$(DATE)
-SEQ_TAG = $(subst .,-,$(SEQ_VERSION))
+SEQ_TAG = $(subst .,-,$(SEQ_RELEASE))
 
 include $(TOP)/configure/RULES_TOP
 
@@ -36,7 +36,7 @@ upload:
 	$(RM) $(SNAPSHOT).tar.gz
 
 release: upload
-	darcs dist -d seq-$(SEQ_VERSION) -t seq-$(SEQ_TAG)
-	rsync seq-$(SEQ_VERSION).tar.gz $(USER_AT_HOST):$(SEQ_PATH)/releases/
+	darcs dist -d seq-$(SEQ_RELEASE) -t seq-$(SEQ_TAG)
+	rsync seq-$(SEQ_RELEASE).tar.gz $(USER_AT_HOST):$(SEQ_PATH)/releases/
 
 .PHONY: release upload

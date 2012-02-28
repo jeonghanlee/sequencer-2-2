@@ -35,7 +35,7 @@ epicsShareFunc void epicsShareAPI seq(
 	unsigned int	smallStack;
 
 	/* Print version & date of sequencer */
-	printf(SEQ_VERSION "\n");
+	printf(SEQ_RELEASE "\n");
 
 	/* Exit if no parameters specified */
 	if (!seqProg)
