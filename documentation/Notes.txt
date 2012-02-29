@@ -22,6 +22,11 @@ Release 2.1.5
 
 * several documentation fixes (thanks to Lewis Muir)
 
+* fixed a build problem with older base releases
+  (thanks to Bruce Hill)
+
+* internal renamings: SEQ_VERSION->SEQ_RELEASE, seqVersion->seq_release
+
 * know problems of published releases will from now on be
   listed on an extra documentation page, with a link from the
   release notes
