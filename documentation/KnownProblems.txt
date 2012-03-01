@@ -1,6 +1,18 @@
 Known Problems
 ==============
 
+.. _Known_Problems_2.1.5:
+
+Known Problems in Release 2.1.5
+-------------------------------
+
+* Using pvPutComplete or pvGetComplete inside a when-clause may
+  result in a deadlock: the state set forever waits for the
+  completion even though the callback arrived.
+
+  Note: this Problem is present at least since 2.0.12.
+
+
 .. _Known_Problems_2.1.4:
 
 Known Problems in Release 2.1.4
