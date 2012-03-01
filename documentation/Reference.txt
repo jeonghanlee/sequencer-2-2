@@ -307,7 +307,8 @@ and :c:func:`efTestAndClear`.
 An event flag ``e`` can act as a binary semaphore, allowing exactly one
 state set to continue, if ``when(efTestAndClear(e))`` is used to wait
 and ``efSet(e)`` to signal. Event flags can be coupled to changes of a
-PV using the :token:`sync` clause.
+PV using the :token:`sync` clause, so that the flag gets set whenever
+an event happens.
 
 You cannot declare arrays of or pointers to event flags, since
 event flags are not translated to C variables in your program.
@@ -498,8 +499,8 @@ This declares a variable to be synchronized with an event flag.
 
 When a monitor is posted on any of the process variables associated
 with the event flag (and these are :token:`monitor`\ed), or when an
-asynchronous get operation completes, the corresponding event flag is
-set.
+asynchronous get or put operation completes, the corresponding event
+flag is set.
 
 The variable must be :token:`assign`\ed and :token:`monitor`\ed.
 A variable can be mentioned in at most one sync clause, but an event
