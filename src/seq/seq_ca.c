@@ -253,14 +253,6 @@ static void proc_db_events(
 		ss_write_buffer(ch, val, &meta, evtype == MON_COMPLETE);
 	}
 
-	/* Wake up each state set that uses this channel in an event */
-	seqWakeup(sp, ch->eventNum);
-
-	/* If there's an event flag associated with this channel, set it */
-	/* TODO: check if correct/documented to do this for non-monitor completions */
-	if (ch->efId > 0)
-		seq_efSet(sp->ss, ch->efId);
-
 	/* Signal completion */
 	switch (evtype)
 	{
@@ -273,6 +265,14 @@ static void proc_db_events(
 	default:
 		break;
 	}
+
+	/* If there's an event flag associated with this channel, set it */
+	/* TODO: check if correct/documented to do this for non-monitor completions */
+	if (ch->efId > 0)
+		seq_efSet(sp->ss, ch->efId);
+
+	/* Wake up each state set that uses this channel in an event */
+	seqWakeup(sp, ch->eventNum);
 }
 
 struct putq_cp_arg {
