@@ -3,8 +3,9 @@ Using the Run Time Sequencer
 
 .. todo:: This chapter should be completely re-worked.
 
-.. note:: Much of the information here is out-dated, some is
-   missing, and some is plainly wrong.
+.. warning:: Much of the information here is out-dated, some is
+   missing, and some is plainly wrong. I badly need to re-write
+   this chapter.
 
 In the previous chapter you learned how to create and compile some
 simple programs. In this chapter you will be introduced to
@@ -53,6 +54,13 @@ out which tasks are running by using the VxWorks ``i`` command.
 
 Examining the State Program
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. warning:: The following works only if you are using the EPICS
+   IOC shell, not if you use the VxWorks C shell. On the VxWorks shell
+   you must supply the thread ID, giving the program name (even in
+   double quotes) will not work. 
+   You can find the thread ID belonging to the program by executing
+   ``seqShow`` without arguments.
 
 You can examine the program by typing::
 
@@ -277,5 +285,5 @@ events.
 
 Prior to Version 1.8 of the sequencer, event flags were cleared
 after a ``when`` statement executed. Currently, event flags must be
-cleared with either ``efTestAndClear`` or ``efClear`` , unless the :option:`-e`
-compiler option was chosen.
+cleared with either ``efTestAndClear`` or ``efClear`` , unless 
+the :option:`-e` compiler option was chosen.
