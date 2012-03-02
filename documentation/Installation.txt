@@ -229,7 +229,7 @@ point the vxWorks startup script to ::
    $SEQ/test/validate/O.$T_A/st.cmd
 
 where ``$T_A`` is the name of the target architecture and ``$SEQ`` refers to
-the (absolute) path of you sequencer installation. The system will
+the (absolute) path of your sequencer installation. The system will
 start an IOC and will run a number of SNL test programs, one after the other,
 after each one giving a summary of how many tests failed etc.
 
