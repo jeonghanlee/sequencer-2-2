@@ -975,13 +975,13 @@ epicsShareFunc boolean epicsShareAPI seq_delay(SS_ID ss, DELAY_ID delayId)
 	timeElapsed = timeNow - ss->timeEntered;
 
 	/* Check for delay timeout */
-	if ( (timeElapsed >= ss->delay[delayId]) )
+	if (timeElapsed > ss->delay[delayId]-0.000001)
 	{
 		ss->delayExpired[delayId] = TRUE; /* mark as expired */
 		expired = TRUE;
 	}
-	DEBUG("delay(%s,%u): %g seconds, %s\n", ss->ssName, delayId,
-		ss->delay[delayId], expired ? "expired": "unexpired");
+	DEBUG("delay(%s,%u): diff=%.10f, %s\n", ss->ssName, delayId,
+		timeElapsed - ss->delay[delayId], expired ? "expired": "unexpired");
 	return expired;
 }
 
