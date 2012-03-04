@@ -24,7 +24,7 @@ ss test1 {
             i = 0;
         }
         when (i == 5) {
-        } state put_sync
+        } state wait_complete
         when (delay(0.4)) {
             int status;
             x = 1;
@@ -35,19 +35,24 @@ ss test1 {
             ++i;
         } state put_async
     }
-    state put_sync {
+    state wait_complete {
+        when (delay(5.0)) {
+            testFail("pvPut notification timeout");
+        } state put_sync
         when (pvPutComplete(x)) {
-            int i = 0;
             testPass("pvPut/ASYNC complete\n");
+        } state put_sync
+    }
+    state put_sync {
+        entry {
+            int i = 0;
             for (i=0; i<4; i++) {
                 int status = pvPut(x,SYNC);
                 /* should always succeed */
                 testOk(status==pvStatOK, "pvPut/SYNC %d, status=%d (%s)",
                     i, status, status ? pvMessage(x) : "");
             }
-        } state wait
-    }
-    state wait {
+        }
         when (delay(1)) {
         } exit
     }
