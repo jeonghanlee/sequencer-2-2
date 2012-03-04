@@ -17,7 +17,7 @@ monitor x;
 evflag f;
 
 entry {
-    testPlan(5);
+    seq_test_init(5);
     pvSync(x,f);
 }
 
@@ -48,6 +48,5 @@ ss help {
 }
 
 exit {
-    testDone();
     seq_test_done();
 }

@@ -9,7 +9,7 @@ program arrayTest
 %%#include "../testSupport.h"
 
 entry {
-    testPlan(20);
+    seq_test_init(20);
 }
 
 ss array {
@@ -44,6 +44,5 @@ ss array {
 }
 
 exit {
-    testDone();
     seq_test_done();
 }

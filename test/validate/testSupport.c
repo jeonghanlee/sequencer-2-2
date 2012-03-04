@@ -13,8 +13,8 @@ in the file LICENSE that is included with this distribution.
 #include "../testSupport.h"
 
 static epicsEventId this_test_done;
-
 static seqProgram *prog;
+int seq_test_raise_priority;
 
 static int doit(void)
 {
@@ -22,8 +22,9 @@ static int doit(void)
     return 0;
 }
 
-void run_seq_test(seqProgram *seqProg)
+void run_seq_test(seqProgram *seqProg, int raise_priority)
 {
+    seq_test_raise_priority = raise_priority;
     if (!this_test_done) {
         this_test_done = epicsEventMustCreate(epicsEventEmpty);
     }
@@ -32,8 +33,17 @@ void run_seq_test(seqProgram *seqProg)
     epicsEventWait(this_test_done);
 }
 
+void seq_test_init(int num_tests)
+{
+    testPlan(num_tests);
+    if (seq_test_raise_priority) {
+        epicsThreadSetPriority(epicsThreadGetIdSelf(), epicsThreadPriorityHigh);
+    }
+}
+
 void seq_test_done(void)
 {
+    testDone();
 #if defined(vxWorks)
     epicsEventSignal(this_test_done);
 #else

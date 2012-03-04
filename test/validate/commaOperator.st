@@ -9,7 +9,7 @@ program commaOperatorTest
 %%#include "../testSupport.h"
 
 entry {
-    testPlan(4);
+    seq_test_init(4);
 }
 
 ss myss {
@@ -25,6 +25,5 @@ ss myss {
 }
 
 exit {
-    testDone();
     seq_test_done();
 }

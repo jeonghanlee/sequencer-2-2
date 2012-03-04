@@ -16,7 +16,7 @@ option +r;
 int i = 1;
 
 entry {
-    testPlan(5);
+    seq_test_init(5);
 }
 
 /* only state-set */
@@ -41,6 +41,5 @@ ss start {
 /* exit handler */
 exit {
     testOk(i==1, "global i==%d", i);
-    testDone();
     seq_test_done();
 }

@@ -23,7 +23,7 @@ monitor msg;
 syncq msg 40;
 
 entry {
-    testPlan(40);
+    seq_test_init(40);
 }
 
 ss low_high {
@@ -118,6 +118,5 @@ ss check {
 }
 
 exit {
-    testDone();
     seq_test_done();
 }

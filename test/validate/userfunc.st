@@ -26,7 +26,7 @@ monitor i;
 foreign pVar, ssId;
 
 entry {
-    testPlan(10);
+    seq_test_init(10);
 }
 
 ss myss {
@@ -43,6 +43,5 @@ ss myss {
 }
 
 exit {
-    testDone();
     seq_test_done();
 }

@@ -24,7 +24,7 @@ assign anon;
 evflag ef_read_named, ef_read_anon, ef_read_named_sync, ef_read_anon_sync;
 
 entry {
-    testPlan(MAX_GET*4*3);
+    seq_test_init(MAX_GET*4*3);
     mutex = epicsMutexMustCreate();
 }
 
@@ -205,6 +205,5 @@ ss write {
 }
 
 exit {
-    testDone();
     seq_test_done();
 }

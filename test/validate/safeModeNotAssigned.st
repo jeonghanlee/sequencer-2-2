@@ -15,7 +15,7 @@ int v = 0;
 #define MAX_TEST 10
 
 entry {
-    testPlan(MAX_TEST*2);
+    seq_test_init(MAX_TEST*2);
 }
 
 ss ss1 {
@@ -48,6 +48,5 @@ ss ss2 {
 }
 
 exit {
-    testDone();
     seq_test_done();
 }

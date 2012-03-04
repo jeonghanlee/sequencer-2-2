@@ -19,7 +19,7 @@ sync cnt to ef_cnt;
 #define MAX_TEST 10
 
 entry {
-    testPlan(MAX_TEST);
+    seq_test_init(MAX_TEST);
 }
 
 ss read {
@@ -50,6 +50,5 @@ ss write {
 }
 
 exit {
-    testDone();
     seq_test_done();
 }

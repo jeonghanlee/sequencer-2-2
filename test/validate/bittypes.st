@@ -23,7 +23,7 @@ assign i32 to "ushort";
 assign ui32 to "ushort";
 
 entry {
-    testPlan(12);
+    seq_test_init(12);
 }
 
 ss test {
@@ -74,6 +74,5 @@ ss test {
 }
 
 exit {
-    testDone();
     seq_test_done();
 }

@@ -26,7 +26,7 @@ monitor anonymous;
 sync anonymous to ef_anonymous;
 
 entry {
-    testPlan(0);
+    seq_test_init(0);
     efClear(ef_named);
 }
 
@@ -74,6 +74,5 @@ ss write {
 }
 
 exit {
-    testDone();
     seq_test_done();
 }

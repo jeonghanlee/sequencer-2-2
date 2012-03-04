@@ -14,7 +14,7 @@ int x;
 assign x to "pvPutAsync1";
 
 entry {
-    testPlan(10);
+    seq_test_init(10);
 }
 
 ss test1 {
@@ -84,6 +84,5 @@ ss test2 {
 #endif
 
 exit {
-    testDone();
     seq_test_done();
 }

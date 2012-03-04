@@ -20,7 +20,7 @@ foreign pvStatOK;
 #define NTESTS 30
 
 entry {
-    testPlan(NTESTS);
+    seq_test_init(NTESTS);
 }
 
 ss reassign {
@@ -93,6 +93,5 @@ ss reassign {
 }
 
 exit {
-    testDone();
     seq_test_done();
 }

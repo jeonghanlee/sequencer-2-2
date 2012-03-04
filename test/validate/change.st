@@ -14,7 +14,7 @@ program changeTest
 #define MAX_TEST 50
 
 entry {
-    testPlan(MAX_TEST);
+    seq_test_init(MAX_TEST);
     /* uncomment for repeatability */
     /* srandom(12345); */
 }
@@ -72,6 +72,5 @@ ss main {
 }
 
 exit {
-    testDone();
     seq_test_done();
 }
