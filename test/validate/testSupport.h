@@ -11,7 +11,7 @@ in the file LICENSE that is included with this distribution.
 #include "epicsMutex.h"
 #include "epicsUnitTest.h"
 
-void run_seq_test(seqProgram *seqProg, int raise_priority);
+void run_seq_test(seqProgram *seqProg, int adapt_priority);
 void seq_test_init(int num_tests);
 void seq_test_done(void);
 

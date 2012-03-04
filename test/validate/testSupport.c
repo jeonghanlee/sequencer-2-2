@@ -14,7 +14,7 @@ in the file LICENSE that is included with this distribution.
 
 static epicsEventId this_test_done;
 static seqProgram *prog;
-int seq_test_raise_priority;
+int seq_test_adapt_priority;
 
 static int doit(void)
 {
@@ -22,9 +22,9 @@ static int doit(void)
     return 0;
 }
 
-void run_seq_test(seqProgram *seqProg, int raise_priority)
+void run_seq_test(seqProgram *seqProg, int adapt_priority)
 {
-    seq_test_raise_priority = raise_priority;
+    seq_test_adapt_priority = adapt_priority;
     if (!this_test_done) {
         this_test_done = epicsEventMustCreate(epicsEventEmpty);
     }
@@ -36,8 +36,10 @@ void run_seq_test(seqProgram *seqProg, int raise_priority)
 void seq_test_init(int num_tests)
 {
     testPlan(num_tests);
-    if (seq_test_raise_priority) {
+    if (seq_test_adapt_priority > 0) {
         epicsThreadSetPriority(epicsThreadGetIdSelf(), epicsThreadPriorityHigh);
+    } else if (seq_test_adapt_priority < 0) {
+        epicsThreadSetPriority(epicsThreadGetIdSelf(), epicsThreadPriorityLow);
     }
 }
 
