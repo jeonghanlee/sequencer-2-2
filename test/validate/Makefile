@@ -28,6 +28,7 @@ TESTPROD_HOST += syncq
 REGRESSION_TESTS_WITH_DB += bittypes
 REGRESSION_TESTS_WITH_DB += evflag
 REGRESSION_TESTS_WITH_DB += pvGet
+REGRESSION_TESTS_WITH_DB += pvGetAsync
 REGRESSION_TESTS_WITH_DB += pvPutAsync
 REGRESSION_TESTS_WITH_DB += reassign
 
@@ -77,8 +78,10 @@ seqSoftIoc_LIBS += $(EPICS_BASE_IOC_LIBS)
 ifeq '$(EPICS_HAS_UNIT_TEST)' '1'
 seqSoftIoc_SRCS += testSupport.c
 
+REGRESSION_TESTS_vxWorks = $(filter-out pvGetAsync,$(REGRESSION_TESTS))
+
 PROD_vxWorks = vxTestHarness
-vxTestHarness_SRCS += $(REGRESSION_TESTS:%=%.st)
+vxTestHarness_SRCS += $(REGRESSION_TESTS_vxWorks:%=%.st)
 vxTestHarness_SRCS += testSupport.c
 vxTestHarness_SRCS += vxTestHarness_registerRecordDeviceDriver.cpp
 vxTestHarness_OBJS += $(EPICS_BASE_BIN)/vxComLibrary
@@ -118,7 +121,7 @@ norace.i race.i: ../raceCommon.st
 
 $(COMMON_DIR)/vxTestHarnessRegistrars.dbd: ../makeTestDbd.pl
 	$(RM) $@.tmp
-	$(PERL) ../makeTestDbd.pl $(REGRESSION_TESTS) > $@.tmp
+	$(PERL) ../makeTestDbd.pl $(REGRESSION_TESTS_vxWorks) > $@.tmp
 	$(MV) $@.tmp $@
 
 $(COMMON_DIR)/vxTestHarness.dbd: $(COMMON_DIR)/vxTestHarnessRegistrars.dbd
@@ -132,7 +135,7 @@ st.cmd: ../st.cmd.vxWorks ../makeStCmd.pl
 	$(RM) $@.tmp
 	$(CP) ../st.cmd.vxWorks $@.tmp
 	$(PERL) -MExtUtils::Command -e chmod 644 $@.tmp
-	$(PERL) ../makeStCmd.pl $(REGRESSION_TESTS) >> $@.tmp
+	$(PERL) ../makeStCmd.pl $(REGRESSION_TESTS_vxWorks) >> $@.tmp
 	$(MV) $@.tmp $@
 
 ifeq "$(OS_CLASS)" "vxWorks"

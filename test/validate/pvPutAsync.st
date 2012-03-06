@@ -37,10 +37,10 @@ ss test1 {
     }
     state wait_complete {
         when (delay(5.0)) {
-            testFail("pvPut notification timeout");
+            testFail("pvPut completion timeout");
         } state put_sync
         when (pvPutComplete(x)) {
-            testPass("pvPut/ASYNC complete\n");
+            testPass("pvPut/ASYNC complete");
         } state put_sync
     }
     state put_sync {

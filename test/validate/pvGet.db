@@ -1,2 +1,2 @@
-record(ao,"named_pv") {
+record(ao,"pvGet1") {
 }

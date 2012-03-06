@@ -19,7 +19,7 @@ foreign shared, mutex;
 int anon;
 assign anon;
 
-#define MAX_GET 10
+#define MAX_GET 5
 
 evflag ef_read_named, ef_read_anon, ef_read_named_sync, ef_read_anon_sync;
 
@@ -30,7 +30,7 @@ entry {
 
 ss read_named {
     int named;
-    connect named to "named_pv";
+    connect named to "pvGet1";
     int expected;
     int n = 0;
 
@@ -112,7 +112,7 @@ ss read_anon {
 
 ss read_named_sync {
     int named;
-    connect named to "named_pv";
+    connect named to "pvGet1";
     int expected;
     int n = 0;
 
@@ -186,7 +186,7 @@ ss read_anon_sync {
 
 ss write {
     int out = 0;
-    connect out to "named_pv";
+    connect out to "pvGet1";
 
     state run {
         when (efTest(ef_read_named) && efTest(ef_read_anon) &&
