@@ -222,7 +222,22 @@ Note that this requires EPICS base R3.14.10 or later, since we use the
 test support in base. Also note that some of the tests are supposed
 to run for half a minute, so don't give up too soon.
 
-You can also run the tests on an embedded system. Currently only
+To run just one test from the suite, switch to the architecture build
+directory of the test and execute perl with the name of the test
+program ending in ``.t``.  For example, to run the evflag test on a
+linux-x86_64 host, change directory to
+``test/validate/O.linux-x86_64`` and run ::
+
+   > perl evflag.t
+
+There are two ways to run a test that has an associated database
+(evflag is such a test).  The above will run the state machine and
+database on the same IOC.  To run the test as two separate IOCs, use
+the test program ending in ``Ioc.t`` (e.g. evflagIoc.t).  The IOC
+running the state machine runs in the foreground, and the one running
+the database runs in the background.
+
+The test suite can also be run on an embedded system. Currently only
 vxWorks systems are supported, but RTEMS will follow soon. To do this,
 point the vxWorks startup script to ::
 
