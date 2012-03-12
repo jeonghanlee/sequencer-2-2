@@ -249,7 +249,7 @@ static void proc_db_events(
 		}
 
 		/* Write value and meta data to shared buffers.
-		   Set the dirty flag only of this was a monitor event. */
+		   Set the dirty flag only if this was a monitor event. */
 		ss_write_buffer(ch, val, &meta, evtype == MON_COMPLETE);
 	}
 
