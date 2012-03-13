@@ -350,7 +350,7 @@ static void printValue(pr_fun *pr, void *val, unsigned count, int type)
 {
 	char	*c = (char *)val;
 	short	*s = (short *)val;
-	long	*l = (long *)val;
+	int	*i = (int *)val;
 	float	*f = (float *)val;
 	double	*d = (double *)val;
 	typedef char string[MAX_STRING_SIZE];
@@ -370,7 +370,7 @@ static void printValue(pr_fun *pr, void *val, unsigned count, int type)
 			pr(" %d", *s++);
 			break;
 		case pvTypeLONG:
-			pr(" %ld", *l++);
+			pr(" %d", *i++);
 			break;
 		case pvTypeFLOAT:
 			pr(" %g", *f++);
