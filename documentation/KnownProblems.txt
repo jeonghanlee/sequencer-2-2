@@ -12,6 +12,26 @@ Known Problems in Release 2.1.5
 
   Note: this Problem is present at least since 2.0.12.
 
+  Note also: standard CA thread priorities hide this problem, so the
+  symptoms do not appear on VxWorks and RTEMS; they appear only if
+  epics thread priorities are reversed (or ignored, as is typically
+  the case for soft IOCs running in user mode on Linux or Windows).
+
+  The latest snapshot has this bug fixed.
+
+* In safe mode, if a variable is monitored and sync'ed, it can
+  happen that an event is detected with efTestAndClear
+  but the underlying variable still has the old value.
+
+  You should avoid using efTestAndClear together with conditions
+  that test the value of the underlying variable; this may lead
+  to an apparently "lost event", i.e. the event flag gets cleared
+  but no state transition happens. Instead use efTest, and
+  clear the flag in the action block only after you have actually
+  got the new value.
+
+  A fix for this problem will appear in 2.1.6.
+
 
 .. _Known_Problems_2.1.4:
 
