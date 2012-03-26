@@ -10,6 +10,9 @@ SNC = $(INSTALL_HOST_BIN)/snc$(HOSTEXE)
 SNCFLAGS_DEFAULT += +m -i
 SNCFLAGS_vxWorks += -nil-
 
+#  Set to path of valgrind executable if tests should run under valgrind
+USE_VALGRIND =
+
 #  Sequence programs and/or object files to create
 TESTPROD_HOST += decl
 TESTPROD_HOST += delay
@@ -103,12 +106,12 @@ SOFTDBD=$(EPICS_BASE)/dbd/softIoc.dbd
 
 $(REGRESSION_TESTS_WITH_DB:%=%Ioc.t): %Ioc.t: %$(EXE) ../makeTestfile.pl
 	$(RM) $@.tmp
-	$(PERL) ../makeTestfile.pl $@.tmp $* $< ioc $(SOFTIOC) $(SOFTDBD) $(EPICS_HOST_ARCH)
+	$(PERL) ../makeTestfile.pl $@.tmp $* $< ioc $(SOFTIOC) $(SOFTDBD) $(USE_VALGRIND)
 	$(MV) $@.tmp $@
 
 $(REGRESSION_TESTS:%=%.t): %.t: %$(EXE) ../makeTestfile.pl
 	$(RM) $@.tmp
-	$(PERL) ../makeTestfile.pl $@.tmp $* $< noioc $(SOFTIOC) $(SOFTDBD) $(EPICS_HOST_ARCH)
+	$(PERL) ../makeTestfile.pl $@.tmp $* $< noioc $(SOFTIOC) $(SOFTDBD) $(USE_VALGRIND)
 	$(MV) $@.tmp $@
 
 norace.i race.i: ../raceCommon.st

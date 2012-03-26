@@ -22,10 +22,13 @@
 use strict;
 
 my $valgrind = "";
-`valgrind -h`;
-$valgrind = "valgrind -q --log-file=test " if $? == 0;
 
-my ($target, $stem, $exe, $ioc, $softioc, $softdbd) = @ARGV;
+my ($target, $stem, $exe, $ioc, $softioc, $softdbd, $valgrind_path) = @ARGV;
+
+if ($valgrind_path) {
+  `$valgrind_path -h`;
+  $valgrind = "$valgrind_path -q --log-file=test " if $? == 0;
+}
 
 my $db = "../$stem.db";
 
