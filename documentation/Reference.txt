@@ -1517,6 +1517,15 @@ efSet
 Sets the event flag and causes evaluation of the :token:`when`
 clauses for all state sets that are pending on this event flag.
 
+efClear
+^^^^^^^
+
+.. c:function::
+   boolean efClear(event_flag)
+
+Clears the event flag and causes evaluation of the :token:`when`
+clauses for all state sets that are pending on this event flag.
+
 efTest
 ^^^^^^
 
@@ -1525,16 +1534,12 @@ efTest
 
 Returns whether the event flag was set.
 
-efClear
-^^^^^^^
+.. note::
 
-.. c:function::
-   boolean efClear(event_flag)
-
-Clears the event flag and returns whether the event flag was set.
-Also and causes evaluation of the :token:`when` clauses for all
-state sets that are pending on this event flag.
-
+   In safe mode, this function is a synchronization point for all
+   variables (channels) that are :token:`sync`\ed with it, i.e. the
+   state set local copy of these variables will be updated from their
+   current globally visible value.
 
 efTestAndClear
 ^^^^^^^^^^^^^^
@@ -1544,6 +1549,13 @@ efTestAndClear
 
 Clears the event flag and returns whether the event
 flag was set. It is intended for use within a :token:`when` clause.
+
+.. note::
+
+   In safe mode, this function is a synchronization point for all
+   variables (channels) that are :token:`sync`\ed with it, i.e. the
+   state set local copy of these variables will be updated from their
+   current globally visible value.
 
 macValueGet
 ^^^^^^^^^^^
