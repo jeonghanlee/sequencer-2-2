@@ -183,6 +183,23 @@ static void ss_read_all_buffer(SPROG *sp, SSCB *ss)
 }
 
 /*
+ * ss_read_all_buffer_selective() - Call ss_read_buffer_static
+ * for all channels that are sync'ed to the given event flag.
+ */
+void ss_read_buffer_selective(SPROG *sp, SSCB *ss, EV_ID ev_flag)
+{
+	unsigned nch;
+
+	for (nch = 0; nch < sp->numChans; nch++)
+	{
+		CHAN *ch = sp->chan + nch;
+		if (ch->efId == ev_flag)
+			/* Call static version so it gets inlined */
+			ss_read_buffer_static(ss, ch, TRUE);
+	}
+}
+
+/*
  * ss_write_buffer() - Copy given value and meta data
  * to shared buffer. In safe mode, if dirtify is TRUE then
  * set dirty flag for each state set.

@@ -223,6 +223,7 @@ struct pvreq
 void sequencer (void *arg);
 void ss_write_buffer(CHAN *ch, void *val, PVMETA *meta, boolean dirtify);
 void ss_read_buffer(SSCB *ss, CHAN *ch, boolean dirty_only);
+void ss_read_buffer_selective(SPROG *sp, SSCB *ss, EV_ID ev_flag);
 void seqWakeup(SPROG *sp, unsigned eventNum);
 void seqCreatePvSys(SPROG *sp);
 /* seq_mac.c */

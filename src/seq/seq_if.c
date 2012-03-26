@@ -828,6 +828,9 @@ epicsShareFunc boolean epicsShareAPI seq_efTest(SS_ID ss, EV_ID ev_flag)
 
 	DEBUG("efTest: ev_flag=%d, isSet=%d\n", ev_flag, isSet);
 
+	if (sp->options & OPT_SAFE)
+		ss_read_buffer_selective(sp, ss, ev_flag);
+
 	epicsMutexUnlock(sp->programLock);
 
 	return isSet;
@@ -871,6 +874,9 @@ epicsShareFunc boolean epicsShareAPI seq_efTestAndClear(SS_ID ss, EV_ID ev_flag)
 	bitClear(sp->evFlags, ev_flag);
 
 	DEBUG("efTestAndClear: ev_flag=%d, isSet=%d, ss=%d\n", ev_flag, isSet, (int)ssNum(ss));
+
+	if (sp->options & OPT_SAFE)
+		ss_read_buffer_selective(sp, ss, ev_flag);
 
 	epicsMutexUnlock(sp->programLock);
 
