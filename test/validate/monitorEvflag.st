@@ -5,9 +5,9 @@ option +s;
 %%#include "../testSupport.h"
 %%#include <stdio.h>
 
-#define NTESTS 100
-#define NCYCLESPERTEST 2000
-#define NCYCLES (NTESTS*NCYCLESPERTEST)
+#define NDIAGS 100
+#define NCYCLESPERDIAG 1000
+#define NCYCLES (NDIAGS*NCYCLESPERDIAG)
 
 int requested;
 assign requested to "requested";
@@ -47,8 +47,8 @@ ss monitorEvflagTest {
             if (actual != requested) {
                 testFail("requested(%d)!=actual(%d)", requested, actual);
                 error = TRUE;
-            } else if (cycleCount % NCYCLESPERTEST == 0) {
-                testDiag("requested(%d)==actual(%d)", requested, actual);
+            } else if (cycleCount % NCYCLESPERDIAG == 0) {
+                testDiag("passed %d cycles", cycleCount);
             }
             cycleCount++;
         } state makeRequest
