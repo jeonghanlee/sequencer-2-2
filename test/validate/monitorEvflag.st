@@ -6,7 +6,7 @@ option +s;
 %%#include <stdio.h>
 
 #define NTESTS 100
-#define NCYCLESPERTEST 1000
+#define NCYCLESPERTEST 2000
 #define NCYCLES (NTESTS*NCYCLESPERTEST)
 
 int requested;
@@ -20,7 +20,7 @@ evflag actualChanged;
 sync actual actualChanged;
 
 entry {
-    seq_test_init(NTESTS);
+    seq_test_init(1);
 }
 
 ss monitorEvflagTest {
@@ -32,7 +32,10 @@ ss monitorEvflagTest {
         } state makeRequest
     }
     state makeRequest {
-        when (error || cycleCount > NCYCLES) {
+        when (error) {
+        } exit
+        when (cycleCount > NCYCLES) {
+            testPass("no error in %d cycles", NCYCLES);
         } exit
         when (cycleCount <= NCYCLES) {
             requested = cycleCount;
@@ -40,20 +43,18 @@ ss monitorEvflagTest {
         } state waitForActualToEqualRequested
     }
     state waitForActualToEqualRequested {
-        when (efTestAndClear(actualChanged) /* && actual == requested */) {
+        when (efTestAndClear(actualChanged) && actual == requested) {
             if (actual != requested) {
                 testFail("requested(%d)!=actual(%d)", requested, actual);
-                testSkip((NCYCLES-cycleCount)/NCYCLESPERTEST, "failure");
                 error = TRUE;
             } else if (cycleCount % NCYCLESPERTEST == 0) {
-                testPass("requested(%d)==actual(%d)", requested, actual);
+                testDiag("requested(%d)==actual(%d)", requested, actual);
             }
             cycleCount++;
         } state makeRequest
         when (delay(1.0)) {
             testFail("timeout in cycle %d/%d (requested=%d, actual=%d)",
                 cycleCount + 1, NCYCLES, requested, actual);
-            testSkip((NCYCLES-cycleCount)/NCYCLESPERTEST, "failure");
         } exit
     }
 }
