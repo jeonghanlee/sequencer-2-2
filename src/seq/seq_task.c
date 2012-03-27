@@ -185,17 +185,17 @@ static void ss_read_all_buffer(SPROG *sp, SSCB *ss)
 /*
  * ss_read_all_buffer_selective() - Call ss_read_buffer_static
  * for all channels that are sync'ed to the given event flag.
+ * NOTE: calling code must take sp->programLock, as we traverse
+ * the list of channels synced to this event flag.
  */
 void ss_read_buffer_selective(SPROG *sp, SSCB *ss, EV_ID ev_flag)
 {
-	unsigned nch;
-
-	for (nch = 0; nch < sp->numChans; nch++)
+	CHAN *ch = sp->syncedChans[ev_flag];
+	while (ch)
 	{
-		CHAN *ch = sp->chan + nch;
-		if (ch->efId == ev_flag)
-			/* Call static version so it gets inlined */
-			ss_read_buffer_static(ss, ch, TRUE);
+		/* Call static version so it gets inlined */
+		ss_read_buffer_static(ss, ch, TRUE);
+		ch = ch->nextSynced;
 	}
 }
 

@@ -94,7 +94,8 @@ struct channel
 
 	/* dynamic channel data (assigned at runtime) */
 	DBCHAN		*dbch;		/* channel assigned to a named db pv */
-	EV_ID		efId;		/* event flag id if synced */
+	EV_ID		syncedTo;	/* event flag id if synced */
+	CHAN		*nextSynced;	/* next channel synced to same flag */
 	QUEUE		queue;		/* queue if queued */
 	boolean		monitored;	/* whether channel is monitored */
 	/* buffer access, only used in safe mode */
@@ -192,6 +193,7 @@ struct program_instance
 	epicsMutexId	programLock;	/* mutex for locking dynamic program data */
         /* the following five members must always be protected by programLock */
 	bitMask		*evFlags;	/* event bits for event flags & channels */
+	CHAN		**syncedChans;	/* for each event flag, start of synced list */
 	unsigned	assignCount;	/* number of channels assigned to ext. pv */
 	unsigned	connectCount;	/* number of channels connected */
 	unsigned	monitorCount;	/* number of channels monitored */

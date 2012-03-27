@@ -275,11 +275,11 @@ static void anonymous_put(SS_ID ss, CHAN *ch)
 		/* Set dirty flag only if monitored */
 		ss_write_buffer(ch, var, 0, ch->monitored);
 	}
+	/* If there's an event flag associated with this channel, set it */
+	if (ch->syncedTo)
+		seq_efSet(ss, ch->syncedTo);
 	/* Wake up each state set that uses this channel in an event */
 	seqWakeup(ss->sprog, ch->eventNum);
-	/* If there's an event flag associated with this channel, set it */
-	if (ch->efId)
-		seq_efSet(ss, ch->efId);
 }
 
 /*
@@ -660,10 +660,48 @@ epicsShareFunc pvStat epicsShareAPI seq_pvStopMonitor(SS_ID ss, VAR_ID varId)
  * Synchronize pv with an event flag.
  * ev_flag == 0 means unSync.
  */
-epicsShareFunc void epicsShareAPI seq_pvSync(SS_ID ss, VAR_ID varId, EV_ID ev_flag)
+epicsShareFunc void epicsShareAPI seq_pvSync(SS_ID ss, VAR_ID varId, EV_ID new_ev_flag)
 {
-	assert(ev_flag >= 0 && ev_flag <= ss->sprog->numEvFlags);
-	ss->sprog->chan[varId].efId = ev_flag;
+	SPROG	*sp = ss->sprog;
+	CHAN	*this_ch = sp->chan + varId;
+	EV_ID	old_ev_flag = this_ch->syncedTo;
+
+	assert(new_ev_flag >= 0 && new_ev_flag <= sp->numEvFlags);
+
+	epicsMutexMustLock(sp->programLock);
+	if (old_ev_flag != new_ev_flag)
+	{
+		if (old_ev_flag)
+		{
+			/* remove it from the old list */
+			CHAN *ch = sp->syncedChans[old_ev_flag];
+			assert(ch);			/* since old_ev_flag != 0 */
+			if (ch == this_ch)		/* first in list */
+			{
+				sp->syncedChans[old_ev_flag] = this_ch->nextSynced;
+				ch->nextSynced = 0;
+			}
+			else
+			{
+				while (ch->nextSynced != this_ch)
+				{
+					ch = ch->nextSynced;
+					assert(ch);	/* since old_ev_flag != 0 */
+				}
+				assert (ch->nextSynced == this_ch);
+				ch->nextSynced = this_ch->nextSynced;
+			}
+		}
+		this_ch->syncedTo = new_ev_flag;
+		if (new_ev_flag)
+		{
+			/* insert it into the new list */
+			CHAN *ch = sp->syncedChans[new_ev_flag];
+			sp->syncedChans[new_ev_flag] = this_ch;
+			this_ch->nextSynced = ch;
+		}
+	}
+	epicsMutexUnlock(sp->programLock);
 }
 
 /*
@@ -918,7 +956,7 @@ epicsShareFunc boolean epicsShareAPI seq_pvGetQ(SS_ID ss, VAR_ID varId)
 	SPROG	*sp = ss->sprog;
 	CHAN	*ch = sp->chan + varId;
 	void	*var = valPtr(ch,ss);
-	EV_ID	ev_flag = ch->efId;
+	EV_ID	ev_flag = ch->syncedTo;
 	PVMETA	*meta = metaPtr(ch,ss);
 	boolean	was_empty;
 	struct getq_cp_arg arg = {ch, var, meta};
@@ -955,7 +993,7 @@ epicsShareFunc void epicsShareAPI seq_pvFlushQ(SS_ID ss, VAR_ID varId)
 {
 	SPROG	*sp = ss->sprog;
 	CHAN	*ch = sp->chan + varId;
-	EV_ID	ev_flag = ch->efId;
+	EV_ID	ev_flag = ch->syncedTo;
 	QUEUE	queue = ch->queue;
 
 	DEBUG("pvFlushQ: pv name=%s, count=%d\n", ch->dbch ? ch->dbch->dbName : "<anomymous>",

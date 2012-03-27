@@ -198,8 +198,8 @@ epicsShareFunc void epicsShareAPI seqChanShow(epicsThreadId tid, const char *str
 		else
 			printf("  Not monitored\n");
 
-		if (ch->efId)
-			printf("  Sync'ed to event flag %u\n", ch->efId);
+		if (ch->syncedTo)
+			printf("  Sync'ed to event flag %u\n", ch->syncedTo);
 		else
 			printf("  Not sync'ed\n");
 

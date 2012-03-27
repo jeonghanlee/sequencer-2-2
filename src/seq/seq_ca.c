@@ -268,8 +268,8 @@ static void proc_db_events(
 
 	/* If there's an event flag associated with this channel, set it */
 	/* TODO: check if correct/documented to do this for non-monitor completions */
-	if (ch->efId > 0)
-		seq_efSet(sp->ss, ch->efId);
+	if (ch->syncedTo)
+		seq_efSet(sp->ss, ch->syncedTo);
 
 	/* Wake up each state set that uses this channel in an event */
 	seqWakeup(sp, ch->eventNum);
@@ -310,7 +310,7 @@ static void proc_db_events_queued(SPROG *sp, CHAN *ch, pvValue *value)
 		);
 	}
 	/* Set event flag; note: it doesn't matter which state set we pass. */
-	seq_efSet(sp->ss, ch->efId);
+	seq_efSet(sp->ss, ch->syncedTo);
 	/* Wake up each state set that uses this channel in an event */
 	seqWakeup(sp, ch->eventNum);
 }

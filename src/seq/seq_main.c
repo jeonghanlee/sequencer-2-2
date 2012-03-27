@@ -191,6 +191,8 @@ static boolean init_sprog(SPROG *sp, seqProgram *seqProg)
 		errlogSevPrintf(errlogFatal, "init_sprog: calloc failed\n");
 		return FALSE;
 	}
+	/* NOTE: event flags count from 1 upward */
+	sp->syncedChans = newArray(CHAN*, sp->numEvFlags+1);
 
 	/* Allocate and initialize syncQ queues */
 	if (sp->numQueues > 0)
@@ -368,7 +370,14 @@ static boolean init_chan(SPROG *sp, CHAN *ch, seqChan *seqChan)
 	ch->offset = seqChan->offset;
 	ch->count = seqChan->count;
 	if (ch->count == 0) ch->count = 1;
-	ch->efId = seqChan->efId;
+	ch->syncedTo = seqChan->efId;
+	if (ch->syncedTo)
+	{
+		/* insert into syncedTo list for this event flag */
+		CHAN *fst = sp->syncedChans[ch->syncedTo];
+		sp->syncedChans[ch->syncedTo] = ch;
+		ch->nextSynced = fst;
+	}
 	ch->monitored = seqChan->monitored;
 	ch->eventNum = seqChan->eventNum;
 
@@ -382,9 +391,9 @@ static boolean init_chan(SPROG *sp, CHAN *ch, seqChan *seqChan)
 	}
 
 	DEBUG("  varname=%s, count=%u\n"
-		"  efId=%u, monitored=%u, eventNum=%u\n",
+		"  syncedTo=%u, monitored=%u, eventNum=%u\n",
 		ch->varName, ch->count,
-		ch->efId, ch->monitored, ch->eventNum);
+		ch->syncedTo, ch->monitored, ch->eventNum);
 	DEBUG("  type=%p: typeStr=%s, putType=%d, getType=%d, size=%d\n",
 		ch->type, ch->type->typeStr,
 		ch->type->putType, ch->type->getType, ch->type->size);
@@ -571,6 +580,7 @@ void seq_free(SPROG *sp)
 	free(sp->queues);
 
 	free(sp->evFlags);
+	free(sp->syncedChans);
 	if (sp->options & OPT_REENT) free(sp->var);
 	free(sp);
 }
