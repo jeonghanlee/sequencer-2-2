@@ -258,11 +258,6 @@ snl:
 	"int32_t"	{ TYPEWORD(INT32T, 	"int32_t"); }
 	"uint32_t"	{ TYPEWORD(UINT32T,	"uint32_t"); }
 
-	"TRUE"		{ LITERAL(INTCON, integer_literal, "TRUE"); }
-	"FALSE"		{ LITERAL(INTCON, integer_literal, "FALSE"); }
-	"ASYNC"		{ LITERAL(INTCON, integer_literal, "ASYNC"); }
-	"SYNC"		{ LITERAL(INTCON, integer_literal, "SYNC"); }
-
 	LET (LET|DEC)*	{ IDENTIFIER(NAME, identifier, strdupft(s->tok, cursor)); }
 	("0" [xX] HEX+ IS?) | ("0" OCT+ IS?) | (DEC+ IS?) | (['] (ESC|[^\n\\'])* ['])
 			{ LITERAL(INTCON, integer_literal, strdupft(s->tok, cursor)); }

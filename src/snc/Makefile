@@ -25,6 +25,7 @@ snc_SRCS += gen_code.c      # code generation
 snc_SRCS += gen_ss_code.c   # code generation (state sets)
 snc_SRCS += gen_tables.c    # code generation (tables)
 snc_SRCS += sym_table.c     # symbol table
+snc_SRCS += builtin.c       # builtin constants and functions
 
 snc_LIBS += Com
 

@@ -19,6 +19,7 @@ in the file LICENSE that is included with this distribution.
 #include "sym_table.h"
 #include "main.h"
 #include "expr.h"
+#include "builtin.h"
 #include "analysis.h"
 
 static const int impossible = 0;
@@ -62,6 +63,9 @@ Program *analyse_program(Expr *prog, Options options)
 		p->param	= "";
 
 	p->sym_table = sym_table_create();
+
+	register_builtin_consts(p->sym_table);
+	register_builtin_funcs(p->sym_table);
 
 	p->chan_list = new(ChanList);
 	p->syncq_list = new(SyncQList);
@@ -1091,6 +1095,12 @@ static int connect_variable(Expr *ep, Expr *scope, void *parg)
 	if (!vp)
 	{
 		VarList *var_list = *pvar_list_from_scope(scope);
+		struct const_symbol *csym = lookup_builtin_const(st, ep->value);
+		if (csym)
+		{
+			ep->type = E_CONST;
+			return FALSE;
+		}
 
 		warning_at_expr(ep, "variable '%s' used but not declared\n",
 			ep->value);
