@@ -791,7 +791,16 @@ static void gen_pv_func(
 		printf(", ");
 		if (ef_args)
 		{
-			gen_ef_arg(func_name, ap, num_extra_parms+1);
+			/* special case: constant NOEVFLAG */
+			if (ap->type == E_CONST)
+			{
+				if (gen_builtin_const(ap)!=CT_EVFLAG)
+					error_at_expr(ap,
+					  "argument %d to built-in function %s must be an event flag\n",
+					  num_extra_parms+1, func_name);
+			}
+			else
+				gen_ef_arg(func_name, ap, num_extra_parms+1);
 		}
 		else
 		{
