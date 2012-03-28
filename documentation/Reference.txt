@@ -1650,7 +1650,7 @@ traditional unsafe mode.
 In the traditional (unsafe) mode, variables are *not* protected against
 access from concurrently running threads. Concurrent access to SNL
 variables was introduced in version 2.0, when implementation of the PV
-layer switched from the traditional single threaded CA mode ("preemptive
+layer switched from the old single threaded CA mode ("preemptive
 callbacks disabled") to the multi-threaded mode ("preemptive callbacks
 enabled") in order to support more than one state set per program. This
 could result in data corruption for variables that are not read and written
@@ -1671,6 +1671,19 @@ Concurrent access to SNL variables happens when
 While it is possible to avoid the first case by careful coding (using e.g.
 event flags for synchronization) it is not possible to guard against the
 second case as these events can interrupt action statements at any time.
+
+One of the reasons SNL programs have mostly worked in spite of this is
+that due to the standard CA thread priorities the callback thread does not
+interrupt the state set threads. Furthermore (and contrary to what many
+people believe) the VxWorks scheduler does not normally serve threads with
+equal priority in a round-robin (time-sliced) fashion; instead each thread
+keeps running until it gets interrupted by a higher priority thread or
+until it blocks on a semaphore.
+
+However, thread priorities are not honored if programs are run under
+Linux or Windows in user mode; and anyway, priorities should only be used
+to improve latency for certain operations (at the cost of others) and
+*never* should they be relied upon for program correctness.
 
 Safe mode solves all these problems by changing the way variables,
 particularly global variables, are interpreted. In safe mode, all variables
