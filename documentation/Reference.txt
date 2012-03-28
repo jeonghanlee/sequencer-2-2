@@ -1697,7 +1697,8 @@ don't do anything i.e. when they wait for events in a :token:`when` clause.
 In safe mode, variable values get updated right before the conditions are
 evaluated, or when explicitly calling synchronization functions like
 :c:func:`pvGetComplete` or :c:func:`pvGet` (the latter only if called in
-synchronous mode); see below for details.
+synchronous mode), as well as :c:func:`efTest` and :c:func:`efTestAndClear`.
+The documentation for the built-in functions explains the details.
 
 Safe mode implies reentrant mode, see :ref:`reentrant option`.
 
@@ -1759,16 +1760,13 @@ as with external PVs.
 Event Flags in Safe Mode
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-Apart from the :token:`sync` and :token:`syncq` features, an event flag
-behaves like an anonymous PV of boolean type with a monitor. We could
-have defined (pseudo code)::
-
-   efSet(e)          { e = TRUE; pvPut(e); }
-   efClear(e)        { e = FALSE; pvPut(e); }
-   efTest(e)         { pvGet(e,SYNC); return e; }
-   efTestAndClear(e) { pvGet(e,SYNC);
-                       if(e) { efClear(e); return TRUE}
-                       else return FALSE; }
+Apart from the :token:`sync` and :token:`syncq` features, and apart
+from the atomicity of :c:func:`efTestAndClear`, an event flag behaves
+similar to an anonymous PV of boolean type with a monitor. In safe
+mode, :c:func:`efTest` and :c:func:`efTestAndClear` have the additional
+side-effect of acting as a synchronization point for all variables that
+are :token:`sync`\ed with the event flag: the state set local copies of
+these variable are updated from their globally visible copies.
 
 
 C Compatibility Features
