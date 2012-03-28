@@ -1047,6 +1047,17 @@ boolean
    #define FALSE  0
 
 
+NOEVFLAG
+^^^^^^^^
+
+::
+
+   #define NOEVFLAG 0
+
+This can be given as second argument to :c:func:`pvSync` (instead of
+an event flag) to cancel the sync.
+
+
 .. _BuiltinFunctions:
 
 Built-in Functions
@@ -1339,7 +1350,7 @@ pvSync
    void pvSync(assigned_var, event_flag)
 
 Synchronizes a variable with an event flag, or removes such a
-synchronization if ``event_flag`` is zero.
+synchronization if ``event_flag`` is `NOEVFLAG`_.
 
 See :token:`sync` clause.
 
