@@ -1320,6 +1320,10 @@ variable). In :ref:`safe mode`, it causes assignment to an anonymous PV.
 
 As usual, ``assigned_var`` can also be an array element.
 
+See also :token:`assign` clause.
+
+A better name for this function would be ``pvReassign``.
+
 .. note::
 
    :c:func:`pvAssign` can only be called on variables (or array elements)
@@ -1335,7 +1339,14 @@ As usual, ``assigned_var`` can also be an array element.
    care should be taken that assignment and de-assignment do not
    alternate too often.
 
-A better name for this function would be ``pvReassign``.
+..note:: If you want to assign array elements to separate PVs, you cannot
+   currently do this with a single call (in contrast to doing it in an
+   :token:`assign` clause. Instead, you must call :c:func:`pvAssign`
+   for each array element individually.
+   This might change in a future release.
+
+..todo:: Implement multiple assign for arrays.
+
 
 pvMonitor
 ^^^^^^^^^
@@ -1347,11 +1358,28 @@ Initiates a monitor on the underlying process variable.
 
 See :token:`monitor` clause.
 
+..note:: If you want to monitor all elements of an array that have been
+   assigned to separate PVs, you cannot currently do this with a single
+   call (in contrast to doing it in a :token:`monitor` clause). Instead,
+   you must call :c:func:`pvMonitor` for each array element individually.
+   This might change in a future release.
+
+..todo:: Implement multiple monitor for arrays.
+
+
 pvStopMonitor
 ^^^^^^^^^^^^^
 
 .. c:function::
    pvStat pvStopMonitor(assigned_var)
+
+..note:: If you want to stop monitoring all elements of an array that have been
+   assigned to separate PVs, you cannot currently do this with a single
+   call. Instead,
+   you must call :c:func:`pvStopMonitor` for each array element individually.
+   This might change in a future release.
+
+..todo:: Implement multiple stop monitor for arrays.
 
 Terminates a monitor on the underlying process variable.
 
@@ -1364,6 +1392,14 @@ pvSync
 
 Synchronizes a variable with an event flag, or removes such a
 synchronization if ``event_flag`` is `NOEVFLAG`_.
+
+..note:: If you want to sync all elements of an array that have been
+   assigned to separate PVs, you cannot currently do this with a single
+   call. Instead,
+   you must call :c:func:`pvSync` for each array element individually.
+   This might change in a future release.
+
+..todo:: Implement multiple sync for arrays.
 
 See :token:`sync` clause.
 
