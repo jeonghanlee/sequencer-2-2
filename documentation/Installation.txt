@@ -80,7 +80,17 @@ the `latest snapshot`_, or check out the `darcs`_ repository::
 
    > darcs get http://www-csr.bessy.de/control/SoftDist/sequencer/repo/ seq-head
 
-You can also follow development by using the `repository browser`_.
+You can also follow development by using the `repository browser`_. There are currently
+three branches:
+
+* `branch 2-0`_ is the previous version. There is no development happening
+  on here, except maybe fixing build problems.
+
+* `branch 2-1`_ is the current "stable" version. Development is restricted to bug fixes,
+  mostly.
+
+* `branch 2-2`_ is where new features are developed that will appear in version 2.2.
+  No releases have been made on this branch yet.
 
 See `Contribute`_ for a short description how to record and send
 patches.
@@ -109,7 +119,10 @@ patches.
 .. _2.0.0: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2.0.0.tar.gz
 .. _1.9.5: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-1.9.5.tar.gz
 .. _1.9.4: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-1.9.4.tar.gz
-.. _repository browser: http://www-csr.bessy.de/cgi-bin/darcsweb.cgi?r=sequencer;a=summary
+.. _repository browser: http://www-csr.bessy.de/cgi-bin/darcsweb.cgi
+.. _branch 2-0: http://www-csr.bessy.de/cgi-bin/darcsweb.cgi?r=seq%20branch-2-0;a=summary
+.. _branch 2-1: http://www-csr.bessy.de/cgi-bin/darcsweb.cgi?r=seq%20branch-2-1;a=summary
+.. _branch 2-2: http://www-csr.bessy.de/cgi-bin/darcsweb.cgi?r=seq%20branch-2-2;a=summary
 
 
 Unpack
