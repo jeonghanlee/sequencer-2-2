@@ -415,7 +415,7 @@ static void assign_elem(
 	assert(chan_list);				/* precondition */
 	assert(defn);					/* precondition */
 	assert(vp);					/* precondition */
-	assert(n_subscr <= type_array_length1(vp->type));/*precondition */
+	assert(n_subscr < type_array_length1(vp->type));/*precondition */
 	assert(vp->assign != M_SINGLE);			/* precondition */
 
 	if (vp->assign == M_NONE)
@@ -518,6 +518,12 @@ static void assign_multi(
 #ifdef DEBUG
 		report("'%s'%s", pv_name->value, pv_name->next ? ", " : "};\n");
 #endif
+		if (n_subscr >= type_array_length1(vp->type))
+		{
+			warning_at_expr(pv_name, "discarding excess PV names "
+				"in multiple assign to variable '%s'\n", vp->name);
+			break;
+		}
 		assign_elem(chan_list, defn, vp, n_subscr++, pv_name->value);
 	}
 	/* for the remaining array elements, assign to "" */
