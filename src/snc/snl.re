@@ -362,16 +362,7 @@ line_marker_str:
 /*!re2c
 	(["] (ESC|[^\n\\"])* ["])
 			{
-				uchar saved = cursor[-1];
-				char *str = (char *)(s->tok + line_marker_part + 1);
-				cursor[-1] = 0;
-				if (!s->file) {
-					s->file = strdup(str);
-				} else if (s->file && strcmp(str, s->file) != 0) {
-					free(s->file);
-					s->file = strdup(str);
-				}
-				cursor[-1] = saved;
+				s->file = strdupft(s->tok + line_marker_part + 1, cursor-1);
 				goto line_marker_skip;
 			}
 	NL		{
