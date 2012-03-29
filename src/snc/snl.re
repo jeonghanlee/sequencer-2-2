@@ -54,7 +54,7 @@ typedef struct Scanner {
 	uchar	*lim;	/* pointer to one position after last read char */
 	uchar	*top;	/* pointer to (one after) top of allocated buffer */
 	uchar	*eof;	/* pointer to (one after) last char in file (or 0) */
-	char	*file;	/* source file name */
+	const char *file;	/* source file name */
 	int	line;	/* line number */
 } Scanner;
 
@@ -476,7 +476,7 @@ Expr *parse_program(const char *src_file)
 	void	*parser;	/* the (lemon generated) parser */
 
 	memset(&s, 0, sizeof(s));
-	s.file = strdup(src_file);
+	s.file = src_file;
 	s.line = 1;
 
 	parser = snlParserAlloc(malloc);

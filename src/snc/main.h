@@ -11,7 +11,7 @@ in the file LICENSE that is included with this distribution.
 #define INCLsncmainh
 
 /* append '# <line_num> "<src_file>"\n' to output (if not disabled by cmd-line option) */
-void gen_line_marker_prim(int line_num, char *src_file);
+void gen_line_marker_prim(int line_num, const char *src_file);
 
 /* this gets the shorter name as it is the common way to call above */
 #define gen_line_marker(ep) gen_line_marker_prim((ep)->line_num, (ep)->src_file)

@@ -81,9 +81,9 @@ struct state_options			/* run-time state options */
 
 struct token				/* for the lexer and parser */
 {
-	char	*str;
-	char	*file;
-	int	line;
+	char		*str;
+	const char	*file;
+	int		line;
 };
 
 struct when				/* extra data for when clauses */
@@ -108,13 +108,13 @@ struct state_set			/* extra data for state set clauses */
 
 struct expression			/* generic syntax node */
 {
-	Expr	*next;			/* list node: next expression */
-	Expr	*last;			/* list node: last expression */
-	Expr	**children;		/* array of children [left,right,...] */
-	int	type;			/* expression type (E_XXX) */
-	char	*value;			/* operator or value string */
-	int	line_num;		/* originating line number */
-	char	*src_file;		/* originating source file */
+	Expr		*next;		/* list node: next expression */
+	Expr		*last;		/* list node: last expression */
+	Expr		**children;	/* array of children [left,right,...] */
+	int		type;		/* expression type (E_XXX) */
+	char		*value;		/* operator or value string */
+	int		line_num;	/* originating line number */
+	const char	*src_file;	/* originating source file */
 	union				/* extra data, depends on type */
 	{
 		Var	*e_var;		/* variable definiton */

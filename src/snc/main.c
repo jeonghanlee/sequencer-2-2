@@ -216,7 +216,7 @@ static void print_usage(void)
 	report("example:\n snc +a -c vacuum.st\n");
 }
 
-void gen_line_marker_prim(int line_num, char *src_file)
+void gen_line_marker_prim(int line_num, const char *src_file)
 {
 	if (options.line)
 		printf("# line %d \"%s\"\n", line_num, src_file);
