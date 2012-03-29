@@ -187,7 +187,7 @@ epicsShareFunc seqBool epicsShareAPI seq_pvPutComplete(SS_ID, VAR_ID,
 	unsigned, seqBool, seqBool*);
 epicsShareFunc pvStat epicsShareAPI seq_pvAssign(SS_ID, VAR_ID, const char *);
 epicsShareFunc pvStat epicsShareAPI seq_pvMonitor(SS_ID, VAR_ID);
-epicsShareFunc void epicsShareAPI seq_pvSync(SS_ID, VAR_ID, EV_ID);
+epicsShareFunc void epicsShareAPI seq_pvSync(SS_ID, VAR_ID, unsigned, EV_ID);
 epicsShareFunc pvStat epicsShareAPI seq_pvStopMonitor(SS_ID, VAR_ID);
 /* pv info */
 epicsShareFunc char *epicsShareAPI seq_pvName(SS_ID, VAR_ID);

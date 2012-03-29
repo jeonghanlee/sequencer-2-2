@@ -78,7 +78,7 @@ static struct func_symbol func_symbols[] =
     {"pvSeverity",      FT_PV,      FALSE,  0,  FALSE,  FALSE},
     {"pvStatus",        FT_PV,      FALSE,  0,  FALSE,  FALSE},
     {"pvStopMonitor",   FT_PV,      FALSE,  0,  FALSE,  FALSE},
-    {"pvSync",          FT_PV,      FALSE,  0,  FALSE,  TRUE },
+    {"pvSync",          FT_PV,      TRUE,   0,  FALSE,  TRUE },
     {"pvTimeStamp",     FT_PV,      FALSE,  0,  FALSE,  FALSE},
     {"seqLog",          FT_OTHER,   FALSE,  0,  FALSE,  FALSE},
     {0,                 FT_OTHER,   FALSE,  0,  FALSE,  FALSE}

@@ -681,45 +681,50 @@ epicsShareFunc pvStat epicsShareAPI seq_pvStopMonitor(SS_ID ss, VAR_ID varId)
  * Synchronize pv with an event flag.
  * ev_flag == 0 means unSync.
  */
-epicsShareFunc void epicsShareAPI seq_pvSync(SS_ID ss, VAR_ID varId, EV_ID new_ev_flag)
+epicsShareFunc void epicsShareAPI seq_pvSync(SS_ID ss, VAR_ID varId, unsigned length, EV_ID new_ev_flag)
 {
 	SPROG	*sp = ss->sprog;
-	CHAN	*this_ch = sp->chan + varId;
-	EV_ID	old_ev_flag = this_ch->syncedTo;
+	unsigned i;
 
 	assert(new_ev_flag >= 0 && new_ev_flag <= sp->numEvFlags);
 
 	epicsMutexMustLock(sp->programLock);
-	if (old_ev_flag != new_ev_flag)
+	for (i=0; i<length; i++)
 	{
-		if (old_ev_flag)
+		CHAN	*this_ch = sp->chan + varId + i;
+		EV_ID	old_ev_flag = this_ch->syncedTo;
+
+		if (old_ev_flag != new_ev_flag)
 		{
-			/* remove it from the old list */
-			CHAN *ch = sp->syncedChans[old_ev_flag];
-			assert(ch);			/* since old_ev_flag != 0 */
-			if (ch == this_ch)		/* first in list */
+			if (old_ev_flag)
 			{
-				sp->syncedChans[old_ev_flag] = this_ch->nextSynced;
-				ch->nextSynced = 0;
-			}
-			else
-			{
-				while (ch->nextSynced != this_ch)
+				/* remove it from the old list */
+				CHAN *ch = sp->syncedChans[old_ev_flag];
+				assert(ch);			/* since old_ev_flag != 0 */
+				if (ch == this_ch)		/* first in list */
 				{
-					ch = ch->nextSynced;
-					assert(ch);	/* since old_ev_flag != 0 */
+					sp->syncedChans[old_ev_flag] = this_ch->nextSynced;
+					ch->nextSynced = 0;
 				}
-				assert (ch->nextSynced == this_ch);
-				ch->nextSynced = this_ch->nextSynced;
+				else
+				{
+					while (ch->nextSynced != this_ch)
+					{
+						ch = ch->nextSynced;
+						assert(ch);	/* since old_ev_flag != 0 */
+					}
+					assert (ch->nextSynced == this_ch);
+					ch->nextSynced = this_ch->nextSynced;
+				}
 			}
-		}
-		this_ch->syncedTo = new_ev_flag;
-		if (new_ev_flag)
-		{
-			/* insert it into the new list */
-			CHAN *ch = sp->syncedChans[new_ev_flag];
-			sp->syncedChans[new_ev_flag] = this_ch;
-			this_ch->nextSynced = ch;
+			this_ch->syncedTo = new_ev_flag;
+			if (new_ev_flag)
+			{
+				/* insert it into the new list */
+				CHAN *ch = sp->syncedChans[new_ev_flag];
+				sp->syncedChans[new_ev_flag] = this_ch;
+				this_ch->nextSynced = ch;
+			}
 		}
 	}
 	epicsMutexUnlock(sp->programLock);
