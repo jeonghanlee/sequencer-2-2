@@ -32,7 +32,7 @@ entry {
 
 ss read {
     double named;
-    assign named to "test";
+    assign named to "evflag";
     monitor named;
     sync named to ef_named;
     state wait {
@@ -49,7 +49,7 @@ ss read {
 
 ss write {
     double named = 1.0;
-    assign named to "test";
+    assign named to "evflag";
     int n=0;
     state send {
         when (n > 10) {

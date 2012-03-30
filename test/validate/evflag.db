@@ -1,2 +1,2 @@
-record(ao,"test") {
+record(ao,"evflag") {
 }
