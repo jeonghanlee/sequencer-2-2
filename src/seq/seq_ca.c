@@ -404,12 +404,20 @@ void seq_conn_handler(void *var, int connected)
 		DEBUG("%s disconnected from %s\n", ch->varName, dbch->dbName);
 		if (dbch->connected)
 		{
+			unsigned nss;
+
 			dbch->connected = FALSE;
 			sp->connectCount--;
 
 			if (ch->monitored)
 			{
 				seq_monitor(ch, FALSE);
+			}
+			/* terminate outstanding requests that wait for completion */
+			for (nss = 0; nss < sp->numSS; nss++)
+			{
+				epicsEventSignal(sp->ss[nss].getSemId[chNum(ch)]);
+				epicsEventSignal(sp->ss[nss].putSemId[chNum(ch)]);
 			}
 		}
 		else

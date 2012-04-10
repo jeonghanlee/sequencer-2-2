@@ -33,6 +33,21 @@ in the file LICENSE that is included with this distribution.
 #include "seq.h"
 #include "seq_debug.h"
 
+static pvStat check_connected(DBCHAN *dbch, PVMETA *meta)
+{
+	if (!dbch->connected)
+	{
+		meta->status = pvStatDISCONN;
+		meta->severity = pvSevrINVALID;
+		meta->message = "disconnected";
+		return meta->status;
+	}
+	else
+	{
+		return pvStatOK;
+	}
+}
+
 /*
  * Get value from a channel.
  * TODO: add optional timeout argument.
@@ -72,15 +87,6 @@ epicsShareFunc pvStat epicsShareAPI seq_pvGet(SS_ID ss, VAR_ID varId, enum compT
 		compType = (sp->options & OPT_ASYNC) ? ASYNC : SYNC;
 	}
 
-	/* Check for channel connected */
-	if (!dbch->connected)
-	{
-		meta->status = pvStatDISCONN;
-		meta->severity = pvSevrINVALID;
-		meta->message = "disconnected";
-		return meta->status;
-	}
-
 	if (compType == SYNC)
 	{
 		double before, after;
@@ -88,6 +94,8 @@ epicsShareFunc pvStat epicsShareAPI seq_pvGet(SS_ID ss, VAR_ID varId, enum compT
 		switch (epicsEventWaitWithTimeout(getSem, tmo))
 		{
 		case epicsEventWaitOK:
+			status = check_connected(dbch, meta);
+			if (status) return epicsEventSignal(getSem), status;
 			pvTimeGetCurrentDouble(&after);
 			tmo -= (after - before);
 			break;
@@ -109,6 +117,8 @@ epicsShareFunc pvStat epicsShareAPI seq_pvGet(SS_ID ss, VAR_ID varId, enum compT
 		switch (epicsEventTryWait(getSem))
 		{
 		case epicsEventWaitOK:
+			status = check_connected(dbch, meta);
+			if (status) return epicsEventSignal(getSem), status;
 			break;
 		case epicsEventWaitTimeout:
 			errlogSevPrintf(errlogFatal,
@@ -145,6 +155,9 @@ epicsShareFunc pvStat epicsShareAPI seq_pvGet(SS_ID ss, VAR_ID varId, enum compT
 		meta->message = "get failure";
 		errlogSevPrintf(errlogFatal, "pvGet: pvVarGetCallback() %s failure: %s\n",
 			dbch->dbName, pvVarGetMess(dbch->pvid));
+		freeListFree(sp->pvReqPool, req);
+		epicsEventSignal(getSem);
+		check_connected(dbch, meta);
 		return status;
 	}
 
@@ -155,6 +168,9 @@ epicsShareFunc pvStat epicsShareAPI seq_pvGet(SS_ID ss, VAR_ID varId, enum compT
 		switch (epicsEventWaitWithTimeout(getSem, tmo))
 		{
 		case epicsEventWaitOK:
+			epicsEventSignal(getSem);
+			status = check_connected(dbch, meta);
+			if (status) return status;
 			if (sp->options & OPT_SAFE)
 				/* Copy regardless of whether dirty flag is set or not */
 				ss_read_buffer(ss, ch, FALSE);
@@ -170,7 +186,6 @@ epicsShareFunc pvStat epicsShareAPI seq_pvGet(SS_ID ss, VAR_ID varId, enum compT
 			meta->message = "get completion failure";
 			return meta->status;
 		}
-		epicsEventSignal(getSem);
 	}
 
 	return pvStatOK;
@@ -185,6 +200,7 @@ epicsShareFunc boolean epicsShareAPI seq_pvGetComplete(SS_ID ss, VAR_ID varId)
 	epicsEventId	getSem = ss->getSemId[varId];
 	SPROG		*sp = ss->sprog;
 	CHAN		*ch = sp->chan + varId;
+	pvStat		status;
 
 	if (!ch->dbch)
 	{
@@ -207,6 +223,11 @@ epicsShareFunc boolean epicsShareAPI seq_pvGetComplete(SS_ID ss, VAR_ID varId)
 	{
 	case epicsEventWaitOK:
 		epicsEventSignal(getSem);
+		status = check_connected(ch->dbch, metaPtr(ch,ss));
+		/* TODO: returning either TRUE or FALSE here seems wrong. We return TRUE,
+		   so that state sets don't hang. Still means that user code has to check
+		   status by calling pvStatus and/or pvMessage. */
+		if (status) return TRUE;
 		/* In safe mode, copy value and meta data from shared buffer
 		   to ss local buffer. */
 		if (sp->options & OPT_SAFE)
@@ -316,17 +337,11 @@ epicsShareFunc pvStat epicsShareAPI seq_pvPut(SS_ID ss, VAR_ID varId, enum compT
 	}
 
 	/* Check for channel connected */
-	if (!dbch->connected)
-	{
-		meta->status = pvStatDISCONN;
-		meta->severity = pvSevrINVALID;
-		meta->message = "disconnected";
-		return meta->status;
-	}
+	status = check_connected(dbch, meta);
+	if (status) return status;
 
 	/* Determine whether to perform synchronous, asynchronous, or
-           plain put
-	   ((+a) option was never honored for put, so DEFAULT
+	   plain put ((+a) option was never honored for put, so DEFAULT
 	   means non-blocking and therefore implicitly asynchronous) */
 	if (compType == SYNC)
 	{
@@ -389,6 +404,12 @@ epicsShareFunc pvStat epicsShareAPI seq_pvPut(SS_ID ss, VAR_ID varId, enum compT
 				ch->type->putType,	/* data type */
 				count,			/* element count */
 				(pvValue *)var);	/* data value */
+		if (status != pvStatOK)
+		{
+			errlogSevPrintf(errlogFatal, "pvPut: pvVarPutNoBlock() %s failure: %s\n",
+				dbch->dbName, pvVarGetMess(dbch->pvid));
+			return status;
+		}
 	}
 	else
 	{
@@ -404,13 +425,15 @@ epicsShareFunc pvStat epicsShareAPI seq_pvPut(SS_ID ss, VAR_ID varId, enum compT
 				(pvValue *)var,		/* data value */
 				seq_put_handler,	/* callback handler */
 				req);			/* user arg */
-	}
-	if (status != pvStatOK)
-	{
-		errlogSevPrintf(errlogFatal, "pvPut: pvVarPut%s() %s failure: %s\n",
-			(compType == DEFAULT) ? "NoBlock" : "Callback",
-			dbch->dbName, pvVarGetMess(dbch->pvid));
-		return status;
+		if (status != pvStatOK)
+		{
+			errlogSevPrintf(errlogFatal, "pvPut: pvVarPutCallback() %s failure: %s\n",
+				dbch->dbName, pvVarGetMess(dbch->pvid));
+			freeListFree(sp->pvReqPool, req);
+			epicsEventSignal(putSem);
+			check_connected(dbch, meta);
+			return status;
+		}
 	}
 
 	/* Synchronous: wait for completion (10s timeout) */
@@ -420,30 +443,23 @@ epicsShareFunc pvStat epicsShareAPI seq_pvPut(SS_ID ss, VAR_ID varId, enum compT
 		switch (epicsEventWaitWithTimeout(putSem, tmo))
 		{
 		case epicsEventWaitOK:
+			epicsEventSignal(putSem);
+			status = check_connected(dbch, meta);
+			if (status) return status;
 			break;
 		case epicsEventWaitTimeout:
 			meta->status = pvStatTIMEOUT;
 			meta->severity = pvSevrMAJOR;
 			meta->message = "put completion timeout";
-			status = meta->status;
+			return meta->status;
 			break;
 		case epicsEventWaitError:
 			meta->status = pvStatERROR;
 			meta->severity = pvSevrMAJOR;
 			meta->message = "put completion failure";
-			status = meta->status;
+			return meta->status;
 			break;
 		}
-		epicsEventSignal(putSem);
-	}
-
-	DEBUG("pvPut: status=%d, mess=%s\n", status,
-		pvVarGetMess(dbch->pvid));
-	if (status != pvStatOK)
-	{
-		DEBUG("pvPut on \"%s\" failed (%d)\n", dbch->dbName, status);
-		DEBUG("  putType=%d\n", ch->type->putType);
-		DEBUG("  size=%d, count=%d\n", ch->type->size, count);
 	}
 
 	return pvStatOK;
@@ -466,11 +482,16 @@ epicsShareFunc boolean epicsShareAPI seq_pvPutComplete(
 	{
 		epicsEventId	putSem = ss->putSemId[varId+n];
 		boolean		done = FALSE;
+		CHAN		*ch = ss->sprog->chan + varId + n;
 
 		switch (epicsEventTryWait(putSem))
 		{
 		case epicsEventWaitOK:
 			epicsEventSignal(putSem);
+			check_connected(ch->dbch, metaPtr(ch,ss));
+			/* TODO: returning either TRUE or FALSE here seems wrong. We return TRUE,
+			   so that state sets don't hang. Still means that user code has to check
+			   status by calling pvStatus and/or pvMessage. */
 			done = TRUE;
 			break;
 		case epicsEventWaitError:
