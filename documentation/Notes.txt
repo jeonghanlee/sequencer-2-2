@@ -1,6 +1,106 @@
 Release Notes
 =============
 
+.. _Release_Notes_2.1.6:
+
+Release 2.1.6
+-------------
+
+Bug fixes:
+
+* fixed order of state set wakeup and signalling of completions
+
+  This was a subtle concurrency bug discovered and analyzed by Lewis Muir:
+  if pvPutComplete or pvGetComplete are used inside a when-clause, waking
+  up the state set before signalling completion could result in a deadlock.
+  See :ref:`Known_Problems_2.1.5` for details.
+
+* fixed 'lost events' bug (safe mode only), an even subtler bug which
+  happened only in safe mode. See :ref:`Known_Problems_2.1.5` for details.
+  Thanks to Lewis Muir for providing a test case that makes this bug
+  reproducable.
+
+  The fix is to make efTest and efTestAndClear synchronization points
+  for all variables sync'ed to the event flag. See the updated sections
+  in the reference (under :c:func:`efTest` and :c:func:`efTestAndClear`).
+
+* fix pvPut/pvGet hanger on disconnect
+
+  The connection handler now releases all semaphores waiting for an
+  event on this PV. Furthermore, the pvGet/pvPut[Complete] built-in
+  functions check the connected status whenever they successfully waited
+  for such a semaphore.
+
+* fixed compiler crash in case of excess PVs given in an assign clause
+
+* fixed memory bug in the lexer
+
+  This bug led to wrong reported line numbers in #include'd SNL code.
+  It could also potentially result in compiler crashes.
+
+* emulate the 'first monitor event' for anonymous PVs in safe mode
+
+* work around small rounding errors in seq_delay
+
+Other changes (seq/snc):
+
+* renamed NO_EVENT_FLAG to NOEVFLAG, fix support for passing it as argument to pvSync
+
+* add pvStatXXX and pvSevrXXX to known constants
+
+  This fixes the long-standing problem that pvStatOK are not known
+  to snc and thus must be declared as foreign (or you get a warning).
+
+* revert back to generating names, not values, for known constants
+
+* avoid warning on 64 bit systems when debug messages are switched on
+
+Tests:
+
+* added regression tests for some of the new bugs
+
+* no longer runs all tests under valgrind by default
+
+  This is now configurable in test/validate/Makefile.
+
+* add pvGetAsync test but dont run it on vxWorks
+
+* run tests on vxWorks with standard, lowered, and increased priority
+
+* added instructions for running a single test
+
+Docs:
+
+* improved documentation of event flags in safe mode
+
+* extended safe mode explanation with a remark on priorities
+
+* documented some deficiencies of pvAssign, pvMonitor, etc w.r.t. the syntax versions
+
+* added NOEVFLAG constant and its use in pvSync
+
+* added built-in constants to reference
+
+* documented side effects of efTest and efTestAndClear
+
+* updated the known problems page
+
+* added instructions for running a single test
+
+* added more prominent warnings for out-dated information
+
+* fixed documentation of sync
+
+  A sync'ed event flags gets set on any kind of event:
+  monitor, as well as put and get completion.
+
+* streamlined repository branch layout on web server
+
+  See documentation/Installation.txt for details.
+
+* fixed several small errors and typos
+
+
 .. _Release_Notes_2.1.5:
 
 Release 2.1.5
