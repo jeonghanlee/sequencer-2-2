@@ -31,6 +31,7 @@ void run_seq_test(seqProgram *seqProg, int adapt_priority)
     prog = seqProg;
     runTestFunc(seqProg->progName, doit);
     epicsEventWait(this_test_done);
+    epicsThreadSleep(1.0);
 }
 
 void seq_test_init(int num_tests)
@@ -45,6 +46,7 @@ void seq_test_init(int num_tests)
 
 void seq_test_done(void)
 {
+    epicsThreadSetPriority(epicsThreadGetIdSelf(), epicsThreadPriorityMedium);
     testDone();
 #if defined(vxWorks)
     epicsEventSignal(this_test_done);

@@ -18,7 +18,7 @@ sync x to efx;
 
 foreign MAX_STRING_SIZE;
 
-#define MAX_TESTS 5
+#define MAX_TESTS 10
 
 entry {
     seq_test_init(MAX_TESTS);

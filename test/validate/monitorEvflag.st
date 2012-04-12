@@ -5,8 +5,8 @@ option +s;
 %%#include "../testSupport.h"
 %%#include <stdio.h>
 
-#define NDIAGS 100
-#define NCYCLESPERDIAG 1000
+#define NDIAGS 20
+#define NCYCLESPERDIAG 500
 #define NCYCLES (NDIAGS*NCYCLESPERDIAG)
 
 int requested;

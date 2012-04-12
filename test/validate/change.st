@@ -7,6 +7,8 @@ in the file LICENSE that is included with this distribution.
 /* Test state change statement */
 program changeTest
 
+option +r;
+
 %%#include <time.h>
 %%#include <stdlib.h>
 %%#include "../testSupport.h"

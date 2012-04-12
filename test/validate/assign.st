@@ -6,6 +6,8 @@ in the file LICENSE that is included with this distribution.
 \*************************************************************************/
 program assignTest
 
+option +r;
+
 %%#include "../testSupport.h"
 
 int x = 0;
