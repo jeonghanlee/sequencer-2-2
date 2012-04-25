@@ -18,7 +18,7 @@ Bug fixes:
 * fixed 'lost events' bug (safe mode only), an even subtler bug which
   happened only in safe mode. See :ref:`Known_Problems_2.1.5` for details.
   Thanks to Lewis Muir for providing a test case that makes this bug
-  reproducable.
+  reproducible.
 
   The fix is to make efTest and efTestAndClear synchronization points
   for all variables sync'ed to the event flag. See the updated sections
@@ -91,7 +91,7 @@ Docs:
 
 * fixed documentation of sync
 
-  A sync'ed event flags gets set on any kind of event:
+  A sync'ed event flag gets set on any kind of event:
   monitor, as well as put and get completion.
 
 * streamlined repository branch layout on web server
