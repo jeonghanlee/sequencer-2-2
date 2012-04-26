@@ -39,5 +39,6 @@ upload:
 release: upload
 	darcs dist -d seq-$(SEQ_RELEASE) -t seq-$(SEQ_TAG)
 	rsync seq-$(SEQ_RELEASE).tar.gz $(USER_AT_HOST):$(SEQ_PATH)/releases/
+	$(RM) seq-$(SEQ_RELEASE).tar.gz
 
 .PHONY: release upload
