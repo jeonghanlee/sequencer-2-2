@@ -1087,6 +1087,10 @@ calling :c:func:`delay` in action code does *not* introduce a delay at this
 point. Later versions of *snc* may output a warning or even stop with an
 error.
 
+.. todo:: What about changing this so that :c:func:`delay` in action code
+   *does* introduce a delay? In other words, compile 'delay(<expr>)' to
+   'epicsThreadSleep(<expr>)' if called in action code.
+
 
 delay expired
 ^^^^^^^^^^^^^
