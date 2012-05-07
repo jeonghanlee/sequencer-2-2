@@ -243,7 +243,6 @@ static void analyse_option(Options *options, Expr *defn)
 		case 'c': options->conn = optval; break;
 		case 'd': options->debug = optval; break;
 		case 'e': options->newef = optval; break;
-		case 'i': options->init_reg = optval; break;
 		case 'l': options->line = optval; break;
 		case 'm': options->main = optval; break;
 		case 'r': options->reent = optval; break;

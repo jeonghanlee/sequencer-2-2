@@ -82,7 +82,7 @@ void generate_code(Program *p)
 	if (p->options.main) gen_main(p->name);
 
 	/* Sequencer registration */
-	if (p->options.init_reg) gen_init_reg(p->name);
+	gen_init_reg(p->name);
 }
 
 /* Generate main program */

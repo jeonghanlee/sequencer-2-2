@@ -176,9 +176,6 @@ static void parse_option(char *s)
 	case 'r':
 		options.reent = opt_val;
 		break;
-	case 'i':
-		options.init_reg = opt_val;
-		break;
 	case 'l':
 		options.line = opt_val;
 		break;

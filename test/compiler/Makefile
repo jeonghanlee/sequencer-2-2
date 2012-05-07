@@ -5,7 +5,7 @@ include $(TOP)/configure/CONFIG
 #  ADD MACRO DEFINITIONS AFTER THIS LINE
 
 #  Generate snc main programs (not needed under VxWorks)
-SNCFLAGS_DEFAULT += +m -i
+SNCFLAGS_DEFAULT += +m
 SNCFLAGS_vxWorks += -nil-
 
 SNC = $(INSTALL_HOST_BIN)/snc$(HOSTEXE)
