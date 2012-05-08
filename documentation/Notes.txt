@@ -6,6 +6,8 @@ Release Notes
 Release 2.1.6
 -------------
 
+:ref:`Known_Problems_2.1.6`
+
 Bug fixes:
 
 * fixed order of state set wakeup and signalling of completions

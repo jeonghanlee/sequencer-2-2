@@ -1,6 +1,22 @@
 Known Problems
 ==============
 
+.. _Known_Problems_2.1.6:
+
+Known Problems in Release 2.1.6
+-------------------------------
+
+* The (undocumented) snc option -i disables generation of iocsh
+  registration code. This option should *not* be used, even if
+  the program runs on vxWorks without an iocsh. Furthermore, the ::
+  
+    registrar(<programName>Registrar)
+
+  line *must* be included in the dbd file, otherwise
+  global variables are not properly initialized, leading to an
+  assertion failure when the program is started.
+
+
 .. _Known_Problems_2.1.5:
 
 Known Problems in Release 2.1.5
