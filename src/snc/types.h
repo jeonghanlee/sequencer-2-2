@@ -88,8 +88,8 @@ struct token				/* for the lexer and parser */
 
 struct when				/* extra data for when clauses */
 {
-	Expr	*next_state;		/* declaration of target state */
-	VarList	*var_list;		/* list of local variables */
+	Expr		*next_state;	/* declaration of target state */
+	VarList		*var_list;	/* list of local variables */
 };
 
 struct state				/* extra data for state clauses */
@@ -102,9 +102,9 @@ struct state				/* extra data for state clauses */
 
 struct state_set			/* extra data for state set clauses */
 {
-	int	num_states;		/* number of states */
-	int	num_delays;		/* number of delays */
-	VarList	*var_list;		/* list of 'local' variables */
+	int		num_states;	/* number of states */
+	int		num_delays;	/* number of delays */
+	VarList		*var_list;	/* list of 'local' variables */
 };
 
 struct expression			/* generic syntax node */
