@@ -348,7 +348,7 @@ Report Bugs
 -----------
 
 Please send bug reports to to tech-talk@aps.anl.gov or the maintainer
-(currently this is `me <benjamin.franksen@bessy.de>`_). It helps
+(currently this is `me <benjamin.franksen@helmholtz-berlin.de>`_). It helps
 if you include which release of the sequencer and EPICS base release
 you are using.
 
