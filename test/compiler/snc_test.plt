@@ -14,6 +14,7 @@ my $success = {
 
 my $warning = {
   sncExOpt_UnrecOpt => 1,
+  state_not_reachable => 3,
   syncq_no_size => 1,
 };
 
