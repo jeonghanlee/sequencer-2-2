@@ -95,6 +95,7 @@ struct when				/* extra data for when clauses */
 struct state				/* extra data for state clauses */
 {
 	int		index;		/* index in array of seqState structs */
+	uint		is_target;	/* is this state a target state? */
 	StateOptions	options;	/* state options */
 	VarList		*var_list;	/* list of 'local' variables */
 };
