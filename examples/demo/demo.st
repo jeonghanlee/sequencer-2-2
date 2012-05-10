@@ -11,23 +11,23 @@ in the file LICENSE that is included with this distribution.
 
 #define PVSYS    "pvsys=ktl"
 
-#define LIGHT    "demo.light"
-#define LIGHTON  "demo.lighton"
-#define LIGHTOFF "demo.lightoff"
-#define VOLTAGE  "demo.voltage"
-#define LOLIMIT  "demo.lolimit"
-#define HILIMIT  "demo.hilimit"
+#define LIGHT    "{prefix}.light"
+#define LIGHTON  "{prefix}.lighton"
+#define LIGHTOFF "{prefix}.lightoff"
+#define VOLTAGE  "{prefix}.voltage"
+#define LOLIMIT  "{prefix}.lolimit"
+#define HILIMIT  "{prefix}.hilimit"
 
 #else
 
 #define PVSYS    "pvsys=ca"
 
-#define LIGHT    "demo:light"
-#define LIGHTON  "demo:lightOn"
-#define LIGHTOFF "demo:lightOff"
-#define VOLTAGE  "demo:voltage"
-#define LOLIMIT  "demo:loLimit"
-#define HILIMIT  "demo:hiLimit"
+#define LIGHT    "{prefix}:light"
+#define LIGHTON  "{prefix}:lightOn"
+#define LIGHTOFF "{prefix}:lightOff"
+#define VOLTAGE  "{prefix}:voltage"
+#define LOLIMIT  "{prefix}:loLimit"
+#define HILIMIT  "{prefix}:hiLimit"
 
 #endif
 

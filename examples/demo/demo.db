@@ -1,25 +1,25 @@
-record(ao,"demo:lightOff") {
+record(ao,"$(PREFIX):lightOff") {
     field(DOL,"4.5")
     field(PREC,"6")
     field(HOPR,"10.0")
     field(LOPR,"0.0")
 }
 
-record(ao,"demo:lightOn") {
+record(ao,"$(PREFIX):lightOn") {
     field(DOL,"5.5")
     field(PREC,"6")
     field(HOPR,"10.0")
     field(LOPR,"0.0")
 }
 
-record(ao,"demo:loLimit") {
+record(ao,"$(PREFIX):loLimit") {
     field(DOL,"0.0")
     field(PREC,"6")
     field(HOPR,"10.0")
     field(LOPR,"0.0")
 }
 
-record(ao,"demo:voltage") {
+record(ao,"$(PREFIX):voltage") {
     field(DOL,"0.0")
     field(PREC,"6")
     field(HOPR,"10.0")
@@ -34,32 +34,32 @@ record(ao,"demo:voltage") {
     field(LSV,"MINOR")
 }
 
-record(ao,"demo:hiLimit") {
+record(ao,"$(PREFIX):hiLimit") {
     field(DOL,"10.0")
     field(PREC,"6")
     field(HOPR,"10.0")
     field(LOPR,"0.0")
 }
 
-record(bo,"demo:light") {
+record(bo,"$(PREFIX):light") {
     field(ZNAM,"off")
     field(ONAM,"on")
     field(ZSV,"MINOR")
 }
 
-record(stringin,"demo:ss_light") {
+record(stringin,"$(PREFIX):ss_light") {
     field(DTYP,"Sequencer Internals")
     field(INP,"@demo light")
     field(SCAN,"1 second")
 }
 
-record(stringin,"demo:ss_ramp") {
+record(stringin,"$(PREFIX):ss_ramp") {
     field(DTYP,"Sequencer Internals")
     field(INP,"@demo ramp")
     field(SCAN,"1 second")
 }
 
-record(stringin,"demo:ss_limit") {
+record(stringin,"$(PREFIX):ss_limit") {
     field(DTYP,"Sequencer Internals")
     field(INP,"@demo limit")
     field(SCAN,"1 second")
