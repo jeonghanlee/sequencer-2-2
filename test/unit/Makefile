@@ -4,7 +4,7 @@ include $(TOP)/configure/CONFIG
 
 PROD_LIBS += Com seq pv
 
-USR_CFLAGS += -I$(TOP)/src/seq
+USR_INCLUDES += -I$(TOP)/src/seq
 
 TESTPROD_HOST += queueTest
 queueTest_SRCS += queueTest.c
