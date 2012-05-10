@@ -386,10 +386,10 @@ static void printValue(pr_fun *pr, void *val, unsigned count, int type)
 /* Find a state program associated with a given thread id */
 static SSCB *seqQryFind(epicsThreadId tid)
 {
-	SSCB *ss;
+	SSCB *ss = NULL;
 
-	ss = seqFindStateSet(tid);
-	if (ss == NULL)
+	printf("seqFindStateSet found ss=%p for tid=%p\n", ss, tid);
+	if (tid == NULL || (ss = seqFindStateSet(tid)) == NULL)
 	{
 		if (tid)
 			printf("No program instance is running thread %p.\n", tid);
