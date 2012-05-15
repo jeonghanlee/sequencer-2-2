@@ -437,28 +437,6 @@ c_code_line:
 	DONE;		/* dead code, only here to make compiler warning go away */
 }
 
-#ifdef TEST_LEXER
-void report_loc(const char *f, int l) {
-	fprintf(stderr, "%s:%d: ", f, l);
-}
-
-int main() {
-	Scanner s;
-	int		tt;	/* token type */
-	Token		tv;	/* token value */
-
-	memset(&s, 0, sizeof(s));
-
-	s.cur = fill(&s, s.cur);
-	s.line = 1;
-
-	while( (tt = scan(&s, &tv)) != EOI) {
-		printf("%s:%d: %2d\t$%s$\n", tv.file, tv.line, tt, tv.str);
-	}
-	return 0;
-}
-#else
-
 Expr *parse_program(const char *src_file)
 {
 	Scanner	s;
@@ -484,5 +462,3 @@ Expr *parse_program(const char *src_file)
 	snlParserFree(parser, free);
 	return result;
 }
-
-#endif /* TEST_LEXER */

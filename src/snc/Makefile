@@ -29,12 +29,6 @@ snc_SRCS += builtin.c       # builtin constants and functions
 
 snc_LIBS += Com
 
-ifdef LEXER_TEST
-PROD_HOST =
-TESTPROD_HOST = lexer
-USR_CFLAGS = -DTEST_LEXER
-endif
-
 # locally overwrite default value for this variable
 INSTALL_DOC = $(INSTALL_LOCATION)/documentation
 DOCS += bnf.inc
