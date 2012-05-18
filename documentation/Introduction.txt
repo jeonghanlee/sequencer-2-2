@@ -60,6 +60,8 @@ which the changes have been implemented by William Lupton of W. M.
 Keck Observatory and Greg White of Stanford Linear Accelerator
 Center (SLAC).
 
+.. _VersioningPolicy:
+
 Versioning Policy
 ^^^^^^^^^^^^^^^^^
 
@@ -69,6 +71,29 @@ minor the changes. The second digit is the minor version number and
 will be incremented each time functional changes are made. The
 first digit is the major version number and will be incremented
 only when major changes are made.
+
+Starting with version 2.1, the following refined rules apply:
+
+* Changes in the major (first) version number indicate disruptive
+  changes that may break backward compatibility. When upgrading to a
+  new major version, existing programs may need to be reviewed and
+  possibly adapted to changes in syntax or semantics.
+
+* An increase of the minor (second) version number indicates the
+  availability of new features, while source code compatibility for
+  existing programs is preserved. However, such changes *may*
+  involve major re-organizations of the implementation, und
+  therefore introduce new bugs. Care should be taken when upgrading
+  to a new minor version, especially if the new patch-level number
+  is zero: these should be used in production systems only after
+  testing that everything still works as expected.
+
+* Changes in the patch-level (third) version number are strictly
+  reserved for bug-fixes, including fixes and extensions to the
+  documentation and the tests. No new features will appear, except
+  where unavoidable to cleanly fix a bug. It should always be safe
+  (and is recommended) to upgrade to the latest patch level release.
+
 
 ToDo List
 ---------
