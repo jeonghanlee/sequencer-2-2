@@ -29,20 +29,43 @@ struct sequencerProgram {
 static struct sequencerProgram *seqHead;
 static epicsMutexId seqLock;
 
-/*
- * This routine is called before multitasking has started, so there's
- * no race condition in creating the linked list or the lock.
- */
-epicsShareFunc void epicsShareAPI seqRegisterSequencerProgram(seqProgram *p)
+static void seqInitPvt(void *arg)
 {
-    struct sequencerProgram *sp;
+    seqLock = epicsMutexCreate();
+    if (!seqLock) {
+        errlogSevPrintf(errlogFatal, "seqInitPvt: out of memory");
+        exit(EXIT_FAILURE);
+    }
+}
 
-    seqLock = epicsMutexMustCreate();
-    sp = (struct sequencerProgram *)mallocMustSucceed(sizeof *sp, "seqRegisterSequencerProgram");
-    sp->prog = p;
-    sp->next = seqHead;
-    sp->instances = NULL;
-    seqHead = sp;
+static void seqLazyInit()
+{
+    static epicsThreadOnceId seqOnceFlag = EPICS_THREAD_ONCE_INIT;
+    epicsThreadOnce(&seqOnceFlag, seqInitPvt, NULL);
+}
+
+epicsShareFunc void epicsShareAPI seqRegisterSequencerProgram(seqProgram *prog)
+{
+    struct sequencerProgram *sp = NULL;
+
+    seqLazyInit();
+    epicsMutexMustLock(seqLock);
+    foreach(sp, seqHead) {
+        if (sp->prog == prog) {
+            break;
+        }
+    }
+    if (!sp) {
+        sp = (struct sequencerProgram *)malloc(sizeof *sp);
+        if (!sp) {
+            errlogSevPrintf(errlogFatal, "seqRegisterSequencerProgram: out of memory");
+        }
+        sp->prog = prog;
+        sp->next = seqHead;
+        sp->instances = NULL;
+        seqHead = sp;
+    }
+    epicsMutexUnlock(seqLock);
 }
 
 int traverseSequencerPrograms(sequencerProgramTraversee *traversee, void *param)
@@ -50,6 +73,7 @@ int traverseSequencerPrograms(sequencerProgramTraversee *traversee, void *param)
     struct sequencerProgram *sp;
     int stop = FALSE;
 
+    seqLazyInit();
     epicsMutexMustLock(seqLock);
     foreach(sp, seqHead) {
         stop = traversee(&sp->instances, sp->prog, param);
@@ -104,13 +128,19 @@ static void seqCallFunc(const iocshArgBuf *args)
     }
     if (*table == '&')
         table++;
+    seqLazyInit();
+    epicsMutexMustLock(seqLock);
     foreach(sp, seqHead) {
         if (!strcmp(table, sp->prog->progName)) {
-            seq(sp->prog, macroDef, (unsigned)stackSize);
-            return;
+            break;
         }
     }
-    printf("Can't find sequencer `%s'.\n", table);
+    epicsMutexUnlock(seqLock);
+    if (sp) {
+        seq(sp->prog, macroDef, (unsigned)stackSize);
+    } else {
+        printf("Can't find sequencer `%s'.\n", table);
+    }
 }
 
 /* seqShow */

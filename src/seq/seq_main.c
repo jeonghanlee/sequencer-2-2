@@ -34,6 +34,9 @@ epicsShareFunc void epicsShareAPI seq(
 	const char	*threadName;
 	unsigned int	smallStack;
 
+	/* Register this program (if not yet done) */
+	seqRegisterSequencerProgram(seqProg);
+
 	/* Print version & date of sequencer */
 	printf(SEQ_RELEASE "\n");
 
