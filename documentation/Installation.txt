@@ -81,10 +81,9 @@ or by following the links here:
 If you want to help testing, please use
 the `latest snapshot`_, or check out the `darcs`_ repository::
 
-   > darcs get http://www-csr.bessy.de/control/SoftDist/sequencer/repo/ seq-head
+   > darcs get http://www-csr.bessy.de/control/SoftDist/sequencer/repo/<branch>
 
-You can also follow development by using the `repository browser`_. There are currently
-three branches:
+where ``<branch>`` is the branch name. There are currently three branches:
 
 * `branch 2-0`_ is the previous version. There is no development happening
   on here, except maybe fixing build problems.
@@ -97,6 +96,8 @@ three branches:
 
 See `Contribute`_ for a short description how to record and send
 patches.
+
+You can also follow development by using the `repository browser`_.
 
 .. _latest snapshot: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-snapshot-latest.tar.gz
 .. _2.1.6: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2.1.6.tar.gz
