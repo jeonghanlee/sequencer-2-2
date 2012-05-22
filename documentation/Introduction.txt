@@ -95,7 +95,7 @@ Starting with version 2.1, the following refined rules apply:
   (and is recommended) to upgrade to the latest patch level release.
 
 
-ToDo List
----------
+.. ToDo List
+.. ---------
 
-.. todolist::
+.. .. todolist::
