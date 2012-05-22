@@ -9,13 +9,29 @@ Known Problems in Release 2.1.6
 * The (undocumented) snc option -i disables generation of iocsh
   registration code. This option should *not* be used, even if
   the program runs on vxWorks without an iocsh. Furthermore, the ::
-  
+
     registrar(<programName>Registrar)
 
-  line *must* be included in the dbd file, otherwise
-  global variables are not properly initialized, leading to an
-  assertion failure when the program is started.
+  line *must* be included in the dbd file.
 
+  If *no* registrar
+  entries exist, global variables are not properly initialized,
+  leading to an assertion failure when the first program is started.
+
+  If only some entries exist, seqShow will only display the ones
+  that have been registered.
+
+* Sometimes seqShow with no arguments does not display all programs
+  and state sets in a table as it is supposed to do. This happens if
+  there is (at least) one state set that has not yet been started,
+  for instance if not all channels have connected yet. seqShow (with
+  no arguments) then acts as if you gave it the name of such a program.
+
+* Build on a Debian Linux system failed due to missing header files.
+  It seems this is caused by ``USR_CFLAGS += -I$(TOP)/src/seq`` lines
+  in some Makefiles. William Steele reported this and also provided
+  the fix, which is to replace these with
+  ``USR_INCLUDES += -I$(TOP)/src/seq``.
 
 .. _Known_Problems_2.1.5:
 
