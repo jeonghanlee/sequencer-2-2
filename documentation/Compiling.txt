@@ -33,6 +33,9 @@ Option  Description
   +e    Use the new event flag mode. This is the default.
   -e    Use the old event flag mode (clear flags after executing a
         when statement).
+  +i    Generate registrar procedure that registers shell commands
+        and programs with an IOC shell. This is the default.
+  -i    Do not generate registrar procedure.
   +l    Add line markers to the generated code, so that C compiler
         messages refer to the SNL source file. This is the default.
   -l    Do not produce line markers.
