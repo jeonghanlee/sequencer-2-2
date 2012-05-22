@@ -6,6 +6,8 @@ Known Problems
 Known Problems in Release 2.1.6
 -------------------------------
 
+All these are fixed in the latest snapshot and in the next release.
+
 * The (undocumented) snc option -i disables generation of iocsh
   registration code. This option should *not* be used, even if
   the program runs on vxWorks without an iocsh. Furthermore, the ::
