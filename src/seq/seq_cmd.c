@@ -106,7 +106,7 @@ static epicsThreadId findThread(const char *name)
 }
 
 /* seq */
-static const iocshArg seqArg0 = { "sequencer",iocshArgString};
+static const iocshArg seqArg0 = { "program/threadID",iocshArgString};
 static const iocshArg seqArg1 = { "macro definitions",iocshArgString};
 static const iocshArg seqArg2 = { "stack size",iocshArgInt};
 static const iocshArg * const seqArgs[3] = { &seqArg0,&seqArg1,&seqArg2 };
@@ -144,7 +144,7 @@ static void seqCallFunc(const iocshArgBuf *args)
 }
 
 /* seqShow */
-static const iocshArg seqShowArg0 = { "sequencer",iocshArgString};
+static const iocshArg seqShowArg0 = { "program/threadID",iocshArgString};
 static const iocshArg * const seqShowArgs[1] = {&seqShowArg0};
 static const iocshFuncDef seqShowFuncDef = {"seqShow",1,seqShowArgs};
 static void seqShowCallFunc(const iocshArgBuf *args)
@@ -159,7 +159,7 @@ static void seqShowCallFunc(const iocshArgBuf *args)
 }
 
 /* seqQueueShow */
-static const iocshArg seqQueueShowArg0 = { "sequencer",iocshArgString};
+static const iocshArg seqQueueShowArg0 = { "program/threadID",iocshArgString};
 static const iocshArg * const seqQueueShowArgs[1] = {&seqQueueShowArg0};
 static const iocshFuncDef seqQueueShowFuncDef = {"seqQueueShow",1,seqQueueShowArgs};
 static void seqQueueShowCallFunc(const iocshArgBuf *args)
@@ -176,7 +176,7 @@ static void seqQueueShowCallFunc(const iocshArgBuf *args)
 }
 
 /* seqStop */
-static const iocshArg seqStopArg0 = { "sequencer",iocshArgString};
+static const iocshArg seqStopArg0 = { "program/threadID",iocshArgString};
 static const iocshArg * const seqStopArgs[1] = {&seqStopArg0};
 static const iocshFuncDef seqStopFuncDef = {"seqStop",1,seqStopArgs};
 static void seqStopCallFunc(const iocshArgBuf *args)
@@ -193,7 +193,7 @@ static void seqStopCallFunc(const iocshArgBuf *args)
 }
 
 /* seqChanShow */
-static const iocshArg seqChanShowArg0 = { "sequencer",iocshArgString};
+static const iocshArg seqChanShowArg0 = { "program/threadID",iocshArgString};
 static const iocshArg seqChanShowArg1 = { "channel",iocshArgString};
 static const iocshArg * const seqChanShowArgs[2] = {&seqChanShowArg0,&seqChanShowArg1};
 static const iocshFuncDef seqChanShowFuncDef = {"seqChanShow",2,seqChanShowArgs};
