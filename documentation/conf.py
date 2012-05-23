@@ -85,7 +85,7 @@ add_function_parentheses = False
 # output. They are ignored by default.
 show_authors = True
 
-highlight_language = "c"
+# highlight_language = "c"
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
