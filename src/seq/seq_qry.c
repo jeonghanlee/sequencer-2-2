@@ -151,7 +151,8 @@ epicsShareFunc void epicsShareAPI seqChanShow(epicsThreadId tid, const char *str
 	else
 		connQual = 0;
 
-	while (dn && (unsigned)nch < sp->numChans)
+	/* terminate whenever nch leaves the range */
+	while (dn && nch >= 0 && (unsigned)nch < sp->numChans)
 	{
 		CHAN *ch = sp->chan + nch;
 		DBCHAN *dbch = ch->dbch;
@@ -176,7 +177,7 @@ epicsShareFunc void epicsShareAPI seqChanShow(epicsThreadId tid, const char *str
 				continue; /* skip this channel */
 			}
 		}
-		printf("\n#%d of %d:\n", nch+1, sp->numChans);
+		printf("\n#%d of %d:\n", nch, sp->numChans);
 		printf("  Variable name: \"%s\"\n", ch->varName);
 		printf("    type = %s\n", ch->type->typeStr);
 		printf("    count = %u\n", ch->count);
@@ -221,8 +222,7 @@ epicsShareFunc void epicsShareAPI seqChanShow(epicsThreadId tid, const char *str
 		}
 
 		dn = userInput();
-		nch = max(0, nch + dn);
-		assert(nch >= 0);
+		nch += dn;
 	}
 }
 /*
@@ -301,48 +301,51 @@ epicsShareFunc void epicsShareAPI seqQueueShow(epicsThreadId tid)
 {
 	SSCB	*ss = seqQryFind(tid);
 	SPROG	*sp;
-	int	n = 0;
+	int	nq = 0;
 	int	dn = 1;
 
 	if (ss == NULL) return;
 	sp = ss->sprog;
 	printf("State Program: \"%s\"\n", sp->progName);
 	printf("Number of queues = %d\n", sp->numQueues);
-	while (dn && (unsigned)n < sp->numQueues)
+	/* terminate whenever nq leaves the range */
+	while (dn && nq >= 0 && (unsigned)nq < sp->numQueues)
 	{
-		QUEUE	queue = sp->queues[n];
+		QUEUE	queue = sp->queues[nq];
 
-		printf("  Queue #%d: numElems=%u, used=%u, elemSize=%u\n", n,
+		printf("  Queue #%d: numElems=%u, used=%u, elemSize=%u\n", nq,
 			(unsigned)seqQueueNumElems(queue),
 			(unsigned)seqQueueUsed(queue),
 			(unsigned)seqQueueElemSize(queue));
 		dn = userInput();
-		n = max(0, n + dn);
-		assert(n >= 0);
+		nq += dn;
 	}
 }
 
-/* Read from console until a RETURN is detected.
-   The return value <n> value means:
-   n == 0: quit
-   n > 0 : move forward n items
-   n < 0 : move backward n items
+/* Read one line from console and parse.
+   The input can be:
+   - empty (return) as shortcut for '+1'
+   - '-' or '+' as shortcuts for '-1' and '+1'
+   - a signed integer
+   - anything else means quit
+   The return value means:
+   == 0: quit
+   > 0 : move forward n items
+   < 0 : move backward n items
 */
 static int userInput(void)
 {
-	char	buffer[10];
-	int	n;
+	char	buf[10];
 
 	printf("Next? (+/- skip count)\n");
-	if (fgets(buffer, 10, stdin) == NULL)
+	if (fgets(buf, 10, stdin) == NULL)
 		return 0;
-	if (buffer[0] == 'q')
-		return 0; /* quit */
+	if (buf[0] == '\n')
+		return 1;
+	else if ((buf[0] == '-' || buf[0] == '+') && buf[1] == '\n')
+		buf[1] = '1';
 
-	n = atoi(buffer);
-	if (n == 0)
-		n = 1;
-	return n;
+	return atoi(buf);
 }
 
 /* Print the current internal value of a database channel */
