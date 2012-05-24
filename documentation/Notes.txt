@@ -1,6 +1,67 @@
 Release Notes
 =============
 
+.. _Release_Notes_2.1.7:
+
+Release 2.1.7
+-------------
+
+Functional changes
+
+* use epicsThreadOnce to lazily initialize globals and register programs
+
+  This means we need the registrar(<programName>) dbd file entry only
+  in case an IOC shell is actually used.
+
+* fixed behaviour of seqQryFind if tid argument is NULL
+
+  This should in any case call seqShowAll and then return NULL.
+  Previously, it would return any state set which has not yet been
+  started (for instance because the first state set thread is still
+  blocked waiting for PVs to connect).
+
+* fixed interactive behaviour of seqChanShow and seqQueueShow
+
+  There were some edge cases where the user input was not parsed
+  as one would expect. The behaviour now follows exactly the
+  description in the reference.
+
+* USR_CFLAGS -> USR_INCLUDES fixes a build problem on some systems
+
+  William Steele reported and solved this.
+
+* snc: issue warning if a state is not reachable from the first; also
+  added a compiler test for this.
+
+  Thanks to Lewis Muir for suggesting this feature.
+
+Documentation
+
+* documented the -i compiler option (i.e. suppress generation of iocsh
+  registrar procedure)
+
+* explained the versioning policy and added a link on the download page
+
+Minor stuff
+
+* fixed darcs repository location on download page
+
+* removed auto-generated todo list in docs, fixed release number in
+  documentation/conf.py
+
+* fixed some typos in documentation/Notes.txt
+
+* fixed my mail address (bessy -> helmholtz-berlin)
+
+* started improving pvSync test, needs more work
+
+* added prefix macro to examples/demo PVs
+
+* renamed the 1st argument of shell commands that except a threadID
+  from "sequencer" to "program/threadID"
+
+* enlarged table column widths in output of seqShow (with no arguments)
+
 .. _Release_Notes_2.1.6:
 
 Release 2.1.6
