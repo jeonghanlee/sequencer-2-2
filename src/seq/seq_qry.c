@@ -284,16 +284,6 @@ epicsShareFunc void epicsShareAPI seqcar(int level)
 		stats.nChans - stats.nConn);
 }
 
-#if 0
-epicsShareFunc void epicsShareAPI seqcaStats(int *pchans, int *pdiscon)
-{
-	struct seqStats stats = {0, 0, 0, 0};
-	seqTraverseProg(seqcarCollect, (void *) &stats);
-	if (pchans)  *pchans  = stats.nChans;
-	if (pdiscon) *pdiscon = stats.nChans - stats.nConn;
-}
-#endif
-
 /*
  * seqQueueShow() - Show syncQ queue information for a state program.
  */
@@ -391,7 +381,6 @@ static SSCB *seqQryFind(epicsThreadId tid)
 {
 	SSCB *ss = NULL;
 
-	printf("seqFindStateSet found ss=%p for tid=%p\n", ss, tid);
 	if (tid == NULL || (ss = seqFindStateSet(tid)) == NULL)
 	{
 		if (tid)
