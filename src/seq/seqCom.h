@@ -216,9 +216,10 @@ epicsShareFunc void epicsShareAPI seqChanShow(epicsThreadId, const char *);
 epicsShareFunc void epicsShareAPI seqcar(int level);
 epicsShareFunc void epicsShareAPI seqQueueShow(epicsThreadId);
 epicsShareFunc void epicsShareAPI seqStop(epicsThreadId);
+epicsShareFunc void epicsShareAPI seq(seqProgram *, const char *, unsigned);
+/* called by generated main and registrar routines */
 epicsShareFunc void epicsShareAPI seqRegisterSequencerProgram(seqProgram *p);
 epicsShareFunc void epicsShareAPI seqRegisterSequencerCommands(void);
-epicsShareFunc void epicsShareAPI seq(seqProgram *, const char *, unsigned);
 /* exported for devSequencer */
 epicsShareFunc struct program_instance* epicsShareAPI seqFindProgByName(const char *, int);
 
