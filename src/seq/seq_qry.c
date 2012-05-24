@@ -399,8 +399,8 @@ static int seqShowSP(SPROG *sp, void *parg)
 	int		*pprogCount = (int *)parg;
 
 	if ((*pprogCount)++ == 0)
-		printf("Program Name     Thread ID  Thread Name      SS Name\n");
-		printf("------------     ---------  -----------      -------\n");
+		printf("Program Name        Thread ID           Thread Name         SS Name\n");
+		printf("------------        ---------           -----------         -------\n");
 	progName = sp->progName;
 	for (nss = 0; nss < sp->numSS; nss++)
 	{
@@ -411,7 +411,7 @@ static int seqShowSP(SPROG *sp, void *parg)
 		else
 			epicsThreadGetName(ss->threadId, threadName,
 				      sizeof(threadName));
-		printf("%-16s %-8p  %-16s %-16s\n", progName,
+		printf("%-19s %-19p %-19s %-19s\n", progName,
 			ss->threadId, threadName, ss->ssName );
 		progName = "";
 	}
