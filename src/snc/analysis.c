@@ -172,10 +172,8 @@ VarList **pvar_list_from_scope(Expr *scope)
 	case D_WHEN:
 		assert(scope->extra.e_when);	/* invariant */
 		return &scope->extra.e_when->var_list;
-	case D_ENTRY:
-		return &scope->extra.e_entry;
-	case D_EXIT:
-		return &scope->extra.e_exit;
+	case D_ENTEX:
+		return &scope->extra.e_entex;
 	case S_CMPND:
 		return &scope->extra.e_cmpnd;
 	default:
@@ -198,10 +196,8 @@ Expr *defn_list_from_scope(Expr *scope)
 		return scope->state_defns;
 	case D_WHEN:
 		return scope->when_defns;
-	case D_ENTRY:
-		return scope->entry_defns;
-	case D_EXIT:
-		return scope->exit_defns;
+	case D_ENTEX:
+		return scope->entex_defns;
 	case S_CMPND:
 		return scope->cmpnd_defns;
 	default:
@@ -1307,7 +1303,7 @@ static int iter_connect_state_change_stmts(Expr *ep, Expr *scope, void *parg)
 		pcsc_arg->ssp = ep;
 		return TRUE;
 	}
-	else if (ep->type == D_ENTRY || ep->type == D_EXIT)
+	else if (ep->type == D_ENTEX)
 	{
 		/* to flag erroneous state change statements, see below */
 		pcsc_arg->in_when = FALSE;
@@ -1351,7 +1347,7 @@ static void connect_state_change_stmts(SymTable st, Expr *scope)
 	csc_arg.ssp = 0;
 	csc_arg.in_when = FALSE;
 	traverse_expr_tree(scope,
-		(1<<S_CHANGE)|(1<<D_SS)|(1<<D_ENTRY)|(1<<D_EXIT)|(1<<D_WHEN),
+		(1<<S_CHANGE)|(1<<D_SS)|(1<<D_ENTEX)|(1<<D_WHEN),
 		expr_mask, 0, iter_connect_state_change_stmts, &csc_arg);
 }
 

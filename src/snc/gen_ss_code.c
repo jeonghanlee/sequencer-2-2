@@ -35,8 +35,7 @@ static void gen_state_func(
 	const char *rettype,
 	const char *extra_args
 );
-static void gen_entry_body(Expr *xp);
-static void gen_exit_body(Expr *xp);
+static void gen_entex_body(Expr *xp);
 static void gen_delay_body(Expr *xp);
 static void gen_event_body(Expr *xp);
 static void gen_action_body(Expr *xp);
@@ -65,8 +64,7 @@ enum expr_context
 {
 	C_COND,		/* when() condition */
 	C_TRANS,	/* state transition actions */
-	C_ENTRY,	/* entry block */
-	C_EXIT,		/* exit block */
+	C_ENTEX,	/* entry or exit block */
 	C_INIT		/* variable initialization */
 };
 
@@ -97,7 +95,7 @@ void gen_ss_code(Program *program)
 
 	/* Generate program entry func */
 	if (prog->prog_entry)
-		gen_prog_func(prog, "entry", prog->prog_entry, gen_entry_body);
+		gen_prog_func(prog, "entry", prog->prog_entry, gen_entex_body);
 
 	/* For each state set ... */
 	foreach (ssp, prog->prog_statesets)
@@ -111,11 +109,11 @@ void gen_ss_code(Program *program)
 			/* Generate entry and exit functions */
 			if (sp->state_entry != 0)
 				gen_state_func(ssp->value, ss_num, sp->value, 
-					sp->state_entry, gen_entry_body,
+					sp->state_entry, gen_entex_body,
 					"Entry", "I", "void", "");
 			if (sp->state_exit != 0)
 				gen_state_func(ssp->value, ss_num, sp->value,
-					sp->state_exit, gen_exit_body,
+					sp->state_exit, gen_entex_body,
 					"Exit", "O", "void", "");
 			/* Generate function to set up for delay processing */
 			gen_state_func(ssp->value, ss_num, sp->value,
@@ -130,14 +128,14 @@ void gen_ss_code(Program *program)
 			gen_state_func(ssp->value, ss_num, sp->value,
 				sp->state_whens, gen_action_body,
 				"Action", "A", "void",
-                                ", int transNum, int *pNextState");
+				", int transNum, int *pNextState");
 		}
 		ss_num++;
 	}
 
 	/* Generate program exit func */
 	if (prog->prog_exit)
-		gen_prog_func(prog, "exit", prog->prog_exit, gen_exit_body);
+		gen_prog_func(prog, "exit", prog->prog_exit, gen_entex_body);
 }
 
 /* Generate a local C variable declaration for each variable declared
@@ -223,29 +221,16 @@ static void gen_state_func(
 	printf("}\n");
 }
 
-static void gen_entry_body(Expr *xp)
+static void gen_entex_body(Expr *xp)
 {
 	Expr	*ep;
 
-	assert(xp->type == D_ENTRY);
+	assert(xp->type == D_ENTEX);
 	gen_local_var_decls(xp, 1);
 	gen_defn_c_code(xp, 1);
-	foreach (ep, xp->entry_stmts)
+	foreach (ep, xp->entex_stmts)
 	{
-		gen_expr(C_ENTRY, ep, 1);
-	}
-}
-
-static void gen_exit_body(Expr *xp)
-{
-	Expr	*ep;
-
-	assert(xp->type == D_EXIT);
-	gen_local_var_decls(xp, 1);
-	gen_defn_c_code(xp, 1);
-	foreach (ep, xp->exit_stmts)
-	{
-		gen_expr(C_ENTRY, ep, 1);
+		gen_expr(C_ENTEX, ep, 1);
 	}
 }
 

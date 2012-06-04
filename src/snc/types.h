@@ -126,8 +126,7 @@ struct expression			/* generic syntax node */
 		State	*e_state;	/* state data */
 		When	*e_when;	/* transition data */
 		Expr	*e_change;	/* declaration of target state */
-		VarList	*e_entry;	/* local declarations */
-		VarList	*e_exit;	/* local declarations */
+		VarList	*e_entex;	/* local declarations */
 		VarList	*e_cmpnd;	/* block local definitions */
 	}	extra;
 };
@@ -239,14 +238,14 @@ struct program
 /* Expression types that are scopes. By definition, a scope is an expression
    that allows variable declarations as (immediate) subexpressions. */
 #define scope_mask		( (1<<D_PROG) | (1<<D_SS) | (1<<D_STATE)\
-				| (1<<D_ENTRY) | (1<<D_EXIT) | (1<<D_WHEN) | (1<<S_CMPND) )
+				| (1<<D_ENTEX) | (1<<D_WHEN) | (1<<S_CMPND) )
 #define is_scope(e)		(((1<<((e)->type)) & scope_mask) != 0)
 /* Expressions types that may have sub-scopes */
-#define has_sub_scope_mask	( (1<<D_ENTRY) | (1<<D_EXIT) | (1<<D_PROG) | (1<<D_SS)\
+#define has_sub_scope_mask	( (1<<D_ENTEX) | (1<<D_PROG) | (1<<D_SS)\
 				| (1<<D_STATE) | (1<<D_WHEN) | (1<<S_CMPND) | (1<<S_FOR)\
 				| (1<<S_IF) | (1<<S_STMT) | (1<<S_WHILE) )
 /* Expressions types that may have sub-expressions */
-#define has_sub_expr_mask	( (1<<D_DECL) | (1<<D_ENTRY) | (1<<D_EXIT) | (1<<D_PROG)\
+#define has_sub_expr_mask	( (1<<D_DECL) | (1<<D_ENTEX) | (1<<D_PROG)\
 				| (1<<D_SS) | (1<<D_STATE) | (1<<D_SYNC) | (1<<D_SYNCQ)\
 				| (1<<D_WHEN) | (1<<E_BINOP) | (1<<E_DELAY) | (1<<E_FUNC)\
 				| (1<<E_INIT) | (1<<E_PAREN) | (1<<E_POST)\
@@ -275,8 +274,7 @@ enum expr_type			/* description [child expressions...] */
 {
 	D_ASSIGN,		/* assign statement [subscr,pvs] */
 	D_DECL,			/* variable declaration [init] */
-	D_ENTRY,		/* entry statement [defns,stmts] */
-	D_EXIT,			/* exit statement [defns,stmts] */
+	D_ENTEX,		/* entry or exit statement [defns,stmts] */
 	D_MONITOR,		/* monitor statement [subscr] */
 	D_OPTION,		/* option definition [] */
 	D_PROG,			/* whole program [param,defns,entry,statesets,exit,ccode] */
@@ -322,10 +320,8 @@ enum expr_type			/* description [child expressions...] */
 #define cmpnd_stmts	children[1]
 #define decl_init	children[0]
 #define delay_args	children[0]
-#define entry_defns	children[0]
-#define entry_stmts	children[1]
-#define exit_defns	children[0]
-#define exit_stmts	children[1]
+#define entex_defns	children[0]
+#define entex_stmts	children[1]
 #define for_init	children[0]
 #define for_cond	children[1]
 #define for_iter	children[2]
@@ -381,8 +377,7 @@ expr_type_info[]
 = {
 	{ "D_ASSIGN",	2 },
 	{ "D_DECL",	1 },
-	{ "D_ENTRY",	2 },
-	{ "D_EXIT",	2 },
+	{ "D_ENTEX",	2 },
 	{ "D_MONITOR",	1 },
 	{ "D_OPTION",	0 },
 	{ "D_PROG",	6 },

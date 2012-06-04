@@ -268,10 +268,10 @@ state_defn(p) ::= syncq(x).			{ p = x; }
 state_defn(p) ::= declaration(x).		{ p = x; }
 state_defn(p) ::= option(x).			{ p = x; }
 
-entry(p) ::= ENTRY(t) block(b).			{ p = expr(D_ENTRY, t, b.left, b.right); }
+entry(p) ::= ENTRY(t) block(b).			{ p = expr(D_ENTEX, t, b.left, b.right); }
 entry(p) ::= .					{ p = 0; }
 
-exit(p) ::= EXIT(t) block(b).			{ p = expr(D_EXIT, t, b.left, b.right); }
+exit(p) ::= EXIT(t) block(b).			{ p = expr(D_ENTEX, t, b.left, b.right); }
 exit(p) ::= .					{ p = 0; }
 
 whens(p) ::= whens(xs) when(x).			{ p = link_expr(xs, x); }
