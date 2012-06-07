@@ -247,7 +247,7 @@ static void gen_delay_body(Expr *xp)
 	foreach (tp, xp)
 	{
 		assert(tp->type == D_WHEN);
-		traverse_expr_tree(tp->when_cond, 1<<E_DELAY, 0, 0, gen_delay, 0);
+		traverse_expr_tree(tp->when_cond, 1u<<E_DELAY, 0, 0, gen_delay, 0);
 	}
 }
 
@@ -368,7 +368,7 @@ static void gen_var_access(Var *vp)
 	report("var_access: %s, scope=(%s,%s)\n",
 		vp->name, expr_type_name(vp->scope), vp->scope->value);
 #endif
-	assert((1<<vp->scope->type) & scope_mask);
+	assert((1u<<vp->scope->type) & scope_mask);
 
 	if (vp->type->tag == V_EVFLAG)
 	{
@@ -627,7 +627,7 @@ static int gen_builtin_func(int context, Expr *ep)
 static void gen_ef_arg(
 	const char	*func_name,	/* function name */
 	Expr		*ap,		/* argument expression */
-	int		index		/* argument index */
+	uint		index		/* argument index */
 )
 {
 	Var	*vp;

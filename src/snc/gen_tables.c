@@ -31,7 +31,7 @@ in the file LICENSE that is included with this distribution.
 
 typedef struct event_mask_args {
 	seqMask	*event_words;
-	int	num_event_flags;
+	uint	num_event_flags;
 } event_mask_args;
 
 static void gen_channel_table(ChanList *chan_list, uint num_event_flags, int opt_reent);
@@ -373,7 +373,7 @@ static int iter_event_mask_scalar(Expr *ep, Expr *scope, void *parg)
 	event_mask_args	*em_args = (event_mask_args *)parg;
 	Chan		*cp;
 	Var		*vp;
-	int		num_event_flags = em_args->num_event_flags;
+	uint		num_event_flags = em_args->num_event_flags;
 	seqMask		*event_words = em_args->event_words;
 
 	assert(ep->type == E_VAR);

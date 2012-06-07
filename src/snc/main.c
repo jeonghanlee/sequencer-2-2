@@ -155,7 +155,7 @@ static void parse_args(int argc, char *argv[])
 
 static void parse_option(char *s)
 {
-	int		opt_val;
+	uint		opt_val;
 
 	opt_val = (*s == '+');
 

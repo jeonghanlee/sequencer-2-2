@@ -93,7 +93,7 @@ struct when				/* extra data for when clauses */
 
 struct state				/* extra data for state clauses */
 {
-	int		index;		/* index in array of seqState structs */
+	uint		index;		/* index in array of seqState structs */
 	uint		is_target;	/* is this state a target state? */
 	StateOptions	options;	/* state options */
 	VarList		*var_list;	/* list of 'local' variables */
@@ -101,8 +101,8 @@ struct state				/* extra data for state clauses */
 
 struct state_set			/* extra data for state set clauses */
 {
-	int		num_states;	/* number of states */
-	int		num_delays;	/* number of delays */
+	uint		num_states;	/* number of states */
+	uint		num_delays;	/* number of delays */
 	VarList		*var_list;	/* list of 'local' variables */
 };
 
@@ -111,7 +111,7 @@ struct expression			/* generic syntax node */
 	Expr		*next;		/* list node: next expression */
 	Expr		*last;		/* list node: last expression */
 	Expr		**children;	/* array of children [left,right,...] */
-	int		type;		/* expression type (E_XXX) */
+	uint		type;		/* expression type (E_XXX) */
 	char		*value;		/* operator or value string */
 	int		line_num;	/* originating line number */
 	const char	*src_file;	/* originating source file */
@@ -119,8 +119,8 @@ struct expression			/* generic syntax node */
 	{
 		Var	*e_var;		/* variable definiton */
 		Var	*e_decl;	/* variable definiton */
-		int	e_delay;	/* delay id */
-		int	e_option;	/* option value (1 or 0) */
+		uint	e_delay;	/* delay id */
+		uint	e_option;	/* option value (1 or 0) */
 		VarList	*e_prog;	/* top-level definitions */
 		StateSet *e_ss;		/* state set data */
 		State	*e_state;	/* state data */
@@ -237,27 +237,29 @@ struct program
 
 /* Expression types that are scopes. By definition, a scope is an expression
    that allows variable declarations as (immediate) subexpressions. */
-#define scope_mask		( (1<<D_PROG) | (1<<D_SS) | (1<<D_STATE)\
-				| (1<<D_ENTEX) | (1<<D_WHEN) | (1<<S_CMPND) )
-#define is_scope(e)		(((1<<((e)->type)) & scope_mask) != 0)
+#define scope_mask		( (1u<<D_PROG)   | (1u<<D_SS)      | (1u<<D_STATE)\
+				| (1u<<D_ENTEX)  | (1u<<D_WHEN)    | (1u<<S_CMPND) )
+
+#define is_scope(e)		(((1u<<((e)->type)) & scope_mask) != 0)
+
 /* Expressions types that may have sub-scopes */
-#define has_sub_scope_mask	( (1<<D_ENTEX) | (1<<D_PROG) | (1<<D_SS)\
-				| (1<<D_STATE) | (1<<D_WHEN) | (1<<S_CMPND) | (1<<S_FOR)\
-				| (1<<S_IF) | (1<<S_STMT) | (1<<S_WHILE) )
+#define has_sub_scope_mask	( (1u<<D_ENTEX)  | (1u<<D_PROG)    | (1u<<D_SS)\
+				| (1u<<D_STATE)  | (1u<<D_WHEN)    | (1u<<S_CMPND)  | (1u<<S_FOR)\
+				| (1u<<S_IF)     | (1u<<S_STMT)    | (1u<<S_WHILE) )
 /* Expressions types that may have sub-expressions */
-#define has_sub_expr_mask	( (1<<D_DECL) | (1<<D_ENTEX) | (1<<D_PROG)\
-				| (1<<D_SS) | (1<<D_STATE) | (1<<D_SYNC) | (1<<D_SYNCQ)\
-				| (1<<D_WHEN) | (1<<E_BINOP) | (1<<E_DELAY) | (1<<E_FUNC)\
-				| (1<<E_INIT) | (1<<E_PAREN) | (1<<E_POST)\
-				| (1<<E_PRE) | (1<<E_SUBSCR) | (1<<E_TERNOP) | (1<<E_VAR)\
-				| (1<<S_CHANGE) | (1<<S_CMPND) | (1<<S_FOR) | (1<<S_IF)\
-				| (1<<S_STMT) | (1<<S_WHILE) )
+#define has_sub_expr_mask	( (1u<<D_DECL)   | (1u<<D_ENTEX)   | (1u<<D_PROG)\
+				| (1u<<D_SS)     | (1u<<D_STATE)   | (1u<<D_SYNC)   | (1u<<D_SYNCQ)\
+				| (1u<<D_WHEN)   | (1u<<E_BINOP)   | (1u<<E_DELAY)\
+				| (1u<<E_FUNC)   | (1u<<E_INIT)    | (1u<<E_PAREN)  | (1u<<E_POST)\
+				| (1u<<E_PRE)    | (1u<<E_SUBSCR)  | (1u<<E_TERNOP) | (1u<<E_VAR)\
+				| (1u<<S_CHANGE) | (1u<<S_CMPND)   | (1u<<S_FOR)    | (1u<<S_IF)\
+				| (1u<<S_STMT)   | (1u<<S_WHILE) )
 /* Expression types that are actually expressions i.e. no definitions or statements.
    These are the ones that start with E_. */
-#define	expr_mask		( (1<<E_BINOP) | (1<<E_CONST) | (1<<E_DELAY) | (1<<E_FUNC)\
-				| (1<<E_INIT)\
-				| (1<<E_PAREN) | (1<<E_POST) | (1<<E_PRE) | (1<<E_STRING)\
-				| (1<<E_SUBSCR) | (1<<E_TERNOP) | (1<<E_VAR) | (1<<T_TEXT) )
+#define	expr_mask		( (1u<<E_BINOP)  | (1u<<E_CONST)   | (1u<<E_DELAY)\
+				| (1u<<E_FUNC)   | (1u<<E_INIT)\
+				| (1u<<E_PAREN)  | (1u<<E_POST)    | (1u<<E_PRE)    | (1u<<E_STRING)\
+				| (1u<<E_SUBSCR) | (1u<<E_TERNOP)  | (1u<<E_VAR)    | (1u<<T_TEXT) )
 
 #define expr_type_name(e)	expr_type_info[(e)->type].name
 
@@ -370,7 +372,7 @@ extern
 struct expr_type_info
 {
 	const char *name;
-	const int num_children;
+	const uint num_children;
 }
 expr_type_info[]
 #ifdef expr_type_GLOBAL

@@ -28,7 +28,7 @@ static const StateOptions default_state_options = DEFAULT_STATE_OPTIONS;
 
 /* Expr is the generic syntax tree node */
 Expr *expr(
-	int	type,
+	uint	type,
 	Token	tok,
 	...			/* variable number of child arguments */
 )

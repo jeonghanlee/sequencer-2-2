@@ -16,7 +16,7 @@ in the file LICENSE that is included with this distribution.
 #include "types.h"
 
 Expr *expr(
-	int	type,		/* E_BINOP, E_ASGNOP, etc */
+	uint	type,		/* E_BINOP, E_ASGNOP, etc */
 	Token	tok,		/* "==", "+=", var name, constant, etc. */
 	...
 );

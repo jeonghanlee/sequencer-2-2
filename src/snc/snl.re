@@ -83,12 +83,14 @@ static uchar *fill(Scanner *s, uchar *cursor) {
 	/* does not touch s->cur, instead works with argument cursor */
 	if (!s->eof) {
 		uint read_cnt;			/* number of bytes read */
-		uint garbage = s->tok - s->bot;	/* number of garbage bytes */
-		uint valid = s->lim - s->tok;	/* number of still valid bytes to copy */
+		int garbage = s->tok - s->bot;	/* number of garbage bytes */
+		int valid = s->lim - s->tok;	/* number of still valid bytes to copy */
 		uchar *token = s->tok;		/* start of valid bytes */
-		uint space = (s->top - s->lim) + garbage;
+		int space = (s->top - s->lim) + garbage;
 						/* remaining space after garbage collection */
 		int need_alloc = space < BSIZE;	/* do we need to allocate a new buffer? */
+
+		assert(valid >= 0);
 
 		/* anything below s->tok is garbage, collect it */
 		if (garbage) {
@@ -97,7 +99,7 @@ static uchar *fill(Scanner *s, uchar *cursor) {
 #endif
 			if (!need_alloc) {
 				/* shift valid buffer content down to bottom of buffer */
-				memmove(s->bot, token, valid);
+				memmove(s->bot, token, (size_t)valid);
 			}
 			/* adjust pointers */
 			s->tok = s->bot;	/* same as s->tok -= garbage */
@@ -110,11 +112,14 @@ static uchar *fill(Scanner *s, uchar *cursor) {
 		/* increase the buffer size if necessary, ensuring that we have
 		   at least BSIZE bytes of free space to fill (after s->lim) */
 		if (need_alloc) {
-			uchar *buf = (uchar*) malloc((s->lim - s->bot + BSIZE)*sizeof(uchar));
+			uchar *buf;
+
+			assert(s->lim - s->bot >= 0);
+			buf = (uchar*) malloc(((size_t)(s->lim - s->bot) + BSIZE)*sizeof(uchar));
 #ifdef DEBUG
 			report("fill: need_alloc, bot: before=%p after=%p\n", s->bot, buf);
 #endif
-			memcpy(buf, token, valid);
+			memcpy(buf, token, (size_t)valid);
 			s->tok = buf;
 			s->end = &buf[s->end - s->bot];
 			s->ptr = &buf[s->ptr - s->bot];
@@ -338,8 +343,9 @@ string_cat:
 				goto string_cat;
 			}
 	["]		{
-				uint len = s->end - s->tok;
-				memmove(cursor - len, s->tok, len);
+				int len = s->end - s->tok;
+				assert(len >= 0);
+				memmove(cursor - len, s->tok, (size_t)len);
 				s->tok = cursor - len;
 				goto string_const;
 			}

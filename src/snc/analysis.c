@@ -222,7 +222,7 @@ static void analyse_definitions(Program *p)
 static void analyse_option(Options *options, Expr *defn)
 {
 	char	*optname;
-	int	optval;
+	uint	optval;
 
 	assert(options);		/* precondition */
 	assert(defn);			/* precondition */
@@ -257,7 +257,7 @@ static void analyse_option(Options *options, Expr *defn)
 static void analyse_state_option(StateOptions *options, Expr *defn)
 {
 	char	*optname;
-	int	optval;
+	uint	optval;
 
 	assert(options);		/* precondition */
 	assert(defn);			/* precondition */
@@ -1132,7 +1132,7 @@ static void connect_variables(SymTable st, Expr *scope)
 #ifdef DEBUG
 	report("**begin** connect_variables\n");
 #endif
-	traverse_expr_tree(scope, 1<<E_VAR, ~has_sub_expr_mask,
+	traverse_expr_tree(scope, 1u<<E_VAR, ~has_sub_expr_mask,
 		0, connect_variable, &st);
 #ifdef DEBUG
 	report("**end** connect_variables\n");
@@ -1141,15 +1141,15 @@ static void connect_variables(SymTable st, Expr *scope)
 
 void traverse_expr_tree(
 	Expr		*ep,		/* start expression */
-	int		call_mask,	/* when to call iteratee */
-	int		stop_mask,	/* when to stop descending */
+	uint		call_mask,	/* when to call iteratee */
+	uint		stop_mask,	/* when to stop descending */
 	Expr		*scope,		/* current scope, 0 at top-level */
 	expr_iter	*iteratee,	/* function to call */
 	void		*parg		/* argument to pass to function */
 )
 {
 	Expr	*cep;
-	int	i;
+	uint	i;
 	int	descend = TRUE;
 
 	if (!ep)
@@ -1161,7 +1161,7 @@ void traverse_expr_tree(
 #endif
 
 	/* Call the function? */
-	if (call_mask & (1<<ep->type))
+	if (call_mask & (1u<<ep->type))
 	{
 		descend = iteratee(ep, scope, parg);
 	}
@@ -1184,7 +1184,7 @@ void traverse_expr_tree(
 	{
 		foreach (cep, ep->children[i])
 		{
-			if (cep && !((1<<cep->type) & stop_mask))
+			if (cep && !((1u<<cep->type) & stop_mask))
 			{
 				traverse_expr_tree(cep, call_mask, stop_mask,
 					scope, iteratee, parg);
@@ -1195,7 +1195,7 @@ void traverse_expr_tree(
 
 static int assign_next_delay_id(Expr *ep, Expr *scope, void *parg)
 {
-	int *delay_id = (int *)parg;
+	uint *delay_id = (uint *)parg;
 
 	assert(ep->type == E_DELAY);
 	ep->extra.e_delay = *delay_id;
@@ -1207,12 +1207,12 @@ static int assign_next_delay_id(Expr *ep, Expr *scope, void *parg)
 static uint connect_states(SymTable st, Expr *prog)
 {
 	Expr	*ssp;
-	int	num_ss = 0;
+	uint	num_ss = 0;
 
 	foreach (ssp, prog->prog_statesets)
 	{
 		Expr *sp;
-		int num_states = 0;
+		uint num_states = 0;
 
 #ifdef DEBUG
 		report("connect_states: ss = %s\n", ssp->value);
@@ -1249,7 +1249,7 @@ static uint connect_states(SymTable st, Expr *prog)
 		{
 			Expr *tp;
 			/* Each state has its own delay ids */
-			int delay_id = 0;
+			uint delay_id = 0;
 
 			foreach (tp, sp->state_whens)
 			{
@@ -1273,7 +1273,7 @@ static uint connect_states(SymTable st, Expr *prog)
 					ssp->value, sp->value, tp->value, next_sp->extra.e_state->index);
 #endif
 				/* assign delay ids */
-				traverse_expr_tree(tp->when_cond, 1<<E_DELAY, 0, 0,
+				traverse_expr_tree(tp->when_cond, 1u<<E_DELAY, 0, 0,
 					assign_next_delay_id, &delay_id);
 			}
 			if (delay_id > ssp->extra.e_ss->num_delays)
@@ -1347,7 +1347,7 @@ static void connect_state_change_stmts(SymTable st, Expr *scope)
 	csc_arg.ssp = 0;
 	csc_arg.in_when = FALSE;
 	traverse_expr_tree(scope,
-		(1<<S_CHANGE)|(1<<D_SS)|(1<<D_ENTEX)|(1<<D_WHEN),
+		(1u<<S_CHANGE)|(1u<<D_SS)|(1u<<D_ENTEX)|(1u<<D_WHEN),
 		expr_mask, 0, iter_connect_state_change_stmts, &csc_arg);
 }
 
@@ -1381,7 +1381,7 @@ static void mark_states_reachable_from(Expr *sp)
 
 	traverse_expr_tree(
 		sp,				/* start expression */
-		(1<<S_CHANGE)|(1<<D_WHEN),	/* when to call iteratee */
+		(1u<<S_CHANGE)|(1u<<D_WHEN),	/* when to call iteratee */
 		expr_mask,			/* when to stop descending */
 		sp,				/* current scope, 0 at top-level */
 		iter_mark_states_reachable,	/* function to call */
@@ -1421,7 +1421,7 @@ static void check_states_reachable_from_first(Expr *ssp)
 static uint assign_ef_bits(Expr *scope)
 {
 	Var	*vp;
-	int	num_event_flags = 0;
+	uint	num_event_flags = 0;
 	VarList	*var_list;
 
 	var_list = *pvar_list_from_scope(scope);

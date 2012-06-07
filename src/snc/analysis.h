@@ -31,8 +31,8 @@ typedef int expr_iter(Expr *ep, Expr *scope, void *parg);
 
 void traverse_expr_tree(
 	Expr		*ep,		/* start expression */
-	int		call_mask,	/* when to call iteratee */
-	int		stop_mask,	/* when to stop descending */
+	uint		call_mask,	/* when to call iteratee */
+	uint		stop_mask,	/* when to stop descending */
 	Expr		*scope,		/* current scope, 0 at top-level */
 	expr_iter	*iteratee,	/* function to call */
 	void		*parg		/* argument to pass to function */
