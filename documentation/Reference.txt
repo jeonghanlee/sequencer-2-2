@@ -591,9 +591,18 @@ Option
    option_value: "+"
    option_value: "-"
 
-Option values must include the "+" or "-" sign. Example::
+The option name is any combination
+of option letters. Multiple options can be clobbered into a single
+option clause, but only a single option value is allowed.
+Option value "+" turns the given options on, a"-" turns them off.
+
+Examples::
 
    option +r; /* make code reentrant */
+   option -ca; /* synchronous pvGet and don't wait for channels to connect */
+
+Unknown option letters cause a warning to be issued, but are otherwise
+ignored.
 
 The same syntax is used for global options and state options. The
 interpretation, however, is different:
