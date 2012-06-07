@@ -822,6 +822,8 @@ Statements
 As can be seen, most C statements are supported. Not supported are
 the switch/case statement and the return statement.
 
+.. versionadded:: 2.1
+
 The *state change statement* is not borrowed from C; it is only available
 in a state transition action block (i.e. after a when) and has the effect
 of immediately jumping out of the action block, overriding the statically
