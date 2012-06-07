@@ -41,7 +41,7 @@ static void fill_state_struct(Expr *sp, char *ss_name, uint ss_num);
 static void gen_prog_table(Program *p);
 static void encode_options(Options options);
 static void encode_state_options(StateOptions options);
-static void gen_ss_table(SymTable st, Expr *ss_list);
+static void gen_ss_table(Expr *ss_list);
 static void gen_state_event_mask(Expr *sp, uint num_event_flags,
 	seqMask *event_words, uint num_event_words);
 static int iter_event_mask_scalar(Expr *ep, Expr *scope, void *parg);
@@ -53,7 +53,7 @@ void gen_tables(Program *p)
 	printf("\n/************************ Tables ************************/\n");
 	gen_channel_table(p->chan_list, p->num_event_flags, p->options.reent);
 	gen_state_table(p->prog->prog_statesets, p->num_event_flags, p->chan_list->num_elems);
-	gen_ss_table(p->sym_table, p->prog->prog_statesets);
+	gen_ss_table(p->prog->prog_statesets);
 	gen_prog_table(p);
 }
 
@@ -302,7 +302,7 @@ static void encode_options(Options options)
 }
 
 /* Generate state set table, one entry for each state set */
-static void gen_ss_table(SymTable st, Expr *ss_list)
+static void gen_ss_table(Expr *ss_list)
 {
 	Expr	*ssp;
 	int	num_ss;
