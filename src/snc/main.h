@@ -10,6 +10,10 @@ in the file LICENSE that is included with this distribution.
 #ifndef INCLsncmainh
 #define INCLsncmainh
 
+#if !defined(__GNUC__)
+#define __attribute__(x)
+#endif
+
 /* append '# <line_num> "<src_file>"\n' to output (if not disabled by cmd-line option) */
 void gen_line_marker_prim(int line_num, const char *src_file);
 
@@ -22,22 +26,28 @@ void gen_line_marker_prim(int line_num, const char *src_file);
 void report_loc(const char *src_file, int line_num);
 
 /* location plus message */
-void report_at(const char *src_file, int line_num, const char *format, ...);
+void report_at(const char *src_file, int line_num, const char *format, ...)
+__attribute__((format(printf,3,4)));
 
 /* location plus message and increase error count */
-void error_at(const char *src_file, int line_num, const char *format, ...);
+void error_at(const char *src_file, int line_num, const char *format, ...)
+__attribute__((format(printf,3,4)));
 
 /* with location from this expression */
 struct expression;
-void report_at_expr(struct expression *ep, const char *format, ...);
+void report_at_expr(struct expression *ep, const char *format, ...)
+__attribute__((format(printf,2,3)));
 
 /* with location from this expression but only if warnings are enabled */
-void warning_at_expr(struct expression *ep, const char *format, ...);
+void warning_at_expr(struct expression *ep, const char *format, ...)
+__attribute__((format(printf,2,3)));
 
 /* with location from this expression and increase error count */
-void error_at_expr(struct expression *ep, const char *format, ...);
+void error_at_expr(struct expression *ep, const char *format, ...)
+__attribute__((format(printf,2,3)));
 
 /* message only */
-void report(const char *format, ...);
+void report(const char *format, ...)
+__attribute__((format(printf,1,2)));
 
 #endif	/*INCLsncmainh*/

@@ -59,6 +59,9 @@ typedef struct Scanner {
 } Scanner;
 
 static void scan_report(Scanner *s, const char *format, ...)
+__attribute__((format(printf,2,3)));
+
+static void scan_report(Scanner *s, const char *format, ...)
 {
 	va_list args;
 
