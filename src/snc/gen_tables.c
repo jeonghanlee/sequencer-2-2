@@ -22,8 +22,6 @@ in the file LICENSE that is included with this distribution.
 #endif
 
 #include "seqCom.h"
-#define boolean seqBool
-#define bitMask seqMask
 #include "analysis.h"
 #include "main.h"
 #include "sym_table.h"
@@ -32,7 +30,7 @@ in the file LICENSE that is included with this distribution.
 #include "gen_tables.h"
 
 typedef struct event_mask_args {
-	bitMask	*event_words;
+	seqMask	*event_words;
 	int	num_event_flags;
 } event_mask_args;
 
@@ -45,7 +43,7 @@ static void encode_options(Options options);
 static void encode_state_options(StateOptions options);
 static void gen_ss_table(SymTable st, Expr *ss_list);
 static void gen_state_event_mask(Expr *sp, uint num_event_flags,
-	bitMask *event_words, uint num_event_words);
+	seqMask *event_words, uint num_event_words);
 static int iter_event_mask_scalar(Expr *ep, Expr *scope, void *parg);
 static int iter_event_mask_array(Expr *ep, Expr *scope, void *parg);
 
@@ -186,9 +184,9 @@ static void gen_state_table(Expr *ss_list, uint num_event_flags, uint num_channe
 	uint	ss_num = 0;
 
 #if (__STDC_VERSION__ >= 199901L) || defined(__GNUC__)
-	bitMask	event_mask[num_event_words];
+	seqMask	event_mask[num_event_words];
 #else
-	bitMask	*event_mask = (bitMask *)alloca(num_event_words*sizeof(bitMask));
+	seqMask	*event_mask = (seqMask *)alloca(num_event_words*sizeof(seqMask));
 #endif
 
 	/* NOTE: Bit zero of event mask is not used. Bit 1 to num_event_flags
@@ -334,7 +332,7 @@ static void gen_ss_table(SymTable st, Expr *ss_list)
    are for process variables. Bit zero is not used for whatever mysterious reason
    I cannot tell. */
 static void gen_state_event_mask(Expr *sp, uint num_event_flags,
-	bitMask *event_words, uint num_event_words)
+	seqMask *event_words, uint num_event_words)
 {
 	uint	n;
 	Expr	*tp;
@@ -376,7 +374,7 @@ static int iter_event_mask_scalar(Expr *ep, Expr *scope, void *parg)
 	Chan		*cp;
 	Var		*vp;
 	int		num_event_flags = em_args->num_event_flags;
-	bitMask		*event_words = em_args->event_words;
+	seqMask		*event_words = em_args->event_words;
 
 	assert(ep->type == E_VAR);
 	vp = ep->extra.e_var;
@@ -417,7 +415,7 @@ static int iter_event_mask_array(Expr *ep, Expr *scope, void *parg)
 {
 	event_mask_args	*em_args = (event_mask_args *)parg;
 	uint		num_event_flags = em_args->num_event_flags;
-	bitMask		*event_words = em_args->event_words;
+	seqMask		*event_words = em_args->event_words;
 
 	Var		*vp=0;
 	Expr		*e_var=0, *e_ix=0;
