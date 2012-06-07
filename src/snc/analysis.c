@@ -41,7 +41,7 @@ static void connect_variables(SymTable st, Expr *scope);
 static void connect_state_change_stmts(SymTable st, Expr *scope);
 static uint connect_states(SymTable st, Expr *ss_list);
 static void check_states_reachable_from_first(Expr *ss);
-static void add_var(SymTable st, Var *vp, Expr *scope);
+static void add_var(Var *vp, Expr *scope);
 static Var *find_var(SymTable st, char *name, Expr *scope);
 static uint assign_ef_bits(Expr *scope);
 
@@ -319,7 +319,7 @@ static void analyse_declaration(SymTable st, Expr *scope, Expr *defn)
 	}
 	else
 	{
-		add_var(st, vp, scope);
+		add_var(vp, scope);
 	}
 }
 
@@ -1023,7 +1023,7 @@ static SyncQ *new_sync_queue(SyncQList *syncq_list, uint size)
 }
 
 /* Add a variable to a scope (append to the end of the var_list) */
-void add_var(SymTable st, Var *vp, Expr *scope)
+void add_var(Var *vp, Expr *scope)
 {
 	VarList	*var_list = *pvar_list_from_scope(scope);
 
@@ -1121,7 +1121,7 @@ static int connect_variable(Expr *ep, Expr *scope, void *parg)
 			var_list = *pvar_list_from_scope(scope);
 		}
 		sym_table_insert(st, vp->name, var_list, vp);
-		add_var(st, vp, scope);
+		add_var(vp, scope);
 	}
 	ep->extra.e_var = vp;		/* make connection */
 	return FALSE;			/* there are no children anyway */
