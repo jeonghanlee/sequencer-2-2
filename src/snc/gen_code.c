@@ -63,11 +63,11 @@ void generate_code(Program *p)
 	/* TODO: find a better way to do this */
 	init_gen_ss_code(p);
 
-	/* Generate global, state set, and state variable declarations */
-	gen_user_var(p);
-
 	/* Generate literal C code intermixed with global definitions */
 	gen_defn_c_code(p->prog, 0);
+
+	/* Generate global, state set, and state variable declarations */
+	gen_user_var(p);
 
 	/* Generate code for each state set */
 	gen_ss_code(p);
