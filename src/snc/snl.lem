@@ -29,6 +29,7 @@ in the file LICENSE that is included with this distribution.
 %syntax_error {
 	error_at(TOKEN.file, TOKEN.line,
 		"syntax error near token '%s'\n", TOKEN.str);
+	report_loc(TOKEN.file, TOKEN.line);
 }
 
 // %stack_overflow {
@@ -139,15 +140,22 @@ strings(p) ::= .				{ p = 0; }
 monitor(p) ::= MONITOR variable(v) opt_subscript(s) SEMICOLON. {
 	p = expr(D_MONITOR, v, s);
 }
+monitor(p) ::= MONITOR variable(v) opt_subscript(sub) error SEMICOLON. {
+	p = expr(D_MONITOR, v, sub);
+	report("expected %s';'\n", sub ? "subscript or " : "");
+}
 
 sync(p) ::= SYNC variable(v) opt_subscript(s) to event_flag(f) SEMICOLON. {
 	p = expr(D_SYNC, v, s, expr(E_VAR, f), 0);
+}
+sync(p) ::= SYNC variable(v) opt_subscript(s) to event_flag(f) error SEMICOLON. {
+	p = expr(D_SYNC, v, s, expr(E_VAR, f), 0);
+	report("expected ';'\n");
 }
 
 syncq(p) ::= SYNCQ variable(v) opt_subscript(s) to event_flag(f) syncq_size(n) SEMICOLON. {
 	p = expr(D_SYNCQ, v, s, expr(E_VAR, f), n);
 }
-
 syncq(p) ::= SYNCQ variable(v) opt_subscript(s) syncq_size(n) SEMICOLON. {
 	p = expr(D_SYNCQ, v, s, 0, n);
 }
@@ -281,10 +289,14 @@ when(p) ::= WHEN(t) LPAREN opt_expr(c) RPAREN block(b) STATE NAME(n). {
 	t.str = n.str;
 	p = expr(D_WHEN, t, c, b.left, b.right);
 }
-
 when(p) ::= WHEN(t) LPAREN opt_expr(c) RPAREN block(b) EXIT. {
 	t.str = 0;
 	p = expr(D_WHEN, t, c, b.left, b.right);
+}
+when(p) ::= WHEN(t) LPAREN opt_expr(c) RPAREN block(b) error. {
+	t.str = 0;
+	p = expr(D_WHEN, t, c, b.left, b.right);
+	report("expected 'state' or 'exit'\n");
 }
 
 %type block {ExprPair}
@@ -319,6 +331,7 @@ statement(p) ::= WHILE(t) LPAREN comma_expr(c) RPAREN statement(x).
 						{ p = expr(S_WHILE, t, c, x); }
 statement(p) ::= for_statement(x).		{ p = x; }
 statement(p) ::= opt_expr(x) SEMICOLON(t).	{ p = expr(S_STMT, t, x); }
+// statement(p) ::= error SEMICOLON(t).		{ p = expr(S_STMT, t, 0); report("malformed expression\n"); }
 
 for_statement(p) ::=
 	FOR(for) LPAREN
