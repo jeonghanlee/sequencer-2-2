@@ -259,7 +259,7 @@ states(p) ::= state(x).				{ p = x; }
 
 state(p) ::=
 	STATE NAME(n) LBRACE state_defns(ds)
-	entry(en) whens(ws) exit(ex) RBRACE.
+	entry(en) transitions(ws) exit(ex) RBRACE.
 {
 	p = expr(D_STATE, n, ds, en, ws, ex);
 }
@@ -282,18 +282,18 @@ entry(p) ::= .					{ p = 0; }
 exit(p) ::= EXIT(t) block(b).			{ p = expr(D_ENTEX, t, b.left, b.right); }
 exit(p) ::= .					{ p = 0; }
 
-whens(p) ::= whens(xs) when(x).			{ p = link_expr(xs, x); }
-whens(p) ::= when(x).				{ p = x; }
+transitions(p) ::= transitions(xs) transition(x).{ p = link_expr(xs, x); }
+transitions(p) ::= transition(x).		{ p = x; }
 
-when(p) ::= WHEN(t) LPAREN opt_expr(c) RPAREN block(b) STATE NAME(n). {
+transition(p) ::= WHEN(t) LPAREN opt_expr(c) RPAREN block(b) STATE NAME(n). {
 	t.str = n.str;
 	p = expr(D_WHEN, t, c, b.left, b.right);
 }
-when(p) ::= WHEN(t) LPAREN opt_expr(c) RPAREN block(b) EXIT. {
+transition(p) ::= WHEN(t) LPAREN opt_expr(c) RPAREN block(b) EXIT. {
 	t.str = 0;
 	p = expr(D_WHEN, t, c, b.left, b.right);
 }
-when(p) ::= WHEN(t) LPAREN opt_expr(c) RPAREN block(b) error. {
+transition(p) ::= WHEN(t) LPAREN opt_expr(c) RPAREN block(b) error. {
 	t.str = 0;
 	p = expr(D_WHEN, t, c, b.left, b.right);
 	report("expected 'state' or 'exit'\n");
