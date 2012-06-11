@@ -9,6 +9,8 @@ INC += seqMain.c
 #  snc product
 PROD_HOST += snc
 
+#CFLAGS += -Wconversion -Wextra
+
 snc_LIBS += $(EPICS_BASE_IOC_LIBS)
 
 #snc_SRCS += snl.re         # lexer spec
