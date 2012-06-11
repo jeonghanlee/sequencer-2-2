@@ -5,7 +5,9 @@ use strict;
 use Test::More;
 
 my $success = {
+  cast => 0,
   sncExOpt_DuplOpt => 0,
+  foreignTypes => 0,
   sync_not_monitored => 0,
   syncq_not_monitored => 0,
   include_windows_h => 0,
