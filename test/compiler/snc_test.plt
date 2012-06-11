@@ -6,7 +6,7 @@ use Test::More;
 
 my $success = {
   cast => 0,
-  sncExOpt_DuplOpt => 0,
+  exOpt_DuplOpt => 0,
   foreignTypes => 0,
   sync_not_monitored => 0,
   syncq_not_monitored => 0,
@@ -16,7 +16,7 @@ my $success = {
 };
 
 my $warning = {
-  sncExOpt_UnrecOpt => 1,
+  exOpt_UnrecOpt => 1,
   state_not_reachable => 3,
   syncq_no_size => 1,
 };

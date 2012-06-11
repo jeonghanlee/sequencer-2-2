@@ -2,14 +2,14 @@
 This file is distributed subject to a Software License Agreement found
 in the file LICENSE that is included with this distribution.
 \*************************************************************************/
-program snctest
+program exOpt_UnrecOptTest
 float v;
 assign v to "grw:xxxExample";
 monitor v;
 
 ss ss1 {
     state low {
-        option + t;
+        option + tc;
         entry {
             printf("Will do this on entry");
             printf("Another thing to do on entry");
@@ -24,7 +24,6 @@ ss ss1 {
         }
     } state high {
         option - t;
-        option + t;
         when(v <= 5.0) {
             printf("changing to low\n");
         } state low
