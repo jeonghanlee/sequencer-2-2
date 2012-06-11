@@ -14,6 +14,7 @@ in the file LICENSE that is included with this distribution.
 
 #include <epicsVersion.h>
 
+#include "static_assert.h"
 #include "var_types.h"
 
 #ifndef	TRUE
@@ -303,9 +304,13 @@ enum expr_type			/* description [child expressions...] */
 	S_STMT,			/* simple statement, i.e. 'expr;'  [expr] */
 	S_WHILE,		/* while statement [cond,stmt] */
 
-	T_TEXT			/* C code or other text to be inserted [] */
+	T_TEXT,			/* C code or other text to be inserted [] */
+
+	NUM_EXPR_TYPES
 };
-/* CAUTION: must not be more than 32 expression types */
+
+/* make sure we have no more expression types than bits */
+STATIC_ASSERT(NUM_EXPR_TYPES <= 8*sizeof(TypeMask), expr_types_fit_into_TypeMask);
 
 /* Accessors for child expressions. Would like to define structs for the
    various expression types with children, but then we could no longer
