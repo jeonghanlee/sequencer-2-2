@@ -10,16 +10,16 @@ in the file LICENSE that is included with this distribution.
 /*************************************************************************\
                 State set code generation
 \*************************************************************************/
-#include	<stdio.h>
-#include	<string.h>
-#include	<assert.h>
+#include <stdio.h>
+#include <string.h>
+#include <assert.h>
 
-#include	"expr.h"
-#include	"analysis.h"
-#include	"gen_code.h"
-#include	"main.h"
-#include	"builtin.h"
-#include	"gen_ss_code.h"
+#include "expr.h"
+#include "analysis.h"
+#include "gen_code.h"
+#include "main.h"
+#include "builtin.h"
+#include "gen_ss_code.h"
 
 static const int impossible = 0;
 

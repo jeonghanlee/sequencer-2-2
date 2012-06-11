@@ -109,7 +109,7 @@ static int analyse_defn(Expr *scope, Expr *parent_scope, void *parg)
 	/* NOTE: We always need to allocate a var_list, even if there are no
 	   definitions on this level, so later on (see connect_variables below)
 	   we can traverse in the other direction to find the nearest enclosing
-	   scope. See connect_variables below. */
+	   scope. */
 	if (!*pvar_list)
 	{
 		*pvar_list = new(VarList);
@@ -248,7 +248,7 @@ static void analyse_option(Options *options, Expr *defn)
 		  "warning: unknown option '%s'\n", optname);
 		}
 	}
-	if (options->safe && !options->reent) {
+	if (options->safe) {
 		options->reent = TRUE;
 	}
 }

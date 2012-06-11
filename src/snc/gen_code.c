@@ -10,16 +10,16 @@ in the file LICENSE that is included with this distribution.
 /*************************************************************************\
                 Code generation
 \*************************************************************************/
-#include	<stdio.h>
-#include	<stdlib.h>
-#include	<string.h>
-#include	<assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <assert.h>
 
-#include	"analysis.h"
-#include	"gen_ss_code.h"
-#include	"gen_tables.h"
-#include	"main.h"
-#include	"gen_code.h"
+#include "analysis.h"
+#include "gen_ss_code.h"
+#include "gen_tables.h"
+#include "main.h"
+#include "gen_code.h"
 
 static void gen_preamble(char *prog_name);
 static void gen_main(char *prog_name);
@@ -226,7 +226,7 @@ static void gen_global_c_code(Expr *global_c_list)
 {
 	Expr	*ep;
 
-	if (global_c_list != NULL)
+	if (global_c_list != 0)
 	{
 		printf("\n/* Global C code */\n");
 		foreach (ep, global_c_list)
