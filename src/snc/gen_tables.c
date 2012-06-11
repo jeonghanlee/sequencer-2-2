@@ -104,26 +104,30 @@ static void gen_channel(Chan *cp, uint num_event_flags, int opt_reent)
 	Var		*vp = cp->var;
 	char		elem_str[20] = "";
 	uint		ef_num;
-	enum type_tag	type = type_base_type(vp->type);
+	Type		*basetype = base_type(vp->type);
 
-	if (type == V_LONG || type == V_ULONG)
+	if (basetype->tag == T_PRIM)
 	{
-		printf(
+		enum prim_type_tag type = basetype->val.prim;
+		if (type == V_LONG || type == V_ULONG)
+		{
+			printf(
 "#if LONG_MAX > 0x7fffffffL\n"
-		);
-		gen_line_marker(vp->decl);
-		printf(
+			);
+			gen_line_marker(vp->decl);
+			printf(
 "#error variable '"
-		);
-		gen_var_decl(vp);
-		printf("'"
+			);
+			gen_var_decl(vp);
+			printf("'"
 " cannot be assigned to a PV (on the chosen target system)\\\n"
 " because Channel Access does not support integral types longer than 4 bytes.\\\n"
 " You can use '%s' instead, or the fixed size type '%s'.\n"
 "#endif\n",
-		type == V_LONG ? "int" : "unsigned int",
-		type == V_LONG ? "int32_t" : "uint32_t"
-		);
+				type == V_LONG ? "int" : "unsigned int",
+				type == V_LONG ? "int32_t" : "uint32_t"
+			);
+		}
 	}
 
 	if (vp->assign == M_MULTI)
@@ -155,7 +159,8 @@ static void gen_channel(Chan *cp, uint num_event_flags, int opt_reent)
 	/* variable name with optional elem num */
 	printf("\"%s%s\", ", vp->name, elem_str);
 	/* variable type */
-	printf("\"%s\", ", type_name(type_base_type(vp->type)));
+	assert(base_type(vp->type)->tag == T_PRIM);
+	printf("\"%s\", ", prim_type_name[base_type(vp->type)->val.prim]);
 	/* count, for requests */
 	printf("%d, ", cp->count);
 	/* event number */
@@ -380,12 +385,7 @@ static int iter_event_mask_scalar(Expr *ep, Expr *scope, void *parg)
 	vp = ep->extra.e_var;
 	assert(vp != 0);
 
-	/* this subroutine handles only the scalar variables and event flags */
-	if (vp->type->tag < V_EVFLAG || vp->type->tag >= V_POINTER)
-		return FALSE;		/* no children anyway */
-
-	/* event flag? */
-	if (vp->type->tag == V_EVFLAG)
+	if (vp->type->tag == T_EVFLAG)
 	{
 #ifdef DEBUG
 		report("  iter_event_mask_scalar: evflag: %s, ef_num=%d\n",
@@ -394,6 +394,10 @@ static int iter_event_mask_scalar(Expr *ep, Expr *scope, void *parg)
 		bitSet(event_words, vp->chan.evflag->index);
 		return FALSE;		/* no children anyway */
 	}
+	if (vp->type->tag != T_PRIM)
+		return FALSE;		/* no children anyway */
+
+	assert(vp->type->tag == T_PRIM);
 
 	/* if not associated with channel, return */
 	if (vp->assign == M_NONE)
@@ -441,8 +445,10 @@ static int iter_event_mask_array(Expr *ep, Expr *scope, void *parg)
 	assert(vp != 0);
 
 	/* this subroutine handles only the array variables */
-	if (vp->type->tag != V_ARRAY)
+	if (vp->type->tag != T_ARRAY)
 		return TRUE;
+
+	assert(vp->type->tag == T_ARRAY);
 
 	if (vp->assign == M_NONE)
 	{

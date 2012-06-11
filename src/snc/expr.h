@@ -15,6 +15,7 @@ in the file LICENSE that is included with this distribution.
 
 #include "types.h"
 
+/* defined in expr.c */
 Expr *expr(
 	uint	type,		/* E_BINOP, E_ASGNOP, etc */
 	Token	tok,		/* "==", "+=", var name, constant, etc. */
@@ -37,8 +38,10 @@ uint strtoui(
 	uint *pnumber		/* location for result if successful */
 );
 
-Expr *decl_add_base_type(Expr *ds, uint tag);
+/* defined in var_types.c */
+Expr *decl_add_base_type(Expr *ds, Type t);
 Expr *decl_add_init(Expr *d, Expr *init);
+Expr *abstract_decl_create(void);
 Expr *decl_create(Token name);
 Expr *decl_postfix_array(Expr *d, char *s);
 Expr *decl_prefix_pointer(Expr *d);

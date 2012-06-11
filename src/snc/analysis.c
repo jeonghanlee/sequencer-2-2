@@ -295,11 +295,12 @@ static void analyse_declaration(SymTable st, Expr *scope, Expr *defn)
 	report("declaration: %s\n", vp->name);
 #endif
 
-	if (scope->type != D_PROG && vp->type->tag <= V_EVFLAG)
+	if (scope->type != D_PROG && 
+		(vp->type->tag == T_NONE || vp->type->tag == T_EVFLAG))
 	{
 		error_at_expr(defn,
 			"%s can only be declared at the top-level\n",
-			vp->type->tag == V_NONE ? "foreign variables"
+			vp->type->tag == T_NONE ? "foreign variables"
 			: "event flags");
 	}
 
@@ -462,7 +463,7 @@ static void assign_subscript(
 	report("assign %s[%s] to '%s';\n", vp->name, subscr->value, pv_name);
 #endif
 
-	if (vp->type->tag != V_ARRAY)	/* establish L3 */
+	if (vp->type->tag != T_ARRAY)	/* establish L3 */
 	{
 		error_at_expr(defn, "variable '%s' is not an array\n", vp->name);
 		return;
@@ -502,7 +503,7 @@ static void assign_multi(
 	report("assign %s to {", vp->name);
 #endif
 
-	if (vp->type->tag != V_ARRAY)	/* establish L3 */
+	if (vp->type->tag != T_ARRAY)	/* establish L3 */
 	{
 		error_at_expr(defn, "variable '%s' is not an array\n", vp->name);
 		return;
@@ -581,7 +582,7 @@ static void monitor_elem(Expr *defn, Var *vp, Expr *subscr)
 	report("monitor %s[%s];\n", vp->name, subscr->value);
 #endif
 
-	if (vp->type->tag != V_ARRAY)	/* establish L3 */
+	if (vp->type->tag != T_ARRAY)	/* establish L3 */
 	{
 		error_at_expr(defn, "variable '%s' is not an array\n", vp->name);
 		return;
@@ -720,7 +721,7 @@ static void sync_elem(Expr *defn, Var *vp, Expr *subscr, Var *evp)
 	report("sync %s[%d] to %s;\n", vp->name, subscr->value, evp->name);
 #endif
 
-	if (vp->type->tag != V_ARRAY)	/* establish L3 */
+	if (vp->type->tag != T_ARRAY)	/* establish L3 */
 	{
 		error_at_expr(defn, "variable '%s' is not an array\n", vp->name);
 		return;
@@ -795,7 +796,7 @@ static void analyse_sync(SymTable st, Expr *scope, Expr *defn)
 		error_at_expr(defn, "event flag '%s' not declared\n", ef_name);
 		return;
 	}
-	if (evp->type->tag != V_EVFLAG)
+	if (evp->type->tag != T_EVFLAG)
 	{
 		error_at_expr(defn, "variable '%s' is not a event flag\n", ef_name);
 		return;
@@ -861,7 +862,7 @@ static void syncq_elem(Expr *defn, Var *vp, Expr *subscr, SyncQ *qp)
 
 	assert(vp->syncq != M_SINGLE);			/* call */
 
-	if (vp->type->tag != V_ARRAY)	/* establish L3 */
+	if (vp->type->tag != T_ARRAY)	/* establish L3 */
 	{
 		error_at_expr(defn, "variable '%s' is not an array\n", vp->name);
 		return;
@@ -950,7 +951,7 @@ static void analyse_syncq(SymTable st, SyncQList *syncq_list, Expr *scope, Expr 
 			error_at_expr(defn, "event flag '%s' not declared\n", ef_name);
 			return;
 		}
-		if (evp->type->tag != V_EVFLAG)
+		if (evp->type->tag != T_EVFLAG)
 		{
 			error_at_expr(defn, "variable '%s' is not a event flag\n", ef_name);
 			return;
@@ -1070,7 +1071,7 @@ Var *find_var(SymTable st, char *name, Expr *scope)
 
 /* Connect a variable in an expression (E_VAR) to the Var structure.
    If there is no such structure, e.g. because the variable has not been
-   declared, then allocate one, assign type V_NONE, and assign the
+   declared, then allocate one, assign type T_NONE, and assign the
    top-level scope for the variable. */
 static int connect_variable(Expr *ep, Expr *scope, void *parg)
 {
@@ -1113,7 +1114,7 @@ static int connect_variable(Expr *ep, Expr *scope, void *parg)
 		vp = new(Var);
 		vp->name = ep->value;
                 vp->type = new(Type);
-		vp->type->tag = V_NONE;	/* undeclared type */
+		vp->type->tag = T_NONE;	/* undeclared type */
 		vp->init = 0;
 		/* add this variable to the top-level scope, NOT the current scope */
 		while (var_list->parent_scope) {
@@ -1132,8 +1133,7 @@ static void connect_variables(SymTable st, Expr *scope)
 #ifdef DEBUG
 	report("**begin** connect_variables\n");
 #endif
-	traverse_expr_tree(scope, 1u<<E_VAR, ~has_sub_expr_mask,
-		0, connect_variable, &st);
+	traverse_expr_tree(scope, 1u<<E_VAR, 0, 0, connect_variable, &st);
 #ifdef DEBUG
 	report("**end** connect_variables\n");
 #endif
@@ -1141,8 +1141,8 @@ static void connect_variables(SymTable st, Expr *scope)
 
 void traverse_expr_tree(
 	Expr		*ep,		/* start expression */
-	uint		call_mask,	/* when to call iteratee */
-	uint		stop_mask,	/* when to stop descending */
+	TypeMask	call_mask,	/* when to call iteratee */
+	TypeMask	stop_mask,	/* when to stop descending */
 	Expr		*scope,		/* current scope, 0 at top-level */
 	expr_iter	*iteratee,	/* function to call */
 	void		*parg		/* argument to pass to function */
@@ -1429,7 +1429,7 @@ static uint assign_ef_bits(Expr *scope)
 	/* Assign event flag numbers (starting at 1) */
 	foreach (vp, var_list->first)
 	{
-		if (vp->type->tag == V_EVFLAG)
+		if (vp->type->tag == T_EVFLAG)
 		{
 			vp->chan.evflag->index = ++num_event_flags;
 		}

@@ -80,6 +80,7 @@ in the file LICENSE that is included with this distribution.
 %left	LSHIFT RSHIFT.
 %left	ADD SUB.
 %left	ASTERISK SLASH MOD.
+%right	CAST.
 %right	NOT INCR DECR PRE.
 %left	LBRACKET RBRACKET POINTER PERIOD POST.
 // LPAREN RPAREN not listed as we do not support indirect calls. */
@@ -176,8 +177,10 @@ subscript(p) ::= LBRACKET INTCON(n) RBRACKET.	{ p = n; }
 
 // Declarations
 
-declaration(p) ::= type(t) init_declarators(ds) SEMICOLON.
+declaration(p) ::= basetype(t) init_declarators(ds) SEMICOLON.
 						{ p = decl_add_base_type(ds, t); }
+declaration(p) ::= FOREIGN init_declarators(ds) SEMICOLON.
+						{ p = decl_add_base_type(ds, mk_no_type()); }
 
 init_declarators(p) ::= init_declarator(x).	{ p = x; }
 init_declarators(p) ::= init_declarators(xs) COMMA init_declarator(x).
@@ -198,6 +201,8 @@ direct_declarator(p) ::= direct_declarator(x) subscript(s).
 
 // Initializer
 // Note: comma operator not allowed in 'expr'.
+init_expr(p) ::= LPAREN(tc) type_expr(c) RPAREN LBRACE(tx) init_exprs(x) RBRACE.
+						{ p = expr(E_CAST, tc, c, expr(E_INIT, tx, x)); }
 init_expr(p) ::= LBRACE(t) init_exprs(x) RBRACE.{ p = expr(E_INIT, t, x); }
 init_expr(p) ::= expr(x).			{ p = x; }
 
@@ -205,28 +210,66 @@ init_exprs(p) ::= init_exprs(xs) COMMA init_expr(x).	{ p = link_expr(xs, x); }
 init_exprs(p) ::= init_expr(x).				{ p = x; }
 init_exprs(p) ::= .					{ p = 0; }
 
-%type type {int}
-type(p) ::= CHAR.				{ p = V_CHAR;	}
-type(p) ::= SHORT.				{ p = V_SHORT;	}
-type(p) ::= INT.				{ p = V_INT;	}
-type(p) ::= LONG.				{ p = V_LONG;	}
-type(p) ::= UNSIGNED CHAR.			{ p = V_UCHAR;	}
-type(p) ::= UNSIGNED SHORT.			{ p = V_USHORT;	}
-type(p) ::= UNSIGNED INT.			{ p = V_UINT;	}
-type(p) ::= UNSIGNED LONG.			{ p = V_ULONG;	}
+// Type expressions
 
-type(p) ::= INT8T.				{ p = V_INT8T;	}
-type(p) ::= UINT8T.				{ p = V_UINT8T;	}
-type(p) ::= INT16T.				{ p = V_INT16T;	}
-type(p) ::= UINT16T.				{ p = V_UINT16T;}
-type(p) ::= INT32T.				{ p = V_INT32T;	}
-type(p) ::= UINT32T.				{ p = V_UINT32T;}
+// C standard calls this specifier-qualifier-list
+%type basetype {Type}
+basetype(p) ::= CHAR.				{ p = mk_prim_type(V_CHAR);	}
+basetype(p) ::= SHORT.				{ p = mk_prim_type(V_SHORT);	}
+basetype(p) ::= INT.				{ p = mk_prim_type(V_INT);	}
+basetype(p) ::= LONG.				{ p = mk_prim_type(V_LONG);	}
+basetype(p) ::= UNSIGNED CHAR.			{ p = mk_prim_type(V_UCHAR);	}
+basetype(p) ::= UNSIGNED SHORT.			{ p = mk_prim_type(V_USHORT);	}
+basetype(p) ::= UNSIGNED INT.			{ p = mk_prim_type(V_UINT);	}
+basetype(p) ::= UNSIGNED LONG.			{ p = mk_prim_type(V_ULONG);	}
 
-type(p) ::= FLOAT.				{ p = V_FLOAT;	}
-type(p) ::= DOUBLE.				{ p = V_DOUBLE;	}
-type(p) ::= STRING.				{ p = V_STRING;	}
-type(p) ::= EVFLAG.				{ p = V_EVFLAG;	}
-type(p) ::= FOREIGN.				{ p = V_NONE;	}
+basetype(p) ::= INT8T.				{ p = mk_prim_type(V_INT8T);	}
+basetype(p) ::= UINT8T.				{ p = mk_prim_type(V_UINT8T);	}
+basetype(p) ::= INT16T.				{ p = mk_prim_type(V_INT16T);	}
+basetype(p) ::= UINT16T.			{ p = mk_prim_type(V_UINT16T);	}
+basetype(p) ::= INT32T.				{ p = mk_prim_type(V_INT32T);	}
+basetype(p) ::= UINT32T.			{ p = mk_prim_type(V_UINT32T);	}
+
+basetype(p) ::= FLOAT.				{ p = mk_prim_type(V_FLOAT);	}
+basetype(p) ::= DOUBLE.				{ p = mk_prim_type(V_DOUBLE);	}
+basetype(p) ::= STRING.				{ p = mk_prim_type(V_STRING);	}
+basetype(p) ::= EVFLAG.				{ p = mk_ef_type();		}
+
+basetype(p) ::= ENUM NAME(x).			{ p = mk_foreign_type(F_ENUM, x.str);	}
+basetype(p) ::= STRUCT NAME(x).			{ p = mk_foreign_type(F_STRUCT, x.str);	}
+basetype(p) ::= UNION NAME(x).			{ p = mk_foreign_type(F_UNION, x.str);	}
+basetype(p) ::= TYPENAME NAME(x).		{ p = mk_foreign_type(F_TYPENAME, x.str); }
+
+type_expr(p) ::= basetype(t) opt_abstract_declarator(d). {
+	p = decl_add_base_type(d, t);
+}
+
+opt_abstract_declarator(p) ::= . {
+	p = abstract_decl_create();
+}
+opt_abstract_declarator(p) ::= abstract_declarator(x). {
+	p = x;
+}
+
+abstract_declarator(p) ::= ASTERISK. {
+	p = decl_prefix_pointer(abstract_decl_create());
+}
+abstract_declarator(p) ::= ASTERISK direct_abstract_declarator(x). {
+	p = decl_prefix_pointer(x);
+}
+abstract_declarator(p) ::= direct_abstract_declarator(x). {
+	p = x;
+}
+
+direct_abstract_declarator(p) ::= LPAREN abstract_declarator(x) RPAREN. {
+	p = x;
+}
+direct_abstract_declarator(p) ::= direct_abstract_declarator(x) subscript(s). {
+	p = decl_postfix_array(x, s.str);
+}
+direct_abstract_declarator(p) ::= subscript(s). {
+	p = decl_postfix_array(abstract_decl_create(), s.str);
+}
 
 // Option spec
 
@@ -371,6 +414,9 @@ expr(p) ::= NOT(t)	expr(x). [PRE]		{ p = expr(E_PRE, t, x); }
 expr(p) ::= TILDE(t)	expr(x). [PRE]		{ p = expr(E_PRE, t, x); }
 expr(p) ::= INCR(t)	expr(x). [PRE]		{ p = expr(E_PRE, t, x); }
 expr(p) ::= DECR(t)	expr(x). [PRE]		{ p = expr(E_PRE, t, x); }
+
+// Type Cast
+expr(p) ::= LPAREN(t) type_expr(c) RPAREN expr(x). [CAST] { p = expr(E_CAST, t, c, x); }
 
 // Binary Operators, left-to-right
 expr(p) ::= expr(x) SUB(t)	expr(y).	{ p = expr(E_BINOP, t, x, y); }

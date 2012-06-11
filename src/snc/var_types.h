@@ -8,8 +8,15 @@ in the file LICENSE that is included with this distribution.
 #define INCLvar_typesh
 
 enum type_tag {
-    V_NONE,
-    V_EVFLAG,
+    T_NONE,     /* undeclared (or declared as foreign) variable */
+    T_EVFLAG,   /* event flags */
+    T_PRIM,     /* primitive types: numbers, char, string */
+    T_FOREIGN,  /* foreign types (declared in C code) */
+    T_POINTER,
+    T_ARRAY,
+};
+
+enum prim_type_tag {
     V_CHAR,
     V_UCHAR,
     V_SHORT,
@@ -27,9 +34,13 @@ enum type_tag {
     V_FLOAT,
     V_DOUBLE,
     V_STRING,
-    V_ENUM,
-    V_POINTER,
-    V_ARRAY,
+};
+
+enum foreign_type_tag {
+    F_ENUM,
+    F_STRUCT,
+    F_UNION,
+    F_TYPENAME,
 };
 
 struct array_type {
@@ -41,9 +52,9 @@ struct pointer_type {
     struct type *value_type;
 };
 
-struct enum_type {
-    unsigned    num_names;
-    char        **names;
+struct foreign_type {
+    enum foreign_type_tag tag;
+    char *name;
 };
 
 typedef struct type Type;
@@ -51,19 +62,72 @@ typedef struct type Type;
 struct type {
     enum type_tag tag;
     union {
+        enum prim_type_tag  prim;
+        struct foreign_type foreign;
         struct pointer_type pointer;
         struct array_type   array;
-        struct enum_type    enumeration;
     } val;
     struct type *parent;
 };
 
-const char *type_name (unsigned tag);
-#define type_base_type(t) (t->parent->tag)
+/* base type for any combination of pointers and arrays */
 #define base_type(t) (t->parent)
+
+/* array length in 1st and 2nd dimension */
 unsigned type_array_length1(Type *t);
 unsigned type_array_length2(Type *t);
+
+/* whether type can be assign'ed to a PV */
 unsigned type_assignable(Type *t);
+
+/* generate code for a type, name is an optional variable name  */
 void gen_type(Type *t, char *name);
+
+/* creating types */
+Type mk_prim_type(enum prim_type_tag tag);
+Type mk_foreign_type(enum foreign_type_tag tag, char *name);
+Type mk_ef_type();
+Type mk_no_type();
+
+#ifndef var_types_GLOBAL
+extern
+#endif
+const char *prim_type_name[]
+#ifdef var_types_GLOBAL
+= {
+    "char",
+    "unsigned char",
+    "short",
+    "unsigned short",
+    "int",
+    "unsigned int",
+    "long",
+    "unsigned long",
+    "epicsInt8",
+    "epicsUInt8",
+    "epicsInt16",
+    "epicsUInt16",
+    "epicsInt32",
+    "epicsUInt32",
+    "float",
+    "double",
+    "string",
+}
+#endif
+;
+
+#ifndef var_types_GLOBAL
+extern
+#endif
+const char *foreign_type_prefix[]
+#ifdef var_types_GLOBAL
+= {
+    "enum ",
+    "struct ",
+    "union ",
+    "",
+}
+#endif
+;
 
 #endif /*INCLvar_typesh */

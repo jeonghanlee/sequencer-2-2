@@ -36,7 +36,7 @@ static int assert_var_declared(Expr *ep, Expr *scope, void *parg)
 	assert(ep->type == E_VAR);
 	assert(ep->extra.e_var != 0);
 	assert(ep->extra.e_var->decl != 0 ||
-		ep->extra.e_var->type->tag == V_NONE);
+		ep->extra.e_var->type->tag == T_NONE);
 	return TRUE;		/* there are no children anyway */
 }
 

@@ -150,7 +150,7 @@ static void gen_local_var_decls(Expr *scope, int level)
 	/* Convert internal type to `C' type */
 	foreach (vp, var_list->first)
 	{
-		if (vp->decl && vp->type->tag != V_NONE)
+		if (vp->decl && vp->type->tag != T_NONE)
 		{
 			gen_line_marker(vp->decl);
 			indent(level);
@@ -177,7 +177,7 @@ static void gen_type_default(Type *type)
 	case V_STRING:
 		printf("\"\"");
 		break;
-	case V_ARRAY:
+	case T_ARRAY:
 		printf("{");
 		for (n=0; n<type->val.array.num_elems; n++)
 		{
@@ -368,13 +368,13 @@ static void gen_var_access(Var *vp)
 	report("var_access: %s, scope=(%s,%s)\n",
 		vp->name, expr_type_name(vp->scope), vp->scope->value);
 #endif
-	assert((1u<<vp->scope->type) & scope_mask);
+	assert(is_scope(vp->scope));
 
-	if (vp->type->tag == V_EVFLAG)
+	if (vp->type->tag == T_EVFLAG)
 	{
 		printf("%d/*%s*/", vp->chan.evflag->index, vp->name);
 	}
-	else if (vp->type->tag == V_NONE)
+	else if (vp->type->tag == T_NONE)
 	{
 		printf("%s", vp->name);
 	}
@@ -544,6 +544,14 @@ static void gen_expr(
 		gen_expr(context, ep->paren_expr, 0);
 		printf(")");
 		break;
+	case E_CAST:
+		printf("(");
+		/* gen_type_expr(ep->cast_type); */
+		assert(ep->cast_type->type == D_DECL);
+		gen_var_decl(ep->cast_type->extra.e_decl);
+		printf(")");
+		gen_expr(context, ep->cast_operand, 0);
+		break;
 	case E_PRE:
 		printf("%s", ep->value);
 		gen_expr(context, ep->pre_operand, 0);
@@ -642,7 +650,7 @@ static void gen_ef_arg(
 	}
 	vp = ap->extra.e_var;
 	assert(vp->type);
-	if (vp->type->tag != V_EVFLAG)
+	if (vp->type->tag != T_EVFLAG)
 	{
 		error_at_expr(ap,
 		  "argument to built-in function %s must be an event flag\n", func_name);

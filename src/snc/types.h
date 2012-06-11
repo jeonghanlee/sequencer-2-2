@@ -41,6 +41,7 @@ typedef struct sync_queue_list	SyncQList;
 typedef struct var_list		VarList;
 typedef struct expr_pair	ExprPair;
 
+typedef unsigned int		TypeMask;
 typedef unsigned int		uint;
 
 struct sym_table
@@ -111,14 +112,14 @@ struct expression			/* generic syntax node */
 	Expr		*next;		/* list node: next expression */
 	Expr		*last;		/* list node: last expression */
 	Expr		**children;	/* array of children [left,right,...] */
-	uint		type;		/* expression type (E_XXX) */
+	TypeMask	type;		/* expression type (E_XXX) */
 	char		*value;		/* operator or value string */
 	int		line_num;	/* originating line number */
 	const char	*src_file;	/* originating source file */
 	union				/* extra data, depends on type */
 	{
-		Var	*e_var;		/* variable definiton */
-		Var	*e_decl;	/* variable definiton */
+		Var	*e_var;		/* variable reference */
+		Var	*e_decl;	/* variable declaration */
 		uint	e_delay;	/* delay id */
 		uint	e_option;	/* option value (1 or 0) */
 		VarList	*e_prog;	/* top-level definitions */
@@ -165,7 +166,7 @@ L1c:	syncq	== M_MULTI	=> assign == M_MULTI
 L2a:	assign	== M_NONE	=> monitor == M_NONE
 L2b:	assign	== M_NONE	=> sync == M_NONE
 L2c:	assign	== M_NONE	=> syncq == M_NONE
-L3:	assign	== M_MULTI	=> type->tag == V_ARRAY
+L3:	assign	== M_MULTI	=> type->tag == T_ARRAY
 */
 
 struct channel				/* channel assignment info */
@@ -235,31 +236,25 @@ struct program
 /* Generic iteration on lists */
 #define foreach(e,l)		for (e = l; e != 0; e = e->next)
 
+/* Commonly used sets of expression types */
+
 /* Expression types that are scopes. By definition, a scope is an expression
    that allows variable declarations as (immediate) subexpressions. */
-#define scope_mask		( (1u<<D_PROG)   | (1u<<D_SS)      | (1u<<D_STATE)\
-				| (1u<<D_ENTEX)  | (1u<<D_WHEN)    | (1u<<S_CMPND) )
-
+#define scope_mask		( (1u<<D_PROG)   | (1u<<D_SS)     | (1u<<D_STATE)\
+				| (1u<<D_ENTEX)  | (1u<<D_WHEN)   | (1u<<S_CMPND) )
+/* Whether an expression is a scope */
 #define is_scope(e)		(((1u<<((e)->type)) & scope_mask) != 0)
 
-/* Expressions types that may have sub-scopes */
-#define has_sub_scope_mask	( (1u<<D_ENTEX)  | (1u<<D_PROG)    | (1u<<D_SS)\
-				| (1u<<D_STATE)  | (1u<<D_WHEN)    | (1u<<S_CMPND)  | (1u<<S_FOR)\
-				| (1u<<S_IF)     | (1u<<S_STMT)    | (1u<<S_WHILE) )
-/* Expressions types that may have sub-expressions */
-#define has_sub_expr_mask	( (1u<<D_DECL)   | (1u<<D_ENTEX)   | (1u<<D_PROG)\
-				| (1u<<D_SS)     | (1u<<D_STATE)   | (1u<<D_SYNC)   | (1u<<D_SYNCQ)\
-				| (1u<<D_WHEN)   | (1u<<E_BINOP)   | (1u<<E_DELAY)\
-				| (1u<<E_FUNC)   | (1u<<E_INIT)    | (1u<<E_PAREN)  | (1u<<E_POST)\
-				| (1u<<E_PRE)    | (1u<<E_SUBSCR)  | (1u<<E_TERNOP) | (1u<<E_VAR)\
-				| (1u<<S_CHANGE) | (1u<<S_CMPND)   | (1u<<S_FOR)    | (1u<<S_IF)\
-				| (1u<<S_STMT)   | (1u<<S_WHILE) )
+/* Expression types that may have sub-scopes */
+#define has_sub_scope_mask	( (1u<<D_ENTEX)  | (1u<<D_PROG)   | (1u<<D_SS)\
+				| (1u<<D_STATE)  | (1u<<D_WHEN)   | (1u<<S_CMPND) | (1u<<S_FOR)\
+				| (1u<<S_IF)     | (1u<<S_STMT)   | (1u<<S_WHILE) )
 /* Expression types that are actually expressions i.e. no definitions or statements.
    These are the ones that start with E_. */
-#define	expr_mask		( (1u<<E_BINOP)  | (1u<<E_CONST)   | (1u<<E_DELAY)\
+#define	expr_mask		( (1u<<E_BINOP)  | (1u<<E_CAST)   | (1u<<E_CONST) | (1u<<E_DELAY)\
 				| (1u<<E_FUNC)   | (1u<<E_INIT)\
-				| (1u<<E_PAREN)  | (1u<<E_POST)    | (1u<<E_PRE)    | (1u<<E_STRING)\
-				| (1u<<E_SUBSCR) | (1u<<E_TERNOP)  | (1u<<E_VAR)    | (1u<<T_TEXT) )
+				| (1u<<E_PAREN)  | (1u<<E_POST)   | (1u<<E_PRE)   | (1u<<E_STRING)\
+				| (1u<<E_SUBSCR) | (1u<<E_TERNOP) | (1u<<E_VAR)   | (1u<<T_TEXT) )
 
 #define expr_type_name(e)	expr_type_info[(e)->type].name
 
@@ -287,6 +282,7 @@ enum expr_type			/* description [child expressions...] */
 	D_WHEN,			/* when statement [cond,defns,stmts] */
 
 	E_BINOP,		/* binary operator [left,right] */
+	E_CAST,			/* type cast [operand] */
 	E_CONST,		/* numeric (inkl. character) constant [] */
 	E_DELAY,		/* delay function call [args] */
 	E_FUNC,			/* function call [args] */
@@ -318,6 +314,8 @@ enum expr_type			/* description [child expressions...] */
 #define assign_pvs	children[1]
 #define binop_left	children[0]
 #define binop_right	children[1]
+#define cast_type	children[0]
+#define cast_operand	children[1]
 #define cmpnd_defns	children[0]
 #define cmpnd_stmts	children[1]
 #define decl_init	children[0]
@@ -366,6 +364,14 @@ enum expr_type			/* description [child expressions...] */
 #define while_cond	children[0]
 #define while_stmt	children[1]
 
+/* Accessors for var_lists (only for scopes) */
+#define prog_var_list	extra.e_prog
+#define ss_var_list	extra.e_ss->var_list
+#define state_var_list	extra.e_state->var_list
+#define when_var_list	extra.e_when->var_list
+#define entex_var_list	extra.e_entex;
+#define cmpnd_var_list	extra.e_cmpnd;
+
 #ifndef expr_type_GLOBAL
 extern
 #endif
@@ -389,6 +395,7 @@ expr_type_info[]
 	{ "D_SYNCQ",	3 },
 	{ "D_WHEN",	3 },
 	{ "E_BINOP",	2 },
+	{ "E_CAST",	2 },
 	{ "E_CONST",	0 },
 	{ "E_DELAY",	1 },
 	{ "E_FUNC",	1 },
@@ -407,10 +414,9 @@ expr_type_info[]
 	{ "S_JUMP",	0 },
 	{ "S_STMT",	1 },
 	{ "S_WHILE",	2 },
-	{ "T_TEXT",	0 }
-};
-#else
-;
+	{ "T_TEXT",	0 },
+}
 #endif
+;
 
 #endif	/*INCLtypesh*/

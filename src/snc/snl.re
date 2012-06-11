@@ -237,6 +237,7 @@ snl:
 	"double"	{ TYPEWORD(DOUBLE,	"double"); }
 	"else"		{ KEYWORD(ELSE,		"else"); }
 	"entry"		{ KEYWORD(ENTRY,	"entry"); }
+	"enum"		{ TYPEWORD(ENUM,	"enum"); }
 	"evflag"	{ TYPEWORD(EVFLAG,	"evflag"); }
 	"exit"		{ KEYWORD(EXIT,		"exit"); }
 	"float"		{ TYPEWORD(FLOAT,	"float"); }
@@ -252,10 +253,13 @@ snl:
 	"ss"		{ KEYWORD(SS,		"ss"); }
 	"state"		{ KEYWORD(STATE,	"state"); }
 	"string"	{ KEYWORD(STRING,	"string"); }
+	"struct"	{ TYPEWORD(STRUCT,	"struct"); }
 	"syncQ"		{ KEYWORD(SYNCQ,	"syncQ"); }
 	"syncq"		{ KEYWORD(SYNCQ,	"syncq"); }
 	"sync"		{ KEYWORD(SYNC,		"sync"); }
 	"to"		{ KEYWORD(TO,		"to"); }
+	"typename"	{ TYPEWORD(TYPENAME,	"typename"); }
+	"union"		{ TYPEWORD(UNION,	"union"); }
 	"unsigned"	{ TYPEWORD(UNSIGNED,	"unsigned"); }
 	"when"		{ KEYWORD(WHEN,		"when"); }
 	"while"		{ KEYWORD(WHILE,	"while"); }
