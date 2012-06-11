@@ -1204,7 +1204,7 @@ static int assign_next_delay_id(Expr *ep, Expr *scope, void *parg)
 	assert(ep->type == E_DELAY);
 	ep->extra.e_delay = *delay_id;
 	*delay_id += 1;
-	return FALSE;	/* delays cannot be nested as they do not return a value */
+	return TRUE;
 }
 
 /* Check for duplicate state set and state names and resolve transitions between states */
