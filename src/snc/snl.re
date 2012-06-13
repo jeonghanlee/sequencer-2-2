@@ -271,6 +271,12 @@ snl:
 	"int32_t"	{ TYPEWORD(INT32T, 	"int32_t"); }
 	"uint32_t"	{ TYPEWORD(UINT32T,	"uint32_t"); }
 
+	"_seq" (LET|DEC)* {
+		*cursor = 0;
+		scan_report(s, "identifier '%s'starts with reserved prefix\n", s->tok);
+		DONE;
+	}
+
 	LET (LET|DEC)*	{ IDENTIFIER(NAME, identifier, strdupft(s->tok, cursor)); }
 	("0" [xX] HEX+ IS?) | ("0" OCT+ IS?) | (DEC+ IS?) | (['] (ESC|[^\n\\'])* ['])
 			{ LITERAL(INTCON, integer_literal, strdupft(s->tok, cursor)); }
