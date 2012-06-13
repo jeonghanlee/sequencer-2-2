@@ -1,4 +1,4 @@
-package make_test_lib;
+package build_test_lib;
 
 use strict;
 use Test::More;
