@@ -8,11 +8,11 @@ my $success = {
   cast => 0,
   exOpt_DuplOpt => 0,
   foreignTypes => 0,
-  sync_not_monitored => 0,
-  syncq_not_monitored => 0,
   include_windows_h => 0,
   namingConflict => 0,
   nesting_depth => 0,
+  sync_not_monitored => 0,
+  syncq_not_monitored => 0,
 };
 
 my $warning = {
@@ -30,6 +30,7 @@ my $error = {
   foreignNoInit => 1,
   misplacedExit => 1,
   pvNotAssigned => 20,
+  reservedId => 2,
   sync_not_assigned => 1,
   syncq_not_assigned => 1,
   syncq_size_out_of_range => 1,
