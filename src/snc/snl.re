@@ -64,6 +64,7 @@ static void scan_report(Scanner *s, const char *format, ...)
 
 	report_loc(s->file, s->line);
 	va_start(args, format);
+	fprintf(stderr, "lexical error: ");
 	vfprintf(stderr, format, args);
 	va_end(args);
 }
