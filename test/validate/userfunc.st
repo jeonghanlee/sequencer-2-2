@@ -11,31 +11,27 @@ program userfuncTest
 option +s;
 
 %{
-static void incr(SS_ID ssId, int *pv, VAR_ID v)
-{
-    seq_pvGet(ssId, v, SYNC);
-    *pv += 1;
-    seq_pvPut(ssId, v, SYNC);
-}
+static void incr(SS_ID ssId, int *pv, VAR_ID v);
+static void set_i(SEQ_VARS *const pVar, int value);
 }%
 
 int i = 0;
 assign i;
 monitor i;
 
-foreign pVar, ssId;
-
 entry {
-    seq_test_init(10);
+    seq_test_init(20);
 }
 
 ss myss {
     state doit {
         int i_saved;
         when (delay(0.1)) {
-            incr(ssId, &i, pvIndex(i));
+            incr(ssId(), &i, pvIndex(i));
             testOk1(i_saved == i-1);
             i_saved = i;
+            set_i(pVar(), 1);
+            testOk1(i == 1);
         } state doit
         when (i == 10) {
         } exit
@@ -45,3 +41,17 @@ ss myss {
 exit {
     seq_test_done();
 }
+
+%{
+static void incr(SS_ID ssId, int *pv, VAR_ID v)
+{
+    seq_pvGet(ssId, v, SYNC);
+    *pv += 1;
+    seq_pvPut(ssId, v, SYNC);
+}
+
+static void set_i(SEQ_VARS *const pVar, int value)
+{
+    pVar->i = value;
+}
+}%
