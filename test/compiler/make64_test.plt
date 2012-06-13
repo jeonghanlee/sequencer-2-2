@@ -9,6 +9,7 @@ make_test_lib::do_tests(
   success => [qw(
   )],
   failure => [qw(
+    namingConflict
     tooLong
     varinit
     varinitOptr

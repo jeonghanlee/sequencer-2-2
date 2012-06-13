@@ -7,6 +7,7 @@ use make_test_lib;
 
 make_test_lib::do_tests(
   success => [qw(
+    namingConflict
     tooLong
   )],
   failure => [qw(
