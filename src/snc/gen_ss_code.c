@@ -26,6 +26,7 @@ static const int impossible = 0;
 static void gen_local_var_decls(Expr *scope, int level);
 static void gen_state_func(
 	const char *ss_name,
+	uint ss_num,
 	const char *state_name,
 	Expr *xp,
 	void (*gen_body)(Expr *xp),
@@ -89,6 +90,7 @@ void gen_ss_code(Program *program)
 	Expr	*prog = program->prog;
 	Expr	*ssp;
 	Expr	*sp;
+	uint	ss_num = 0;
 
 	/* Generate program init func */
 	gen_prog_init_func(prog, program->options.reent);
@@ -108,28 +110,29 @@ void gen_ss_code(Program *program)
 
 			/* Generate entry and exit functions */
 			if (sp->state_entry != 0)
-				gen_state_func(ssp->value, sp->value, 
+				gen_state_func(ssp->value, ss_num, sp->value, 
 					sp->state_entry, gen_entry_body,
 					"Entry", "I", "void", "");
 			if (sp->state_exit != 0)
-				gen_state_func(ssp->value, sp->value,
+				gen_state_func(ssp->value, ss_num, sp->value,
 					sp->state_exit, gen_exit_body,
 					"Exit", "O", "void", "");
 			/* Generate function to set up for delay processing */
-			gen_state_func(ssp->value, sp->value,
+			gen_state_func(ssp->value, ss_num, sp->value,
 				sp->state_whens, gen_delay_body,
 				"Delay", "D", "void", "");
 			/* Generate event processing function */
-			gen_state_func(ssp->value, sp->value,
+			gen_state_func(ssp->value, ss_num, sp->value,
 				sp->state_whens, gen_event_body,
 				"Event", "E", "seqBool",
 				", int *pTransNum, int *pNextState");
 			/* Generate action processing function */
-			gen_state_func(ssp->value, sp->value,
+			gen_state_func(ssp->value, ss_num, sp->value,
 				sp->state_whens, gen_action_body,
 				"Action", "A", "void",
                                 ", int transNum, int *pNextState");
 		}
+		ss_num++;
 	}
 
 	/* Generate program exit func */
@@ -202,6 +205,7 @@ void gen_var_init(Var *vp, int level)
 
 static void gen_state_func(
 	const char *ss_name,
+	uint ss_num,
 	const char *state_name,
 	Expr *xp,
 	void (*gen_body)(Expr *xp),
@@ -213,8 +217,8 @@ static void gen_state_func(
 {
 	printf("\n/* %s function for state \"%s\" in state set \"%s\" */\n",
  		title, state_name, ss_name);
-	printf("static %s %s_%s_%s(SS_ID ssId, struct %s *pVar%s)\n{\n",
-		rettype, prefix, ss_name, state_name, VAR_PREFIX, extra_args);
+	printf("static %s %s_%s_%d_%s(SS_ID ssId, struct %s *pVar%s)\n{\n",
+		rettype, prefix, ss_name, ss_num, state_name, VAR_PREFIX, extra_args);
 	gen_body(xp);
 	printf("}\n");
 }
