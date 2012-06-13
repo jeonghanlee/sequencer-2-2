@@ -43,7 +43,7 @@ typedef unsigned char uchar;
 #define IDENTIFIER(t,e,n)	RET(t,n)
 #define DELIMITER		RET
 
-#define DONE			RET(EOI,0)
+#define DONE			RET(EOI,"")
 
 typedef struct Scanner {
 	uchar	*bot;	/* pointer to bottom (start) of buffer */
