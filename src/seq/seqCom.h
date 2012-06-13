@@ -200,6 +200,8 @@ epicsShareFunc seqBool epicsShareAPI seq_pvAssigned(SS_ID, VAR_ID);
 epicsShareFunc seqBool epicsShareAPI seq_pvConnected(SS_ID, VAR_ID);
 
 #define seq_pvIndex(ssId, varId)	varId
+#define seq_ssId(ssId)			ssId
+#define seq_pVar(ssId)			_seq_vars
 
 /* global operations */
 epicsShareFunc void epicsShareAPI seq_pvFlush(SS_ID);

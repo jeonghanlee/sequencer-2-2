@@ -81,6 +81,8 @@ static struct func_symbol func_symbols[] =
     {"pvSync",          FT_PV,      TRUE,   0,  FALSE,  TRUE },
     {"pvTimeStamp",     FT_PV,      FALSE,  0,  FALSE,  FALSE},
     {"seqLog",          FT_OTHER,   FALSE,  0,  FALSE,  FALSE},
+    {"pVar",            FT_OTHER,   FALSE,  0,  FALSE,  FALSE},
+    {"ssId",            FT_OTHER,   FALSE,  0,  FALSE,  FALSE},
     {0,                 FT_OTHER,   FALSE,  0,  FALSE,  FALSE}
 };
 
