@@ -198,7 +198,9 @@ epicsShareFunc epicsTimeStamp epicsShareAPI seq_pvTimeStamp(SS_ID, VAR_ID);
 epicsShareFunc const char *epicsShareAPI seq_pvMessage(SS_ID, VAR_ID);
 epicsShareFunc seqBool epicsShareAPI seq_pvAssigned(SS_ID, VAR_ID);
 epicsShareFunc seqBool epicsShareAPI seq_pvConnected(SS_ID, VAR_ID);
-epicsShareFunc VAR_ID epicsShareAPI seq_pvIndex(SS_ID, VAR_ID);
+
+#define seq_pvIndex(ssId, varId)	varId
+
 /* global operations */
 epicsShareFunc void epicsShareAPI seq_pvFlush(SS_ID);
 epicsShareFunc void epicsShareAPI seq_delayInit(SS_ID, DELAY_ID, double);

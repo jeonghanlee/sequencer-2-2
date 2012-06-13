@@ -827,14 +827,6 @@ epicsShareFunc const char *epicsShareAPI seq_pvMessage(SS_ID ss, VAR_ID varId)
 }
 
 /*
- * Return index of database variable.
- */
-epicsShareFunc VAR_ID epicsShareAPI seq_pvIndex(SS_ID ss, VAR_ID varId)
-{
-	return varId; /* index is same as varId */
-}
-
-/*
  * Return channel time stamp.
  */
 epicsShareFunc epicsTimeStamp epicsShareAPI seq_pvTimeStamp(SS_ID ss, VAR_ID varId)
