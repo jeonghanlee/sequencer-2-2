@@ -8,9 +8,6 @@ seq_DEPEND_DIRS = pv
 
 DIRS += lemon
 
-DIRS += dev
-dev_DEPEND_DIRS = seq
-
 DIRS += snc
 snc_DEPEND_DIRS += seq
 snc_DEPEND_DIRS += lemon

@@ -24,7 +24,7 @@ demoSupport_LIBS += seq pv
 demoSupport_LIBS += $(EPICS_BASE_IOC_LIBS)
 demoSupport_SRCS += demo.st
 
-demo_LIBS += demoSupport seqDev seq pv
+demo_LIBS += demoSupport seq pv
 demo_LIBS += $(EPICS_BASE_IOC_LIBS)
 
 include $(TOP)/configure/RULES
