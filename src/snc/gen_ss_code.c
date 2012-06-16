@@ -214,8 +214,8 @@ static void gen_state_func(
 )
 {
 	printf("\n/* %s function for state \"%s\" in state set \"%s\" */\n",
- 		title, state_name, ss_name);
-	printf("static %s %s_%s_%d_%s(SS_ID ssId, struct %s *pVar%s)\n{\n",
+		title, state_name, ss_name);
+	printf("static %s %s_%s_%d_%s(SS_ID ssId, struct %s *const pVar%s)\n{\n",
 		rettype, prefix, ss_name, ss_num, state_name, VAR_PREFIX, extra_args);
 	gen_body(xp);
 	printf("}\n");
@@ -902,7 +902,7 @@ static void gen_prog_init_func(Expr *prog, int opt_reent)
 {
 	assert(prog->type == D_PROG);
 	printf("\n/* Program init func */\n");
-	printf("static void G_prog_init(struct %s *pVar)\n{\n", VAR_PREFIX);
+	printf("static void G_prog_init(struct %s *const pVar)\n{\n", VAR_PREFIX);
 	if (opt_reent)
 	{
 		indent(1); printf("static struct %s pVarInit = ", VAR_PREFIX);
@@ -920,7 +920,7 @@ static void gen_prog_func(
 {
 	assert(prog->type == D_PROG);
 	printf("\n/* Program %s func */\n", name);
-	printf("static void G_prog_%s(SS_ID ssId, struct %s *pVar)\n{\n",
+	printf("static void G_prog_%s(SS_ID ssId, struct %s *const pVar)\n{\n",
 		name, VAR_PREFIX);
 	if (xp && gen_body) gen_body(xp);
 	printf("}\n");
