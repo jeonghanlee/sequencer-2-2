@@ -50,6 +50,7 @@ static int gen_builtin_const(Expr *ep);
 static void gen_prog_func(
 	Expr *prog,
 	const char *name,
+	const char *doc,
 	Expr *xp,
 	void (*gen_body)(Expr *xp));
 static void gen_prog_init_func(Expr *prog, int opt_reent);
@@ -95,7 +96,7 @@ void gen_ss_code(Program *program)
 
 	/* Generate program entry func */
 	if (prog->prog_entry)
-		gen_prog_func(prog, "entry", prog->prog_entry, gen_entex_body);
+		gen_prog_func(prog, NM_ENTRY, "entry", prog->prog_entry, gen_entex_body);
 
 	/* For each state set ... */
 	foreach (ssp, prog->prog_statesets)
@@ -107,35 +108,35 @@ void gen_ss_code(Program *program)
 				sp->value, ssp->value);
 
 			/* Generate entry and exit functions */
-			if (sp->state_entry != 0)
+			if (sp->state_entry)
 				gen_state_func(ssp->value, ss_num, sp->value, 
 					sp->state_entry, gen_entex_body,
-					"Entry", "I", "void", "");
-			if (sp->state_exit != 0)
+					"Entry", NM_ENTRY, "void", "");
+			if (sp->state_exit)
 				gen_state_func(ssp->value, ss_num, sp->value,
 					sp->state_exit, gen_entex_body,
-					"Exit", "O", "void", "");
+					"Exit", NM_EXIT, "void", "");
 			/* Generate function to set up for delay processing */
 			gen_state_func(ssp->value, ss_num, sp->value,
 				sp->state_whens, gen_delay_body,
-				"Delay", "D", "void", "");
+				"Delay", NM_DELAY, "void", "");
 			/* Generate event processing function */
 			gen_state_func(ssp->value, ss_num, sp->value,
 				sp->state_whens, gen_event_body,
-				"Event", "E", "seqBool",
-				", int *pTransNum, int *pNextState");
+				"Event", NM_EVENT, "seqBool",
+				", int *" NM_PTRN ", int *" NM_PNST);
 			/* Generate action processing function */
 			gen_state_func(ssp->value, ss_num, sp->value,
 				sp->state_whens, gen_action_body,
-				"Action", "A", "void",
-				", int transNum, int *pNextState");
+				"Action", NM_ACTION, "void",
+				", int " NM_TRN ", int *" NM_PNST);
 		}
 		ss_num++;
 	}
 
 	/* Generate program exit func */
 	if (prog->prog_exit)
-		gen_prog_func(prog, "exit", prog->prog_exit, gen_entex_body);
+		gen_prog_func(prog, NM_EXIT, "exit", prog->prog_exit, gen_entex_body);
 }
 
 /* Generate a local C variable declaration for each variable declared
@@ -215,8 +216,8 @@ static void gen_state_func(
 {
 	printf("\n/* %s function for state \"%s\" in state set \"%s\" */\n",
 		title, state_name, ss_name);
-	printf("static %s %s_%s_%d_%s(SS_ID ssId, struct %s *const pVar%s)\n{\n",
-		rettype, prefix, ss_name, ss_num, state_name, VAR_PREFIX, extra_args);
+	printf("static %s %s_%s_%d_%s(SS_ID " NM_SS ", SEQ_VARS *const " NM_VARS "%s)\n{\n",
+		rettype, prefix, ss_name, ss_num, state_name, extra_args);
 	gen_body(xp);
 	printf("}\n");
 }
@@ -259,7 +260,7 @@ static int gen_delay(Expr *ep, Expr *scope, void *parg)
 	assert(ep->type == E_DELAY);
 	gen_line_marker(ep);
 	/* Generate 1-st part of function w/ 1-st 2 parameters */
-	indent(1); printf("seq_delayInit(ssId, %d, (", ep->extra.e_delay);
+	indent(1); printf("seq_delayInit(" NM_SS ", %d, (", ep->extra.e_delay);
 	/* generate the 3-rd parameter (an expression) */
 	gen_expr(C_COND, ep->delay_args, 0);
 	/* Complete the function call */
@@ -277,7 +278,7 @@ static void gen_action_body(Expr *xp)
 	const int	level = 1;
 
 	/* "switch" statment based on the transition number */
-	indent(level); printf("switch(transNum)\n");
+	indent(level); printf("switch(" NM_TRN ")\n");
 	indent(level); printf("{\n");
 	trans_num = 0;
 
@@ -327,7 +328,7 @@ static void gen_event_body(Expr *xp)
 		Expr *next_sp;
 
 		assert(tp->type == D_WHEN);
-		if (tp->when_cond != 0)
+		if (tp->when_cond)
 			gen_line_marker(tp->when_cond);
 		indent(level); printf("if (");
 		if (tp->when_cond == 0)
@@ -342,14 +343,14 @@ static void gen_event_body(Expr *xp)
 		{
 			/* "when(...) {...} exit" -> exit from program */
 			indent(level+1);
-			printf("seq_exit(ssId);\n");
+			printf("seq_exit(" NM_SS ");\n");
 		}
 		else
 		{
 			indent(level+1);
-			printf("*pNextState = %d;\n", next_sp->extra.e_state->index);
+			printf("*" NM_PNST " = %d;\n", next_sp->extra.e_state->index);
 		}
-		indent(level+1);printf("*pTransNum = %d;\n", trans_num);
+		indent(level+1);printf("*" NM_PTRN " = %d;\n", trans_num);
 		indent(level+1); printf("return TRUE;\n");
 		indent(level); printf("}\n");
 		trans_num++;
@@ -359,7 +360,7 @@ static void gen_event_body(Expr *xp)
 
 static void gen_var_access(Var *vp)
 {
-	const char *pre = global_opt_reent ? "pVar->" : "";
+	const char *pre = global_opt_reent ? NM_VARS "->" : "";
 
 	assert(vp);
 	assert(vp->scope);
@@ -384,13 +385,13 @@ static void gen_var_access(Var *vp)
 	}
 	else if (vp->scope->type == D_SS)
 	{
-		printf("%s%s_%s.%s", pre, VAR_PREFIX, vp->scope->value, vp->name);
+		printf("%s%s_%s.%s", pre, NM_VARS, vp->scope->value, vp->name);
 	}
 	else if (vp->scope->type == D_STATE)
 	{
-		printf("%s%s_%s.%s_%s.%s", pre, VAR_PREFIX,
+		printf("%s%s_%s.%s_%s.%s", pre, NM_VARS,
 			vp->scope->extra.e_state->var_list->parent_scope->value,
-			VAR_PREFIX, vp->scope->value, vp->name);
+			NM_VARS, vp->scope->value, vp->name);
 	}
 	else	/* compound or when stmt => generate a local C variable */
 	{
@@ -443,7 +444,7 @@ static void gen_expr(
 		printf(")\n");
 		cep = ep->if_then;
 		gen_expr(context, cep, cep->type == S_CMPND ? level : level+1);
-		if (ep->if_else != 0)
+		if (ep->if_else)
 		{
 			indent(level);
 			printf("else\n");
@@ -484,7 +485,7 @@ static void gen_expr(
 			break;
 		}
 		indent(level);
-		printf("{*pNextState = %d; return;}\n", ep->extra.e_change->extra.e_state->index);
+		printf("{*" NM_PNST " = %d; return;}\n", ep->extra.e_change->extra.e_state->index);
 		break;
 	/* Expressions */
 	case E_VAR:
@@ -579,7 +580,7 @@ static int gen_builtin_const(Expr *ep)
 	char	*const_name = ep->value;
 	struct const_symbol *sym = lookup_builtin_const(global_sym_table, const_name);
 
-	if (sym == NULL)
+	if (!sym)
 		return CT_NONE;
 	printf("%s", const_name);
 	return sym->type;
@@ -592,7 +593,7 @@ static int gen_builtin_func(int context, Expr *ep)
 	Expr	*ap;			/* argument expr */
 	struct func_symbol *sym = lookup_builtin_func(global_sym_table, func_name);
 
-	if (sym == NULL)
+	if (!sym)
 		return FALSE;	/* not a special function */
 
 #ifdef	DEBUG
@@ -602,7 +603,7 @@ static int gen_builtin_func(int context, Expr *ep)
 		sym->ef_action_only, sym->ef_args);
 #endif
 	/* All builtin functions require ssId as 1st parameter */
-	printf("seq_%s(ssId", func_name);
+	printf("seq_%s(" NM_SS "", func_name);
 	switch (sym->type)
 	{
 	case FT_DELAY:
@@ -702,7 +703,7 @@ static void gen_pv_func(
 )
 {
 	Expr	*ap, *subscr = 0;
-	Var	*vp = NULL;
+	Var	*vp = 0;
 	uint	num_extra_parms = 0;
 
 	ap = ep->func_args;
@@ -902,10 +903,10 @@ static void gen_prog_init_func(Expr *prog, int opt_reent)
 {
 	assert(prog->type == D_PROG);
 	printf("\n/* Program init func */\n");
-	printf("static void G_prog_init(struct %s *const pVar)\n{\n", VAR_PREFIX);
+	printf("static void " NM_INIT "(SEQ_VARS *const " NM_VARS ")\n{\n");
 	if (opt_reent)
 	{
-		indent(1); printf("static struct %s pVarInit = ", VAR_PREFIX);
+		indent(1); printf("static struct %s pVarInit = ", NM_VARS);
 		gen_user_var_init(prog, 1); printf(";\n");
 		indent(1); printf("*pVar = pVarInit;\n");
 	}
@@ -915,13 +916,14 @@ static void gen_prog_init_func(Expr *prog, int opt_reent)
 static void gen_prog_func(
 	Expr *prog,
 	const char *name,
+	const char *doc,
 	Expr *xp,
 	void (*gen_body)(Expr *xp))
 {
 	assert(prog->type == D_PROG);
-	printf("\n/* Program %s func */\n", name);
-	printf("static void G_prog_%s(SS_ID ssId, struct %s *const pVar)\n{\n",
-		name, VAR_PREFIX);
+	printf("\n/* Program %s func */\n", doc);
+	printf("static void %s(SS_ID " NM_SS ", SEQ_VARS *const " NM_VARS ")\n{\n",
+		name);
 	if (xp && gen_body) gen_body(xp);
 	printf("}\n");
 }

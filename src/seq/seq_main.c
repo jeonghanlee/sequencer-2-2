@@ -152,7 +152,7 @@ static boolean init_sprog(SPROG *sp, seqProgram *seqProg)
 	/* Allocate user variable area if reentrant option (+r) is set */
 	if ((sp->options & OPT_REENT) && sp->varSize > 0)
 	{
-		sp->var = (USER_VAR *)newArray(char, sp->varSize);
+		sp->var = (SEQ_VARS *)newArray(char, sp->varSize);
 		if (!sp->var)
 		{
 			errlogSevPrintf(errlogFatal, "init_sprog: calloc failed\n");
@@ -346,7 +346,7 @@ static boolean init_sscb(SPROG *sp, SSCB *ss, seqSS *seqSS)
 		}
 		if (sp->varSize > 0)
 		{
-			ss->var = (USER_VAR *)newArray(char, sp->varSize);
+			ss->var = (SEQ_VARS *)newArray(char, sp->varSize);
 			if (!ss->var)
 			{
 				errlogSevPrintf(errlogFatal, "init_sscb: calloc failed\n");

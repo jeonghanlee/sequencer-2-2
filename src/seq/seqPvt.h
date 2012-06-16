@@ -160,7 +160,7 @@ struct state_set
 	epicsEventId	*putSemId;	/* semaphores for async put */
 	/* safe mode */
 	boolean		*dirty;		/* array of flags, one for each channel */
-	USER_VAR	*var;		/* variable value block */
+	SEQ_VARS	*var;		/* variable value block */
 };
 
 struct program_instance
@@ -179,7 +179,7 @@ struct program_instance
 	unsigned	numQueues;	/* number of syncQ queues */
 	SSCB		*ss;		/* array of state set control blocks */
 	unsigned	numSS;		/* number of state sets */
-	USER_VAR	*var;		/* user variable area (shared buffer) */
+	SEQ_VARS	*var;		/* user variable area (shared buffer) */
 	size_t		varSize;	/* size of user variable area */
 	MACRO		*macros;	/* ptr to macro table */
 	char		*params;	/* program parameters */

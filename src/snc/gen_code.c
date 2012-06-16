@@ -127,7 +127,7 @@ static void gen_user_var(Program *p)
 
 	printf("\n/* Variable declarations */\n");
 
-	if (opt_reent) printf("struct %s {\n", VAR_PREFIX);
+	if (opt_reent) printf("struct %s {\n", NM_VARS);
 	/* Convert internal type to `C' type */
 	foreach (vp, p->prog->extra.e_prog->first)
 	{
@@ -164,7 +164,7 @@ static void gen_user_var(Program *p)
 
 		if (!ss_empty)
 		{
-			indent(level); printf("struct %s_%s {\n", VAR_PREFIX, ssp->value);
+			indent(level); printf("struct %s_%s {\n", NM_VARS, ssp->value);
 			foreach (vp, ssp->extra.e_ss->var_list->first)
 			{
 				indent(level+1); gen_var_decl(vp); printf(";\n");
@@ -181,10 +181,10 @@ static void gen_user_var(Program *p)
 						indent(level+2); gen_var_decl(vp); printf(";\n");
 					}
 					indent(level+1);
-					printf("} %s_%s;\n", VAR_PREFIX, sp->value);
+					printf("} %s_%s;\n", NM_VARS, sp->value);
 				}
 			}
-			indent(level); printf("} %s_%s", VAR_PREFIX, ssp->value);
+			indent(level); printf("} %s_%s", NM_VARS, ssp->value);
 			if (!opt_reent)
 			{
 				printf(" = ");

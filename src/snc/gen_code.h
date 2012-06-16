@@ -20,6 +20,22 @@ void gen_defn_c_code(Expr *scope, int level);
 void gen_var_decl(Var *vp);
 void indent(int level);
 
-#define VAR_PREFIX "UserVar"
+#define NM_VARS		"_seq_vars"
+#define NM_CHANS	"_seq_chans"
+#define NM_STATES	"_seq_states"
+#define NM_STATESETS	"_seq_statesets"
+
+#define NM_ENTRY	"_seq_entry"
+#define NM_EXIT		"_seq_exit"
+#define NM_INIT		"_seq_init"
+#define NM_ACTION	"_seq_action"
+#define NM_DELAY	"_seq_delay"
+#define NM_EVENT	"_seq_event"
+#define NM_MASK		"_seq_mask"
+
+#define NM_SS		"_seq_ss"
+#define NM_TRN		"_seq_trn"
+#define NM_PTRN		"_seq_ptrn"
+#define NM_PNST		"_seq_pnst"
 
 #endif	/*INCLgencodeh*/

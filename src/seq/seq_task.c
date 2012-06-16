@@ -252,7 +252,7 @@ static void ss_entry(void *arg)
 {
 	SSCB		*ss = (SSCB *)arg;
 	SPROG		*sp = ss->sprog;
-	USER_VAR	*var;
+	SEQ_VARS	*var;
 
 	if (sp->options & OPT_SAFE)
 		var = ss->var;

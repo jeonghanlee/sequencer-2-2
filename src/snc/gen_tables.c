@@ -65,7 +65,7 @@ static void gen_channel_table(ChanList *chan_list, uint num_event_flags, int opt
 	if (chan_list->first)
 	{
 		printf("\n/* Channel table */\n");
-		printf("static seqChan G_channels[] = {\n");
+		printf("static seqChan " NM_CHANS "[] = {\n");
 		printf("\t/* chName, offset, varName, varType, count, eventNum, efId, monitored, queueSize, queueIndex */\n");
 		foreach (cp, chan_list->first)
 		{
@@ -76,7 +76,7 @@ static void gen_channel_table(ChanList *chan_list, uint num_event_flags, int opt
 	else
 	{
 		printf("\n/* No channel definitions */\n");
-		printf("#define G_channels NULL\n");
+		printf("#define " NM_CHANS " 0\n");
 	}
 }
 
@@ -88,13 +88,13 @@ static void gen_var_name(Var *vp)
 	}
 	else if (vp->scope->type == D_SS)
 	{
-		printf("%s_%s.%s", VAR_PREFIX, vp->scope->value, vp->name);
+		printf("%s_%s.%s", NM_VARS, vp->scope->value, vp->name);
 	}
 	else if (vp->scope->type == D_STATE)
 	{
-		printf("%s_%s.%s_%s.%s", VAR_PREFIX,
+		printf("%s_%s.%s_%s.%s", NM_VARS,
 			vp->scope->extra.e_state->var_list->parent_scope->value,
-			VAR_PREFIX, vp->scope->value, vp->name);
+			NM_VARS, vp->scope->value, vp->name);
 	}
 }
 
@@ -138,14 +138,14 @@ static void gen_channel(Chan *cp, uint num_event_flags, int opt_reent)
 	else
 		ef_num = 0;
 
-	if (cp->name == NULL)
-		printf("\t{NULL, ");
+	if (!cp->name)
+		printf("\t{0, ");
 	else
 		printf("\t{\"%s\", ", cp->name);
 
 	if (opt_reent)
 	{
-		printf("offsetof(struct %s, ", VAR_PREFIX);
+		printf("offsetof(struct %s, ", NM_VARS);
 		gen_var_name(vp);
 		printf("%s), ", elem_str);
 	}
@@ -205,7 +205,7 @@ static void gen_state_table(Expr *ss_list, uint num_event_flags, uint num_channe
 		foreach (sp, ssp->ss_states)
 		{
 			gen_state_event_mask(sp, num_event_flags, event_mask, num_event_words);
-			printf("static const seqMask\tEM_%s_%d_%s[] = {\n",
+			printf("static const seqMask " NM_MASK "_%s_%d_%s[] = {\n",
 				ssp->value, ss_num, sp->value);
 			for (n = 0; n < num_event_words; n++)
 				printf("\t0x%08x,\n", event_mask[n]);
@@ -214,7 +214,7 @@ static void gen_state_table(Expr *ss_list, uint num_event_flags, uint num_channe
 
 		/* Generate table of state structures */
 		printf("\n/* State table for state set \"%s\" */\n", ssp->value);
-		printf("static seqState G_%s_states[] = {\n", ssp->value);
+		printf("static seqState " NM_STATES "_%s[] = {\n", ssp->value);
 		foreach (sp, ssp->ss_states)
 		{
 			fill_state_struct(sp, ssp->value, ss_num);
@@ -229,20 +229,20 @@ static void fill_state_struct(Expr *sp, char *ss_name, uint ss_num)
 {
 	printf("\t{\n");
 	printf("\t/* state name */        \"%s\",\n", sp->value);
-	printf("\t/* action function */   A_%s_%d_%s,\n", ss_name, ss_num, sp->value);
-	printf("\t/* event function */    E_%s_%d_%s,\n", ss_name, ss_num, sp->value);
-	printf("\t/* delay function */    D_%s_%d_%s,\n", ss_name, ss_num, sp->value);
+	printf("\t/* action function */   " NM_ACTION "_%s_%d_%s,\n", ss_name, ss_num, sp->value);
+	printf("\t/* event function */    " NM_EVENT "_%s_%d_%s,\n", ss_name, ss_num, sp->value);
+	printf("\t/* delay function */    " NM_DELAY "_%s_%d_%s,\n", ss_name, ss_num, sp->value);
 	printf("\t/* entry function */    ");
 	if (sp->state_entry)
-		printf("I_%s_%d_%s,\n", ss_name, ss_num, sp->value);
+		printf(NM_ENTRY "_%s_%d_%s,\n", ss_name, ss_num, sp->value);
 	else
 		printf("0,\n");
 	printf("\t/* exit function */     ");
 	if (sp->state_exit)
-		printf("O_%s_%d_%s,\n", ss_name, ss_num, sp->value);
+		printf(NM_EXIT "_%s_%d_%s,\n", ss_name, ss_num, sp->value);
 	else
 		printf("0,\n");
-	printf("\t/* event mask array */  EM_%s_%d_%s,\n", ss_name, ss_num, sp->value);
+	printf("\t/* event mask array */  " NM_MASK "_%s_%d_%s,\n", ss_name, ss_num, sp->value);
 	printf("\t/* state options */     ");
 	encode_state_options(sp->extra.e_state->options);
 	printf("\n\t},\n");
@@ -268,20 +268,20 @@ static void gen_prog_table(Program *p)
 	printf("seqProgram %s = {\n", p->name);
 	printf("\t/* magic number */      %d,\n", MAGIC);
 	printf("\t/* program name */      \"%s\",\n", p->name);
-	printf("\t/* channels */          G_channels,\n");
+	printf("\t/* channels */          " NM_CHANS ",\n");
 	printf("\t/* num. channels */     %d,\n", p->chan_list->num_elems);
-	printf("\t/* state sets */        G_state_sets,\n");
+	printf("\t/* state sets */        " NM_STATESETS ",\n");
 	printf("\t/* num. state sets */   %d,\n", p->num_ss);
 	if (p->options.reent)
-		printf("\t/* user var size */     sizeof(struct %s),\n", VAR_PREFIX);
+		printf("\t/* user var size */     sizeof(struct %s),\n", NM_VARS);
 	else
 		printf("\t/* user var size */     0,\n");
 	printf("\t/* param */             \"%s\",\n", p->param);
 	printf("\t/* num. event flags */  %d,\n", p->num_event_flags);
 	printf("\t/* encoded options */   "); encode_options(p->options);
-	printf("\t/* init func */         G_prog_init,\n");
-	printf("\t/* entry func */        %s,\n", p->prog->prog_entry?"G_prog_entry":"NULL");
-	printf("\t/* exit func */         %s,\n", p->prog->prog_exit?"G_prog_exit":"NULL");
+	printf("\t/* init func */         " NM_INIT ",\n");
+	printf("\t/* entry func */        %s,\n", p->prog->prog_entry ? NM_ENTRY : "0");
+	printf("\t/* exit func */         %s,\n", p->prog->prog_exit ? NM_EXIT : "0");
 	printf("\t/* num. queues */       %d\n", p->syncq_list->num_elems);
 	printf("};\n");
 }
@@ -313,7 +313,7 @@ static void gen_ss_table(Expr *ss_list)
 	int	num_ss;
 
 	printf("\n/* State set table */\n");
-	printf("static seqSS G_state_sets[] = {\n");
+	printf("static seqSS " NM_STATESETS "[] = {\n");
 	num_ss = 0;
 	foreach (ssp, ss_list)
 	{
@@ -322,7 +322,7 @@ static void gen_ss_table(Expr *ss_list)
 		num_ss++;
 		printf("\t{\n");
 		printf("\t/* state set name */    \"%s\",\n", ssp->value);
-		printf("\t/* states */            G_%s_states,\n", ssp->value);
+		printf("\t/* states */            " NM_STATES "_%s,\n", ssp->value);
 		printf("\t/* number of states */  %d,\n", ssp->extra.e_ss->num_states);
 		printf("\t/* number of delays */  %d\n", ssp->extra.e_ss->num_delays);
 		printf("\t},\n");
