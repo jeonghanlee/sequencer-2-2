@@ -17,8 +17,6 @@ Known Problems in Release 2.1.7
     ss x { state y_z { ... } }
     ss x_y { state z { ... } }
 
-  This has been fixed in the latest snapshot.
-
 .. _Known_Problems_2.1.6:
 
 Known Problems in Release 2.1.6

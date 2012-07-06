@@ -1,10 +1,19 @@
 Release Notes
 =============
 
+.. _Release_Notes_2.1.8:
+
+Release 2.1.8
+-------------
+
+* Fixed the two bugs listed under :ref:`Known_Problems_2.1.7`.
+
 .. _Release_Notes_2.1.7:
 
 Release 2.1.7
 -------------
+
+:ref:`Known_Problems_2.1.7`
 
 Functional changes
 
