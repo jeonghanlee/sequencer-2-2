@@ -46,14 +46,20 @@ include $(TOP)/configure/RULES
 vpath %.lem ..
 vpath %.lt ..
 
-snl.c snl.h: snl.lem snl.lt $(LEMON)
-	$(RM) $@
+snl.c: snl.lem snl.lt $(LEMON)
+	$(RM) snl.c snl.h
 	$(LEMON) o=. $<
+
+snl.h: snl.c
+	# empty recipy needed to work around make bug #35455
 
 vpath %.re ..
 
-lexer.c: snl.re snl.h
+lexer.c: snl.re
 	$(RE2C) -s -b -o $@ $<
+
+# work around bug in base rules
+lexer.o: snl.h
 
 $(COMMON_DIR)/snl.bnf: snl.lem
 	$(RM) $@
