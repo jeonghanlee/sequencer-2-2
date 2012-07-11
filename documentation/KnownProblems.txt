@@ -1,6 +1,14 @@
 Known Problems
 ==============
 
+.. _Known_Problems_2.1.8:
+
+Known Problems in Release 2.1.8
+-------------------------------
+
+Build fails on some windows systems due to a stupid bug in
+src/snc/Makefile.
+
 .. _Known_Problems_2.1.7:
 
 Known Problems in Release 2.1.7

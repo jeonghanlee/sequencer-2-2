@@ -1,6 +1,15 @@
 Release Notes
 =============
 
+.. _Release_Notes_2.1.9:
+
+Release 2.1.9
+-------------
+
+Fixed a stupid error in src/snc/Makefile that caused the fix to
+the build rules for snc to not work on Windows.
+This is the only change w.r.t. 2.1.8.
+
 .. _Release_Notes_2.1.8:
 
 Release 2.1.8
