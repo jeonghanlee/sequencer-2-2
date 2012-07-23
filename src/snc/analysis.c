@@ -304,7 +304,7 @@ static void analyse_declaration(SymTable st, Expr *scope, Expr *defn)
 			: "event flags");
 	}
 
-	var_list = *pvar_list_from_scope(scope);
+	var_list = var_list_from_scope(scope);
 
 	if (!sym_table_insert(st, vp->name, var_list, vp))
 	{
@@ -1026,7 +1026,7 @@ static SyncQ *new_sync_queue(SyncQList *syncq_list, uint size)
 /* Add a variable to a scope (append to the end of the var_list) */
 void add_var(Var *vp, Expr *scope)
 {
-	VarList	*var_list = *pvar_list_from_scope(scope);
+	VarList	*var_list = var_list_from_scope(scope);
 
 	if (!var_list->first)
 		var_list->first = vp;
@@ -1043,7 +1043,7 @@ void add_var(Var *vp, Expr *scope)
    var struct or 0 if the variable is not found. */
 Var *find_var(SymTable st, char *name, Expr *scope)
 {
-	VarList *var_list = *pvar_list_from_scope(scope);
+	VarList *var_list = var_list_from_scope(scope);
 	Var	*vp;
 
 #ifdef DEBUG
@@ -1100,7 +1100,7 @@ static int connect_variable(Expr *ep, Expr *scope, void *parg)
 #endif
 	if (!vp)
 	{
-		VarList *var_list = *pvar_list_from_scope(scope);
+		VarList *var_list = var_list_from_scope(scope);
 		struct const_symbol *csym = lookup_builtin_const(st, ep->value);
 		if (csym)
 		{
@@ -1119,7 +1119,7 @@ static int connect_variable(Expr *ep, Expr *scope, void *parg)
 		/* add this variable to the top-level scope, NOT the current scope */
 		while (var_list->parent_scope) {
 			scope = var_list->parent_scope;
-			var_list = *pvar_list_from_scope(scope);
+			var_list = var_list_from_scope(scope);
 		}
 		sym_table_insert(st, vp->name, var_list, vp);
 		add_var(vp, scope);
@@ -1424,7 +1424,7 @@ static uint assign_ef_bits(Expr *scope)
 	uint	num_event_flags = 0;
 	VarList	*var_list;
 
-	var_list = *pvar_list_from_scope(scope);
+	var_list = var_list_from_scope(scope);
 
 	/* Assign event flag numbers (starting at 1) */
 	foreach (vp, var_list->first)

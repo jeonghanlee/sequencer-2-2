@@ -146,7 +146,7 @@ static void gen_local_var_decls(Expr *scope, int level)
 	Var	*vp;
 	VarList	*var_list;
 
-	var_list = *pvar_list_from_scope(scope);
+	var_list = var_list_from_scope(scope);
 
 	/* Convert internal type to `C' type */
 	foreach (vp, var_list->first)
