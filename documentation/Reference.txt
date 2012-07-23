@@ -1103,8 +1103,8 @@ error.
    'epicsThreadSleep(<expr>)' if called in action code.
 
 
-delay expired
-^^^^^^^^^^^^^
+delay
+^^^^^
 
 .. c:function::
    boolean delay(double delay_in_seconds)
@@ -1116,7 +1116,6 @@ The :option:`-t` state option (see `State Option`_) controls whether the
 delay is measured from when the current state was entered from a different
 state (:option:`-t`) or from any state, including itself (:option:`+t`,
 the default).
-
 
 pvPut
 ^^^^^
