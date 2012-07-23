@@ -18,31 +18,6 @@ list. Comments are welcome, as usual.
 * pvGetComplete should support additional arguments for arrays of multiple
   PVs, just like pvPutComplete.
 
-* It would be nice to be able to use foreign types in SNL declarations.
-  However, supporting typedefs exactly as in C is problematic:
-  at the place where an identifier is *used*, the context-free grammar cannot
-  decide whether it is a type or a variable. So we would need to assign
-  different tokens to typedefs and other identifiers. And the
-  lexer would have to look up the identifier in the symbol table to see
-  what kind of token to produce. Effectively, we need to feed information
-  from the parser back into the lexer. This is all horrible and error
-  prone. Instead, I am flirting
-  with the idea to borrow C++'s typename keyword, so one could write e.g. ::
-
-    %%#include <stdio.h>
-    typename FILE *f;
-
-  in SNL code. The "typename" would of course not be included in the
-  generated C code.
-
-  We could also allow to use named struct, union, or enum types, e.g. ::
-
-    struct epicsTimeStamp ts = pvTimestamp(var);
-
-  In all these cases, the keyword (typename, struct, union, enum)
-  cleanly disambiguates the grammar, so we can keep lexing and parsing
-  as separate stages.
-
 * Raw ideas:
 
   - Allow parameterized state sets (like a function). Then allow to "jump"
