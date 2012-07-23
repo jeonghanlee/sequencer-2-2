@@ -69,9 +69,6 @@ list. Comments are welcome, as usual.
   but wouldn't it be nice if it meant to put/get all (connected) elements?
   Write to tech-talk and ask (since it breaks compatibility)?
 
-* Not sure what to do with devSequencer. It is ugly, accesses sequencer
-  internals, and does not work if programs are instantiated more than once.
-
 * Need to go over the introductory chapters in the docs, remove out-dated
   information.
 

@@ -298,20 +298,7 @@ The output should look something like this::
    ...
 
 If you see the "start -> ramp_up" etc. messages, things are
-good. From another shell, do the following::
-
-   > camonitor demo:ss_light demo:ss_ramp demo:ss_limit
-   demo:ss_light                  2011-07-15 12:35:24.809118 LIGHT_ON  
-   demo:ss_ramp                   2011-07-15 12:35:24.809131 RAMP_DOWN  
-   demo:ss_limit                  2011-07-15 12:35:24.809126 START  
-   demo:ss_light                  2011-07-15 12:35:29.829946 LIGHT_OFF  
-   demo:ss_ramp                   2011-07-15 12:35:34.850682 RAMP_UP  
-   demo:ss_light                  2011-07-15 12:35:40.873949 LIGHT_ON  
-   ...
-
-This illustrates the very basic "sequencer device support" that was
-added in release 2.0. These records are returning the names of the
-first two state-sets of the demo program.
+good.
 
 
 Use
