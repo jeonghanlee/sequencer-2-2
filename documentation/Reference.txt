@@ -1881,10 +1881,11 @@ equal priority in a round-robin (time-sliced) fashion; instead each thread
 keeps running until it gets interrupted by a higher priority thread or
 until it blocks on a semaphore.
 
-However, thread priorities are not honored if programs are run under
-Linux or Windows in user mode; and anyway, priorities should only be used
-to improve latency for certain operations (at the cost of others) and
-*never* should they be relied upon for program correctness.
+However, RTEMS does time-share threads at the same priority, while Linux and
+Windows honor thread priorities only if real-time mode (which needs
+administrator privileges). Most importantly, priorities should only be used
+to improve latency for certain operations (at the cost of others) and never
+should be relied upon for program correctness.
 
 Safe mode solves all these problems by changing the way variables,
 particularly global variables, are interpreted. In safe mode, all variables
