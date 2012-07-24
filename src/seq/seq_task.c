@@ -495,10 +495,10 @@ void seqCreatePvSys(SPROG *sp)
 }
 
 /*
- * seqWakeup() -- wake up each state set that is waiting on this event
+ * ss_wakeup() -- wake up each state set that is waiting on this event
  * based on the current event mask; eventNum = 0 means wake all state sets.
  */
-void seqWakeup(SPROG *sp, unsigned eventNum)
+void ss_wakeup(SPROG *sp, unsigned eventNum)
 {
 	unsigned nss;
 
@@ -509,12 +509,12 @@ void seqWakeup(SPROG *sp, unsigned eventNum)
 
 		epicsMutexMustLock(sp->programLock);
 		/* If event bit in mask is set, wake that state set */
-		DEBUG("seqWakeup: eventNum=%d, mask=%u, state set=%d\n", eventNum, 
+		DEBUG("ss_wakeup: eventNum=%d, mask=%u, state set=%d\n", eventNum, 
 			ss->mask? *ss->mask : 0, (int)ssNum(ss));
 		if (eventNum == 0 || 
 			(ss->mask && bitTest(ss->mask, eventNum)))
 		{
-			DEBUG("seqWakeup: waking up state set=%d\n", (int)ssNum(ss));
+			DEBUG("ss_wakeup: waking up state set=%d\n", (int)ssNum(ss));
 			epicsEventSignal(ss->syncSemId); /* wake up ss thread */
 		}
 		epicsMutexUnlock(sp->programLock);

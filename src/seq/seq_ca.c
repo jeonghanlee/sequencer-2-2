@@ -280,7 +280,7 @@ static void proc_db_events(
 		seq_efSet(sp->ss, ch->syncedTo);
 
 	/* Wake up each state set that uses this channel in an event */
-	seqWakeup(sp, ch->eventNum);
+	ss_wakeup(sp, ch->eventNum);
 }
 
 struct putq_cp_arg {
@@ -320,7 +320,7 @@ static void proc_db_events_queued(SPROG *sp, CHAN *ch, pvValue *value)
 	/* Set event flag; note: it doesn't matter which state set we pass. */
 	seq_efSet(sp->ss, ch->syncedTo);
 	/* Wake up each state set that uses this channel in an event */
-	seqWakeup(sp, ch->eventNum);
+	ss_wakeup(sp, ch->eventNum);
 }
 
 /* Disconnect all database channels */
@@ -472,5 +472,5 @@ void seq_conn_handler(void *var, int connected)
 	   using these functions inside a when-condition and it is expected
 	   that such conditions get checked whenever these counts change.
 	   This is really a crude solution. */
-	seqWakeup(sp, 0);
+	ss_wakeup(sp, 0);
 }

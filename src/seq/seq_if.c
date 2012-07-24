@@ -300,7 +300,7 @@ static void anonymous_put(SS_ID ss, CHAN *ch)
 	if (ch->syncedTo)
 		seq_efSet(ss, ch->syncedTo);
 	/* Wake up each state set that uses this channel in an event */
-	seqWakeup(ss->sprog, ch->eventNum);
+	ss_wakeup(ss->sprog, ch->eventNum);
 }
 
 /*
@@ -863,7 +863,7 @@ epicsShareFunc void epicsShareAPI seq_efSet(SS_ID ss, EV_ID ev_flag)
 	bitSet(sp->evFlags, ev_flag);
 
 	/* Wake up state sets that are waiting for this event flag */
-	seqWakeup(sp, ev_flag);
+	ss_wakeup(sp, ev_flag);
 
 	epicsMutexUnlock(sp->programLock);
 }
@@ -907,7 +907,7 @@ epicsShareFunc boolean epicsShareAPI seq_efClear(SS_ID ss, EV_ID ev_flag)
 	bitClear(sp->evFlags, ev_flag);
 
 	/* Wake up state sets that are waiting for this event flag */
-	seqWakeup(sp, ev_flag);
+	ss_wakeup(sp, ev_flag);
 
 	epicsMutexUnlock(sp->programLock);
 
@@ -1102,5 +1102,5 @@ epicsShareFunc void epicsShareAPI seq_exit(SS_ID ss)
 	/* Take care that we die even if waiting for initial connect */
 	epicsEventSignal(sp->ready);
 	/* Wakeup all state sets unconditionally */
-	seqWakeup(sp, 0);
+	ss_wakeup(sp, 0);
 }
