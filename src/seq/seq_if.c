@@ -75,7 +75,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvGet(SS_ID ss, VAR_ID varId, enum compT
 	/* No named PV and traditional mode => user error */
 	if (!dbch)
 	{
-		errlogSevPrintf(errlogFatal,
+		errlogSevPrintf(errlogMajor,
 			"pvGet(%s): user error (variable not assigned)\n",
 			ch->varName
 		);
@@ -100,7 +100,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvGet(SS_ID ss, VAR_ID varId, enum compT
 			tmo -= (after - before);
 			break;
 		case epicsEventWaitTimeout:
-			errlogSevPrintf(errlogFatal,
+			errlogSevPrintf(errlogMajor,
 				"pvGet(ss %s, var %s, pv %s): failed (timeout "
 				"waiting for other get requests to finish)\n",
 				ss->ssName, ch->varName, dbch->dbName
@@ -121,7 +121,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvGet(SS_ID ss, VAR_ID varId, enum compT
 			if (status) return epicsEventSignal(getSem), status;
 			break;
 		case epicsEventWaitTimeout:
-			errlogSevPrintf(errlogFatal,
+			errlogSevPrintf(errlogMajor,
 				"pvGet(ss %s, var %s, pv %s): user error "
 				"(there is already a get pending for this variable/"
 				"state set combination)\n",
@@ -211,7 +211,7 @@ epicsShareFunc boolean epicsShareAPI seq_pvGetComplete(SS_ID ss, VAR_ID varId)
 		}
 		else
 		{
-			errlogSevPrintf(errlogFatal,
+			errlogSevPrintf(errlogMajor,
 				"pvGetComplete(%s): user error (variable not assigned)\n",
 				ch->varName
 			);
@@ -329,7 +329,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvPut(SS_ID ss, VAR_ID varId, enum compT
 	}
 	if (!dbch)
 	{
-		errlogSevPrintf(errlogFatal,
+		errlogSevPrintf(errlogMajor,
 			"pvPut(%s): user error (variable not assigned)\n",
 			ch->varName
 		);
@@ -354,7 +354,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvPut(SS_ID ss, VAR_ID varId, enum compT
 			tmo -= (after - before);
 			break;
 		case epicsEventWaitTimeout:
-			errlogSevPrintf(errlogFatal,
+			errlogSevPrintf(errlogMajor,
 				"pvPut(ss %s, var %s, pv %s): failed (timeout "
 				"waiting for other put requests to finish)\n",
 				ss->ssName, ch->varName, dbch->dbName
@@ -377,7 +377,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvPut(SS_ID ss, VAR_ID varId, enum compT
 			meta->severity = pvSevrMAJOR;
 			meta->message = "already one put pending";
 			status = meta->status;
-			errlogSevPrintf(errlogFatal,
+			errlogSevPrintf(errlogMajor,
 				"pvPut(ss %s, var %s, pv %s): user error "
 				"(there is already a put pending for this variable/"
 				"state set combination)\n",
@@ -642,7 +642,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvMonitor(SS_ID ss, VAR_ID varId)
 	}
 	if (!dbch)
 	{
-		errlogSevPrintf(errlogFatal,
+		errlogSevPrintf(errlogMajor,
 			"pvMonitor(%s): user error (variable not assigned)\n",
 			ch->varName
 		);
@@ -668,7 +668,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvStopMonitor(SS_ID ss, VAR_ID varId)
 	}
 	if (!dbch)
 	{
-		errlogSevPrintf(errlogFatal,
+		errlogSevPrintf(errlogMajor,
 			"pvStopMonitor(%s): user error (variable not assigned)\n",
 			ch->varName
 		);
@@ -982,7 +982,7 @@ epicsShareFunc boolean epicsShareAPI seq_pvGetQ(SS_ID ss, VAR_ID varId)
 
 	if (!ch->queue)
 	{
-		errlogSevPrintf(errlogFatal,
+		errlogSevPrintf(errlogMajor,
 			"pvGetQ(%s): user error (variable not queued)\n",
 			ch->varName
 		);
