@@ -26,14 +26,17 @@ struct sequencerProgram {
 };
 
 /* These are the only global variables in the whole seq library. */
-static struct sequencerProgram *seqHead;
-static epicsMutexId seqLock;
+static struct
+{
+    epicsMutexId lock;
+    struct sequencerProgram *programs;
+} globals;
 
 static void seqInitPvt(void *arg)
 {
-    seqLock = epicsMutexCreate();
-    if (!seqLock) {
-        errlogSevPrintf(errlogFatal, "seqInitPvt: out of memory");
+    globals.lock = epicsMutexCreate();
+    if (!globals.lock) {
+        errlogSevPrintf(errlogFatal, "seqInitPvt: epicsMutexCreate failed\n");
         exit(EXIT_FAILURE);
     }
 }
@@ -49,8 +52,8 @@ epicsShareFunc void epicsShareAPI seqRegisterSequencerProgram(seqProgram *prog)
     struct sequencerProgram *sp = NULL;
 
     seqLazyInit();
-    epicsMutexMustLock(seqLock);
-    foreach(sp, seqHead) {
+    epicsMutexMustLock(globals.lock);
+    foreach(sp, globals.programs) {
         if (sp->prog == prog) {
             break;
         }
@@ -61,11 +64,11 @@ epicsShareFunc void epicsShareAPI seqRegisterSequencerProgram(seqProgram *prog)
             errlogSevPrintf(errlogFatal, "seqRegisterSequencerProgram: out of memory");
         }
         sp->prog = prog;
-        sp->next = seqHead;
+        sp->next = globals.programs;
         sp->instances = NULL;
-        seqHead = sp;
+        globals.programs = sp;
     }
-    epicsMutexUnlock(seqLock);
+    epicsMutexUnlock(globals.lock);
 }
 
 int traverseSequencerPrograms(sequencerProgramTraversee *traversee, void *param)
@@ -74,8 +77,8 @@ int traverseSequencerPrograms(sequencerProgramTraversee *traversee, void *param)
     int stop = FALSE;
 
     seqLazyInit();
-    epicsMutexMustLock(seqLock);
-    foreach(sp, seqHead) {
+    epicsMutexMustLock(globals.lock);
+    foreach(sp, globals.programs) {
         stop = traversee(&sp->instances, sp->prog, param);
         if (stop) break;
     }
@@ -83,7 +86,7 @@ int traverseSequencerPrograms(sequencerProgramTraversee *traversee, void *param)
     if (!stop) {
         stop = traversee(NULL, NULL, param);
     }
-    epicsMutexUnlock(seqLock);
+    epicsMutexUnlock(globals.lock);
     return stop;
 }
 
@@ -129,13 +132,13 @@ static void seqCallFunc(const iocshArgBuf *args)
     if (*table == '&')
         table++;
     seqLazyInit();
-    epicsMutexMustLock(seqLock);
-    foreach(sp, seqHead) {
+    epicsMutexMustLock(globals.lock);
+    foreach(sp, globals.programs) {
         if (!strcmp(table, sp->prog->progName)) {
             break;
         }
     }
-    epicsMutexUnlock(seqLock);
+    epicsMutexUnlock(globals.lock);
     if (sp) {
         seq(sp->prog, macroDef, (unsigned)stackSize);
     } else {
