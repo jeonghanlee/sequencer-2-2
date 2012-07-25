@@ -70,8 +70,9 @@ static void gen_channel_table(ChanList *chan_list, uint num_event_flags, int opt
 		foreach (cp, chan_list->first)
 		{
 			gen_channel(cp, num_event_flags, opt_reent);
-			printf("%s", cp->next ? ",\n" : "\n};\n");
+			printf(",\n");
 		}
+		printf("};\n");
 	}
 	else
 	{
