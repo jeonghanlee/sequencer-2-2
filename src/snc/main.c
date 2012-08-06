@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
 	if (infp == NULL)
 	{
 		perror(in_file);
-		exit(EXIT_FAILURE);
+		return EXIT_FAILURE;
 	}
 
 	/* Redirect output stream to specified file */
@@ -58,17 +58,16 @@ int main(int argc, char *argv[])
 	if (outfp == NULL)
 	{
 		perror(out_file);
-		exit(EXIT_FAILURE);
+		return EXIT_FAILURE;
 	}
 
-	/* stdin, i.e. the input file should be unbuffered,
-           since the re2c generated lexer works fastest when
-           it maintains its own buffer */
+	/* stdin: the input file should be unbuffered,
+           since the lexer maintains its own buffer */
 	setvbuf(stdin, NULL, _IONBF, 0);
-	/* stdout, i.e. the generated C program should be
+	/* stdout: the generated C program should be
            block buffered with standard buffer size */
 	setvbuf(stdout, NULL, _IOFBF, BUFSIZ);
-	/* stderr, i.e. messages should be output immediately */
+	/* stderr: messages should be output immediately */
 	setvbuf(stderr, NULL, _IONBF, 0);
 
 	printf("/* Generated with snc from %s */\n", in_file);
@@ -80,7 +79,7 @@ int main(int argc, char *argv[])
 	if (err_cnt == 0)
 		generate_code(prg);
 
-	exit(err_cnt ? EXIT_FAILURE : EXIT_SUCCESS);
+	return err_cnt ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
 /* Initialize options, in_file, and out_file from arguments. */
