@@ -81,7 +81,7 @@ enum compType {
 #endif
 
 typedef	struct state_set *const SS_ID;	/* state set id, opaque */
-typedef struct _seq_vars SEQ_VARS;	/* defined by program, opaque */
+typedef struct _seq_var SEQ_VARS;	/* defined by program, opaque */
 typedef char string[MAX_STRING_SIZE];	/* the string typedef */
 
 /* these typedefs make the code more self documenting */
@@ -201,7 +201,7 @@ epicsShareFunc seqBool epicsShareAPI seq_pvConnected(SS_ID, VAR_ID);
 
 #define seq_pvIndex(ssId, varId)	varId
 #define seq_ssId(ssId)			ssId
-#define seq_pVar(ssId)			_seq_vars
+#define seq_pVar(ssId)			_seq_var
 
 /* global operations */
 epicsShareFunc void epicsShareAPI seq_pvFlush(SS_ID);
