@@ -5,8 +5,6 @@ For more information see the .txt files under documentation:
 
 Introduction.txt
    What all this is about, licensing, and other trivia
-Notes.txt
-   Release notes
 Installation.txt
    How to download, build, etc
 Tutorial.txt
@@ -17,7 +15,14 @@ Using.txt
    How to create a working SNL program
 Reference.txt
    SNL syntax and built-in procedures
-PV-API.txt
-   Details about the PV API
 Examples.txt
    Annotated example programs
+Notes.txt
+   Release notes
+KnownProblems.txt
+   What the name says
+Plans.txt
+   New features, ideas, and wishes
+
+You can also view the documentation online at
+http://www-csr.bessy.de/control/SoftDist/sequencer/
