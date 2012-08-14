@@ -552,7 +552,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvAssign(SS_ID ss, VAR_ID varId, const c
 
 			if (ch->monitored)
 			{
-				seq_monitor(ch, FALSE);
+				seq_camonitor(ch, FALSE);
 			}
 		}
 
@@ -648,7 +648,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvMonitor(SS_ID ss, VAR_ID varId)
 		return pvStatERROR;
 	}
 	ch->monitored = TRUE;
-	return seq_monitor(ch, TRUE);
+	return seq_camonitor(ch, TRUE);
 }
 
 /*
@@ -674,7 +674,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvStopMonitor(SS_ID ss, VAR_ID varId)
 		return pvStatERROR;
 	}
 	ch->monitored = FALSE;
-	return seq_monitor(ch, FALSE);
+	return seq_camonitor(ch, FALSE);
 }
 
 /*

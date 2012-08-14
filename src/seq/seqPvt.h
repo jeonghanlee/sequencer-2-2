@@ -243,7 +243,7 @@ void seq_mon_handler(void *var, pvType type, unsigned count,
 void seq_conn_handler(void *var,int connected);
 pvStat seq_connect(SPROG *sp, boolean wait);
 void seq_disconnect(SPROG *sp);
-pvStat seq_monitor(CHAN *ch, boolean on);
+pvStat seq_camonitor(CHAN *ch, boolean on);
 /* seq_prog.c */
 typedef int seqTraversee(SPROG *prog, void *param);
 void seqTraverseProg(seqTraversee *func, void *param);

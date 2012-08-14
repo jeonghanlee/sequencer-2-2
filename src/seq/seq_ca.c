@@ -357,7 +357,7 @@ void seq_disconnect(SPROG *sp)
 	pvSysFlush(sp->pvSys);
 }
 
-pvStat seq_monitor(CHAN *ch, boolean on)
+pvStat seq_camonitor(CHAN *ch, boolean on)
 {
 	DBCHAN	*dbch = ch->dbch;
 	pvStat	status;
@@ -379,7 +379,7 @@ pvStat seq_monitor(CHAN *ch, boolean on)
 	else
 		status = pvVarMonitorOff(dbch->pvid, dbch->monid);
 	if (status != pvStatOK)
-		errlogSevPrintf(errlogFatal, "seq_monitor: pvVarMonitor%s(%s) failure: %s\n",
+		errlogSevPrintf(errlogFatal, "seq_camonitor: pvVarMonitor%s(%s) failure: %s\n",
 			on?"On":"Off", dbch->dbName, pvVarGetMess(dbch->pvid));
 	else if (!on)
 		dbch->monid = NULL;
@@ -419,7 +419,7 @@ void seq_conn_handler(void *var, int connected)
 
 			if (ch->monitored)
 			{
-				seq_monitor(ch, FALSE);
+				seq_camonitor(ch, FALSE);
 			}
 			/* terminate outstanding requests that wait for completion */
 			for (nss = 0; nss < sp->numSS; nss++)
@@ -454,7 +454,7 @@ void seq_conn_handler(void *var, int connected)
 
 			if (ch->monitored)
 			{
-				seq_monitor(ch, TRUE);
+				seq_camonitor(ch, TRUE);
 			}
 		}
 		else
