@@ -37,7 +37,16 @@ void seqMacEval(SPROG *sp, const char *inStr, char *outStr, size_t maxChar)
 	char	name[50], *value, *tmp;
 	size_t	valLth, nameLth;
 
+	assert(outStr);
+	assert(maxChar > 0);
+
 	DEBUG("seqMacEval: InStr=%s, ", inStr);
+
+	if (!inStr)
+	{
+		*outStr = 0;
+		return;
+	}
 
 	tmp = outStr;
 	while (*inStr != 0 && maxChar > 0)
@@ -56,7 +65,7 @@ void seqMacEval(SPROG *sp, const char *inStr, char *outStr, size_t maxChar)
 			name[nameLth] = 0;
 			if (*inStr != 0)
 				inStr++;
-				
+
 			DEBUG("Macro name=%s, ", name);
 
 			/* Find macro value from macro name */

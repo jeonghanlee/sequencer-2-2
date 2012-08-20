@@ -531,10 +531,11 @@ epicsShareFunc pvStat epicsShareAPI seq_pvAssign(SS_ID ss, VAR_ID varId, const c
 	CHAN	*ch = sp->chan + varId;
 	pvStat	status = pvStatOK;
 	DBCHAN	*dbch = ch->dbch;
+	char	new_pv_name[100];
 
-	if (!pvName) pvName = "";
+	seqMacEval(sp, pvName, new_pv_name, sizeof(new_pv_name));
 
-	DEBUG("Assign %s to \"%s\"\n", ch->varName, pvName);
+	DEBUG("Assign %s to \"%s\"\n", ch->varName, new_pv_name);
 
 	epicsMutexMustLock(sp->programLock);
 
@@ -564,7 +565,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvAssign(SS_ID ss, VAR_ID varId, const c
 		free(dbch->dbName);
 	}
 
-	if (pvName == NULL || pvName[0] == 0)	/* new name is empty -> free resources */
+	if (new_pv_name[0] == 0)	/* new name is empty -> free resources */
 	{
 		if (dbch) {
 			free(ch->dbch->ssMetaData);
@@ -582,7 +583,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvAssign(SS_ID ss, VAR_ID varId, const c
 				return pvStatERROR;
 			}
 		}
-		dbch->dbName = epicsStrDup(pvName);
+		dbch->dbName = epicsStrDup(new_pv_name);
 		if (!dbch->dbName)
 		{
 			errlogSevPrintf(errlogFatal, "pvAssign: epicsStrDup failed\n");
