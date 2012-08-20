@@ -2,13 +2,11 @@
 This file is distributed subject to a Software License Agreement found
 in the file LICENSE that is included with this distribution.
 \*************************************************************************/
-/* Demo KTL EPICS sequence; illustrates and tests parallel control */
+/* illustrate and test parallel control */
 
-program control/* ("pvsys=ktl") */
+program control
 
-#define KTL_NAMES "dcs.axeinit", "dcs.chpinit", "dcs.domeinit",\
-    "dcs.rotinit", "dcs.secinit", "dcs.tertinit"
-#define CA_NAMES "dcs:axeinit", "dcs:chpinit", "dcs:domeinit",\
+#define PV_NAMES "dcs:axeinit", "dcs:chpinit", "dcs:domeinit",\
     "dcs:rotinit", "dcs:secinit", "dcs:tertinit"
 
 /* options */
@@ -17,7 +15,7 @@ option  +r;
 /* control variables */
 #define N 6
 int32_t init[N];
-assign init to {CA_NAMES};
+assign init to {PV_NAMES};
 
 /* main state-set */
 ss main {
