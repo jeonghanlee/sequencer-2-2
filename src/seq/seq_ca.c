@@ -60,7 +60,7 @@ pvStat seq_connect(SPROG *sp, boolean wait)
 {
 	pvStat		status;
 	unsigned	nch;
-	int		delay = 10;
+	int		delay = 2.0;
 	boolean		ready = FALSE;
 
 	/*
@@ -100,9 +100,11 @@ pvStat seq_connect(SPROG *sp, boolean wait)
 	if (wait)
 	{
 		boolean firstTime = TRUE;
+		double timeStartWait;
+		pvTimeGetCurrentDouble(&timeStartWait);
 
 		do {
-			unsigned ac,mc,cc,fmc;
+			unsigned ac, mc, cc, gmc;
 			/* Check whether we have been asked to exit */
 			if (sp->die)
 				return pvStatERROR;
@@ -111,21 +113,23 @@ pvStat seq_connect(SPROG *sp, boolean wait)
 			ac = sp->assignCount;
 			mc = sp->monitorCount;
 			cc = sp->connectCount;
-			fmc = sp->firstMonitorCount;
+			gmc = sp->firstMonitorCount;
 			epicsMutexUnlock(sp->programLock);
 
-			ready = ac == cc && mc == fmc;
+			ready = ac == cc && mc == gmc;
 			if (!ready)
 			{
+				double timeNow;
 				if (!firstTime)
 				{
 					errlogSevPrintf(errlogMinor,
-						"%s[%d]: assigned=%d, connected=%d, "
+						"%s[%d](after %d sec): assigned=%d, connected=%d, "
 						"monitored=%d, got monitor=%d\n",
 						sp->progName, sp->instance,
-						ac, cc, mc, fmc);
-					firstTime = FALSE;
+						(int)(timeNow - timeStartWait),
+						ac, cc, mc, gmc);
 				}
+				firstTime = FALSE;
 				if (epicsEventWaitWithTimeout(
 					sp->ready, (double)delay) == epicsEventWaitError)
 				{
@@ -133,7 +137,11 @@ pvStat seq_connect(SPROG *sp, boolean wait)
 						"epicsEventWaitWithTimeout failure\n");
 					return pvStatERROR;
 				}
-				if (delay < 60) delay += 10;
+				pvTimeGetCurrentDouble(&timeNow);
+				if (delay < 3600)
+					delay *= 1.71;
+				else
+					delay = 3600;
 			}
 		} while (!ready);
 		printf("%s[%d]: all channels connected & received 1st monitor\n",
