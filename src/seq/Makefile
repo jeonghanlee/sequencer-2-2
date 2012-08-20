@@ -7,6 +7,7 @@ include $(TOP)/configure/CONFIG
 #  Include files
 INC += seqCom.h
 INC += seq_release.h
+INC += seq_static_assert.h
 
 #  seq library
 LIBRARY = seq

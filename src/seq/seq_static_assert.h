@@ -10,15 +10,18 @@ in the file LICENSE that is included with this distribution.
 #ifndef INCLstatic_asserth
 #define INCLstatic_asserth
 
-#define CONCAT2(x,y) x ## y
-#define CONCAT(x,y) CONCAT2(x,y)
-#define STATIC_ASSERT(cond,msg) \
-    typedef struct { int CONCAT(static_assertion_failed_,msg) : !!(cond); } \
-        CONCAT(static_assertion_failed_,__COUNTER__)
+#ifndef STATIC_ASSERT
+
+#define STATIC_JOIN(x, y) STATIC_JOIN2(x, y)
+#define STATIC_JOIN2(x, y) x ## y
+#define STATIC_ASSERT(expr) \
+    typedef int STATIC_JOIN(static_assert_failed_at_line_, __LINE__) \
+    [ (expr) ? 1 : -1 ]
 
 /*
  * usage:
  *     STATIC_ASSERT(condition_to_assert, identifier_that_explains_the_assertion);
  */
+#endif
 
 #endif	/*INCLstatic_asserth*/
