@@ -34,7 +34,7 @@ ss main {
     }
 
     state active {
-        when (pvPutComplete(init, TRUE, done)) {
+        when (pvPutCompleteArray(init, N, TRUE, done)) {
             int i;
             printf("init commands not all done:");
             for (i = 0; i < N; i++)
@@ -42,7 +42,7 @@ ss main {
             printf("\n");
         } state active
 
-        when (pvPutComplete(init)) {
+        when (pvPutCompleteArray(init, N)) {
             printf("init commands all done\n");
         } state done
 
@@ -60,7 +60,8 @@ ss main {
                     pvPutComplete(init[i]),
                     pvStatus(init[i]),
                     pvSeverity(init[i]),
-                    pvMessage(init[i]) ? pvMessage(init[i]) : "");
+                    pvMessage(init[i]) ? pvMessage(init[i]) : ""
+                );
             }
         } state wait
     }
