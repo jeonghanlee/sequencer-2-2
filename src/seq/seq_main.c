@@ -29,7 +29,7 @@ static PVTYPE *find_type(const char *userType);
  * Creates the initial state program thread and returns its thread id.
  * Most initialization is performed here.
  */
-epicsShareFunc void epicsShareAPI seq(
+epicsShareFunc epicsThreadId epicsShareAPI seq(
 	seqProgram *seqProg, const char *macroDef, unsigned stackSize)
 {
 	epicsThreadId	tid;
@@ -48,7 +48,7 @@ epicsShareFunc void epicsShareAPI seq(
 	if (!seqProg)
 	{
 		errlogSevPrintf(errlogFatal, "seq: bad first argument seqProg (is NULL)\n");
-		return;
+		return 0;
 	}
 
 	/* Check for correct state program format */
@@ -57,14 +57,14 @@ epicsShareFunc void epicsShareAPI seq(
 		errlogSevPrintf(errlogFatal, "seq: illegal magic number in state program.\n"
 			"      - probable mismatch between SNC & SEQ versions\n"
 			"      - re-compile your program?\n");
-		return;
+		return 0;
 	}
 
 	sp = new(SPROG);
 	if (!sp)
 	{
 		errlogSevPrintf(errlogFatal, "seq: calloc failed\n");
-		return;
+		return 0;
 	}
 
 	/* Parse the macro definitions from the "program" statement */
@@ -75,7 +75,7 @@ epicsShareFunc void epicsShareAPI seq(
 
 	/* Initialize program struct */
 	if (!init_sprog(sp, seqProg))
-		return;
+		return 0;
 
 	/* Specify stack size */
 	if (stackSize == 0)
@@ -112,11 +112,13 @@ epicsShareFunc void epicsShareAPI seq(
 	if (!tid)
 	{
 		errlogSevPrintf(errlogFatal, "seq: epicsThreadCreate failed");
-		return;
+		return 0;
 	}
 
 	printf("Spawning sequencer program \"%s\", thread %p: \"%s\"\n",
 		sp->progName, tid, threadName);
+
+	return tid;
 }
 
 /*
