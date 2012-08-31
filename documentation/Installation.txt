@@ -200,8 +200,8 @@ should be reported, see `Report Bugs`_).
 Building the Manual
 ^^^^^^^^^^^^^^^^^^^
 
-From 2.0.99 on, the manual is in reStructureText format. This format
-is (more or less) readable plain text, so this section is optional.
+From 2.0.99 on, the manual is in `reStructuredText`_ format. This
+format is (more or less) readable plain text, so this section is optional.
 
 Building the manual means generating a set of html pages and maybe a
 single pdf from the sources.
@@ -223,6 +223,7 @@ This generates a pdf file named ``Manual.pdf`` and also puts it into the
 you need to have a working latex installation. On my system (kubuntu
 karmic) I also needed to install the package tetex-extra.
 
+.. _reStructuredText: http://docutils.sourceforge.net/rst.html
 .. _Python: http://www.python.org/
 .. _Sphinx: http://sphinx.pocoo.org/
 

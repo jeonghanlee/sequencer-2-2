@@ -9,7 +9,7 @@ About
 Acknowledgements
 ----------------
 
-This software was originally developed by Andy Kozubal at Los Alamos
+The sequencer was originally developed by Andy Kozubal at Los Alamos
 National Laboratory (LANL). It was subsequently modified by William
 Lupton, formerly at  the W. M. Keck Observatory (Keck), with
 contributions by Greg White of the Stanford Linear Accelerator Center
