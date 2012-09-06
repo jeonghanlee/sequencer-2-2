@@ -8,30 +8,30 @@ Release 2.1.10
 
 snc:
 
-  * avoid follow-up syntax error after lexical error,
-    say lexical error when there is one
+* avoid follow-up syntax error after lexical error,
+  say lexical error when there is one
 
-  * fix wrong assumption about delays not being nested
+* fix wrong assumption about delays not being nested
 
-  * added assertion and cast to unsigned to silence a warning
-    in the lemon parser template
+* added assertion and cast to unsigned to silence a warning
+  in the lemon parser template
 
-  * fixed a c99-ism in the parser template
+* fixed a c99-ism in the parser template
 
 seq:
 
-  * revert seq() back to returning thread id of 1st state set
-    instead of void
+* revert seq() back to returning thread id of 1st state set
+  instead of void
 
 examples:
 
-  * added new cmdButtons example (thanks to Wesley Moore)
+* added new cmdButtons example (thanks to Wesley Moore)
 
 docs:
 
-  * updated the README file
+* updated the README file
 
-  * fixed safe mode documentation (thanks to Eric Norum)
+* fixed safe mode documentation (thanks to Eric Norum)
 
 .. _Release_Notes_2.1.9:
 
