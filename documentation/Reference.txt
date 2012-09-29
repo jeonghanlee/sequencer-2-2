@@ -1327,12 +1327,25 @@ pvAssign
 .. c:function::
    pvStat pvAssign(assigned_var, process_variable_name)
 
-Assigns or re-assigns the SNL variable ``var`` to
-``process_variable_name``. If ``process_variable_name`` is an empty
-string then ``assigned_var`` is de-assigned (not associated with any process
-variable). In :ref:`safe mode`, it causes assignment to an anonymous PV.
+Assigns or re-assigns the SNL variable ``var`` to ``process_variable_name``.
+If ``process_variable_name`` is an empty string then ``assigned_var`` is
+de-assigned (not associated with any process variable). In :ref:`safe mode`,
+it causes assignment to an anonymous PV.
 
 As usual, ``assigned_var`` can also be an array element.
+
+Note that pvAsssign is *asynchronous*: it sends a request to search for and
+connect to the given ``process_variable_name``, but it does not wait for a
+response, similar to ``pvGet(var,ASYNC)``. Calling pvAssign *does* have one
+immediate effect, namely de-assigning the variable from any PV it currently
+is assigned to. In order to make sure that it has connected to the new PV,
+you can use the :c:func:`pvConnected` built-in function inside a :token:`when`
+clause.
+
+.. todo::
+
+   Add an optional argument, so users can make pvAssign wait for the
+   connection to be established (or some timeout).
 
 See also :token:`assign` clause.
 
@@ -1340,26 +1353,27 @@ A better name for this function would be ``pvReassign``.
 
 .. note::
 
-   :c:func:`pvAssign` can only be called on variables (or array elements)
+   ``pvAssign`` can only be called on variables (or array elements)
    that have been statically marked as process variables using the
    :token:`assign` syntax. An empty string may be used for the initial
    assignment, or (from version 2.1. onward) the simplified form
    ``assign var``.
 
-.. note:: If a variable gets de-assigned from a non-empty to an empty
+.. warning::
+
+   If a variable gets de-assigned from a non-empty to an empty
    name, the corresponding channel is destroyed, which means that
    dynamically allocated memory gets freed. If your
    system cannot handle dynamic memory allocation without fragmentation,
    care should be taken that assignment and de-assignment do not
    alternate too often.
 
-..note:: If you want to assign array elements to separate PVs, you cannot
-   currently do this with a single call (in contrast to doing it in an
-   :token:`assign` clause. Instead, you must call :c:func:`pvAssign`
-   for each array element individually.
-   This might change in a future release.
+.. note::
 
-..todo:: Implement multiple assign for arrays.
+   If you want to assign array elements to separate PVs, you cannot
+   currently do this with a single call (in contrast to doing it in an
+   :token:`assign` clause. Instead, you must call ``pvAssign``
+   for each array element individually.
 
 
 pvMonitor
