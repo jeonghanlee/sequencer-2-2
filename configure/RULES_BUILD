@@ -68,5 +68,9 @@ endif
 	$(SNC) $(TARGET_SNCFLAGS) $(SNCFLAGS) $(USR_SNCFLAGS) $(call PATH_FILTER,$<) -o $(@F).tmp
 	$(MV) $(@F).tmp $@
 
+CLEANS += $(SNC_CSRC_FILES)
+
+ifndef BASE_3_15
 clean::
-	@$(RM) $(SNC_CSRC_FILES)
+	$(RM) $(CLEANS)
+endif
