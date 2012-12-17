@@ -153,8 +153,8 @@ epicsShareFunc pvStat epicsShareAPI seq_pvGet(SS_ID ss, VAR_ID varId, enum compT
 		meta->status = pvStatERROR;
 		meta->severity = pvSevrMAJOR;
 		meta->message = "get failure";
-		errlogSevPrintf(errlogFatal, "pvGet: pvVarGetCallback() %s failure: %s\n",
-			dbch->dbName, pvVarGetMess(dbch->pvid));
+		errlogSevPrintf(errlogFatal, "pvGet(var %s, pv %s): pvVarGetCallback() failure: %s\n",
+			ch->varName, dbch->dbName, pvVarGetMess(dbch->pvid));
 		freeListFree(sp->pvReqPool, req);
 		epicsEventSignal(getSem);
 		check_connected(dbch, meta);
@@ -283,7 +283,7 @@ static void anonymous_put(SS_ID ss, CHAN *ch)
 		if (full)
 		{
 			errlogSevPrintf(errlogMinor,
-			  "pvPut on queued variable %s (anonymous): "
+			  "pvPut on queued variable '%s' (anonymous): "
 			  "last queue element overwritten (queue is full)\n",
 			  ch->varName
 			);
@@ -406,8 +406,8 @@ epicsShareFunc pvStat epicsShareAPI seq_pvPut(SS_ID ss, VAR_ID varId, enum compT
 				(pvValue *)var);	/* data value */
 		if (status != pvStatOK)
 		{
-			errlogSevPrintf(errlogFatal, "pvPut: pvVarPutNoBlock() %s failure: %s\n",
-				dbch->dbName, pvVarGetMess(dbch->pvid));
+			errlogSevPrintf(errlogFatal, "pvPut(var %s, pv %s): pvVarPutNoBlock() failure: %s\n",
+				ch->varName, dbch->dbName, pvVarGetMess(dbch->pvid));
 			return status;
 		}
 	}
@@ -427,8 +427,8 @@ epicsShareFunc pvStat epicsShareAPI seq_pvPut(SS_ID ss, VAR_ID varId, enum compT
 				req);			/* user arg */
 		if (status != pvStatOK)
 		{
-			errlogSevPrintf(errlogFatal, "pvPut: pvVarPutCallback() %s failure: %s\n",
-				dbch->dbName, pvVarGetMess(dbch->pvid));
+			errlogSevPrintf(errlogFatal, "pvPut(var %s, pv %s): pvVarPutCallback() failure: %s\n",
+				ch->varName, dbch->dbName, pvVarGetMess(dbch->pvid));
 			freeListFree(sp->pvReqPool, req);
 			epicsEventSignal(putSem);
 			check_connected(dbch, meta);
@@ -495,8 +495,8 @@ epicsShareFunc boolean epicsShareAPI seq_pvPutComplete(
 			done = TRUE;
 			break;
 		case epicsEventWaitError:
-			errlogSevPrintf(errlogFatal, "pvPutComplete: "
-			  "epicsEventTryWait(putSemId[%d]) failure\n", varId);
+			errlogSevPrintf(errlogFatal, "pvPutComplete(%s): "
+			  "epicsEventTryWait(putSem[%d]) failure\n", ch->varName, varId);
 		case epicsEventWaitTimeout:
 			break;
 		}
@@ -559,8 +559,8 @@ epicsShareFunc pvStat epicsShareAPI seq_pvAssign(SS_ID ss, VAR_ID varId, const c
 
 		if (status != pvStatOK)
 		{
-			errlogSevPrintf(errlogFatal, "pvAssign: pvVarDestroy() %s failure: "
-				"%s\n", dbch->dbName, pvVarGetMess(dbch->pvid));
+			errlogSevPrintf(errlogFatal, "pvAssign(var %s, pv %s): pvVarDestroy() failure: "
+				"%s\n", ch->varName, dbch->dbName, pvVarGetMess(dbch->pvid));
 		}
 		free(dbch->dbName);
 	}
@@ -612,8 +612,8 @@ epicsShareFunc pvStat epicsShareAPI seq_pvAssign(SS_ID ss, VAR_ID varId, const c
 			&dbch->pvid);		/* ptr to pvid */
 		if (status != pvStatOK)
 		{
-			errlogSevPrintf(errlogFatal, "pvAssign: pvVarCreate() %s failure: "
-				"%s\n", dbch->dbName, pvVarGetMess(dbch->pvid));
+			errlogSevPrintf(errlogFatal, "pvAssign(var %s, pv %s): pvVarCreate() failure: "
+				"%s\n", ch->varName, dbch->dbName, pvVarGetMess(dbch->pvid));
 			if (ch->dbch->ssMetaData)
 				free(ch->dbch->ssMetaData);
 			free(ch->dbch->dbName);

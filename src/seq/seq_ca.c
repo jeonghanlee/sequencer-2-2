@@ -86,8 +86,8 @@ pvStat seq_connect(SPROG *sp, boolean wait)
 				&dbch->pvid);		/* ptr to PV id */
 		if (status != pvStatOK)
 		{
-			errlogSevPrintf(errlogFatal, "seq_connect: pvVarCreate() %s failure: "
-				"%s\n", dbch->dbName, pvVarGetMess(dbch->pvid));
+			errlogSevPrintf(errlogFatal, "seq_connect: var %s, pv %s: pvVarCreate() failure: "
+				"%s\n", ch->varName, dbch->dbName, pvVarGetMess(dbch->pvid));
 			if (ch->dbch->ssMetaData)
 				free(ch->dbch->ssMetaData);
 			free(ch->dbch->dbName);
@@ -312,7 +312,7 @@ static void proc_db_events_queued(SPROG *sp, CHAN *ch, pvValue *value)
 	if (full)
 	{
 		errlogSevPrintf(errlogMinor,
-		  "monitor event for variable %s (pv %s): "
+		  "monitor event for variable '%s' (pv '%s'): "
 		  "last queue element overwritten (queue is full)\n",
 		  ch->varName, ch->dbch->dbName
 		);
@@ -345,8 +345,8 @@ void seq_disconnect(SPROG *sp)
 		status = pvVarDestroy(dbch->pvid);
 		dbch->pvid = NULL;
 		if (status != pvStatOK)
-			errlogSevPrintf(errlogFatal, "seq_disconnect: pvVarDestroy() %s failure: "
-				"%s\n", dbch->dbName, pvVarGetMess(dbch->pvid));
+			errlogSevPrintf(errlogFatal, "seq_disconnect: var %s, pv %s: pvVarDestroy() failure: "
+				"%s\n", ch->varName, dbch->dbName, pvVarGetMess(dbch->pvid));
 
 		/* Clear monitor & connect indicators */
 		dbch->connected = FALSE;
@@ -379,8 +379,8 @@ pvStat seq_camonitor(CHAN *ch, boolean on)
 	else
 		status = pvVarMonitorOff(dbch->pvid, dbch->monid);
 	if (status != pvStatOK)
-		errlogSevPrintf(errlogFatal, "seq_camonitor: pvVarMonitor%s(%s) failure: %s\n",
-			on?"On":"Off", dbch->dbName, pvVarGetMess(dbch->pvid));
+		errlogSevPrintf(errlogFatal, "seq_camonitor: pvVarMonitor%s(var %s, pv %s) failure: %s\n",
+			on?"On":"Off", ch->varName, dbch->dbName, pvVarGetMess(dbch->pvid));
 	else if (!on)
 		dbch->monid = NULL;
 	return status;
@@ -431,7 +431,8 @@ void seq_conn_handler(void *var, int connected)
 		else
 		{
 			errlogSevPrintf(errlogMinor,
-				"%s disconnect event but already disconnected %s\n",
+				"seq_conn_handler: var '%s', pv '%s': "
+				"disconnect event but already disconnected\n",
 				ch->varName, dbch->dbName);
 		}
 	}
@@ -460,7 +461,8 @@ void seq_conn_handler(void *var, int connected)
 		else
 		{
 			errlogSevPrintf(errlogMinor,
-				"%s connect event but already connected %s\n",
+				"seq_conn_handler: var '%s', pv '%s': "
+				"connect event but already connected\n",
 				ch->varName, dbch->dbName);
 		}
 	}
