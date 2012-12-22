@@ -2033,11 +2033,14 @@ Any variable declared in escaped C code and used in SNL code will
 be flagged with a warning message by the SNC. However, it will be
 passed on to the C compiler correctly.
 
-User Functions within the State Program
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C Functions within the State Program
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The last state set may be followed by C code, usually containing
-one or more user-supplied functions. For example::
+Escaped C code can appear in many places in the SNL program. But only
+code that appears at the top level, i.e. outside any SNL code block will
+be placed at the C top level. So, C *function definitions* must be
+placed there; this means either inside the definitions section
+(:token:`global_defns`) or at the end of the program. For example::
 
    program example
    ...
@@ -2047,8 +2050,19 @@ one or more user-supplied functions. For example::
        { ... }
    }%
 
-There is little reason to do this, since a program can of
-course be linked against C libraries.
+It matters where the function is defined: if it appears at the end of
+the program, it can see all the variable and type definitions generated
+by the SNL compiler, so if your C function acesses a global SNL variable,
+you must place its definition at the end. However, this means that the
+generated code for the SNL program does not see the C function definition,
+so you might want to place a separate prototype for the function in the
+definitions section (i.e. before the state sets).
+
+Note that you can *call* any C function from anywhere in the SNL program
+without escaping. You can also link the SNL program to C objects or
+libraries, so the only reason to put C function definitions inside the
+SNL program is if your function accesses global SNL variables.
+
 
 Calling pvGet etc. from C
 ^^^^^^^^^^^^^^^^^^^^^^^^^
