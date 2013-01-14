@@ -1,6 +1,20 @@
 Known Problems
 ==============
 
+.. _Known_Problems_2.1.10:
+
+Known Problems in Release 2.1.10
+--------------------------------
+
+In the warning message when a queue is full, the variable name
+should be quoted. Here is an example::
+
+  sevr=minor pvPut on queued variable response (anonymous): last queue
+  element overwritten (queue is full)
+
+Here "response" is actually the variable name, but this is not apparent.
+
+
 .. _Known_Problems_2.1.8:
 
 Known Problems in Release 2.1.8
