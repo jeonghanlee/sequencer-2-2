@@ -1534,7 +1534,7 @@ pvIndex
    unsigned pvIndex(assigned_var)
 
 Returns the index associated with a variable. See
-`User Functions within the State Program`_ for how to use this function.
+`Calling pvGet etc. from C`_ for how to use this function.
 
 
 pvFlush
@@ -2062,7 +2062,6 @@ Note that you can *call* any C function from anywhere in the SNL program
 without escaping. You can also link the SNL program to C objects or
 libraries, so the only reason to put C function definitions inside the
 SNL program is if your function accesses global SNL variables.
-
 
 Calling pvGet etc. from C
 ^^^^^^^^^^^^^^^^^^^^^^^^^
