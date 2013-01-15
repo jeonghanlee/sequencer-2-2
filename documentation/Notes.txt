@@ -1,6 +1,21 @@
 Release Notes
 =============
 
+.. _Release_Notes_2.1.11:
+
+Release 2.1.11
+--------------
+
+* adjusted build rules to be compatible with base-3.15
+
+* seq: improved runtime error messages
+
+* seq: extended the comment about waking up all threads on connection event
+
+* docs: improved documentation of pvAssign
+
+* docs: clarified the section on user functions
+
 .. _Release_Notes_2.1.10:
 
 Release 2.1.10
