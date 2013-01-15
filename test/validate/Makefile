@@ -94,7 +94,11 @@ vxTestHarness_DBD += $(COMMON_DIR)/vxTestHarnessRegistrars.dbd
 
 USR_DBDFLAGS += -I $(COMMON_DIR)
 
+TOUCH = $(PERL) -MExtUtils::Command -e touch
+
 DB += vxTestHarness.db
+vxTestHarness.db$(DEP):
+	$(TOUCH) $@
 endif
 
 # PROD_RTEMS = rtemsTestHarness
