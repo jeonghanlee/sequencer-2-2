@@ -86,6 +86,7 @@ DBD += vxTestHarness.dbd
 vxTestHarness_DBD += base.dbd
 vxTestHarness_DBD += $(COMMON_DIR)/vxTestHarnessRegistrars.dbd
 
+# needed for base 3.14.10 compatibility:
 USR_DBDFLAGS += -I $(COMMON_DIR)
 
 DB += vxTestHarness.db
