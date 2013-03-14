@@ -105,6 +105,9 @@ doctest:
 	@echo "Testing of doctests in the sources finished, look at the " \
 	      "results in $(BUILDDIR)/doctest/output.txt."
 
+# suppress output to stdout if -s option to make is in effect
+SILENT=$(if $(findstring s,$(MFLAGS)),>/dev/null,)
+
 pdf: html
 	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTS) $(BUILDDIR)/latex
-	$(MAKE) -C $(BUILDDIR)/latex all-pdf
+	$(MAKE) -C $(BUILDDIR)/latex all-pdf $(SILENT)
