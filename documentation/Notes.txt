@@ -1,6 +1,30 @@
 Release Notes
 =============
 
+.. _Release_Notes_2.1.12:
+
+Release 2.1.12
+--------------
+
+seq: initial wait for channel connect now uses exponential backoff
+
+* The messages about not yet connected/monitored channels appear now
+  at a more user-friendly rate, stabilising at 1 per hour.
+
+build system:
+
+* builds now correctly against base 3.14.8, 3.14.10, 3.14.12, and 3.15
+
+* parallel make supported from base 3.14.12 onward
+
+docs: expanded reference section on C compatibility features
+
+* make clear that you can reference foreign entities
+  directly in action statements w/o recourse to escape syntax
+
+* explain why and how to avoid #include and other CPP directives
+  in multi-line escaped code blocks
+
 .. _Release_Notes_2.1.11:
 
 Release 2.1.11
