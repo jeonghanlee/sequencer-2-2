@@ -32,5 +32,4 @@ include $(TOP)/configure/RULES
 #  ADD RULES AFTER THIS LINE
 
 $(COMMON_DIR)/seq_release.h: $(TOP)/configure/CONFIG ../seq_release.pl
-	$(RM) $@
 	$(PERL) ../seq_release.pl $(SEQ_RELEASE) > $@

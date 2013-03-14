@@ -117,35 +117,25 @@ SOFTIOC=$(EPICS_BASE_BIN)/softIoc$(HOSTEXE)
 SOFTDBD=$(EPICS_BASE)/dbd/softIoc.dbd
 
 $(REGRESSION_TESTS_WITH_DB:%=%Ioc.t): %Ioc.t: %$(EXE) ../makeTestfile.pl
-	$(RM) $@.tmp
-	$(PERL) ../makeTestfile.pl $@.tmp $* $< ioc $(SOFTIOC) $(SOFTDBD) $(USE_VALGRIND)
-	$(MV) $@.tmp $@
+	$(PERL) ../makeTestfile.pl $@ $* $< ioc $(SOFTIOC) $(SOFTDBD) $(USE_VALGRIND)
 
 $(REGRESSION_TESTS:%=%.t): %.t: %$(EXE) ../makeTestfile.pl
-	$(RM) $@.tmp
-	$(PERL) ../makeTestfile.pl $@.tmp $* $< noioc $(SOFTIOC) $(SOFTDBD) $(USE_VALGRIND)
-	$(MV) $@.tmp $@
+	$(PERL) ../makeTestfile.pl $@ $* $< noioc $(SOFTIOC) $(SOFTDBD) $(USE_VALGRIND)
 
 norace.i race.i: ../raceCommon.st
 
 $(COMMON_DIR)/vxTestHarnessRegistrars.dbd: ../makeTestDbd.pl
-	$(RM) $@.tmp
-	$(PERL) ../makeTestDbd.pl $(REGRESSION_TESTS_vxWorks) > $@.tmp
-	$(MV) $@.tmp $@
+	$(PERL) ../makeTestDbd.pl $(REGRESSION_TESTS_vxWorks) > $@
 
 $(COMMON_DIR)/vxTestHarness.dbd: $(COMMON_DIR)/vxTestHarnessRegistrars.dbd
 
 $(COMMON_DIR)/vxTestHarness.db: $(REGRESSION_TESTS_WITH_DB:%=../%.db)
-	$(RM) $@.tmp
-	$(PERL) -ne print $(REGRESSION_TESTS_WITH_DB:%=../%.db) > $@.tmp
-	$(MV) $@.tmp $@
+	$(PERL) -ne print $(REGRESSION_TESTS_WITH_DB:%=../%.db) > $@
 
 st.cmd: ../st.cmd.vxWorks ../makeStCmd.pl
-	$(RM) $@.tmp
-	$(CP) ../st.cmd.vxWorks $@.tmp
-	$(PERL) -MExtUtils::Command -e chmod 644 $@.tmp
-	$(PERL) ../makeStCmd.pl $(REGRESSION_TESTS_vxWorks) >> $@.tmp
-	$(MV) $@.tmp $@
+	$(CP) ../st.cmd.vxWorks $@
+	$(PERL) -MExtUtils::Command -e chmod 644 $@
+	$(PERL) ../makeStCmd.pl $(REGRESSION_TESTS_vxWorks) >> $@
 
 ifeq "$(OS_CLASS)" "vxWorks"
 build: st.cmd
