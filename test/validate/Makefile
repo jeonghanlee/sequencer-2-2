@@ -63,19 +63,13 @@ endif
 #TESTPROD_HOST += ctest
 
 #  Libraries
-PROD_LIBS += seqSoftIoc
 PROD_LIBS += seq pv
 PROD_LIBS += $(EPICS_BASE_IOC_LIBS)
-
-LIBRARY += seqSoftIoc
 
 DBD += seqSoftIoc.dbd
 seqSoftIoc_DBD += base.dbd
 
 seqSoftIoc_SRCS += seqSoftIoc_registerRecordDeviceDriver.cpp
-
-seqSoftIoc_LIBS += seq pv
-seqSoftIoc_LIBS += $(EPICS_BASE_IOC_LIBS)
 
 ifeq '$(EPICS_HAS_UNIT_TEST)' '1'
 seqSoftIoc_SRCS += testSupport.c
@@ -94,12 +88,14 @@ vxTestHarness_DBD += $(COMMON_DIR)/vxTestHarnessRegistrars.dbd
 
 USR_DBDFLAGS += -I $(COMMON_DIR)
 
-TOUCH = $(PERL) -MExtUtils::Command -e touch
-
 DB += vxTestHarness.db
-vxTestHarness.db$(DEP):
-	$(TOUCH) $@
 endif
+
+define template_SRCS
+$(1)_SRCS += $(1).st $(seqSoftIoc_SRCS)
+endef
+$(foreach st, $(TESTPROD_HOST), $(eval $(call template_SRCS,$(st))))
+
 
 # PROD_RTEMS = rtemsTestHarness
 # rtemsTestHarness_SRCS += $(TESTPROD_HOST::%=%.st)
@@ -109,6 +105,13 @@ endif
 include $(TOP)/configure/RULES
 #----------------------------------------
 #  ADD RULES AFTER THIS LINE
+
+ifeq '$(EPICS_HAS_UNIT_TEST)' '1'
+vxTestHarness.db$(DEP):
+	@echo "$(COMMON_DIR)/vxTestHarness.db: ../Makefile" > $@
+vxTestHarness.dbd$(DEP):
+	@echo "$(COMMON_DIR)/vxTestHarness.dbd: ../Makefile" > $@
+endif
 
 SOFTIOC=$(EPICS_BASE_BIN)/softIoc$(HOSTEXE)
 SOFTDBD=$(EPICS_BASE)/dbd/softIoc.dbd
