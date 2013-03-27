@@ -1449,8 +1449,8 @@ pvStatus
 .. c:function::
    pvStat pvStatus(assigned_var)
 
-Returns the current alarm status (e.g. ``pvStatHIHI``, see :ref:`pvStat`)
-of the underlying PV
+Returns the current alarm status (e.g. ``pvStatHIHI``, see the header file
+pvAlarm.h) of the underlying PV
 or indicates failure of a previous PV operation.
 
 The status, severity, and message returned by :c:func:`pvStatus`,

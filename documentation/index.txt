@@ -25,7 +25,6 @@ download, build, and install the software.
    Compiling
    Using
    Reference
-   PV-API
    Examples
    Notes
    KnownProblems

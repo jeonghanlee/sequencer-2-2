@@ -10,7 +10,6 @@ Users' Guide
    Compiling
    Using
    Reference
-   PV-API
    Examples
    Notes
    KnownProblems
