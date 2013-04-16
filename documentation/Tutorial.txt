@@ -700,7 +700,7 @@ it tells the sequencer to compare the value specified by the
 state is entered or whenever the state is entered from another state.
 If the timer matches or exceeds the value of the expression the
 :c:func:`delay` function returns ``TRUE`` otherwise it returns
-``FALSE``.
+``FALSE``.  Think of the operation as `elapsed(s)` rather than `delay(s)`.
 
 If your action statements have any sort of polling loops or calls to
 ``epicsThreadSleep`` you should reconsider your design. The presence
