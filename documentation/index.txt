@@ -26,6 +26,7 @@ download, build, and install the software.
    Using
    Reference
    Examples
+   ReleaseNotes-2-2
    ReleaseNotes-2-1
    ReleaseNotes-2-0-and-older
    KnownProblems
