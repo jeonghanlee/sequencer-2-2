@@ -55,3 +55,42 @@ cannot access global variables declared in SNL, even if the reentrant
 option is not in effect. Such C code should now be placed after the last
 state set.
 
+Delay Implementation
+^^^^^^^^^^^^^^^^^^^^
+
+While it was always allowed to use arbitrary expressions for the
+argument to delay(), this never worked as one would expect if the
+expression depended on e.g. monitored variables. The reason is that
+previously the delay expression was evaluated once for all delays
+appearing in conditions inside a state when the state was entered.
+Later checks whether the delay has expired used the cached delay
+value.
+
+Now, delay expressions are evaluated like all other parts of the
+state transition condition and seq_delay() takes a double argument
+instead of a delay id. As a (transparent) side effect, if the
+delay has not yet expired, the minimum time to wait for events is
+adjusted. This adjustment is now more precise, since we do not store
+the delay but rather the (future) time when the wakeup should happen.
+The new implementation makes a lot of code obsolete which has
+consequently been deleted:
+
+- type DELAY_ID and all mentions of delay ids
+
+- assignment of delay ids in the compiler
+
+- the special cases FT_DELAY for the delay() builtin and
+  the special E_DELAY syntax node type
+
+- generated delay init functions
+
+- seq_delayInit()
+
+- clearDelays() and calcTimeout() in seq_task
+
+- array members delay, delayExpired of struct state_set
+  instead there is now double wakeupTime
+
+- member numDelays in various structs
+
+- assign_next_delay_id in the compiler
