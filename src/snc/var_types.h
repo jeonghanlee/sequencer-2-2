@@ -7,6 +7,8 @@ in the file LICENSE that is included with this distribution.
 #ifndef INCLvar_typesh
 #define INCLvar_typesh
 
+#include "seq_prim_types.h"
+
 enum type_tag {
     T_NONE,     /* undeclared (or declared as foreign) variable */
     T_EVFLAG,   /* event flags */
@@ -14,26 +16,7 @@ enum type_tag {
     T_FOREIGN,  /* foreign types (declared in C code) */
     T_POINTER,
     T_ARRAY,
-};
-
-enum prim_type_tag {
-    V_CHAR,
-    V_UCHAR,
-    V_SHORT,
-    V_USHORT,
-    V_INT,
-    V_UINT,
-    V_LONG,
-    V_ULONG,
-    V_INT8T,
-    V_UINT8T,
-    V_INT16T,
-    V_UINT16T,
-    V_INT32T,
-    V_UINT32T,
-    V_FLOAT,
-    V_DOUBLE,
-    V_STRING,
+    T_PV,
 };
 
 enum foreign_type_tag {
@@ -89,32 +72,6 @@ Type mk_foreign_type(enum foreign_type_tag tag, char *name);
 Type mk_ef_type();
 Type mk_no_type();
 
-#ifndef var_types_GLOBAL
-extern
-#endif
-const char *prim_type_name[]
-#ifdef var_types_GLOBAL
-= {
-    "char",
-    "unsigned char",
-    "short",
-    "unsigned short",
-    "int",
-    "unsigned int",
-    "long",
-    "unsigned long",
-    "epicsInt8",
-    "epicsUInt8",
-    "epicsInt16",
-    "epicsUInt16",
-    "epicsInt32",
-    "epicsUInt32",
-    "float",
-    "double",
-    "string",
-}
-#endif
-;
 
 #ifndef var_types_GLOBAL
 extern

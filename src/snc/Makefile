@@ -26,7 +26,7 @@ snc_SRCS += gen_tables.c    # code generation (tables)
 snc_SRCS += sym_table.c     # symbol table
 snc_SRCS += builtin.c       # builtin constants and functions
 
-snc_LIBS += Com
+snc_LIBS += Com seq
 
 # locally overwrite default value for this variable
 INSTALL_DOC = $(INSTALL_LOCATION)/documentation

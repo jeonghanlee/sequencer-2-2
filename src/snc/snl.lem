@@ -213,31 +213,31 @@ init_exprs(p) ::= .					{ p = 0; }
 // Type expressions
 
 // C standard calls this specifier-qualifier-list
+%type prim_type {enum prim_type_tag}
+prim_type(p) ::= CHAR.				{ p = P_CHAR; }
+prim_type(p) ::= SHORT.				{ p = P_SHORT; }
+prim_type(p) ::= INT.				{ p = P_INT; }
+prim_type(p) ::= LONG.				{ p = P_LONG; }
+prim_type(p) ::= UNSIGNED CHAR.			{ p = P_UCHAR; }
+prim_type(p) ::= UNSIGNED SHORT.		{ p = P_USHORT; }
+prim_type(p) ::= UNSIGNED INT.			{ p = P_UINT; }
+prim_type(p) ::= UNSIGNED LONG.			{ p = P_ULONG; }
+prim_type(p) ::= INT8T.				{ p = P_INT8T; }
+prim_type(p) ::= UINT8T.			{ p = P_UINT8T; }
+prim_type(p) ::= INT16T.			{ p = P_INT16T; }
+prim_type(p) ::= UINT16T.			{ p = P_UINT16T; }
+prim_type(p) ::= INT32T.			{ p = P_INT32T; }
+prim_type(p) ::= UINT32T.			{ p = P_UINT32T; }
+prim_type(p) ::= FLOAT.				{ p = P_FLOAT; }
+prim_type(p) ::= DOUBLE.			{ p = P_DOUBLE; }
+prim_type(p) ::= STRING.			{ p = P_STRING; }
+
 %type basetype {Type}
-basetype(p) ::= CHAR.				{ p = mk_prim_type(V_CHAR);	}
-basetype(p) ::= SHORT.				{ p = mk_prim_type(V_SHORT);	}
-basetype(p) ::= INT.				{ p = mk_prim_type(V_INT);	}
-basetype(p) ::= LONG.				{ p = mk_prim_type(V_LONG);	}
-basetype(p) ::= UNSIGNED CHAR.			{ p = mk_prim_type(V_UCHAR);	}
-basetype(p) ::= UNSIGNED SHORT.			{ p = mk_prim_type(V_USHORT);	}
-basetype(p) ::= UNSIGNED INT.			{ p = mk_prim_type(V_UINT);	}
-basetype(p) ::= UNSIGNED LONG.			{ p = mk_prim_type(V_ULONG);	}
-
-basetype(p) ::= INT8T.				{ p = mk_prim_type(V_INT8T);	}
-basetype(p) ::= UINT8T.				{ p = mk_prim_type(V_UINT8T);	}
-basetype(p) ::= INT16T.				{ p = mk_prim_type(V_INT16T);	}
-basetype(p) ::= UINT16T.			{ p = mk_prim_type(V_UINT16T);	}
-basetype(p) ::= INT32T.				{ p = mk_prim_type(V_INT32T);	}
-basetype(p) ::= UINT32T.			{ p = mk_prim_type(V_UINT32T);	}
-
-basetype(p) ::= FLOAT.				{ p = mk_prim_type(V_FLOAT);	}
-basetype(p) ::= DOUBLE.				{ p = mk_prim_type(V_DOUBLE);	}
-basetype(p) ::= STRING.				{ p = mk_prim_type(V_STRING);	}
-basetype(p) ::= EVFLAG.				{ p = mk_ef_type();		}
-
-basetype(p) ::= ENUM NAME(x).			{ p = mk_foreign_type(F_ENUM, x.str);	}
-basetype(p) ::= STRUCT NAME(x).			{ p = mk_foreign_type(F_STRUCT, x.str);	}
-basetype(p) ::= UNION NAME(x).			{ p = mk_foreign_type(F_UNION, x.str);	}
+basetype(p) ::= prim_type(x).			{ p = mk_prim_type(x); }
+basetype(p) ::= EVFLAG.			{ p = mk_ef_type(); }
+basetype(p) ::= ENUM NAME(x).			{ p = mk_foreign_type(F_ENUM, x.str); }
+basetype(p) ::= STRUCT NAME(x).		{ p = mk_foreign_type(F_STRUCT, x.str); }
+basetype(p) ::= UNION NAME(x).			{ p = mk_foreign_type(F_UNION, x.str); }
 basetype(p) ::= TYPENAME NAME(x).		{ p = mk_foreign_type(F_TYPENAME, x.str); }
 
 type_expr(p) ::= basetype(t) opt_abstract_declarator(d). {

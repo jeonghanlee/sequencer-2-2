@@ -110,7 +110,7 @@ static void gen_channel(Chan *cp, uint num_event_flags, int opt_reent)
 	if (basetype->tag == T_PRIM)
 	{
 		enum prim_type_tag type = basetype->val.prim;
-		if (type == V_LONG || type == V_ULONG)
+		if (type == P_LONG || type == P_ULONG)
 		{
 			printf(
 "#if LONG_MAX > 0x7fffffffL\n"
@@ -125,8 +125,8 @@ static void gen_channel(Chan *cp, uint num_event_flags, int opt_reent)
 " because Channel Access does not support integral types longer than 4 bytes.\\\n"
 " You can use '%s' instead, or the fixed size type '%s'.\n"
 "#endif\n",
-				type == V_LONG ? "int" : "unsigned int",
-				type == V_LONG ? "int32_t" : "uint32_t"
+				type == P_LONG ? "int" : "unsigned int",
+				type == P_LONG ? "int32_t" : "uint32_t"
 			);
 		}
 	}

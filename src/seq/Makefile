@@ -8,6 +8,7 @@ include $(TOP)/configure/CONFIG
 INC += seqCom.h
 INC += seq_release.h
 INC += seq_static_assert.h
+INC += seq_prim_types.h
 
 #  seq library
 LIBRARY = seq
