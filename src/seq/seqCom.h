@@ -84,6 +84,8 @@ typedef	struct state_set *const SS_ID;	/* state set id, opaque */
 typedef struct _seq_var SEQ_VARS;	/* defined by program, opaque */
 typedef char string[MAX_STRING_SIZE];	/* the string typedef */
 
+typedef SEQ_VARS USER_VAR;              /* for compatibility */
+
 /* these typedefs make the code more self documenting */
 typedef epicsUInt32 seqMask;		/* for event masks and options */
 typedef unsigned EV_ID;			/* identifier for an event */
