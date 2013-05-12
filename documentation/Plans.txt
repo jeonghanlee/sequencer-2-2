@@ -83,3 +83,16 @@ list. Comments are welcome, as usual.
 
   Implementation: need to have monitor flags for each state set; must also
   change interface to snc (monitored becomes a bitmask with numSS bits).
+
+* Add some sort of built-in macro language. Something that nicely integrates
+  with the existing SNL syntax would be nice, e.g. ::
+
+    define macro (arg, ...) {
+      definition
+    }
+    include "headerfile";
+
+  Use of CPP could then be deprecated. What about token catenation and
+  stringification as in CPP?
+
+  Implementation would have to be an intermediate step between lexing and parsing.
