@@ -39,8 +39,6 @@ Development snapshots are available under the name
 In the releases directory there is always a symbolic link to the
 `latest snapshot`_.
 
-Release notes are contained in the documentation, see :doc:`Notes`.
-
 Older releases can be either downloaded from the PSI website
 
    http://epics.web.psi.ch/software/sequencer/download
