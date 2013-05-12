@@ -19,6 +19,9 @@ The documentation for the PV layer has been removed, too. The only remaining
 user relevant part of the interface is contained in pvAlarm.h, see next
 paragraph.
 
+Also removed were the keck examples and the KTL related stuff in other example
+directories.
+
 Built-in Constants
 ^^^^^^^^^^^^^^^^^^
 
@@ -55,8 +58,30 @@ cannot access global variables declared in SNL, even if the reentrant
 option is not in effect. Such C code should now be placed after the last
 state set.
 
-Delay Implementation
-^^^^^^^^^^^^^^^^^^^^
+Related patches:
+
+* snc: swap order of gen_user_var and gen_defn_c_code
+* snc: refactored generation of initializers
+
+  With foreign types we can no longer generate default initializers
+  in a portable way, as was done previously (in reentrant mode).
+  We now leave off initializers from the UserVar struct and instead
+  initialize the members one by one (using memcpy) from statically
+  initialized single values.
+
+FIXME: Maybe I should just bite the bullet and keep the order between
+definitions and escaped code fragments as it is in the source file.
+This would certainly be the most user friendly and intuitively
+understandable solution. Problem: cannot do that for global variables
+as they are all in one big struct, so must make an exception
+for variable declarations.
+
+Another idea would be to add an ``include`` statement to the grammar.
+This is related to the built-in macro feature I have been thinking about
+(see :doc:`Plans`).
+
+New Delay Implementation
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 While it was always allowed to use arbitrary expressions for the
 argument to delay(), this never worked as one would expect if the
@@ -72,25 +97,156 @@ instead of a delay id. As a (transparent) side effect, if the
 delay has not yet expired, the minimum time to wait for events is
 adjusted. This adjustment is now more precise, since we do not store
 the delay but rather the (future) time when the wakeup should happen.
-The new implementation makes a lot of code obsolete which has
-consequently been deleted:
 
-- type DELAY_ID and all mentions of delay ids
+Removed devSequencer
+^^^^^^^^^^^^^^^^^^^^
 
-- assignment of delay ids in the compiler
+The (broken and ugly) sequencer device support was removed.
+Consequently, seqFindProgByName was be removed as it is no longer needed.
 
-- the special cases FT_DELAY for the delay() builtin and
-  the special E_DELAY syntax node type
+Multiple pvSync for multiply assigned arrays
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-- generated delay init functions
+Now, if you do pvSync(x,ef), where x is an array for which the elements are
+individually assigned to a separate PVs, then all the elements get synced
+with the event flag, just like if you use the sync clause.
 
-- seq_delayInit()
+Names of Generated and API Entities
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-- clearDelays() and calcTimeout() in seq_task
+These now follow a strict naming convention:
 
-- array members delay, delayExpired of struct state_set
-  instead there is now double wakeupTime
+* all generated names start with "_seq" or "_SEQ"
 
-- member numDelays in various structs
+* most API names start with "seq" or "SEQ", the exceptions being:
 
-- assign_next_delay_id in the compiler
+  - the ``enum compType`` and its members ``DEFAULT``, ``ASYNC``, ``SYNC``
+  - option constants:
+
+    + ``OPT_DEBUG``
+    + ``OPT_ASYNC``
+    + ``OPT_CONN``
+    + ``OPT_REENT``
+    + ``OPT_NEWEF``
+    + ``OPT_SAFE``
+
+    + ``OPT_NORESETTIMERS``
+    + ``OPT_DOENTRYFROMSELF``
+    + ``OPT_DOEXITTOSELF``
+
+  - names for bitmask operations:
+
+    + ``NBITS``
+    + ``NWORDS``
+    + ``bitSet``, ``bitClear``, ``bitTest``, ``optTest``
+
+  - other constants:
+
+    + ``NOEVFLAG``
+    + ``DEFAULT_QUEUE_SIZE``
+    + ``TRUE``, ``FALSE``
+
+  - typedefs for pointers to internal data structures:
+
+    + ``SS_ID``
+    + ``PROG_ID``
+
+  - other typedefs: ``string``, ``EV_ID``, ``VAR_ID``
+
+Accordingly, some of the names in the API had to be changed:
+
+  ========================= =========================
+  Old                       New
+  ========================= =========================
+  USER_VAR                  SEQ_VARS
+  struct UserVar            struct _seq_var
+  ========================= =========================
+
+FIXME: complete this list
+
+In order to prevent name clashes, words starting with "_seq" are no longer
+valid identifiers in SNL.
+
+Unfortunately, this is a breaking change for many programs that heavily use
+escaped code. My justification for making this change is that this is how it
+should have been done from the start. Mixing self-written with generated code
+is fraught with enough hazards as it is, and accidental name capture, though
+not very probable, would be very hard to diagnose for users. Also, this gives
+me a lot more freedom when introducing new features or refactoring the way snc
+generates code.
+
+related patches:
+
+* make names starting with _seq illegal identifiers in SNL
+* renamed some generated identifiers
+* renamed all generated identifiers to start with _seq
+* renamed function typedefs
+* seq_pvIndex is now a macro
+* added new builtin functions pVar and ssId
+
+  These are intended for calling C procedures from SNL,
+  when the C procedure takes SEQ_VARS* or SS_ID as argument.
+
+Miscellaneous New Features
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* seq: pvAssign now does macro substitution, like assign syntax
+* snc: pVar and ssId arguments to generated routines are now const pointers
+
+  This means that user code can mutate the variables and the (opaque)
+  contents of the state set control block, but are not allowed to
+  invalidate the pointers themselves.
+
+* seq: reduce severity of timeouts and user errors from errlogFatal to errlogMajor
+
+* examples: use array version of pvPutComplete
+* disabled examples/parallel because pvPutCompleteArray does not yet work
+
+Various Fixes
+^^^^^^^^^^^^^
+
+* pv: report CA failure status via msg member of pvVar or pvSys
+* option -m is now treated correctly as compile time only
+* removed deprecated epicsShareAPI markers
+* seq: place program lock around wakeup commands in ca callback
+
+  This prevents a race condition resulting in a crash when the program
+  shuts down and deletes mutexes etc before the callback has issued its
+  final ss_wakeup call.
+
+Raw dump of Changes in test
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* added tests for foreign types, cast, and sizeof
+* renamed and rearranged some tests
+* added two compiler tests
+* fixed number of errors for misplacedExit
+* adapted userfunc to compiler changes, extended the test
+* adapted delay.st to better test new delay implementation
+* moved ctest.c to test/compiler
+* ensure that tests cover seq exit phase
+
+* test/compiler: renamed scripts that test the whole build
+* test/compiler: added a test for identifier starting with _seq
+
+Raw dump of Changes in documentation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* minor cleanups in reference
+* added a todo item for delay in action code
+* clarified syntax and semantics of option clause
+* added versionadded tag to state change command
+* superficial change to reference
+* removed foreign types from plans
+* removed some text that referred to the removed sequencer device support
+
+TODO Before Release
+^^^^^^^^^^^^^^^^^^^
+
+* fix above FIXME (related to the next point)
+
+* Move appropriate parts of the generated code to a header file that can be
+  included by external C code. This would obviate most uses of escaped C code
+  in SNL programs.
+
+* Maybe re-introduce #defines for event flags
