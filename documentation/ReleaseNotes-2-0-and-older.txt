@@ -282,7 +282,7 @@ Unused (and undocumented) ``VX_OPT`` option has been removed.
 Replaced direct channel access calls with new PV API
    All CA calls have been replaced with equivalent calls to a new PV
    (process variable) API which can be layered on top of not just CA
-   but also other message systems. See :doc:`PV-API`.
+   but also other message systems.
 
 Added optional generation of main program
    The new :option:`+m` (main) option generates a C main program whose
@@ -443,8 +443,7 @@ Local variables
    These are partially supported. See `Local variables`_.
 
 pvNew dynamic loading
-   This would remove some undesirable library dependencies. See
-   :ref:`pvApiOverview`.
+   This would remove some undesirable library dependencies.
 
 Hierarchical states
    This would be a major enhancement and would, incidentally, bring
