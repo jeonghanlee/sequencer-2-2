@@ -19,12 +19,10 @@ demo_SRCS_vxWorks += -nil-
 #The following adds support from base/src/vxWorks
 demo_OBJS_vxWorks += $(EPICS_BASE_BIN)/vxComLibrary
 
-LIBRARY_IOC += demoSupport
-demoSupport_LIBS += seq pv
-demoSupport_LIBS += $(EPICS_BASE_IOC_LIBS)
-demoSupport_SRCS += demo.st
+demo_LIBS += seq pv
+demo_LIBS += $(EPICS_BASE_IOC_LIBS)
+demo_SRCS += demo.st
 
-demo_LIBS += demoSupport seq pv
 demo_LIBS += $(EPICS_BASE_IOC_LIBS)
 
 include $(TOP)/configure/RULES
