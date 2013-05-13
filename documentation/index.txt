@@ -7,10 +7,7 @@ State Notation Language and Sequencer
 :Maintainer: Ben Franksen <benjamin.franksen@helmholtz-berlin.de>
 :Bug Reports: tech-talk@aps.anl.gov
 
-Welcome to the home page of the EPICS Sequencer project.
-
-This page contains the documentation, including instructions how to
-download, build, and install the software.
+Welcome to the home page of the **EPICS Sequencer** project.
 
 .. include:: about.inc
 
