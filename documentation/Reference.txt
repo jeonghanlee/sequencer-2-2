@@ -625,7 +625,7 @@ State Set
    ss_defns: `ss_defns` `ss_defn`
    ss_defns: 
 
-A program may contains one or more state sets. Each state set is
+A program contains one or more state sets. Each state set is
 defined by the keyword "ss", followed by the name of the state set (an
 identifier). After that comes an opening brace, optionally state set
 local definitions, a list of states, and then a closing brace.
