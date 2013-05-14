@@ -290,7 +290,9 @@ where it is different from 40, but to be on the safe side I
 recommend not to rely too much on the numeric value. (You can use
 ``sizeof(string)`` in SNL expressions.)
 
-.. note:: In contrast to C, in SNL ``string s`` is *not* a synonym for
+.. note::
+
+   In contrast to C, in SNL ``string s`` is *not* a synonym for
    ``char s[MAX_STRING_SIZE]``, since variables of type :token:`string`
    are treated differently when it comes to interacting with PVs: the
    former gets requested with type DBR_STRING and a count of one, while
@@ -431,9 +433,7 @@ Parameter`_). If the process variable name is an empty string, then no
 actual assignment to any process variable is performed, but the variable
 is marked for potential (dynamic) assignment with :c:func:`pvAssign`.
 
-.. note::
-
-   An :token:`assign` clause using an empty string for the PV name is
+.. note:: An :token:`assign` clause using an empty string for the PV name is
    interpreted differently in :ref:`safe mode`, see :ref:`anonymous pvs`.
 
 .. todo:: In safe mode it might make sense to implicitly declare every
@@ -772,15 +772,17 @@ Instead of declaring which should be the next state, one can use the
 single keyword "exit" to specify that at this point all state sets
 should terminate (after completing any action block in progress)
 and execution proceed with the global exit block (if any). Afterwards
-disconnect all channels, close the pv system (CA), free all
-allocated memory, and then terminate the program.
+all channels are disconnected, all allocated memory is freed, and the
+program terminates.
 
-Note: if the program has been started under an ioc shell, then only the SNL
-program is terminated, not the whole ioc. If terminating the ioc shell is
-required, you should call the ``exit()`` function from the standard C
-library. This call can conveniently be placed in the SNL program's global
-exit block. See also the ioc shell command ``seqStop`` in section
-:ref:`Stopping the State Program Tasks`.
+.. note::
+
+   If the program has been started under an ioc shell, then only the SNL
+   program is terminated, not the whole ioc. If terminating the ioc
+   shell is required, you should call the ``exit()`` function from the
+   standard C library. This call can conveniently be placed in the SNL
+   program's global exit block. See also the ioc shell command
+   ``seqStop`` in section :ref:`Stopping the State Program Tasks`.
 
 
 Block
@@ -873,7 +875,9 @@ record selection, and postfix operators (increment and decrement).
    :token:`exit` is listed explicitly because it is a keyword, not an
    identifier, but can also be used as a function.
 
-.. note:: SNL makes no use of the semantics of structure member access and
+.. note::
+
+   SNL makes no use of the semantics of structure member access and
    struct tags are treated as if they were expressions (variables, in
    fact). A side-effect is that *snc* will warn that structure tags are
    "used but not declared", which can be silenced with a :ref:`foreign
@@ -1046,6 +1050,7 @@ compType
    };
 
 .. note::
+
    Only ``SYNC`` and ``ASYNC`` are SNL built-in constants (i.e.
    known to *snc*). The constant ``DEFAULT`` is for use in C code
    (to represent a missing optional argument).
@@ -1386,13 +1391,13 @@ Initiates a monitor on the underlying process variable.
 
 See :token:`monitor` clause.
 
-..note:: If you want to monitor all elements of an array that have been
+.. note:: If you want to monitor all elements of an array that have been
    assigned to separate PVs, you cannot currently do this with a single
    call (in contrast to doing it in a :token:`monitor` clause). Instead,
    you must call :c:func:`pvMonitor` for each array element individually.
    This might change in a future release.
 
-..todo:: Implement multiple monitor for arrays.
+.. todo:: Implement multiple monitor for arrays.
 
 
 pvStopMonitor
@@ -1401,13 +1406,13 @@ pvStopMonitor
 .. c:function::
    pvStat pvStopMonitor(assigned_var)
 
-..note:: If you want to stop monitoring all elements of an array that have been
+.. note:: If you want to stop monitoring all elements of an array that have been
    assigned to separate PVs, you cannot currently do this with a single
    call. Instead,
    you must call :c:func:`pvStopMonitor` for each array element individually.
    This might change in a future release.
 
-..todo:: Implement multiple stop monitor for arrays.
+.. todo:: Implement multiple stop monitor for arrays.
 
 Terminates a monitor on the underlying process variable.
 
@@ -1421,13 +1426,13 @@ pvSync
 Synchronizes a variable with an event flag, or removes such a
 synchronization if ``event_flag`` is `NOEVFLAG`_.
 
-..note:: If you want to sync all elements of an array that have been
+.. note:: If you want to sync all elements of an array that have been
    assigned to separate PVs, you cannot currently do this with a single
    call. Instead,
    you must call :c:func:`pvSync` for each array element individually.
    This might change in a future release.
 
-..todo:: Implement multiple sync for arrays.
+.. todo:: Implement multiple sync for arrays.
 
 See :token:`sync` clause.
 
