@@ -85,7 +85,7 @@ add_function_parentheses = False
 # output. They are ignored by default.
 show_authors = True
 
-# highlight_language = "c"
+highlight_language = "none"
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
@@ -98,15 +98,15 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  Major themes that come with
 # Sphinx are currently 'default' and 'sphinxdoc'.
-html_theme = 'default-plus'
+html_theme = 'naturefixed'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-html_theme_options = {
-  "stickysidebar": "true",
-  "fontsize": "100%",
-}
+# html_theme_options = {
+#   "stickysidebar": "true",
+#   "fontsize": "90%",
+# }
 
 # Add any paths that contain custom themes here, relative to this directory.
 html_theme_path = ["themes"]
@@ -141,7 +141,11 @@ html_last_updated_fmt = '%b %d, %Y'
 #html_use_smartypants = True
 
 # Custom sidebar templates, maps document names to template names.
-#html_sidebars = {}
+html_sidebars = {
+ 'index' : ['home.html', 'searchbox.html'],
+ 'Manual' : ['home.html', 'toc.html', 'relations.html', 'searchbox.html'],
+ '*' : ['toc.html', 'relations.html', 'searchbox.html']
+}
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
@@ -151,13 +155,13 @@ html_last_updated_fmt = '%b %d, %Y'
 html_use_modindex = False
 
 # If false, no index is generated.
-#html_use_index = True
+html_use_index = False
 
 # If true, the index is split into individual pages for each letter.
 #html_split_index = False
 
 # If true, links to the reST sources are added to the pages.
-#html_show_sourcelink = True
+html_show_sourcelink = False
 
 # If true, an OpenSearch description file will be output, and all pages will
 # contain a <link> tag referring to it.  The value of this option must be the
