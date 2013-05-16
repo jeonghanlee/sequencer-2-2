@@ -7,7 +7,7 @@ Prerequisites
 You need to have an `EPICS-3.14`_ base and its dependencies (`GNU
 make`_, `Perl`_) installed.
 
-From 2.0.98 onwards, building the sequencer requires the lexer
+From version 2.1 onwards, building the sequencer requires the lexer
 generator tool `re2c`_. If you are on a Linux system, you will
 probably want to use the re2c package your distribution provides,
 otherwise sources and windows binaries are available from the `re2c
@@ -39,11 +39,7 @@ Development snapshots are available under the name
 In the releases directory there is always a symbolic link to the
 `latest snapshot`_.
 
-Older releases can be either downloaded from the PSI website
-
-   http://epics.web.psi.ch/software/sequencer/download
-
-or by following the links here:
+Older releases can be downloaded by following the links here:
 
    ========= ===========================
    Version   Release Notes
@@ -89,14 +85,15 @@ the `latest snapshot`_, or check out the `darcs`_ repository::
 
 where ``<branch>`` is the branch name. There are currently three branches:
 
-* `branch 2-0`_ is the previous version. There is no development happening
-  on here, except maybe fixing build problems.
+* `branch 2-0`_ is the previous version. This branch is now frozen and will
+  receive no more patches, nor will there be any new releases.
 
-* `branch 2-1`_ is the current "stable" version. Development is restricted to bug fixes,
-  mostly.
+* `branch 2-1`_ is the current "stable" version. Development is restricted
+  to bug fixes (including fixes for build problems) and improvement of the
+  documentation.
 
-* `branch 2-2`_ is where new features are developed that will appear in version 2.2.
-  No releases have been made on this branch yet.
+* `branch 2-2`_ is where new features are developed that will appear in
+  version 2.2. Release 2.2.0 will soon go into beta testing phase.
 
 See `Contribute`_ for a short description how to record and send
 patches.
@@ -138,7 +135,9 @@ You can also follow development by using the `repository browser`_.
 .. _branch 2-0: http://www-csr.bessy.de/cgi-bin/darcsweb.cgi?r=seq%20branch-2-0;a=summary
 .. _branch 2-1: http://www-csr.bessy.de/cgi-bin/darcsweb.cgi?r=seq%20branch-2-1;a=summary
 .. _branch 2-2: http://www-csr.bessy.de/cgi-bin/darcsweb.cgi?r=seq%20branch-2-2;a=summary
-
+.. _old: http://www-csr.bessy.de/control/SoftDist/sequencer/repo/old/
+.. _stable: http://www-csr.bessy.de/control/SoftDist/sequencer/repo/stable/
+.. _experimental: http://www-csr.bessy.de/control/SoftDist/sequencer/repo/experimental/
 
 Unpack
 ------
@@ -359,13 +358,14 @@ Contribute
 
 I am always happy to receive patches (bug fixes, improvements,
 whatever). You can create a local copy of the `darcs`_
-repository by saying::
+repository (the stable branch in this example) by saying::
 
-   > darcs get http://www-csr.bessy.de/control/SoftDist/sequencer/repo/
+   > darcs get http://www-csr.bessy.de/control/SoftDist/sequencer/repo/stable
 
 Assuming you have made some changes, first update your repository to
 include the latest changes from upstream (with darcs this is not
-strictly necessary, but good practice as it helps to avoid conflicts)::
+strictly necessary, but good practice as it helps to avoid unnecessary
+conflicts)::
 
    > darcs pull
 
@@ -379,17 +379,26 @@ you for giving the patch a name). Finally say::
 
    > darcs send
 
+A word of caution: it may happen that I `darcs obliterate`_ patches in
+the experimental branch. If `darcs send`_ asks whether to include patches
+that you don't have authored, this is probably what happened. In that case
+can (but you need not necessarily) quit and obliterate them in your source
+tree, too, before trying to `darcs send`_ again.
+
 Please respect the coding style when making changes. This includes
 indentation (tabs or spaces, how many) and all the other little things
 on which programmers like to differ ;-) like placement of braces etc.
 Note that for historical reasons the style differs somewhat between
-subdirectories. It is much easier for me to review patches if they do
-not contain gratuitous changes or combine several unrelated changes in
-a single patch.
+files and subdirectories. It is much easier for me to review patches if
+they do not contain gratuitous changes or combine several unrelated
+changes in a single patch.
 
 Also, please take care that your patch does not accidentally contain
 site-specific changes (typically done in configure). For my own work, I
 usually record such changes with a description that contains 'DONT SEND
-THIS' or something similar.
+THIS' or something similar, so I don't accidentally record them together
+with other changes.
 
 .. _darcs: http://darcs.net/
+.. _darcs obliterate: http://darcs.net/manual/bigpage.html#SECTION00694000000000000000
+.. _darcs send: http://darcs.net/manual/bigpage.html#SECTION00664000000000000000
