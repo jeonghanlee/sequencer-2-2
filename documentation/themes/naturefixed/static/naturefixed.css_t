@@ -8,9 +8,9 @@
  * :license: BSD, see LICENSE for details.
  *
  */
- 
+
 @import url("nature.css");
- 
+
 /* -- page layout ----------------------------------------------------------- */
 
 div.related {
@@ -21,6 +21,10 @@ div.related {
     right: 0;
     bottom: div.footer.top;
     width: 100%;
+}
+
+div.related h2 {
+    margin-top: 0;
 }
 
 div.document {
