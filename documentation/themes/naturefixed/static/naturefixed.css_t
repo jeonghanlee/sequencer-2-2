@@ -45,8 +45,13 @@ div.footer {
     bottom: 0;
     height: auto;
     padding: 2px;
-    color: #666;
-    background-color: #000;
+    background-color: #6BA81E;
+    color: #fff;
+    text-shadow: 0px 1px 0 #444;
+}
+
+div.footer a {
+    color: #fff;
 }
 
 div.sphinxsidebar {
