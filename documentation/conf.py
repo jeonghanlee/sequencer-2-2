@@ -42,7 +42,7 @@ master_doc = 'index'
 project = u'seq'
 copyright = u"""
 2000, William Lupton, W. M. Keck Observatory, Kamuela, HI 96743, USA;
-2010, Benjamin Franksen, Helmholtz-Zentrum Berlin für Materialien und Energie GmbH
+2010-2013, Benjamin Franksen, Helmholtz-Zentrum Berlin für Materialien und Energie GmbH
 """
 
 # The version info for the project you're documenting, acts as replacement for
