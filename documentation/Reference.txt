@@ -409,6 +409,13 @@ The second one assigns a single element of an array variable to a
 single process variable. The third one assigns elements of an array
 variable to separate process variables.
 
+For the third variant, if the number of PV names does not match the number
+of elements in the array, then the rule is that
+
+* missing PV names default to "", and
+
+* excess PV names are discarded.
+
 .. versionadded:: 2.1
 
 The fourth variant serves as an abbreviation for
