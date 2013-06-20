@@ -185,7 +185,7 @@ latex_paper_size = 'a4'
 
 latex_authors = u"""
 William Lupton (wlupton$@$keck.hawaii.edu)\\\\*
-Benjamin Franksen (benjamin.franksen$@$bessy.de)
+Benjamin Franksen (benjamin.franksen$@$helmholtz-berlin.de)
 """
 
 # Grouping the document tree into LaTeX files. List of tuples
