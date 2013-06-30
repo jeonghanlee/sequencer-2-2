@@ -22,6 +22,7 @@ in the file LICENSE that is included with this distribution.
 #include "gen_code.h"
 
 static void gen_preamble(char *prog_name);
+static void gen_header_preamble(char *prog_name);
 static void gen_main(char *prog_name);
 static void gen_user_var(Program *p);
 static void gen_global_c_code(Expr *global_c_list);
@@ -41,7 +42,7 @@ static int assert_var_declared(Expr *ep, Expr *scope, void *parg)
 }
 
 /* Generate C code from parse tree. */
-void generate_code(Program *p)
+void generate_code(Program *p, const char *header_name)
 {
 	/* assume there have been no errors, so all vars are declared */
 	traverse_expr_tree(p->prog, 1<<E_VAR, 0, 0, assert_var_declared, 0);
@@ -50,24 +51,31 @@ void generate_code(Program *p)
 	report("-------------------- Code Generation --------------------\n");
 #endif
 
-#ifdef DEBUG
-	report("gen_tables:\n");
-	report(" num_event_flags = %d\n", p->num_event_flags);
-	report(" num_ss = %d\n", p->num_ss);
-#endif
-
-	/* Generate preamble code */
-	gen_preamble(p->name);
-
 	/* Initialize tables in gen_ss_code module */
 	/* TODO: find a better way to do this */
 	init_gen_ss_code(p);
+
+	set_gen_h();
+
+	gen_code("/* Generated with snc from %s */\n", p->prog->src_file);
+	gen_code("#ifndef INCL%sh\n", p->name);
+	gen_code("#define INCL%sh\n", p->name);
+
+	/* Generate preamble code */
+	gen_header_preamble(p->name);
 
 	/* Generate literal C code intermixed with global definitions */
 	gen_defn_c_code(p->prog, 0);
 
 	/* Generate global, state set, and state variable declarations */
 	gen_user_var(p);
+	gen_code("#endif /* INCL%sh */\n", p->name);
+
+	set_gen_c();
+
+	gen_code("/* Generated with snc from %s */\n", p->prog->src_file);
+	gen_preamble(p->name);
+	gen_code("#include \"%s\"\n", header_name);
 
 	/* Generate code for each state set */
 	gen_ss_code(p);
@@ -88,23 +96,32 @@ void generate_code(Program *p)
 /* Generate main program */
 static void gen_main(char *prog_name)
 {
-	printf("\n#define PROG_NAME %s\n", prog_name);
-	printf("#include \"seqMain.c\"\n");
+	gen_code("\n#define PROG_NAME %s\n", prog_name);
+	gen_code("#include \"seqMain.c\"\n");
+}
+
+/* Generate header preamble (includes, defines, etc.) */
+static void gen_header_preamble(char *prog_name)
+{
+	/* Program name (comment) */
+	gen_code("\n/* Header file for program \"%s\" */\n", prog_name);
+
+	/* Includes */
+	gen_code("#include \"epicsTypes.h\"\n");
+	gen_code("#include \"seqCom.h\"\n");
 }
 
 /* Generate preamble (includes, defines, etc.) */
 static void gen_preamble(char *prog_name)
 {
 	/* Program name (comment) */
-	printf("\n/* Program \"%s\" */\n", prog_name);
+	gen_code("\n/* C code for program \"%s\" */\n", prog_name);
 
 	/* Includes */
-	printf("#include <string.h>\n");
-	printf("#include <stddef.h>\n");
-	printf("#include <stdio.h>\n");
-	printf("#include <limits.h>\n");
-	printf("#include \"epicsTypes.h\"\n");
-	printf("#include \"seqCom.h\"\n");
+	gen_code("#include <string.h>\n");
+	gen_code("#include <stddef.h>\n");
+	gen_code("#include <stdio.h>\n");
+	gen_code("#include <limits.h>\n");
 }
 
 void gen_var_decl(Var *vp)
@@ -125,24 +142,24 @@ static void gen_user_var(Program *p)
 	Var	*vp;
 	Expr	*sp, *ssp;
 
-	printf("\n/* Variable declarations */\n");
+	gen_code("\n/* Variable declarations */\n");
 
-	if (opt_reent) printf("struct %s {\n", NM_VARS);
+	if (opt_reent) gen_code("struct %s {\n", NM_VARS);
 	/* Convert internal type to `C' type */
 	foreach (vp, p->prog->extra.e_prog->first)
 	{
 		if (vp->decl && vp->type->tag >= V_CHAR)
 		{
 			gen_line_marker(vp->decl);
-			if (!opt_reent) printf("static");
+			if (!opt_reent) gen_code("static");
 			indent(1);
 			gen_var_decl(vp);
 			if (!opt_reent)
 			{
-				printf(" = ");
+				gen_code(" = ");
 				gen_var_init(vp, 0);
 			}
-			printf(";\n");
+			gen_code(";\n");
 		}
 	}
 	foreach (ssp, p->prog->prog_statesets)
@@ -164,10 +181,10 @@ static void gen_user_var(Program *p)
 
 		if (!ss_empty)
 		{
-			indent(level); printf("struct %s_%s {\n", NM_VARS, ssp->value);
+			indent(level); gen_code("struct %s_%s {\n", NM_VARS, ssp->value);
 			foreach (vp, ssp->extra.e_ss->var_list->first)
 			{
-				indent(level+1); gen_var_decl(vp); printf(";\n");
+				indent(level+1); gen_var_decl(vp); gen_code(";\n");
 			}
 			foreach (sp, ssp->ss_states)
 			{
@@ -175,26 +192,26 @@ static void gen_user_var(Program *p)
 				if (!s_empty)
 				{
 					indent(level+1);
-					printf("struct {\n");
+					gen_code("struct {\n");
 					foreach (vp, sp->extra.e_state->var_list->first)
 					{
-						indent(level+2); gen_var_decl(vp); printf(";\n");
+						indent(level+2); gen_var_decl(vp); gen_code(";\n");
 					}
 					indent(level+1);
-					printf("} %s_%s;\n", NM_VARS, sp->value);
+					gen_code("} %s_%s;\n", NM_VARS, sp->value);
 				}
 			}
-			indent(level); printf("} %s_%s", NM_VARS, ssp->value);
+			indent(level); gen_code("} %s_%s", NM_VARS, ssp->value);
 			if (!opt_reent)
 			{
-				printf(" = ");
+				gen_code(" = ");
 				gen_ss_user_var_init(ssp, level);
 			}
-			printf(";\n");
+			gen_code(";\n");
 		}
 	}
-	if (opt_reent) printf("};\n");
-	printf("\n");
+	if (opt_reent) gen_code("};\n");
+	gen_code("\n");
 }
 
 /* Generate C code in definition section */
@@ -212,11 +229,11 @@ void gen_defn_c_code(Expr *scope, int level)
 			{
 				first = FALSE;
 				indent(level);
-				printf("/* C code definitions */\n");
+				gen_code("/* C code definitions */\n");
 			}
 			gen_line_marker(ep);
 			indent(level);
-			printf("%s\n", ep->value);
+			gen_code("%s\n", ep->value);
 		}
 	}
 }
@@ -228,29 +245,29 @@ static void gen_global_c_code(Expr *global_c_list)
 
 	if (global_c_list != 0)
 	{
-		printf("\n/* Global C code */\n");
+		gen_code("\n/* Global C code */\n");
 		foreach (ep, global_c_list)
 		{
 			assert(ep->type == T_TEXT);
 			gen_line_marker(ep);
-			printf("%s\n", ep->value);
+			gen_code("%s\n", ep->value);
 		}
 	}
 }
 
 static void gen_init_reg(char *prog_name)
 {
-	printf("\n/* Register sequencer commands and program */\n");
-	printf("#include \"epicsExport.h\"\n");
-	printf("static void %sRegistrar (void) {\n", prog_name);
-	printf("    seqRegisterSequencerCommands();\n");
-	printf("    seqRegisterSequencerProgram (&%s);\n", prog_name);
-	printf("}\n");
-	printf("epicsExportRegistrar(%sRegistrar);\n", prog_name);
+	gen_code("\n/* Register sequencer commands and program */\n");
+	gen_code("#include \"epicsExport.h\"\n");
+	gen_code("static void %sRegistrar (void) {\n", prog_name);
+	gen_code("    seqRegisterSequencerCommands();\n");
+	gen_code("    seqRegisterSequencerProgram (&%s);\n", prog_name);
+	gen_code("}\n");
+	gen_code("epicsExportRegistrar(%sRegistrar);\n", prog_name);
 }
 
 void indent(int level)
 {
 	while (level-- > 0)
-		printf("\t");
+		gen_code("\t");
 }

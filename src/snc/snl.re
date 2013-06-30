@@ -56,6 +56,7 @@ typedef struct Scanner {
 	uchar	*eof;	/* pointer to (one after) last char in file (or 0) */
 	const char *file;	/* source file name */
 	int	line;	/* line number */
+	FILE	*in;
 } Scanner;
 
 static void scan_report(Scanner *s, const char *format, ...)
@@ -134,12 +135,12 @@ static uchar *fill(Scanner *s, uchar *cursor) {
 		}
 		/* fill the buffer, starting at s->lim, by reading a chunk of
 		   BSIZE bytes (or less if eof is encountered) */
-		if ((read_cnt = fread(s->lim, sizeof(uchar), BSIZE, stdin)) != BSIZE) {
-			if (ferror(stdin)) {
+		if ((read_cnt = fread(s->lim, sizeof(uchar), BSIZE, s->in)) != BSIZE) {
+			if (ferror(s->in)) {
 				perror("error reading input");
 				exit(EXIT_FAILURE);
 			}
-			if (feof(stdin)) {
+			if (feof(s->in)) {
 				s->eof = &s->lim[read_cnt];
 				/* insert sentinel and increase s->eof */
 				*(s->eof)++ = '\n';
@@ -456,7 +457,7 @@ c_code_line:
 	DONE;		/* dead code, only here to make compiler warning go away */
 }
 
-Expr *parse_program(const char *src_file)
+Expr *parse_program(FILE *in, const char *src_file)
 {
 	Scanner	s;
 	int	tt;		/* token type */
@@ -467,6 +468,7 @@ Expr *parse_program(const char *src_file)
 	memset(&s, 0, sizeof(s));
 	s.file = src_file;
 	s.line = 1;
+	s.in = in;
 
 	parser = snlParserAlloc(malloc);
 	do

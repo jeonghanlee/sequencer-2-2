@@ -10,9 +10,11 @@ in the file LICENSE that is included with this distribution.
 #ifndef INCLparserh
 #define INCLparserh
 
+#include <stdio.h>
+
 #include "types.h"
 
-Expr *parse_program(const char *src_file);
+Expr *parse_program(FILE *in, const char *src_file);
 
 void snlParser(
 	void    *yyp,		/* the parser */

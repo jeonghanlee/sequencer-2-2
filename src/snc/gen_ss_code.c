@@ -104,7 +104,7 @@ void gen_ss_code(Program *program)
 		/* For each state ... */
 		foreach (sp, ssp->ss_states)
 		{
-			printf("\n/****** Code for state \"%s\" in state set \"%s\" ******/\n",
+			gen_code("\n/****** Code for state \"%s\" in state set \"%s\" ******/\n",
 				sp->value, ssp->value);
 
 			/* Generate entry and exit functions */
@@ -160,10 +160,10 @@ static void gen_local_var_decls(Expr *scope, int level)
 			/* optional initialisation */
 			if (vp->init)
 			{
-				printf(" = ");
+				gen_code(" = ");
 				gen_expr(C_INIT, vp->init, level);
 			}
-			printf(";\n");
+			gen_code(";\n");
 		}
 	}
 }
@@ -176,19 +176,19 @@ static void gen_type_default(Type *type)
 	switch(type->tag)
 	{
 	case V_STRING:
-		printf("\"\"");
+		gen_code("\"\"");
 		break;
 	case T_ARRAY:
-		printf("{");
+		gen_code("{");
 		for (n=0; n<type->val.array.num_elems; n++)
 		{
 			gen_type_default(type->val.array.elem_type);
-			if (n+1<type->val.array.num_elems) printf(",");
+			if (n+1<type->val.array.num_elems) gen_code(",");
 		}
-		printf("}");
+		gen_code("}");
 		break;
 	default:
-		printf("0");
+		gen_code("0");
 	}
 }
 
@@ -214,12 +214,12 @@ static void gen_state_func(
 	const char *extra_args
 )
 {
-	printf("\n/* %s function for state \"%s\" in state set \"%s\" */\n",
+	gen_code("\n/* %s function for state \"%s\" in state set \"%s\" */\n",
 		title, state_name, ss_name);
-	printf("static %s %s_%s_%d_%s(SS_ID " NM_SS ", SEQ_VARS *const " NM_VARS "%s)\n{\n",
+	gen_code("static %s %s_%s_%d_%s(SS_ID " NM_SS ", SEQ_VARS *const " NM_VARS "%s)\n{\n",
 		rettype, prefix, ss_name, ss_num, state_name, extra_args);
 	gen_body(xp);
-	printf("}\n");
+	gen_code("}\n");
 }
 
 static void gen_entex_body(Expr *xp)
@@ -260,11 +260,11 @@ static int gen_delay(Expr *ep, Expr *scope, void *parg)
 	assert(ep->type == E_DELAY);
 	gen_line_marker(ep);
 	/* Generate 1-st part of function w/ 1-st 2 parameters */
-	indent(1); printf("seq_delayInit(" NM_SS ", %d, (", ep->extra.e_delay);
+	indent(1); gen_code("seq_delayInit(" NM_SS ", %d, (", ep->extra.e_delay);
 	/* generate the 3-rd parameter (an expression) */
 	gen_expr(C_COND, ep->delay_args, 0);
 	/* Complete the function call */
-	printf("));\n");
+	gen_code("));\n");
 	return FALSE;	/* no sense descending into children, as delay cannot be nested */
 }
 
@@ -278,8 +278,8 @@ static void gen_action_body(Expr *xp)
 	const int	level = 1;
 
 	/* "switch" statment based on the transition number */
-	indent(level); printf("switch(" NM_TRN ")\n");
-	indent(level); printf("{\n");
+	indent(level); gen_code("switch(" NM_TRN ")\n");
+	indent(level); gen_code("{\n");
 	trans_num = 0;
 
 	/* For each transition ("when" statement) ... */
@@ -289,29 +289,29 @@ static void gen_action_body(Expr *xp)
 
 		assert(tp->type == D_WHEN);
 		/* one case for each transition */
-		indent(level); printf("case %d:\n", trans_num);
+		indent(level); gen_code("case %d:\n", trans_num);
 
 		/* block within case permits local variables */
-		indent(level+1); printf("{\n");
+		indent(level+1); gen_code("{\n");
 		/* for each definition insert corresponding code */
 		gen_local_var_decls(tp, level+2);
 		gen_defn_c_code(tp, level+2);
 		if (tp->when_defns)
-			printf("\n");
+			gen_code("\n");
 		/* for each action statement insert action code */
 		foreach (ap, tp->when_stmts)
 		{
 			gen_expr(C_TRANS, ap, level+2);
 		}
 		/* end of block */
-		indent(level+1); printf("}\n");
+		indent(level+1); gen_code("}\n");
 
 		/* end of case */
-		indent(level+1); printf("return;\n");
+		indent(level+1); gen_code("return;\n");
 		trans_num++;
 	}
 	/* end of switch stmt */
-	indent(level); printf("}\n");
+	indent(level); gen_code("}\n");
 }
 
 /* Generate a C function that checks events for a particular state */
@@ -330,32 +330,32 @@ static void gen_event_body(Expr *xp)
 		assert(tp->type == D_WHEN);
 		if (tp->when_cond)
 			gen_line_marker(tp->when_cond);
-		indent(level); printf("if (");
+		indent(level); gen_code("if (");
 		if (tp->when_cond == 0)
-			printf("TRUE");
+			gen_code("TRUE");
 		else
 			gen_expr(C_COND, tp->when_cond, 0);
-		printf(")\n");
-		indent(level); printf("{\n");
+		gen_code(")\n");
+		indent(level); gen_code("{\n");
 
 		next_sp = tp->extra.e_when->next_state;
 		if (!next_sp)
 		{
 			/* "when(...) {...} exit" -> exit from program */
 			indent(level+1);
-			printf("seq_exit(" NM_SS ");\n");
+			gen_code("seq_exit(" NM_SS ");\n");
 		}
 		else
 		{
 			indent(level+1);
-			printf("*" NM_PNST " = %d;\n", next_sp->extra.e_state->index);
+			gen_code("*" NM_PNST " = %d;\n", next_sp->extra.e_state->index);
 		}
-		indent(level+1);printf("*" NM_PTRN " = %d;\n", trans_num);
-		indent(level+1); printf("return TRUE;\n");
-		indent(level); printf("}\n");
+		indent(level+1);gen_code("*" NM_PTRN " = %d;\n", trans_num);
+		indent(level+1); gen_code("return TRUE;\n");
+		indent(level); gen_code("}\n");
 		trans_num++;
 	}
-	indent(level); printf("return FALSE;\n");
+	indent(level); gen_code("return FALSE;\n");
 }
 
 static void gen_var_access(Var *vp)
@@ -373,29 +373,29 @@ static void gen_var_access(Var *vp)
 
 	if (vp->type->tag == T_EVFLAG)
 	{
-		printf("%d/*%s*/", vp->chan.evflag->index, vp->name);
+		gen_code("%d/*%s*/", vp->chan.evflag->index, vp->name);
 	}
 	else if (vp->type->tag == T_NONE)
 	{
-		printf("%s", vp->name);
+		gen_code("%s", vp->name);
 	}
 	else if (vp->scope->type == D_PROG)
 	{
-		printf("%s%s", pre, vp->name);
+		gen_code("%s%s", pre, vp->name);
 	}
 	else if (vp->scope->type == D_SS)
 	{
-		printf("%s%s_%s.%s", pre, NM_VARS, vp->scope->value, vp->name);
+		gen_code("%s%s_%s.%s", pre, NM_VARS, vp->scope->value, vp->name);
 	}
 	else if (vp->scope->type == D_STATE)
 	{
-		printf("%s%s_%s.%s_%s.%s", pre, NM_VARS,
+		gen_code("%s%s_%s.%s_%s.%s", pre, NM_VARS,
 			vp->scope->extra.e_state->var_list->parent_scope->value,
 			NM_VARS, vp->scope->value, vp->name);
 	}
 	else	/* compound or when stmt => generate a local C variable */
 	{
-		printf("%s", vp->name);
+		gen_code("%s", vp->name);
 	}
 }
 
@@ -420,7 +420,7 @@ static void gen_expr(
 	/* Statements */
 	case S_CMPND:
 		indent(level);
-		printf("{\n");
+		gen_code("{\n");
 		gen_local_var_decls(ep, level+1);
 		gen_defn_c_code(ep, level+1);
 		foreach (cep, ep->cmpnd_stmts)
@@ -428,26 +428,26 @@ static void gen_expr(
 			gen_expr(context, cep, level+1);
 		}
 		indent(level);
-		printf("}\n");
+		gen_code("}\n");
 		break;
 	case S_STMT:
 		gen_line_marker(ep);
 		indent(level);
 		gen_expr(context, ep->stmt_expr, 0);
-		printf(";\n");
+		gen_code(";\n");
 		break;
 	case S_IF:
 		gen_line_marker(ep);
 		indent(level);
-		printf("if (");
+		gen_code("if (");
 		gen_expr(context, ep->if_cond, 0);
-		printf(")\n");
+		gen_code(")\n");
 		cep = ep->if_then;
 		gen_expr(context, cep, cep->type == S_CMPND ? level : level+1);
 		if (ep->if_else)
 		{
 			indent(level);
-			printf("else\n");
+			gen_code("else\n");
 			cep = ep->if_else;
 			gen_expr(context, cep, cep->type == S_CMPND ? level : level+1);
 		}
@@ -455,28 +455,28 @@ static void gen_expr(
 	case S_WHILE:
 		gen_line_marker(ep);
 		indent(level);
-		printf("while (");
+		gen_code("while (");
 		gen_expr(context, ep->while_cond, 0);
-		printf(")\n");
+		gen_code(")\n");
 		cep = ep->while_stmt;
 		gen_expr(context, cep, cep->type == S_CMPND ? level : level+1);
 		break;
 	case S_FOR:
 		gen_line_marker(ep);
 		indent(level);
-		printf("for (");
+		gen_code("for (");
 		gen_expr(context, ep->for_init, 0);
-		printf("; ");
+		gen_code("; ");
 		gen_expr(context, ep->for_cond, 0);
-		printf("; ");
+		gen_code("; ");
 		gen_expr(context, ep->for_iter, 0);
-		printf(")\n");
+		gen_code(")\n");
 		cep = ep->for_stmt;
 		gen_expr(context, cep, cep->type == S_CMPND ? level : level+1);
 		break;
 	case S_JUMP:
 		indent(level);
-		printf("%s;\n", ep->value);
+		gen_code("%s;\n", ep->value);
 		break;
 	case S_CHANGE:
 		if (context != C_TRANS)
@@ -485,7 +485,7 @@ static void gen_expr(
 			break;
 		}
 		indent(level);
-		printf("{*" NM_PNST " = %d; return;}\n", ep->extra.e_change->extra.e_state->index);
+		gen_code("{*" NM_PNST " = %d; return;}\n", ep->extra.e_change->extra.e_state->index);
 		break;
 	/* Expressions */
 	case E_VAR:
@@ -493,78 +493,78 @@ static void gen_expr(
 		break;
 	case E_SUBSCR:
 		gen_expr(context, ep->subscr_operand, 0);
-		printf("[");
+		gen_code("[");
 		gen_expr(context, ep->subscr_index, 0);
-		printf("]");
+		gen_code("]");
 		break;
 	case E_CONST:
 		if (gen_builtin_const(ep))
 			break;
-		printf("%s", ep->value);
+		gen_code("%s", ep->value);
 		break;
 	case E_STRING:
-		printf("\"%s\"", ep->value);
+		gen_code("\"%s\"", ep->value);
 		break;
 	case E_DELAY:
 	case E_FUNC:
 		if (gen_builtin_func(context, ep))
 			break;
-		printf("%s(", ep->value);
+		gen_code("%s(", ep->value);
 		foreach (cep, ep->func_args)
 		{
 			gen_expr(context, cep, 0);
 			if (cep->next)
-				printf(", ");
+				gen_code(", ");
 		}
-		printf(")");
+		gen_code(")");
 		break;
 	case E_INIT:
-		printf("{");
+		gen_code("{");
 		foreach (cep, ep->init_elems)
 		{
 			gen_expr(context, cep, 0);
 			if (cep->next)
-				printf(", ");
+				gen_code(", ");
 		}
-		printf("}");
+		gen_code("}");
 		break;
 	case E_TERNOP:
 		gen_expr(context, ep->ternop_cond, 0);
-		printf(" ? ");
+		gen_code(" ? ");
 		gen_expr(context, ep->ternop_then, 0);
-		printf(" : ");
+		gen_code(" : ");
 		gen_expr(context, ep->ternop_else, 0);
 		break;
 	case E_BINOP:
 		gen_expr(context, ep->binop_left, 0);
-		printf(" %s ", ep->value);
+		gen_code(" %s ", ep->value);
 		gen_expr(context, ep->binop_right, 0);
 		break;
 	case E_PAREN:
-		printf("(");
+		gen_code("(");
 		gen_expr(context, ep->paren_expr, 0);
-		printf(")");
+		gen_code(")");
 		break;
 	case E_CAST:
-		printf("(");
+		gen_code("(");
 		/* gen_type_expr(ep->cast_type); */
 		assert(ep->cast_type->type == D_DECL);
 		gen_var_decl(ep->cast_type->extra.e_decl);
-		printf(")");
+		gen_code(")");
 		gen_expr(context, ep->cast_operand, 0);
 		break;
 	case E_PRE:
-		printf("%s", ep->value);
+		gen_code("%s", ep->value);
 		gen_expr(context, ep->pre_operand, 0);
 		break;
 	case E_POST:
 		gen_expr(context, ep->post_operand, 0);
-		printf("%s", ep->value);
+		gen_code("%s", ep->value);
 		break;
 	/* C-code can be either definition, statement, or expression */
 	case T_TEXT:
 		indent(level);
-		printf("%s\n", ep->value);
+		gen_code("%s\n", ep->value);
 		break;
 	default:
 		assert(impossible);
@@ -582,7 +582,7 @@ static int gen_builtin_const(Expr *ep)
 
 	if (!sym)
 		return CT_NONE;
-	printf("%s", const_name);
+	gen_code("%s", const_name);
 	return sym->type;
 }
 
@@ -603,11 +603,11 @@ static int gen_builtin_func(int context, Expr *ep)
 		sym->ef_action_only, sym->ef_args);
 #endif
 	/* All builtin functions require ssId as 1st parameter */
-	printf("seq_%s(" NM_SS "", func_name);
+	gen_code("seq_%s(" NM_SS "", func_name);
 	switch (sym->type)
 	{
 	case FT_DELAY:
-		printf(", %d)", ep->extra.e_delay);
+		gen_code(", %d)", ep->extra.e_delay);
 		break;
 	case FT_EVENT:
 		/* Event flag functions */
@@ -621,10 +621,10 @@ static int gen_builtin_func(int context, Expr *ep)
 		/* just fill in user-supplied parameters */
 		foreach (ap, ep->func_args)
 		{
-			printf(", ");
+			gen_code(", ");
 			gen_expr(context, ap, 0);
 		}
-		printf(")");
+		gen_code(")");
 		break;
 	default:
 		assert(impossible);
@@ -684,9 +684,9 @@ static void gen_ef_func(
 		  "built-in function %s requires an argument\n", func_name);
 		return;
 	}
-	printf(", ");
+	gen_code(", ");
 	gen_ef_arg(func_name, ap, 1);
-	printf(")");
+	gen_code(")");
 }
 
 /* Generate code for pv functions requiring a database variable.
@@ -740,32 +740,32 @@ static void gen_pv_func(
 #ifdef	DEBUG
 	report("gen_pv_func: fun=%s, var=%s\n", ep->value, vp->name);
 #endif
-	printf(", ");
+	gen_code(", ");
 	if (vp->assign == M_NONE)
 	{
 		error_at_expr(ep,
 			"parameter 1 to '%s' was not assigned to a pv\n", func_name);
-		printf("?/*%s*/", vp->name);
+		gen_code("?/*%s*/", vp->name);
 	}
 	else if (ap->type == E_SUBSCR && vp->assign != M_MULTI)
 	{
 		error_at_expr(ep,
 			"parameter 1 to '%s' is subscripted but the variable "
 			"it refers to has not been assigned to multiple pvs\n", func_name);
-		printf("%d/*%s*/", vp->index, vp->name);
+		gen_code("%d/*%s*/", vp->index, vp->name);
 	}
 	else
 	{
-		printf("%d/*%s*/", vp->index, vp->name);
+		gen_code("%d/*%s*/", vp->index, vp->name);
 	}
 
 	if (ap->type == E_SUBSCR)
 	{
 		/* e.g. pvPut(xyz[i+2]); => seq_pvPut(ssId, 3 + (i+2)); */
-		printf(" + (VAR_ID)(");
+		gen_code(" + (VAR_ID)(");
 		/* generate the subscript expression */
 		gen_expr(context, subscr, 0);
-		printf(")");
+		gen_code(")");
 	}
 
 	/* If requested, add length parameter (if subscripted variable,
@@ -774,11 +774,11 @@ static void gen_pv_func(
 	{
 		if (ap->type != E_SUBSCR)
 		{
-			printf(", %d", type_array_length1(vp->type));
+			gen_code(", %d", type_array_length1(vp->type));
 		}
 		else
 		{
-			printf(", 1");
+			gen_code(", 1");
 		}
 	}
 
@@ -786,7 +786,7 @@ static void gen_pv_func(
 	foreach (ap, ap->next)
 	{
 		num_extra_parms++;
-		printf(", ");
+		gen_code(", ");
 		if (ef_args)
 		{
 			/* special case: constant NOEVFLAG */
@@ -810,12 +810,12 @@ static void gen_pv_func(
 	   extra zero parameters */
 	while (num_extra_parms < num_params)
 	{
-		printf(", 0");
+		gen_code(", 0");
 		num_extra_parms++;
 	}
 
 	/* Close the parameter list */
-	printf(")");
+	gen_code(")");
 #ifdef	DEBUG
 	report("gen_pv_func: done (fun=%s, var=%s)\n", ep->value, vp->name);
 #endif
@@ -828,11 +828,11 @@ void gen_ss_user_var_init(Expr *ssp, int level)
 	Expr *sp;
 
 	assert(ssp->type == D_SS);
-	printf("{\n");
+	gen_code("{\n");
 	foreach(vp, ssp->extra.e_ss->var_list->first)
 	{
 		if (vp->init) gen_line_marker(vp->init);
-		indent(level+1); gen_var_init(vp, level+1); printf(",\n");
+		indent(level+1); gen_var_init(vp, level+1); gen_code(",\n");
 	}
 	foreach (sp, ssp->ss_states)
 	{
@@ -842,18 +842,18 @@ void gen_ss_user_var_init(Expr *ssp, int level)
 		s_empty = !sp->extra.e_state->var_list->first;
 		if (!s_empty)
 		{
-			indent(level+1); printf("{\n");
+			indent(level+1); gen_code("{\n");
 			foreach (vp, sp->extra.e_state->var_list->first)
 			{
 				if (vp->init) gen_line_marker(vp->init);
 				indent(level+2); gen_var_init(vp, level+2);
-				printf("%s\n", vp->next ? "," : "");
+				gen_code("%s\n", vp->next ? "," : "");
 			}
 			indent(level+1);
-			printf("}%s\n", sp->next ? "," : "");
+			gen_code("}%s\n", sp->next ? "," : "");
 		}
 	}
-	indent(level); printf("}");
+	indent(level); gen_code("}");
 }
 
 /* Generate initializer for the UserVar structs. */
@@ -863,14 +863,14 @@ static void gen_user_var_init(Expr *prog, int level)
 	Expr *ssp;
 
 	assert(prog->type == D_PROG);
-	printf("{\n");
+	gen_code("{\n");
 	/* global variables */
 	foreach(vp, prog->extra.e_prog->first)
 	{
 		if (vp->type->tag >= V_CHAR)
 		{
 			if (vp->init) gen_line_marker(vp->init);
-			indent(level+1); gen_var_init(vp, level+1); printf(",\n");
+			indent(level+1); gen_var_init(vp, level+1); gen_code(",\n");
 		}
 	}
 
@@ -893,24 +893,24 @@ static void gen_user_var_init(Expr *prog, int level)
 		{
 			indent(level+1);
 			gen_ss_user_var_init(ssp, level+1);
-			printf("%s\n", ssp->next ? "," : "");
+			gen_code("%s\n", ssp->next ? "," : "");
 		}
 	}
-	indent(level); printf("}");
+	indent(level); gen_code("}");
 }
 
 static void gen_prog_init_func(Expr *prog, int opt_reent)
 {
 	assert(prog->type == D_PROG);
-	printf("\n/* Program init func */\n");
-	printf("static void " NM_INIT "(SEQ_VARS *const " NM_VARS ")\n{\n");
+	gen_code("\n/* Program init func */\n");
+	gen_code("static void " NM_INIT "(SEQ_VARS *const " NM_VARS ")\n{\n");
 	if (opt_reent)
 	{
-		indent(1); printf("static struct %s pVarInit = ", NM_VARS);
-		gen_user_var_init(prog, 1); printf(";\n");
-		indent(1); printf("*pVar = pVarInit;\n");
+		indent(1); gen_code("static struct %s pVarInit = ", NM_VARS);
+		gen_user_var_init(prog, 1); gen_code(";\n");
+		indent(1); gen_code("*pVar = pVarInit;\n");
 	}
-	printf("}\n");
+	gen_code("}\n");
 }
 
 static void gen_prog_func(
@@ -921,9 +921,9 @@ static void gen_prog_func(
 	void (*gen_body)(Expr *xp))
 {
 	assert(prog->type == D_PROG);
-	printf("\n/* Program %s func */\n", doc);
-	printf("static void %s(SS_ID " NM_SS ", SEQ_VARS *const " NM_VARS ")\n{\n",
+	gen_code("\n/* Program %s func */\n", doc);
+	gen_code("static void %s(SS_ID " NM_SS ", SEQ_VARS *const " NM_VARS ")\n{\n",
 		name);
 	if (xp && gen_body) gen_body(xp);
-	printf("}\n");
+	gen_code("}\n");
 }
