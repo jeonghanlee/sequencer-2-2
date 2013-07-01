@@ -9,6 +9,7 @@ my $success = {
   exOpt_DuplOpt => 0,
   foreignTypes => 0,
   include_windows_h => 0,
+  member => 0,
   namingConflict => 0,
   nesting_depth => 0,
   sync_not_monitored => 0,
