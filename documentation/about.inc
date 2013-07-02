@@ -1,15 +1,14 @@
-The Sequencer is a component of the *Experimental Physics and Industrial
-Controls System*, short `EPICS`_, a set of tools, libraries and applications
+This project is a component of the *Experimental Physics and Industrial
+Control System* (`EPICS`_), a set of tools, libraries and applications
 developed collaboratively and used worldwide to create distributed soft
 real-time control systems for large scale scientific instruments.
 
-The State Notation Language, short *SNL*, is a `domain specific
-programming language`_ that smoothly integrates with and depends and builds
-on `EPICS base`_. This project defines SNL and provides
-an implementation, consisting of the SNL compiler and runtime system.
+The *State Notation Language* (SNL), is a `domain specific programming
+language`_ that smoothly integrates with and depends and builds on EPICS
+`base`_. This project defines SNL and provides an implementation, consisting
+of the SNL compiler and runtime system.
 
-The Sequencer is `free software`_, licensed under the
-`EPICS Open License`_.
+The Sequencer is `free software`_, licensed under the `EPICS Open License`_.
 
 For further information
 
@@ -30,7 +29,7 @@ For further information
 
 .. _domain specific programming language: http://en.wikipedia.org/wiki/Domain-specific_programming_language
 .. _EPICS: http://www.aps.anl.gov/epics/
-.. _EPICS base: http://www.aps.anl.gov/epics/base/index.php
+.. _base: http://www.aps.anl.gov/epics/base/index.php
 .. _talk about version 2.1 of the Sequencer: http://www-csr.bessy.de/control/SoftDist/sequencer/talks/epics-meeting-2011-PSI/sequencer-2-1-slides.pdf
 .. _free software: http://www.gnu.org/philosophy/free-sw.html
 .. _EPICS Open License: http://www.aps.anl.gov/epics/license/open.php
