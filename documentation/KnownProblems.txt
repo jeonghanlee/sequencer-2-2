@@ -1,6 +1,21 @@
 Known Problems
 ==============
 
+.. _Known_Problems_2.1.12:
+
+Known Problems in Release 2.1.12
+--------------------------------
+
+If a synchronous pvGet (or pvPut) ever fails to get a callback from
+channel access, then all subsequent attempts to do pvGets on that
+channel will fail.
+
+Carl Lionberger <calionberger@lbl.gov>, who reported this problem,
+also found the reason: the semaphore that makes the state set block
+until the CA callback arrives, times out but is never signalled, so
+the variable never recovers from the situation.
+
+
 .. _Known_Problems_2.1.10:
 
 Known Problems in Release 2.1.10
