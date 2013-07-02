@@ -6,6 +6,8 @@ Release Notes for Version 2.1
 Release 2.1.12
 --------------
 
+:ref:`Known_Problems_2.1.12`
+
 seq: initial wait for channel connect now uses exponential backoff
 
 * The messages about not yet connected/monitored channels appear now
