@@ -157,14 +157,16 @@ pvStat seq_connect(SPROG *sp, boolean wait)
 void seq_get_handler(
 	void *var, pvType type, unsigned count, pvValue *value, void *arg, pvStat status)
 {
-	PVREQ	*rQ = (PVREQ *)arg;
-	CHAN	*ch = rQ->ch;
+	PVREQ	*rq = (PVREQ *)arg;
+	CHAN	*ch = rq->ch;
+	SSCB	*ss = rq->ss;
 	SPROG	*sp = ch->sprog;
 
 	assert(ch->dbch != NULL);
 	freeListFree(sp->pvReqPool, arg);
-	/* Process event handling in each state set */
-	proc_db_events(value, type, ch, rQ->ss, GET_COMPLETE, status);
+	/* ignore callback if not expected, e.g. already timed out */
+	if (ss->getReq[chNum(ch)] == rq)
+		proc_db_events(value, type, ch, ss, GET_COMPLETE, status);
 }
 
 /*
@@ -174,14 +176,16 @@ void seq_get_handler(
 void seq_put_handler(
 	void *var, pvType type, unsigned count, pvValue *value, void *arg, pvStat status)
 {
-	PVREQ	*rQ = (PVREQ *)arg;
-	CHAN	*ch = rQ->ch;
+	PVREQ	*rq = (PVREQ *)arg;
+	CHAN	*ch = rq->ch;
+	SSCB	*ss = rq->ss;
 	SPROG	*sp = ch->sprog;
 
 	assert(ch->dbch != NULL);
 	freeListFree(sp->pvReqPool, arg);
-	/* Process event handling in each state set */
-	proc_db_events(value, type, ch, rQ->ss, PUT_COMPLETE, status);
+	/* ignore callback if not expected, e.g. already timed out */
+	if (ss->putReq[chNum(ch)] == rq)
+		proc_db_events(value, type, ch, ss, PUT_COMPLETE, status);
 }
 
 /*
