@@ -15,6 +15,42 @@ also found the reason: the semaphore that makes the state set block
 until the CA callback arrives, times out but is never signalled, so
 the variable never recovers from the situation.
 
+This problem is probably present in all releases of the 2.1 branch.
+
+There are two patches available that may or may not fix the problem
+or introduce new problems. You can cherry-pick them from the `darcs
+repository`_ or by downloading and manually applying patch files
+(using ``patch -p1 <patchfile>``):
+
+* seq: fix problem with synchronous pvPut/pvGet
+  
+  The problem was that that once a synchronous request times out, the
+  variable would never recover from the timeout state. This was because
+  the semaphores would not be signalled on timeout. However, in order
+  to correctly discard events (i.e. callbacks from CA) that belong to
+  timed out requests, we have to remember them. This is what the getReq
+  and putReq arrays in struct state_set are for.
+  
+  The fix assumes that CA will eventually call the callback for each
+  accepted request, even if the channel disconnects. If the assumption is
+  wrong then we have a memory leak.
+
+  Download patch file here: `2.1.12-fix1.patch`_.
+
+* seq: use a list to remember timed out requests, free on disconnect
+  
+  This fixes the potential memory leak introduced by fixing the problem
+  with synchronous pvPut/pvGet.
+  
+  The fix assumes that no request callbacks will be called by CA for a
+  variable after a its disconnect callback arrives. If the assumption is
+  wrong then we get potential memory corruption.
+
+  Download patch file here: `2.1.12-fix2.patch`_.
+
+.. _2.1.12-fix1.patch: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2.1.12-fix1.patch
+.. _2.1.12-fix2.patch: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2.1.12-fix2.patch
+.. _darcs repository: http://www-csr.bessy.de/control/SoftDist/sequencer/repo/branch-2-1
 
 .. _Known_Problems_2.1.10:
 
