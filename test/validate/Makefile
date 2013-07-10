@@ -115,14 +115,11 @@ vxTestHarness.dbd$(DEP):
 	@echo "$(COMMON_DIR)/vxTestHarness.dbd: ../Makefile" > $@
 endif
 
-SOFTIOC=$(EPICS_BASE_BIN)/softIoc$(HOSTEXE)
-SOFTDBD=$(EPICS_BASE)/dbd/softIoc.dbd
-
 $(REGRESSION_TESTS_WITH_DB:%=%Ioc.t): %Ioc.t: %$(EXE) ../makeTestfile.pl
-	$(PERL) ../makeTestfile.pl $@ $* $< ioc $(SOFTIOC) $(SOFTDBD) $(USE_VALGRIND)
+	$(PERL) ../makeTestfile.pl $@ $* $< ioc $(USE_VALGRIND)
 
 $(REGRESSION_TESTS:%=%.t): %.t: %$(EXE) ../makeTestfile.pl
-	$(PERL) ../makeTestfile.pl $@ $* $< noioc $(SOFTIOC) $(SOFTDBD) $(USE_VALGRIND)
+	$(PERL) ../makeTestfile.pl $@ $* $< noioc $(USE_VALGRIND)
 
 norace.i race.i: ../raceCommon.st
 
