@@ -120,6 +120,12 @@ epicsShareFunc pvStat epicsShareAPI seq_pvGet(SS_ID ss, VAR_ID varId, enum compT
 		switch (epicsEventTryWait(getSem))
 		{
 		case epicsEventWaitOK:
+			if (ss->getReq[varId] != NULL)
+			{
+				/* previous request timed out but user
+				   did not call pvGetComplete */
+				ss->getReq[varId] = NULL;
+			}
 			status = check_connected(dbch, meta);
 			if (status) return epicsEventSignal(getSem), status;
 			break;
@@ -392,6 +398,12 @@ epicsShareFunc pvStat epicsShareAPI seq_pvPut(SS_ID ss, VAR_ID varId, enum compT
 		switch (epicsEventTryWait(putSem))
 		{
 		case epicsEventWaitOK:
+			if (ss->putReq[varId] != NULL)
+			{
+				/* previous request timed out but user
+				   did not call pvPutComplete */
+				ss->putReq[varId] = NULL;
+			}
 			break;
 		case epicsEventWaitTimeout:
 			meta->status = pvStatERROR;
