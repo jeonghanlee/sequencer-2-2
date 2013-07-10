@@ -33,6 +33,8 @@ in the file LICENSE that is included with this distribution.
 #include "seq.h"
 #include "seq_debug.h"
 
+double seq_sync_timeout = 10.0;
+
 static pvStat check_connected(DBCHAN *dbch, PVMETA *meta)
 {
 	if (!dbch->connected)
@@ -61,7 +63,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvGet(SS_ID ss, VAR_ID varId, enum compT
 	epicsEventId	getSem = ss->getSemId[varId];
 	DBCHAN		*dbch = ch->dbch;
 	PVMETA		*meta = metaPtr(ch,ss);
-	double		tmo = 10.0;
+	double		tmo = seq_sync_timeout;
 
 	/* Anonymous PV and safe mode, just copy from shared buffer.
 	   Note that completion is always immediate, so no distinction
@@ -341,7 +343,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvPut(SS_ID ss, VAR_ID varId, enum compT
 	DBCHAN	*dbch = ch->dbch;
 	PVMETA	*meta = metaPtr(ch,ss);
 	epicsEventId	putSem = ss->putSemId[varId];
-	double	tmo = 10.0;
+	double	tmo = seq_sync_timeout;
 
 	DEBUG("pvPut: pv name=%s, var=%p\n", dbch ? dbch->dbName : "<anonymous>", var);
 
