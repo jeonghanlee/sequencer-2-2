@@ -54,3 +54,15 @@ void seq_test_done(void)
     exit(0);
 #endif
 }
+
+#include "subRecord.h"
+#include "registryFunction.h"
+#include "epicsExport.h"
+
+long subThreadSleep(struct subRecord *psub)
+{
+    epicsThreadSleep(1);
+    psub->val += 1.0;
+    return 0;
+}
+epicsRegisterFunction(subThreadSleep);
