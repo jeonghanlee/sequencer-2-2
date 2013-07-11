@@ -1,6 +1,85 @@
 Release Notes for Version 2.1
 =============================
 
+.. _Release_Notes_2.1.13:
+
+Release 2.1.13
+--------------
+
+User relevant changes:
+
+* seq: fix problem with synchronous pvPut/pvGet
+  
+  The problem was that that once a synchronous request times out, the
+  variable would never recover from the timeout state. This was because
+  the semaphores would not be signalled on timeout. Thanks to
+  Carl Lionberger <calionberger@lbl.gov> for the original report and
+  initial analysis, and to J. Lewis Muir <jlmuir@imca-cat.org> who
+  suggested using unique IDs in order to correctly discard callbacks
+  for time out requests. See `this tech-talk thread
+  <http://www.aps.anl.gov/epics/tech-talk/2013/msg01164.php>`_.
+  
+  The fix assumes that CA will eventually call the callback for each
+  accepted request, even if the channel disconnects. The CA documentation
+  suggests that this is indeed the case.
+
+* seq: fixed a corner case in ASYNC put/get
+  
+  If epicsEventTryWait succeeds, there could still be a previous request
+  pending that has timed out. This happens e.g. if the user code did not
+  call pvGetComplete resp. pvPutComplete. In that case we must reset the
+  request pointer to NULL in order to invalidate the request so it gets
+  ignored whenever it finally arrives.
+
+* added regression tests for pvGet/pvPut (SYNC) timeout recovery
+
+* added a test for using event flag in C function
+  
+  This has been added after Joe Sullivan <sullivan@aps.anl.gov>
+  noted that in version 2.1 there are no #define'ed constants for
+  event flags, as was the case in version 2.0. See
+  `this thread on tech-talk
+  <http://www.aps.anl.gov/epics/tech-talk/2013/msg00891.php>`_.
+
+Internal changes to the test subsystem:
+
+* no longer use the softIoc binary from base
+  
+  Instead, we use the same binary we produce for the test case, and
+  add an extra switch -t that enables running the sequencer program.
+
+* for testing, add a backdoor to change the default timeout
+  
+  I plan to add extra timeout parameters to pvPut and pvGet in version
+  2.2,  which is why I do not want this to be part of the public
+  (documented) API.
+
+* separate testHarness from startup for vxWorks
+  
+  This is so I can first start up the IOC, then switch to telnet console,
+  and then start the tests. The console output (quite verbose for some of
+  the tests) will be much faster in this way and the tests accordingly
+  more realistic.
+
+Documentation changes:
+
+* added link to known problems in 2.1.12 to release notes page
+* updated the known problems page
+* fixed obsolete email address in latex options
+* added rule for missing/excess PV names in array assign clause
+* make footer style same as header (for html output)
+* adapted README to ReleaseNotes split
+* extended HZB copyright to 2013 (only front page and LICENSE)
+* some html layout improvements
+* some improvements/updates in the Installation chapter
+* new layout and blurb for home page
+* fixed a few bad todo and note items
+* added link to talk slides to home page
+* fixed a typo in the reference
+* re-wrote the front page blurb
+* split release notes into separate files (one per version)
+* explain builtin delay as synonym for elapsed
+
 .. _Release_Notes_2.1.12:
 
 Release 2.1.12
