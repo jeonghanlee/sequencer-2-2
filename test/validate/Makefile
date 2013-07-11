@@ -137,8 +137,11 @@ $(COMMON_DIR)/vxTestHarness.db: $(REGRESSION_TESTS_WITH_DB:%=../%.db)
 st.cmd: ../st.cmd.vxWorks ../makeStCmd.pl
 	$(CP) ../st.cmd.vxWorks $@
 	$(PERL) -MExtUtils::Command -e chmod 644 $@
-	$(PERL) ../makeStCmd.pl $(REGRESSION_TESTS_vxWorks) >> $@
+
+testHarness.cmd: ../makeStCmd.pl
+	$(PERL) ../makeStCmd.pl $(REGRESSION_TESTS_vxWorks) > $@
+	$(PERL) -MExtUtils::Command -e chmod 644 $@
 
 ifeq "$(OS_CLASS)" "vxWorks"
-build: st.cmd
+build: st.cmd testHarness.cmd
 endif
