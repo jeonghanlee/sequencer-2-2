@@ -360,8 +360,16 @@ void seq_disconnect(SPROG *sp)
 				"%s\n", ch->varName, dbch->dbName, pvVarGetMess(dbch->pvid));
 
 		/* Clear monitor & connect indicators */
-		dbch->connected = FALSE;
-		sp->connectCount -= 1;
+		if (dbch->connected)
+		{
+			dbch->connected = FALSE;
+			sp->connectCount--;
+		}
+		if (dbch->gotMonitor)
+		{
+			dbch->gotMonitor = FALSE;
+			sp->gotMonitorCount--;
+		}
 	}
 	epicsMutexUnlock(sp->programLock);
 
@@ -371,6 +379,7 @@ void seq_disconnect(SPROG *sp)
 pvStat seq_camonitor(CHAN *ch, boolean turn_on)
 {
 	DBCHAN	*dbch = ch->dbch;
+	SPROG	*sp = ch->sprog;
 	pvStat	status;
 
 	assert(ch);
@@ -378,7 +387,6 @@ pvStat seq_camonitor(CHAN *ch, boolean turn_on)
 	if (turn_on == pvMonIsDefined(dbch->pvid))	/* no change */
 		return pvStatOK;
 	DEBUG("calling pvVarMonitor%s(%p)\n", turn_on ? "On" : "Off", ch);
-	dbch->gotOneMonitor = FALSE;
 	if (turn_on)
 	{
 		status = pvVarMonitorOn(
@@ -388,7 +396,13 @@ pvStat seq_camonitor(CHAN *ch, boolean turn_on)
 				ch);			/* user arg (channel struct) */
 	}
 	else
+	{
 		status = pvVarMonitorOff(&dbch->pvid);
+		dbch->gotMonitor = FALSE;
+		epicsMutexMustLock(sp->programLock);
+		sp->gotMonitorCount -= 1;
+		epicsMutexUnlock(sp->programLock);
+	}
 	if (status != pvStatOK)
 		errlogSevPrintf(errlogFatal, "seq_camonitor: pvVarMonitor%s(var '%s', pv '%s') failure: %s\n",
 			turn_on?"On":"Off", ch->varName, dbch->dbName, pvVarGetMess(dbch->pvid));
