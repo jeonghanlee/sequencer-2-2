@@ -305,21 +305,23 @@ static void proc_db_events(
 			   Set the dirty flag only if this was a monitor event. */
 			ss_write_buffer(ch, val, &meta, evtype == pvEventMonitor);
 		}
+	}
 
-		/* Signal completion */
-		if (ss)
+	epicsMutexMustLock(sp->programLock);
+
+	/* Signal completion */
+	if (ss)
+	{
+		switch (evtype)
 		{
-			switch (evtype)
-			{
-			case pvEventGet:
-				epicsEventSignal(ss->getSemId[chNum(ch)]);
-				break;
-			case pvEventPut:
-				epicsEventSignal(ss->putSemId[chNum(ch)]);
-				break;
-			default:
-				break;
-			}
+		case pvEventGet:
+			epicsEventSignal(ss->getSemId[chNum(ch)]);
+			break;
+		case pvEventPut:
+			epicsEventSignal(ss->putSemId[chNum(ch)]);
+			break;
+		default:
+			break;
 		}
 	}
 
@@ -329,6 +331,8 @@ static void proc_db_events(
 
 	/* Wake up each state set that uses this channel in an event */
 	ss_wakeup(sp, ch->eventNum);
+
+	epicsMutexUnlock(sp->programLock);
 }
 
 /* Disconnect all database channels */
