@@ -33,9 +33,14 @@ in the file LICENSE that is included with this distribution.
 #include "seq.h"
 #include "seq_debug.h"
 
-static void proc_db_events(pvValue *value, pvType type,
-	CHAN *ch, SSCB *ss, pvEventType evtype, pvStat status);
-static void proc_db_events_queued(SPROG *sp, CHAN *ch, pvValue *value);
+static void proc_db_events(
+	pvValue		*value,	/* ptr to value */
+	pvType		type,	/* type of value */
+	CHAN		*ch,	/* channel object */
+	SSCB		*ss,	/* originator, for put and get, else 0 */
+	pvEventType	evtype,	/* put, get, or monitor */
+	pvStat		status	/* status from pv layer */
+);
 
 /*
  * seq_connect() - Initiate connect & monitor requests to PVs.
@@ -183,8 +188,7 @@ static void seq_mon_handler(
 	DBCHAN	*dbch = ch->dbch;
 
 	assert(dbch != NULL);
-	/* Process event handling in each state set */
-	proc_db_events(value, type, ch, sp->ss, pvEventMonitor, status);
+	proc_db_events(value, type, ch, 0, pvEventMonitor, status);
 	if (!dbch->gotOneMonitor)
 	{
 		dbch->gotOneMonitor = TRUE;
@@ -220,79 +224,6 @@ void seq_event_handler(
 	}
 }
 
-/* Common code for completion and monitor handling */
-static void proc_db_events(
-	pvValue		*value,
-	pvType		type,
-	CHAN		*ch,
-	SSCB		*ss,		/* originator, for put and get */
-	pvEventType	evtype,
-	pvStat		status)
-{
-	SPROG	*sp = ch->sprog;
-	DBCHAN	*dbch = ch->dbch;
-	static const char *event_type_name[] = {"get","put","mon"};
-
-	assert(dbch != NULL);
-
-	DEBUG("proc_db_events: var=%s, pv=%s, type=%s, status=%d\n", ch->varName,
-		dbch->dbName, event_type_name[evtype], status);
-
-	/* If monitor on var queued via syncQ, branch to alternative routine */
-	if (ch->queue && evtype == pvEventMonitor)
-	{
-		proc_db_events_queued(sp, ch, value);
-		return;
-	}
-
-	/* Copy value and meta data into user variable shared buffer
-	   (can get NULL value pointer for put completion only) */
-	if (value != NULL)
-	{
-		void *val = pv_value_ptr(value,type);
-		PVMETA meta;
-
-		/* must not use an initializer here, the MS C compiler chokes on it */
-		meta.timeStamp = pv_stamp(value,type);
-		meta.status = pv_status(value,type);
-		meta.severity = pv_severity(value,type);
-		meta.message = NULL;
-
-		/* Set error message only when severity indicates error */
-		if (meta.severity != pvSevrNONE)
-		{
-			const char *pmsg = pvVarGetMess(dbch->pvid);
-			if (!pmsg) pmsg = "unknown";
-			meta.message = pmsg;
-		}
-
-		/* Write value and meta data to shared buffers.
-		   Set the dirty flag only if this was a monitor event. */
-		ss_write_buffer(ch, val, &meta, evtype == pvEventMonitor);
-	}
-
-	/* Signal completion */
-	switch (evtype)
-	{
-	case pvEventGet:
-		epicsEventSignal(ss->getSemId[chNum(ch)]);
-		break;
-	case pvEventPut:
-		epicsEventSignal(ss->putSemId[chNum(ch)]);
-		break;
-	default:
-		break;
-	}
-
-	/* If there's an event flag associated with this channel, set it */
-	/* TODO: check if correct/documented to do this for non-monitor completions */
-	if (ch->syncedTo)
-		seq_efSet(sp->ss, ch->syncedTo);
-
-	/* Wake up each state set that uses this channel in an event */
-	ss_wakeup(sp, ch->eventNum);
-}
-
 struct putq_cp_arg {
 	CHAN	*ch;
 	void	*value;
@@ -307,28 +238,95 @@ static void *putq_cp(void *dest, const void *src, size_t elemSize)
 		pv_size_n(ch->type->getType, ch->dbch->dbCount));
 }
 
-/* Common code for event and callback handling (queuing version) */
-static void proc_db_events_queued(SPROG *sp, CHAN *ch, pvValue *value)
+/* Common code for completion and monitor handling */
+static void proc_db_events(
+	pvValue		*value,
+	pvType		type,
+	CHAN		*ch,
+	SSCB		*ss,
+	pvEventType	evtype,
+	pvStat		status
+)
 {
-	boolean	full;
-	struct putq_cp_arg arg = {ch, value};
+	SPROG	*sp = ch->sprog;
+	DBCHAN	*dbch = ch->dbch;
+	static const char *event_type_name[] = {"get","put","mon"};
 
-	DEBUG("proc_db_events_queued: var=%s, pv=%s, queue=%p, used(max)=%d(%d)\n",
-		ch->varName, ch->dbch->dbName,
-		ch->queue, seqQueueUsed(ch->queue), seqQueueNumElems(ch->queue));
-	/* Copy whole message into queue; no need to lock against other
-	   writers, because named and anonymous PVs are disjoint. */
-	full = seqQueuePutF(ch->queue, putq_cp, &arg);
-	if (full)
+	assert(dbch != NULL);
+
+	DEBUG("proc_db_events: var=%s, pv=%s, type=%s, status=%d\n", ch->varName,
+		dbch->dbName, event_type_name[evtype], status);
+
+	/* monitor on var queued via syncQ */
+	if (ch->queue && evtype == pvEventMonitor)
 	{
-		errlogSevPrintf(errlogMinor,
-		  "monitor event for variable '%s' (pv '%s'): "
-		  "last queue element overwritten (queue is full)\n",
-		  ch->varName, ch->dbch->dbName
-		);
+		boolean	full;
+		struct putq_cp_arg arg = {ch, value};
+
+		DEBUG("proc_db_events: var=%s, pv=%s, queue=%p, used(max)=%d(%d)\n",
+			ch->varName, ch->dbch->dbName,
+			ch->queue, seqQueueUsed(ch->queue), seqQueueNumElems(ch->queue));
+		/* Copy whole message into queue; no need to lock against other
+		   writers, because named and anonymous PVs are disjoint. */
+		full = seqQueuePutF(ch->queue, putq_cp, &arg);
+		if (full)
+		{
+			errlogSevPrintf(errlogMinor,
+			  "monitor event for variable %s (pv %s): "
+			  "last queue element overwritten (queue is full)\n",
+			  ch->varName, ch->dbch->dbName
+			);
+		}
 	}
-	/* Set event flag; note: it doesn't matter which state set we pass. */
-	seq_efSet(sp->ss, ch->syncedTo);
+	else
+	{
+		/* Copy value and meta data into user variable shared buffer
+		   (can get NULL value pointer for put completion only) */
+		if (value != NULL)
+		{
+			void *val = pv_value_ptr(value,type);
+			PVMETA meta;
+
+			/* must not use an initializer here, the MS C compiler chokes on it */
+			meta.timeStamp = pv_stamp(value,type);
+			meta.status = pv_status(value,type);
+			meta.severity = pv_severity(value,type);
+			meta.message = NULL;
+
+			/* Set error message only when severity indicates error */
+			if (meta.severity != pvSevrNONE)
+			{
+				const char *pmsg = pvVarGetMess(dbch->pvid);
+				if (!pmsg) pmsg = "unknown";
+				meta.message = pmsg;
+			}
+
+			/* Write value and meta data to shared buffers.
+			   Set the dirty flag only if this was a monitor event. */
+			ss_write_buffer(ch, val, &meta, evtype == pvEventMonitor);
+		}
+
+		/* Signal completion */
+		if (ss)
+		{
+			switch (evtype)
+			{
+			case pvEventGet:
+				epicsEventSignal(ss->getSemId[chNum(ch)]);
+				break;
+			case pvEventPut:
+				epicsEventSignal(ss->putSemId[chNum(ch)]);
+				break;
+			default:
+				break;
+			}
+		}
+	}
+
+	/* If there's an event flag associated with this channel, set it */
+	if (ch->syncedTo)
+		seq_efSet(sp->ss, ch->syncedTo);
+
 	/* Wake up each state set that uses this channel in an event */
 	ss_wakeup(sp, ch->eventNum);
 }
