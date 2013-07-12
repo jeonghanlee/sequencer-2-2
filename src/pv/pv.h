@@ -42,6 +42,7 @@ typedef void pvEventFunc(pvEventType evt, void *arg, pvType type, unsigned count
 
 struct pvSystem {
     struct ca_client_context *id;
+    const char *msg;
 };
 
 struct pvVar {
@@ -78,6 +79,7 @@ epicsShareFunc unsigned pvVarGetCount(pvVar *var);
 
 #define pvVarGetPrivate(var) (var).arg
 #define pvVarGetMess(var) (var).msg
+#define pvSysGetMess(sys) (sys).msg
 
 epicsShareFunc pvStat pvTimeGetCurrentDouble(double *pTime);
 

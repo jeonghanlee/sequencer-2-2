@@ -7,10 +7,11 @@
 #define epicsExportSharedSymbols
 #include "pv.h"
 
-#define INVOKE(expr) \
+#define INVOKE(x, expr) \
     {\
         int _status = expr;\
         if (!(_status & CA_M_SUCCESS)) {\
+            (x)->msg = ca_message(_status);\
             errlogSevPrintf(sevrFromCA(_status), "%s: %s", #expr, ca_message(_status));\
             return statFromCA(_status);\
         }\
@@ -29,21 +30,21 @@ epicsShareFunc pvStat pvSysCreate(pvSystem *pSys)
 {
     assert(pSys);
     assert(!ca_current_context());
-    INVOKE(ca_context_create(ca_enable_preemptive_callback));
+    INVOKE(pSys, ca_context_create(ca_enable_preemptive_callback));
     pSys->id = ca_current_context();
     return pvStatOK;
 }
 
 epicsShareFunc pvStat pvSysFlush(pvSystem sys)
 {
-    INVOKE(ca_flush_io());
+    INVOKE(&sys, ca_flush_io());
     return pvStatOK;
 }
 
 epicsShareFunc pvStat pvSysAttach(pvSystem sys)
 {
     if (!ca_current_context())
-        INVOKE(ca_attach_context(sys.id));
+        INVOKE(&sys, ca_attach_context(sys.id));
     return pvStatOK;
 }
 
@@ -60,14 +61,14 @@ epicsShareFunc pvStat pvVarCreate(pvSystem sys, const char *name,
     var->conn_handler = conn_func;
     var->event_handler = event_func;
     var->arg = arg;
-    INVOKE(ca_create_channel(name, pvCaConnectionHandler, var, CA_PRIORITY_DEFAULT, &var->chid));
+    INVOKE(var, ca_create_channel(name, pvCaConnectionHandler, var, CA_PRIORITY_DEFAULT, &var->chid));
     return pvStatOK;
 }
 
 epicsShareFunc pvStat pvVarDestroy(pvVar *var)
 {
     assert(var);
-    INVOKE(ca_clear_channel(var->chid));
+    INVOKE(var, ca_clear_channel(var->chid));
     *var = nullPvVar;
     return pvStatOK;
 }
@@ -78,6 +79,7 @@ static void pvCaEventHandler(struct event_handler_args args, pvEventType evt)
     unsigned count = (unsigned)args.count;
     assert(args.count >= 0);
     assert((long)count == args.count);
+    var->msg = ca_message(args.status);
     var->event_handler(evt, args.usr, typeFromCA(args.type), count, (pvValue*)args.dbr, statFromCA(args.status));
 }
 
@@ -100,7 +102,7 @@ epicsShareFunc pvStat pvVarGetCallback(pvVar *var, pvType type, unsigned count, 
 {
     assert(var);
     assert(pv_is_valid_type(type));
-    INVOKE(ca_array_get_callback(
+    INVOKE(var, ca_array_get_callback(
         typeToCA(type), count, var->chid, pvCaGetHandler, arg));
     return pvStatOK;
 }
@@ -109,7 +111,7 @@ epicsShareFunc pvStat pvVarPutNoBlock(pvVar *var, pvType type, unsigned count, p
 {
     assert(var);
     assert(pv_is_simple_type(type));
-    INVOKE(ca_array_put(typeToCA(type), count, var->chid, value));
+    INVOKE(var, ca_array_put(typeToCA(type), count, var->chid, value));
     return pvStatOK;
 }
 
@@ -117,7 +119,7 @@ epicsShareFunc pvStat pvVarPutCallback(pvVar *var, pvType type, unsigned count, 
 {
     assert(var);
     assert(pv_is_simple_type(type));
-    INVOKE(ca_array_put_callback(
+    INVOKE(var, ca_array_put_callback(
         typeToCA(type), count, var->chid, value, pvCaPutHandler, arg));
     return pvStatOK;
 }
@@ -127,7 +129,7 @@ epicsShareFunc pvStat pvVarMonitorOn(pvVar *var, pvType type, unsigned count, vo
     assert(var);
     assert(pv_is_valid_type(type));
     if (var->monid == NULL) {
-        INVOKE(ca_create_subscription(typeToCA(type), count, var->chid,
+        INVOKE(var, ca_create_subscription(typeToCA(type), count, var->chid,
             DBE_VALUE | DBE_ALARM, pvCaMonitorHandler, arg, &var->monid));
     }
     return pvStatOK;
@@ -137,7 +139,7 @@ epicsShareFunc pvStat pvVarMonitorOff(pvVar *var)
 {
     assert(var);
     if (var->monid != NULL) {
-        INVOKE(ca_clear_event(var->monid));
+        INVOKE(var, ca_clear_event(var->monid));
         var->monid = NULL;
     }
     return pvStatOK;
