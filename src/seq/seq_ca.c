@@ -33,23 +33,8 @@ in the file LICENSE that is included with this distribution.
 #include "seq.h"
 #include "seq_debug.h"
 
-/*
- * Event type (extra argument passed to proc_db_events().
- */
-enum event_type {
-	GET_COMPLETE,
-	PUT_COMPLETE,
-	MON_COMPLETE
-};
-
-static const char *event_type_name[] = {
-	"get",
-	"put",
-	"mon"
-};
-
 static void proc_db_events(pvValue *value, pvType type,
-	CHAN *ch, SSCB *ss, enum event_type evtype, pvStat status);
+	CHAN *ch, SSCB *ss, pvEventType evtype, pvStat status);
 static void proc_db_events_queued(SPROG *sp, CHAN *ch, pvValue *value);
 
 /*
@@ -76,13 +61,12 @@ pvStat seq_connect(SPROG *sp, boolean wait)
 		DEBUG("seq_connect: connect %s to %s\n", ch->varName,
 			dbch->dbName);
 		/* Connect to it */
-		dbch->pvid = NULL;
 		status = pvVarCreate(
 				sp->pvSys,		/* PV system context */
 				ch->dbch->dbName,	/* PV name */
 				seq_conn_handler,	/* connection handler routine */
+				seq_event_handler,	/* event handler routine */
 				ch,			/* private data is CHAN struc */
-				sp->debug,		/* debug level (inherited) */
 				&dbch->pvid);		/* ptr to PV id */
 		if (status != pvStatOK)
 		{
@@ -154,8 +138,8 @@ pvStat seq_connect(SPROG *sp, boolean wait)
  * seq_get_handler() - Sequencer callback handler.
  * Called when a "get" completes.
  */
-void seq_get_handler(
-	void *var, pvType type, unsigned count, pvValue *value, void *arg, pvStat status)
+static void seq_get_handler(
+	pvType type, unsigned count, pvValue *value, void *arg, pvStat status)
 {
 	PVREQ	*rq = (PVREQ *)arg;
 	CHAN	*ch = rq->ch;
@@ -166,15 +150,15 @@ void seq_get_handler(
 	freeListFree(sp->pvReqPool, arg);
 	/* ignore callback if not expected, e.g. already timed out */
 	if (ss->getReq[chNum(ch)] == rq)
-		proc_db_events(value, type, ch, ss, GET_COMPLETE, status);
+		proc_db_events(value, type, ch, ss, pvEventGet, status);
 }
 
 /*
  * seq_put_handler() - Sequencer callback handler.
  * Called when a "put" completes.
  */
-void seq_put_handler(
-	void *var, pvType type, unsigned count, pvValue *value, void *arg, pvStat status)
+static void seq_put_handler(
+	pvType type, unsigned count, pvValue *value, void *arg, pvStat status)
 {
 	PVREQ	*rq = (PVREQ *)arg;
 	CHAN	*ch = rq->ch;
@@ -185,14 +169,14 @@ void seq_put_handler(
 	freeListFree(sp->pvReqPool, arg);
 	/* ignore callback if not expected, e.g. already timed out */
 	if (ss->putReq[chNum(ch)] == rq)
-		proc_db_events(value, type, ch, ss, PUT_COMPLETE, status);
+		proc_db_events(value, type, ch, ss, pvEventPut, status);
 }
 
 /*
  * seq_mon_handler() - PV events (monitors) come here.
  */
-void seq_mon_handler(
-	void *var, pvType type, unsigned count, pvValue *value, void *arg, pvStat status)
+static void seq_mon_handler(
+	pvType type, unsigned count, pvValue *value, void *arg, pvStat status)
 {
 	CHAN	*ch = (CHAN *)arg;
 	SPROG	*sp = ch->sprog;
@@ -200,7 +184,7 @@ void seq_mon_handler(
 
 	assert(dbch != NULL);
 	/* Process event handling in each state set */
-	proc_db_events(value, type, ch, sp->ss, MON_COMPLETE, status);
+	proc_db_events(value, type, ch, sp->ss, pvEventMonitor, status);
 	if (!dbch->gotOneMonitor)
 	{
 		dbch->gotOneMonitor = TRUE;
@@ -215,17 +199,39 @@ void seq_mon_handler(
 	}
 }
 
+/*
+ * seq_get_handler() - Sequencer callback handler.
+ * Called when a "get" completes.
+ */
+void seq_event_handler(
+	pvEventType evt, void *arg, pvType type, unsigned count, pvValue *value, pvStat status)
+{
+	switch (evt)
+	{
+	case pvEventGet:
+		seq_get_handler(type, count, value, arg, status);
+		break;
+	case pvEventPut:
+		seq_put_handler(type, count, value, arg, status);
+		break;
+	case pvEventMonitor:
+		seq_mon_handler(type, count, value, arg, status);
+		break;
+	}
+}
+
 /* Common code for completion and monitor handling */
 static void proc_db_events(
-	pvValue	*value,
-	pvType	type,
-	CHAN	*ch,
-	SSCB	*ss,		/* originator, for put and get */
-	enum event_type evtype,
-	pvStat	status)
+	pvValue		*value,
+	pvType		type,
+	CHAN		*ch,
+	SSCB		*ss,		/* originator, for put and get */
+	pvEventType	evtype,
+	pvStat		status)
 {
 	SPROG	*sp = ch->sprog;
 	DBCHAN	*dbch = ch->dbch;
+	static const char *event_type_name[] = {"get","put","mon"};
 
 	assert(dbch != NULL);
 
@@ -233,7 +239,7 @@ static void proc_db_events(
 		dbch->dbName, event_type_name[evtype], status);
 
 	/* If monitor on var queued via syncQ, branch to alternative routine */
-	if (ch->queue && evtype == MON_COMPLETE)
+	if (ch->queue && evtype == pvEventMonitor)
 	{
 		proc_db_events_queued(sp, ch, value);
 		return;
@@ -247,9 +253,9 @@ static void proc_db_events(
 		PVMETA meta;
 
 		/* must not use an initializer here, the MS C compiler chokes on it */
-		meta.timeStamp = *pv_stamp_ptr(value,type);
-		meta.status = *pv_status_ptr(value,type);
-		meta.severity = *pv_severity_ptr(value,type);
+		meta.timeStamp = pv_stamp(value,type);
+		meta.status = pv_status(value,type);
+		meta.severity = pv_severity(value,type);
 		meta.message = NULL;
 
 		/* Set error message only when severity indicates error */
@@ -262,16 +268,16 @@ static void proc_db_events(
 
 		/* Write value and meta data to shared buffers.
 		   Set the dirty flag only if this was a monitor event. */
-		ss_write_buffer(ch, val, &meta, evtype == MON_COMPLETE);
+		ss_write_buffer(ch, val, &meta, evtype == pvEventMonitor);
 	}
 
 	/* Signal completion */
 	switch (evtype)
 	{
-	case GET_COMPLETE:
+	case pvEventGet:
 		epicsEventSignal(ss->getSemId[chNum(ch)]);
 		break;
-	case PUT_COMPLETE:
+	case pvEventPut:
 		epicsEventSignal(ss->putSemId[chNum(ch)]);
 		break;
 	default:
@@ -346,8 +352,7 @@ void seq_disconnect(SPROG *sp)
 		DEBUG("seq_disconnect: disconnect %s from %s\n",
 			ch->varName, dbch->dbName);
 		/* Disconnect this PV */
-		status = pvVarDestroy(dbch->pvid);
-		dbch->pvid = NULL;
+		status = pvVarDestroy(&dbch->pvid);
 		if (status != pvStatOK)
 			errlogSevPrintf(errlogFatal, "seq_disconnect: var %s, pv %s: pvVarDestroy() failure: "
 				"%s\n", ch->varName, dbch->dbName, pvVarGetMess(dbch->pvid));
@@ -368,25 +373,21 @@ pvStat seq_camonitor(CHAN *ch, boolean on)
 
 	assert(ch);
 	assert(dbch);
-	if (on == (dbch->monid != NULL))			/* already done */
+	if (on == pvMonIsDefined(dbch->pvid))		/* already done */
 		return pvStatOK;
 	DEBUG("calling pvVarMonitor%s(%p)\n", on?"On":"Off", dbch->pvid);
 	dbch->gotOneMonitor = FALSE;
 	if (on)
 		status = pvVarMonitorOn(
-				dbch->pvid,		/* pvid */
+				&dbch->pvid,		/* pvid */
 				ch->type->getType,	/* requested type */
 				ch->count,		/* element count */
-				seq_mon_handler,	/* function to call */
-				ch,			/* user arg (channel struct) */
-				&dbch->monid);		/* where to put event id */
+				ch);			/* user arg (channel struct) */
 	else
-		status = pvVarMonitorOff(dbch->pvid, dbch->monid);
+		status = pvVarMonitorOff(&dbch->pvid);
 	if (status != pvStatOK)
 		errlogSevPrintf(errlogFatal, "seq_camonitor: pvVarMonitor%s(var %s, pv %s) failure: %s\n",
 			on?"On":"Off", ch->varName, dbch->dbName, pvVarGetMess(dbch->pvid));
-	else if (!on)
-		dbch->monid = NULL;
 	return status;
 }
 
@@ -394,9 +395,9 @@ pvStat seq_camonitor(CHAN *ch, boolean on)
  * seq_conn_handler() - Sequencer connection handler.
  * Called each time a connection is established or broken.
  */
-void seq_conn_handler(void *var, int connected)
+void seq_conn_handler(int connected, void *arg)
 {
-	CHAN	*ch = (CHAN *)pvVarGetPrivate(var);
+	CHAN	*ch = (CHAN *)arg;
 	SPROG	*sp = ch->sprog;
 	DBCHAN	*dbch = ch->dbch;
 
@@ -404,13 +405,6 @@ void seq_conn_handler(void *var, int connected)
 
 	assert(dbch != NULL);
 
-	/* Note that CA may call this while pvVarCreate is still running,
-	   so dbch->pvid may not yet be initialized. */
-	if (!dbch->pvid)
-		dbch->pvid = var;
-
-	DEBUG("seq_conn_handler(%p,%d), dbch->pvid=%p\n", var, connected, dbch->pvid);
-	assert(dbch->pvid == var);
 	if (!connected)
 	{
 		DEBUG("%s disconnected from %s\n", ch->varName, dbch->dbName);
@@ -453,7 +447,8 @@ void seq_conn_handler(void *var, int connected)
 			{
 				epicsEventSignal(sp->ready);
 			}
-			dbCount = pvVarGetCount(var);
+			assert(pvVarIsDefined(dbch->pvid));
+			dbCount = pvVarGetCount(&dbch->pvid);
 			assert(dbCount >= 0);
 			dbch->dbCount = min(ch->count, (unsigned)dbCount);
 

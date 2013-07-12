@@ -160,10 +160,9 @@ epicsShareFunc pvStat epicsShareAPI seq_pvGet(SS_ID ss, VAR_ID varId, enum compT
 	/* Perform the PV get operation with a callback routine specified.
 	   Requesting more than db channel has available is ok. */
 	status = pvVarGetCallback(
-			dbch->pvid,		/* PV id */
+			&dbch->pvid,		/* PV id */
 			ch->type->getType,	/* request type */
 			ch->count,		/* element count */
-			seq_get_handler,	/* callback handler */
 			req);			/* user arg */
 	if (status != pvStatOK)
 	{
@@ -438,7 +437,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvPut(SS_ID ss, VAR_ID varId, enum compT
 	if (compType == DEFAULT)
 	{
 		status = pvVarPutNoBlock(
-				dbch->pvid,		/* PV id */
+				&dbch->pvid,		/* PV id */
 				ch->type->putType,	/* data type */
 				count,			/* element count */
 				(pvValue *)var);	/* data value */
@@ -460,11 +459,10 @@ epicsShareFunc pvStat epicsShareAPI seq_pvPut(SS_ID ss, VAR_ID varId, enum compT
 		ss->putReq[varId] = req;
 
 		status = pvVarPutCallback(
-				dbch->pvid,		/* PV id */
+				&dbch->pvid,		/* PV id */
 				ch->type->putType,	/* data type */
 				count,			/* element count */
 				(pvValue *)var,		/* data value */
-				seq_put_handler,	/* callback handler */
 				req);			/* user arg */
 		if (status != pvStatOK)
 		{
@@ -592,8 +590,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvAssign(SS_ID ss, VAR_ID varId, const c
 
 	if (dbch)	/* was assigned to a named PV */
 	{
-		status = pvVarDestroy(dbch->pvid);
-		dbch->pvid = NULL;
+		status = pvVarDestroy(&dbch->pvid);
 
 		sp->assignCount -= 1;
 
@@ -658,8 +655,8 @@ epicsShareFunc pvStat epicsShareAPI seq_pvAssign(SS_ID ss, VAR_ID varId, const c
 			sp->pvSys,		/* PV system context */
 			dbch->dbName,		/* DB channel name */
 			seq_conn_handler,	/* connection handler routine */
+			seq_event_handler,	/* event handler routine */
 			ch,			/* user ptr is CHAN structure */
-			sp->debug,		/* debug level (inherited) */
 			&dbch->pvid);		/* ptr to pvid */
 		if (status != pvStatOK)
 		{
@@ -1010,9 +1007,9 @@ static void *getq_cp(void *dest, const void *value, size_t elemSize)
 	{
 		assert(pv_is_time_type(type));
 		/* Copy status, severity and time stamp */
-		meta->status = *pv_status_ptr(value,type);
-		meta->severity = *pv_severity_ptr(value,type);
-		meta->timeStamp = *pv_stamp_ptr(value,type);
+		meta->status = pv_status(value,type);
+		meta->severity = pv_severity(value,type);
+		meta->timeStamp = pv_stamp(value,type);
 		count = ch->dbch->dbCount;
 	}
 	return memcpy(var, pv_value_ptr(value,type), ch->type->size * count);

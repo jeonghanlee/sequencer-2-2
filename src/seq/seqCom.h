@@ -29,7 +29,6 @@ in the file LICENSE that is included with this distribution.
 
 #include "shareLib.h"
 #include "pvAlarm.h"
-#include "pvType.h"
 #include "epicsThread.h"
 #include "epicsTime.h"
 

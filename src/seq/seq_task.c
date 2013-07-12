@@ -34,7 +34,7 @@ void sequencer (void *arg)	/* ptr to original (global) state program table */
 	   and if necessary create pvSys */
 	seqAddProg(sp);
 
-	if (!sp->pvSys)
+	if (!pvSysIsDefined(sp->pvSys))
 	{
 		sp->die = TRUE;
 		goto exit;
@@ -483,15 +483,6 @@ void epicsShareAPI seqStop(epicsThreadId tid)
 	if (sp == NULL)
 		return;
 	seq_exit(sp->ss);
-}
-
-void seqCreatePvSys(SPROG *sp)
-{
-	int debug = sp->debug;
-	pvStat status = pvSysCreate(sp->pvSysName,
-		max(0, debug-1), &sp->pvSys);
-	if (status != pvStatOK)
-		errlogSevPrintf(errlogFatal, "pvSysCreate(\"%s\") failure\n", sp->pvSysName);
 }
 
 /*

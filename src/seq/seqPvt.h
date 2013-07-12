@@ -124,10 +124,9 @@ struct pv_meta_data
 struct db_channel
 {
 	char		*dbName;	/* channel name after macro expansion */
-	void		*pvid;		/* PV (process variable) id */
+	pvVar		pvid;		/* PV (process variable) id */
 	unsigned	dbCount;	/* actual count for db access */
 	boolean		connected;	/* whether channel is connected */
-	void		*monid;		/* monitor id (supplied by PV lib) */
 	boolean		gotOneMonitor;	/* whether got at least one monitor */
 	PVMETA		metaData;	/* meta data (shared buffer) */
 	PVMETA		*ssMetaData;	/* array of meta data,
@@ -172,9 +171,7 @@ struct program_instance
 	int		instance;	/* program instance number */
 	unsigned	threadPriority;	/* thread priority (all threads) */
 	unsigned	stackSize;	/* stack size (all threads) */
-	void		*pvSys;		/* pv system handle */
-	char		*pvSysName;	/* pv system name ("ca", "ktl", ...) */
-	int		debug;		/* pv system debug level */
+	pvSystem	pvSys;		/* pv system handle */
 	CHAN		*chan;		/* table of channels */
 	unsigned	numChans;	/* number of channels */
 	QUEUE		*queues;	/* array of syncQ queues */
@@ -224,28 +221,25 @@ struct pvreq
 /* Internal procedures */
 
 /* seq_task.c */
-void sequencer (void *arg);
+void sequencer(void *arg);
 void ss_write_buffer(CHAN *ch, void *val, PVMETA *meta, boolean dirtify);
 void ss_read_buffer(SSCB *ss, CHAN *ch, boolean dirty_only);
 void ss_read_buffer_selective(SPROG *sp, SSCB *ss, EV_ID ev_flag);
 void ss_wakeup(SPROG *sp, unsigned eventNum);
-void seqCreatePvSys(SPROG *sp);
+
 /* seq_mac.c */
 void seqMacParse(SPROG *sp, const char *macStr);
 char *seqMacValGet(SPROG *sp, const char *name);
 void seqMacEval(SPROG *sp, const char *inStr, char *outStr, size_t maxChar);
 void seqMacFree(SPROG *sp);
+
 /* seq_ca.c */
-void seq_get_handler(void *var, pvType type, unsigned count,
-	pvValue *value, void *arg, pvStat status);
-void seq_put_handler(void *var, pvType type, unsigned count,
-	pvValue *value, void *arg, pvStat status);
-void seq_mon_handler(void *var, pvType type, unsigned count,
-	pvValue *value, void *arg, pvStat status);
-void seq_conn_handler(void *var,int connected);
+pvConnFunc seq_conn_handler;
+pvEventFunc seq_event_handler;
 pvStat seq_connect(SPROG *sp, boolean wait);
 void seq_disconnect(SPROG *sp);
 pvStat seq_camonitor(CHAN *ch, boolean on);
+
 /* seq_prog.c */
 typedef int seqTraversee(SPROG *prog, void *param);
 void seqTraverseProg(seqTraversee *func, void *param);
@@ -253,11 +247,14 @@ SSCB *seqFindStateSet(epicsThreadId threadId);
 SPROG *seqFindProg(epicsThreadId threadId);
 void seqDelProg(SPROG *sp);
 void seqAddProg(SPROG *sp);
+
 /* seqCommands.c */
 typedef int sequencerProgramTraversee(SPROG **sprog, seqProgram *pseq, void *param);
 int traverseSequencerPrograms(sequencerProgramTraversee *traversee, void *param);
+
 /* seq_main.c */
 void seq_free(SPROG *sp);
+
 /* debug/query support */
 typedef int pr_fun(const char *format,...);
 void print_channel_value(pr_fun *, CHAN *ch, void *val);

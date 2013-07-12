@@ -123,19 +123,18 @@ static int addProg(SPROG **ppInstances, seqProgram *pseq, void *param)
     SPROG *sp = (SPROG *)param;
 
     if (!ppInstances || !pseq) {
-        if (!sp->pvSys) {
-            seqCreatePvSys(sp);
+        if (!pvSysIsDefined(sp->pvSys)) {
+            pvStat status = pvSysCreate(&sp->pvSys);
+            if (status != pvStatOK) {
+                errlogPrintf("pvSysCreate() failure\n");
+            }
         }
         return FALSE;
     }
-    assert(sp->pvSysName);
-    /* search for an instance with the same pvSysName */
-    if (!sp->pvSys) {
+    if (!pvSysIsDefined(sp->pvSys)) {
         SPROG *curSP;
         foreach(curSP, *ppInstances) {
-            if (strcmp(sp->pvSysName, curSP->pvSysName) == 0) {
-                DEBUG("Found a program instance (%p[%d]) with pvSys=%s.\n",
-                    curSP, curSP->instance, curSP->pvSysName);
+            if (pvSysIsDefined(curSP->pvSys)) {
                 sp->pvSys = curSP->pvSys;
             }
             break;
@@ -161,7 +160,7 @@ static int addProg(SPROG **ppInstances, seqProgram *pseq, void *param)
         }
         DEBUG("Added program %p, instance %d to instance list.\n",
             sp, sp->instance);
-        if (sp->pvSys)
+        if (pvSysIsDefined(sp->pvSys))
             return TRUE;
     }
     return FALSE;

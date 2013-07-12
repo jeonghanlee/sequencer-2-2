@@ -97,20 +97,6 @@ epicsShareFunc void epicsShareAPI seq(
 	else
 		threadName = sp->progName;
 
-	/* Specify PV system name (defaults to CA) */
-	str = seqMacValGet(sp, "pvsys");
-	if (str && str[0] != '\0')
-		sp->pvSysName = str;
-	else
-		sp->pvSysName = "ca";
-
-	/* Determine debug level (currently only used for PV-level debugging) */
-	str = seqMacValGet(sp, "debug");
-	if (str && str[0] != '\0')
-		sp->debug = atoi(str);
-	else
-		sp->debug = 0;
-
 	/* Specify thread priority */
 	sp->threadPriority = THREAD_PRIORITY;
 	str = seqMacValGet(sp, "priority");
