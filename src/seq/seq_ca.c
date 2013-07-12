@@ -75,7 +75,7 @@ pvStat seq_connect(SPROG *sp, boolean wait)
 				&dbch->pvid);		/* ptr to PV id */
 		if (status != pvStatOK)
 		{
-			errlogSevPrintf(errlogFatal, "seq_connect: var %s, pv %s: pvVarCreate() failure: "
+			errlogSevPrintf(errlogFatal, "seq_connect(var '%s', pv '%s'): pvVarCreate() failure: "
 				"%s\n", ch->varName, dbch->dbName, pvVarGetMess(dbch->pvid));
 			if (ch->dbch->ssMetaData)
 				free(ch->dbch->ssMetaData);
@@ -272,7 +272,7 @@ static void proc_db_events(
 		if (full)
 		{
 			errlogSevPrintf(errlogMinor,
-			  "monitor event for variable %s (pv %s): "
+			  "monitor event for variable '%s' (pv '%s'): "
 			  "last queue element overwritten (queue is full)\n",
 			  ch->varName, ch->dbch->dbName
 			);
@@ -356,7 +356,7 @@ void seq_disconnect(SPROG *sp)
 		/* Disconnect this PV */
 		status = pvVarDestroy(&dbch->pvid);
 		if (status != pvStatOK)
-			errlogSevPrintf(errlogFatal, "seq_disconnect: var %s, pv %s: pvVarDestroy() failure: "
+			errlogSevPrintf(errlogFatal, "seq_disconnect(var '%s', pv '%s'): pvVarDestroy() failure: "
 				"%s\n", ch->varName, dbch->dbName, pvVarGetMess(dbch->pvid));
 
 		/* Clear monitor & connect indicators */
@@ -388,7 +388,7 @@ pvStat seq_camonitor(CHAN *ch, boolean on)
 	else
 		status = pvVarMonitorOff(&dbch->pvid);
 	if (status != pvStatOK)
-		errlogSevPrintf(errlogFatal, "seq_camonitor: pvVarMonitor%s(var %s, pv %s) failure: %s\n",
+		errlogSevPrintf(errlogFatal, "seq_camonitor: pvVarMonitor%s(var '%s', pv '%s') failure: %s\n",
 			on?"On":"Off", ch->varName, dbch->dbName, pvVarGetMess(dbch->pvid));
 	return status;
 }
@@ -431,7 +431,7 @@ void seq_conn_handler(int connected, void *arg)
 		else
 		{
 			errlogSevPrintf(errlogMinor,
-				"seq_conn_handler: var '%s', pv '%s': "
+				"seq_conn_handler(var '%s', pv '%s'): "
 				"disconnect event but already disconnected\n",
 				ch->varName, dbch->dbName);
 		}
