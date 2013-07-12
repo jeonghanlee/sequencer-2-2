@@ -59,11 +59,11 @@ $killit;
 EOF
 } elsif (-r "$db") {
   print $OUT <<EOF;
-exec "$valgrind./$exe -S -t -d $db" or die "exec failed: $err";
+system "$valgrind./$exe -S -t -d $db";
 EOF
 } else {
   print $OUT <<EOF;
-exec "$valgrind./$exe -S -t" or die "exec failed: $err";
+system "$valgrind./$exe -S -t";
 EOF
 }
 

@@ -8,6 +8,7 @@ in the file LICENSE that is included with this distribution.
 
 #include "epicsThread.h"
 #include "epicsEvent.h"
+#include "epicsExit.h"
 #include "seqCom.h"
 
 #include "../testSupport.h"
@@ -44,6 +45,11 @@ void seq_test_init(int num_tests)
     }
 }
 
+void seq_test_at_thread_exit(void *dummy)
+{
+    epicsExit(EXIT_SUCCESS);
+}
+
 void seq_test_done(void)
 {
     epicsThreadSetPriority(epicsThreadGetIdSelf(), epicsThreadPriorityMedium);
@@ -51,7 +57,7 @@ void seq_test_done(void)
 #if defined(vxWorks)
     epicsEventSignal(this_test_done);
 #else
-    exit(0);
+    epicsAtThreadExit(seq_test_at_thread_exit, 0);
 #endif
 }
 
