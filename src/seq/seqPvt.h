@@ -127,7 +127,7 @@ struct db_channel
 	pvVar		pvid;		/* PV (process variable) id */
 	unsigned	dbCount;	/* actual count for db access */
 	boolean		connected;	/* whether channel is connected */
-	boolean		gotOneMonitor;	/* whether got at least one monitor */
+	boolean		gotMonitor;	/* whether we got a monitor after connect */
 	PVMETA		metaData;	/* meta data (shared buffer) */
 	PVMETA		*ssMetaData;	/* array of meta data,
 					   one for each state set (safe mode) */
@@ -196,8 +196,8 @@ struct program_instance
 	unsigned	assignCount;	/* number of channels assigned to ext. pv */
 	unsigned	connectCount;	/* number of channels connected */
 	unsigned	monitorCount;	/* number of channels monitored */
-	unsigned	firstMonitorCount; /* number of channels that received
-					   at least one monitor event */
+	unsigned	gotMonitorCount;/* number of monitored channels that got
+					   a monitor event */
 
 	void		*pvReqPool;	/* freeList for pv requests (has own lock) */
 	boolean		die;		/* flag set when seqStop is called */

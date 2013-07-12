@@ -102,7 +102,7 @@ pvStat seq_connect(SPROG *sp, boolean wait)
 			ac = sp->assignCount;
 			mc = sp->monitorCount;
 			cc = sp->connectCount;
-			gmc = sp->firstMonitorCount;
+			gmc = sp->gotMonitorCount;
 			epicsMutexUnlock(sp->programLock);
 
 			ready = ac == cc && mc == gmc;
@@ -189,12 +189,12 @@ static void seq_mon_handler(
 
 	assert(dbch != NULL);
 	proc_db_events(value, type, ch, 0, pvEventMonitor, status);
-	if (!dbch->gotOneMonitor)
+	if (!dbch->gotMonitor)
 	{
-		dbch->gotOneMonitor = TRUE;
+		dbch->gotMonitor = TRUE;
 		epicsMutexMustLock(sp->programLock);
-		sp->firstMonitorCount++;
-		if (sp->firstMonitorCount == sp->monitorCount
+		sp->gotMonitorCount++;
+		if (sp->gotMonitorCount == sp->monitorCount
 			&& sp->connectCount == sp->assignCount)
 		{
 			epicsEventSignal(sp->ready);
@@ -368,28 +368,30 @@ void seq_disconnect(SPROG *sp)
 	pvSysFlush(sp->pvSys);
 }
 
-pvStat seq_camonitor(CHAN *ch, boolean on)
+pvStat seq_camonitor(CHAN *ch, boolean turn_on)
 {
 	DBCHAN	*dbch = ch->dbch;
 	pvStat	status;
 
 	assert(ch);
 	assert(dbch);
-	if (on == pvMonIsDefined(dbch->pvid))		/* already done */
+	if (turn_on == pvMonIsDefined(dbch->pvid))	/* no change */
 		return pvStatOK;
-	DEBUG("calling pvVarMonitor%s(%p)\n", on?"On":"Off", dbch->pvid);
+	DEBUG("calling pvVarMonitor%s(%p)\n", turn_on ? "On" : "Off", ch);
 	dbch->gotOneMonitor = FALSE;
-	if (on)
+	if (turn_on)
+	{
 		status = pvVarMonitorOn(
 				&dbch->pvid,		/* pvid */
 				ch->type->getType,	/* requested type */
 				ch->count,		/* element count */
 				ch);			/* user arg (channel struct) */
+	}
 	else
 		status = pvVarMonitorOff(&dbch->pvid);
 	if (status != pvStatOK)
 		errlogSevPrintf(errlogFatal, "seq_camonitor: pvVarMonitor%s(var '%s', pv '%s') failure: %s\n",
-			on?"On":"Off", ch->varName, dbch->dbName, pvVarGetMess(dbch->pvid));
+			turn_on?"On":"Off", ch->varName, dbch->dbName, pvVarGetMess(dbch->pvid));
 	return status;
 }
 
@@ -444,7 +446,7 @@ void seq_conn_handler(int connected, void *arg)
 			unsigned dbCount;
 			dbch->connected = TRUE;
 			sp->connectCount++;
-			if (sp->firstMonitorCount == sp->monitorCount
+			if (sp->gotMonitorCount == sp->monitorCount
 				&& sp->connectCount == sp->assignCount)
 			{
 				epicsEventSignal(sp->ready);
