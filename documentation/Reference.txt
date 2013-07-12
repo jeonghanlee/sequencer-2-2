@@ -22,7 +22,7 @@ Comments
    comment: "/*" <anything> "*/"
 
 C-style comments may be placed anywhere in the program. They are
-treated as white space by *snc*. As in C, comments cannot be nested.
+treated as white space. As in C, comments cannot be nested.
 
 Identifiers
 ^^^^^^^^^^^
@@ -78,7 +78,7 @@ Line Markers
    line_number: <non-empty sequence of decimals>
    file_name: <like string_literal, without automatic string concatenation>
 
-Line markers are interpreted by *snc* exactly as in C, i.e. they indicate
+Line markers are interpreted exactly as in C, i.e. they indicate
 that the following symbols are really located in the given source file (if
 any) at the given line.
 
@@ -322,7 +322,7 @@ See :ref:`EventFlags`.
 Foreign Entities
 ~~~~~~~~~~~~~~~~
 
-The pseudo type "foreign" is used to declare any number of C variables
+The pseudo type ``foreign`` is used to declare any number of C variables
 or struct tags or *cpp* macros that have been defined outside the SNL
 program. No warning will be issued if such a variable, struct tag, or
 macro is used in the program even if warnings are enabled.
@@ -2042,8 +2042,8 @@ Escape to C Code
 
 Because the SNL does not support the full C language, C code may be
 escaped in the program. The escaped code is not compiled by *snc*,
-but is passed literally to the C compiler. There are two escape
-methods allowed:
+instead it is literally copied to the generated C code. There are two
+escape methods:
 
 #. Any code between ``%%`` and the next newline character is escaped.
    Example::
@@ -2134,27 +2134,28 @@ SNL program is if your function accesses global SNL variables.
 Calling pvGet etc. from C
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The built-in SNL functions such as :c:func:`pvGet` cannot be directly used
-in user-supplied functions. However, most of the built-in functions
-have a C language equivalent with the same name, except that the prefix ``seq_``
-is added (e.g. ``pvGet`` becomes ``seq_pvGet``). These C functions expect an
-additional first argument identifying the calling state set, which is
-available in action code under the name ``ssId``. If a process
-variable name is required, the index of that variable must
-be supplied. This index is obtained via the :c:func:`pvIndex` function
-(which must be called from SNL code, not C code, to work).
+The built-in SNL functions such as :c:func:`pvGet` cannot be directly
+used in user-supplied functions. However, most of the built-in
+functions have a C language equivalent with the same name, except
+that the prefix ``seq_`` is added (e.g. ``pvGet`` becomes
+``seq_pvGet``). These C functions expect an additional first argument
+identifying the calling state set, which is available in action code
+under the name ``ssId``. If a process variable name is required, the
+index of that variable must be supplied. This index is obtained via
+the :c:func:`pvIndex` function (which must be called from SNL code,
+not C code, to work).
 
-If the program is compiled with the :option:`+r` option, user functions
-cannot directly access SNL variables, not even global ones. Instead,
-variables (or their address) should be passed to user functions as
-arguments. Alternatively, you can pass the ``pVar`` variable of type
-``USER_VAR*`` and access SNL variables as structure members of ``pVar``.
-See next section for details and an example.
+If the program is compiled with the :option:`+r` option, user
+functions cannot directly access SNL variables, not even global ones.
+Instead, variables (or their address) should be passed to user
+functions as arguments. Alternatively, you can pass the ``pVar``
+variable of type ``USER_VAR*`` and access SNL variables as structure
+members of ``pVar``. See next section for details and an example.
 
-The prototypes for the C functions corresponding to the built-in SNL functions
-as well as additional supporting macros and type definitions can be found
-in the header file ``seqCom.h``. This header file is always included by
-the generated C code.
+The prototypes for the C functions corresponding to the built-in SNL
+functions as well as additional supporting macros and type
+definitions can be found in the header file ``seqCom.h``. This header
+file is always included by the generated C code.
 
 
 .. _reentrant option:
@@ -2188,7 +2189,7 @@ Reference to variable ``sw1`` is made as ::
 
    pVar->sw1
 
-This conversion is automatically performed by the *snc* for all SNL
+This conversion is automatically performed by *snc* for all SNL
 statements, but you will have to handle escaped C code yourself.
 
 .. note::
