@@ -174,9 +174,8 @@ Specifying Run-Time Parameters
 You can specify run-time parameters to the sequencer. Parameters
 serve three purposes:
 
-
 #. macro substitution in process variable names,
-#. for use by your program, and
+#. providing arguments to your program, and
 #. as special parameters to the sequencer.
 
 You can pass parameters to your program at run time by
@@ -189,10 +188,15 @@ list (see :ref:`StateProgram`). Parameters
 specified on the command-line override those specified in the
 ``program`` statement.
 
+Parameter values are available inside the program via the built-in
+procedure :c:func:`macValueGet`. They are also (automatically)
+available for parameter expansion when specifying PV names in
+:token:`assign` clauses and the built-in procedure :c:func:`pvAssign`.
+
 VxWorks
 ^^^^^^^
 
-For example, if we wish to specify the value of the macro "unit" in
+For example, if we wish to specify the value of the "unit" parameter in
 the example in the last chapter, we would execute the program with
 the following command::
 
