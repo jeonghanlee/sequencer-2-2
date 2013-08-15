@@ -76,6 +76,7 @@ DBD += seqSoftIoc.dbd
 seqSoftIoc_DBD += base.dbd
 seqSoftIoc_DBD += testSupport.dbd
 
+seqSoftIoc_SRCS += subThreadSleep.c
 seqSoftIoc_SRCS += seqSoftIoc_registerRecordDeviceDriver.cpp
 
 ifeq '$(EPICS_HAS_UNIT_TEST)' '1'
