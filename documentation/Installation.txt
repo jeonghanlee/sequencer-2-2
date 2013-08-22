@@ -44,7 +44,7 @@ Older releases can be downloaded by following the links here:
    ========= =========================== ============================
    Version   Release Notes               Known Problems
    ========= =========================== ============================
-   `2.1.13`_ :ref:`Release_Notes_2.1.13` n/a
+   `2.1.13`_ :ref:`Release_Notes_2.1.13` :ref:`Known_Problems_2.1.13`
    `2.1.12`_ :ref:`Release_Notes_2.1.12` :ref:`Known_Problems_2.1.12`
    `2.1.11`_ :ref:`Release_Notes_2.1.11` n/a
    `2.1.10`_ :ref:`Release_Notes_2.1.10` :ref:`Known_Problems_2.1.10`

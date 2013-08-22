@@ -1,6 +1,17 @@
 Known Problems
 ==============
 
+.. _Known_Problems_2.1.13:
+
+Known Problems in Release 2.1.13
+--------------------------------
+
+Building the tests fails with older base releases (e.g. 3.14.8).
+A fix is available and will be part of the next release. Until then,
+see the `latest snapshot`_ or pull from the darcs repository.
+
+.. _latest snapshot: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-snapshot-latest.tar.gz
+
 .. _Known_Problems_2.1.12:
 
 Known Problems in Release 2.1.12
