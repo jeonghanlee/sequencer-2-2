@@ -8,10 +8,6 @@ program pvPutAsyncTest
 
 %%#include "../testSupport.h"
 
-%%extern double seq_sync_timeout;
-
-foreign seq_sync_timeout;
-
 int x;
 assign x to "pvPutAsync1";
 
@@ -56,15 +52,13 @@ ss test1 {
                     i, status, status ? pvMessage(x) : "");
             }
             i = 2;
-            seq_sync_timeout = 1.0;
-            status = pvPut(x,SYNC);
+            status = pvPut(x,SYNC,1.0);
             /* should fail */
             testOk(status==pvStatTIMEOUT, "pvPut/SYNC %d, status=%d (%s)",
                 i, status, status ? pvMessage(x) : "");
 
             i = 3;
-            seq_sync_timeout = 10.0;
-            status = pvPut(x,SYNC);
+            status = pvPut(x,SYNC,10.0);
             /* should succeed */
             testOk(status==pvStatOK, "pvPut/SYNC %d, status=%d (%s)",
                 i, status, status ? pvMessage(x) : "");

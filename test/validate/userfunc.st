@@ -45,9 +45,9 @@ exit {
 %{
 static void incr(SS_ID ssId, int *pv, VAR_ID v)
 {
-    seq_pvGet(ssId, v, SYNC);
+    seq_pvGet(ssId, v, SYNC, 1.0);
     *pv += 1;
-    seq_pvPut(ssId, v, SYNC);
+    seq_pvPut(ssId, v, SYNC, 1.0);
 }
 
 static void set_i(SEQ_VARS *const pVar, int value)

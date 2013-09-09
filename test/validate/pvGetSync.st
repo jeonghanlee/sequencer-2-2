@@ -8,10 +8,6 @@ program pvGetSyncTest
 
 %%#include "../testSupport.h"
 
-%%extern double seq_sync_timeout;
-
-foreign seq_sync_timeout;
-
 entry {
     seq_test_init(2);
 }
@@ -25,10 +21,9 @@ ss sstest {
     state stest1 {
         when () {
             int status;
-            seq_sync_timeout = 0.1;
             pvPut(p, ASYNC);
             testDiag("x=%f",x);
-            status = pvGet(x,SYNC);
+            status = pvGet(x,SYNC,0.1);
             testOk(status==pvStatTIMEOUT, "pvGet/SYNC, status=%d (%s)",
                 status, status ? pvMessage(x) : "");
             testDiag("x=%f",x);
@@ -38,9 +33,8 @@ ss sstest {
         when (pvPutComplete(p)) {
             int status;
             pvPut(p, ASYNC);
-            seq_sync_timeout = 10.0;
             testDiag("x=%f",x);
-            status = pvGet(x,SYNC);
+            status = pvGet(x,SYNC,10.0);
             testOk(status==pvStatOK, "pvGet/SYNC, status=%d (%s)",
                 status, status ? pvMessage(x) : "");
             testDiag("x=%f",x);
