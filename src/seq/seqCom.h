@@ -63,7 +63,7 @@ extern "C" {
 
 #define NOEVFLAG		0	/* argument to pvSync to remove sync */
 
-#define DEFAULT_QUEUE_SIZE	100	/* default queue size (elements) */
+#define DEFAULT_QUEUE_SIZE	2	/* default queue size (elements) */
 
 /* I/O completion type (extra argument passed to seq_pvGet() and seq_pvPut()) */
 enum compType {
