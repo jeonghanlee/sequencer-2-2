@@ -1141,6 +1141,7 @@ pvPut
 .. c:function::
    pvStat pvPut(assigned_var)
    pvStat pvPut(assigned_var, SYNC)
+   pvStat pvPut(assigned_var, SYNC, timeout)
    pvStat pvPut(assigned_var, ASYNC)
 
 Puts (or writes) the value of an SNL variable to the underlying process
@@ -1195,6 +1196,12 @@ clause.
 Note that for anonymous PVs completion is always immediate, so the ``ASYNC`` option
 is not very useful.
 
+.. versionadded:: 2.2
+
+A timeout value may be specified after the ``SYNC`` argument. This should be
+a positive floating point number, specifying the number of seconds before
+the request times out. This value overrides the default timeout of 10 seconds.
+
 
 pvPutComplete
 ^^^^^^^^^^^^^
@@ -1236,6 +1243,7 @@ pvGet
 .. c:function::
    pvStat pvGet(assigned_var)
    pvStat pvGet(assigned_var, SYNC)
+   pvStat pvGet(assigned_var, SYNC, timeout)
    pvStat pvGet(assigned_var, ASYNC)
 
 Gets (or reads) the value of an SNL variable from the underlying process
@@ -1263,6 +1271,12 @@ monitored, then the state set local copy of the variable will not be updated
 until a call to pvGetComplete is made and returns ``TRUE`` or, if the
 variable is monitored, until the state set waits for events in a :token:`when`
 clause. Note that anonymous PVs behave exactly in the same way.
+
+.. versionadded:: 2.2
+
+A timeout value may be specified after the ``SYNC`` argument. This should be
+a positive floating point number, specifying the number of seconds before
+the request times out. This value overrides the default timeout of 10 seconds.
 
 
 pvGetComplete
