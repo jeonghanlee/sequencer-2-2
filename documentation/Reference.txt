@@ -1212,7 +1212,8 @@ pvPutComplete
    boolean pvPutComplete(assigned_var, boolean any, boolean *pComplete)
 
 Returns whether the last asynchronous :c:func:`pvPut` to this process
-variable has completed.
+variable has completed. This call is appropriate only if
+the :c:func:`pvGet` 's optional ``ASYNC`` argument was used.
 
 The first form is appropriate when the SNL variable is a scalar.
 However, it can also be an array (each of whose elements may be
@@ -1285,14 +1286,31 @@ pvGetComplete
 .. c:function::
    boolean pvGetComplete(assigned_var)
 
-Returns whether the last get of this process variable has completed,
-i.e. the value in the variable is current. This call is appropriate only if
+Returns whether the last asynchronous :c:func:`pvGet` to this process
+variable has completed. This call is appropriate only if
 the asynchronous (:option:`+a`) compile option is specified or
 :c:func:`pvGet` 's optional ``ASYNC`` argument was used.
 
 In :ref:`safe mode`, the the state set local copy of the variable will be
 updated with the value from the PV layer as a side effect of this call
 (if TRUE is returned).
+
+.. versionadded:: 2.2
+
+.. c:function::
+   boolean pvGetComplete(assigned_var, boolean any)
+   boolean pvGetComplete(assigned_var, boolean any, boolean *pComplete)
+
+The first form is appropriate when the SNL variable is a scalar.
+However, it can also be an array (each of whose elements may be
+assigned to a different process variable). In this case, the
+single argument form returns whether *all* :c:func:`pvGet` operations
+for elements of the array have completed (missing arguments are
+implicitly set to ``0``). If ``any`` is ``TRUE``, then
+the function returns whether *any* get has completed since the last
+call. If ``pComplete`` is non-NULL, it should be an array of
+at least the array length of the SNL variable and its elements indicate
+whether the corresponding :c:func:`pvGet` has completed.
 
 
 pvGetCancel
