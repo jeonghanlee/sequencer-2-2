@@ -587,10 +587,10 @@ empty or not; and any state set that mentions a variable in a
 :token:`when` clause automatically gets woken up whenever the variable
 changes due to a monitor event. On the other hand, relying on the event
 flag being set as an indication that the queue is non-empty has always
-been unreliable since another pvGetQ might have intervened and emptied
+been unreliable since another :c:func:`pvGetQ` might have intervened and emptied
 the queue between the two calls.
 
-Note that pvGetQ clears an event flag associated with the variable if
+Note that :c:func:`pvGetQ` clears an event flag associated with the variable if
 the queue becomes empty after removing the head element.
 
 
