@@ -1219,6 +1219,17 @@ at least the array length of the SNL variable and its elements indicate
 whether the corresponding :c:func:`pvPut` has completed.
 
 
+pvPutCancel
+^^^^^^^^^^^
+
+.. c:function::
+   void pvPutCancel(assigned_var)
+
+Cancel a pending (asynchronous) :c:func:`pvPut`. If the variable is a
+multi-PV array, all pending asynchronous puts to elements of the array
+are cancelled.
+
+
 pvGet
 ^^^^^
 
@@ -1268,6 +1279,17 @@ the asynchronous (:option:`+a`) compile option is specified or
 In :ref:`safe mode`, the the state set local copy of the variable will be
 updated with the value from the PV layer as a side effect of this call
 (if TRUE is returned).
+
+
+pvGetCancel
+^^^^^^^^^^^
+
+.. c:function::
+   void pvGetCancel(assigned_var)
+
+Cancel a pending (asynchronous) :c:func:`pvGet`. If the variable is a
+multi-PV array, all pending asynchronous gets to elements of the array
+are cancelled.
 
 
 pvGetQ
