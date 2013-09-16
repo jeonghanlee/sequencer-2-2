@@ -2152,7 +2152,7 @@ here. For instance,
 if the header contains macro definitions, these will not be in effect
 when the rest of the C code block gets compiled.
 
-You can defer defer interpretation of a preprocessor directive until
+You can defer interpretation of a preprocessor directive until
 after *snc* has compiled the code to C, by ensuring that some extra
 non-blank characters appear in front of the ``#`` sign, so *cpp* does
 not recognize the directive. For instance ::
