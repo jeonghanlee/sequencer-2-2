@@ -144,10 +144,14 @@ static void gen_user_var(Program *p)
 	int	opt_reent = p->options.reent;
 	Var	*vp;
 	Expr	*sp, *ssp;
+	int	num_globals = 0;
 
 	gen_code("\n/* Variable declarations */\n");
 
-	if (opt_reent) gen_code("struct %s {\n", NM_VARS);
+	if (opt_reent)
+	{
+		gen_code("struct %s {\n", NM_VARS);
+	}
 	/* Convert internal type to `C' type */
 	foreach (vp, p->prog->extra.e_prog->first)
 	{
@@ -163,7 +167,12 @@ static void gen_user_var(Program *p)
 				gen_var_init(vp, 0);
 			}
 			gen_code(";\n");
+			num_globals++;
 		}
+	}
+	if (opt_reent && !num_globals)
+	{
+		indent(1); gen_code("char _seq_dummy;\n");
 	}
 	foreach (ssp, p->prog->prog_statesets)
 	{
