@@ -8,10 +8,10 @@ program pvGetCompleteTest
 
 %%#include "../testSupport.h"
 
-#define NRUNS 50000
+#define NRUNS 20000
 
 entry {
-    seq_test_init(2*NRUNS);
+    seq_test_init(1);
     testDiag("start");
 }
 
@@ -25,8 +25,12 @@ ss pvGetComplete {
     state count {
         when (n < NRUNS) {
             n++;
+            if (n%1000==0) {
+                testDiag("passed %d runs", n);
+            }
         } state test
         when () {
+            testPass("%d pvGets completed in time and results agree with predictions", 2*NRUNS);
         } exit
     }
     state test {
@@ -43,14 +47,21 @@ ss pvGetComplete {
             }
         }
         when (delay(2)) {
-            testSkip(2,"completion timeout");
-        } state count
+            testFail("pvGet completion timeout");
+        } state fail
         when (pvGetComplete(r[0]) && pvGetComplete(r[1])) {
             int i;
             for (i=0; i<2; i++) {
-                testOk(r[i]==w[i],"%d==%d",r[i],w[i]);
+                if (r[i] != w[i]) {
+                    testFail("n=%d, i=%d, w=%d, r=%d", n, i, w[i], r[i]);
+                    state fail;
+                }
             }
         } state count
+    }
+    state fail {
+        when () {
+        } exit
     }
 }
 
