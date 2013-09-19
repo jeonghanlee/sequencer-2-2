@@ -12,6 +12,20 @@ see the `latest snapshot`_ or pull from the darcs repository.
 
 .. _latest snapshot: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-snapshot-latest.tar.gz
 
+The pvGetComplete and pvPutComplete functions contain a serious bug
+that was introduced in release 2.1.13. The effect is that sometimes
+these functions return a wrong result: they can return TRUE when in
+fact the callback from CA did not yet arrive, which is particularly
+bad with pvGetComplete, since it can mean that if the pvGetComplete is
+used in a when clause then in the code block that follows the result
+is not yet available.
+
+Also note that non-safe mode, this can lead to a race condition
+between update from the CA callback and access from the program,
+possibly corrupting the variable's content. This has always been true
+for monitored variables, but not when using asynchronous pvGet.
+
+
 .. _Known_Problems_2.1.12:
 
 Known Problems in Release 2.1.12
