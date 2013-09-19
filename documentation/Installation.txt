@@ -28,7 +28,7 @@ Releases are available here:
 
    http://www-csr.bessy.de/control/SoftDist/sequencer/releases/
 
-The current stable release is `2.1.13`_. Please take a look at the
+The current stable release is `2.1.14`_. Please take a look at the
 :ref:`VersioningPolicy` if you are unsure whether to upgrade to
 a new release.
 
@@ -44,6 +44,7 @@ Older releases can be downloaded by following the links here:
    ========= =========================== ============================
    Version   Release Notes               Known Problems
    ========= =========================== ============================
+   `2.1.14`_ :ref:`Release_Notes_2.1.14` n/a
    `2.1.13`_ :ref:`Release_Notes_2.1.13` :ref:`Known_Problems_2.1.13`
    `2.1.12`_ :ref:`Release_Notes_2.1.12` :ref:`Known_Problems_2.1.12`
    `2.1.11`_ :ref:`Release_Notes_2.1.11` n/a
@@ -102,6 +103,7 @@ patches.
 You can also follow development by using the `repository browser`_.
 
 .. _latest snapshot: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-snapshot-latest.tar.gz
+.. _2.1.14: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2.1.14.tar.gz
 .. _2.1.13: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2.1.13.tar.gz
 .. _2.1.12: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2.1.12.tar.gz
 .. _2.1.11: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2.1.11.tar.gz
