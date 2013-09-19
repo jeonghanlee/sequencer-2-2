@@ -7,10 +7,10 @@ Known Problems in Release 2.1.13
 --------------------------------
 
 Building the tests fails with older base releases (e.g. 3.14.8).
-A fix is available and will be part of the next release. Until then,
-see the `latest snapshot`_ or pull from the darcs repository.
 
-.. _latest snapshot: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-snapshot-latest.tar.gz
+It also fails on solaris/sparc. The reason in this case is that the
+compiler sometimes generates an empty struct definition (i.e. one with
+no members), which the compiler on this architecture doesn't like.
 
 The pvGetComplete and pvPutComplete functions contain a serious bug
 that was introduced in release 2.1.13. The effect is that sometimes
@@ -24,6 +24,12 @@ Also note that non-safe mode, this can lead to a race condition
 between update from the CA callback and access from the program,
 possibly corrupting the variable's content. This has always been true
 for monitored variables, but not when using asynchronous pvGet.
+
+Fixes for all these problems are available and will be part of the next
+release. Until then, see the `latest snapshot`_ or pull from the darcs
+repository.
+
+.. _latest snapshot: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-snapshot-latest.tar.gz
 
 
 .. _Known_Problems_2.1.12:
