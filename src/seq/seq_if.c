@@ -225,19 +225,12 @@ epicsShareFunc boolean epicsShareAPI seq_pvGetComplete(SS_ID ss, VAR_ID varId)
 
 	if (!ch->dbch)
 	{
-		if (sp->options & OPT_SAFE)
-		{
-			/* Anonymous PVs always complete immediately */
-			return TRUE;
-		}
-		else
-		{
+		/* Anonymous PVs always complete immediately */
+		if (!(sp->options & OPT_SAFE))
 			errlogSevPrintf(errlogMajor,
 				"pvGetComplete(%s): user error (variable not assigned)\n",
-				ch->varName
-			);
-			return FALSE;
-		}
+				ch->varName);
+		return TRUE;
 	}
 
 	switch (epicsEventTryWait(getSem))
@@ -518,6 +511,7 @@ epicsShareFunc boolean epicsShareAPI seq_pvPutComplete(
 	boolean		any,
 	boolean		*complete)
 {
+	SPROG		*sp = ss->sprog;
 	boolean		anyDone = FALSE, allDone = TRUE;
 	unsigned	n;
 
@@ -525,27 +519,39 @@ epicsShareFunc boolean epicsShareAPI seq_pvPutComplete(
 	{
 		epicsEventId	putSem = ss->putSemId[varId+n];
 		boolean		done = FALSE;
-		CHAN		*ch = ss->sprog->chan + varId + n;
+		CHAN		*ch = sp->chan + varId + n;
 
-		switch (epicsEventTryWait(putSem))
+		if (!ch->dbch)
 		{
-		case epicsEventWaitOK:
-			ss->putReq[varId] = NULL;
-			epicsEventSignal(putSem);
-			check_connected(ch->dbch, metaPtr(ch,ss));
-			/* TODO: returning either TRUE or FALSE here seems wrong. We return TRUE,
-			   so that state sets don't hang. Still means that user code has to check
-			   status by calling pvStatus and/or pvMessage. */
+		        /* Anonymous PVs always complete immediately */
+			if (!(sp->options & OPT_SAFE))
+			        errlogSevPrintf(errlogMajor,
+				        "pvPutComplete(%s): user error (variable not assigned)\n",
+				        ch->varName);
 			done = TRUE;
-			break;
-		case epicsEventWaitTimeout:
-			break;
-		case epicsEventWaitError:
-			ss->putReq[varId] = NULL;
-			epicsEventSignal(putSem);
-			errlogSevPrintf(errlogFatal, "pvPutComplete(%s): "
-			  "epicsEventTryWait(putSem[%d]) failure\n", ch->varName, varId);
-			break;
+		}
+		else
+		{
+			switch (epicsEventTryWait(putSem))
+			{
+			case epicsEventWaitOK:
+				ss->putReq[varId] = NULL;
+				epicsEventSignal(putSem);
+				check_connected(ch->dbch, metaPtr(ch,ss));
+				/* TODO: returning either TRUE or FALSE here seems wrong. We return TRUE,
+				   so that state sets don't hang. Still means that user code has to check
+				   status by calling pvStatus and/or pvMessage. */
+				done = TRUE;
+				break;
+			case epicsEventWaitTimeout:
+				break;
+			case epicsEventWaitError:
+				ss->putReq[varId] = NULL;
+				epicsEventSignal(putSem);
+				errlogSevPrintf(errlogFatal, "pvPutComplete(%s): "
+				  "epicsEventTryWait(putSem[%d]) failure\n", ch->varName, varId);
+				break;
+			}
 		}
 
 		anyDone = anyDone || done;
