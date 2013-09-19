@@ -233,6 +233,14 @@ epicsShareFunc boolean epicsShareAPI seq_pvGetComplete(SS_ID ss, VAR_ID varId)
 		return TRUE;
 	}
 
+	if (!ss->getReq[varId])
+	{
+		errlogSevPrintf(errlogMinor,
+			"pvGetComplete(%s): no pending get request for this variable\n",
+			ch->varName);
+		return TRUE;
+	}
+
 	switch (epicsEventTryWait(getSem))
 	{
 	case epicsEventWaitOK:
@@ -528,6 +536,13 @@ epicsShareFunc boolean epicsShareAPI seq_pvPutComplete(
 			        errlogSevPrintf(errlogMajor,
 				        "pvPutComplete(%s): user error (variable not assigned)\n",
 				        ch->varName);
+			done = TRUE;
+		}
+		else if (!ss->putReq[varId])
+		{
+		        errlogSevPrintf(errlogMinor,
+			        "pvPutComplete(%s): no pending put request for this variable\n",
+			        ch->varName);
 			done = TRUE;
 		}
 		else
