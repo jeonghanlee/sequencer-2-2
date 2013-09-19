@@ -1,10 +1,58 @@
 Release Notes for Version 2.1
 =============================
 
+.. _Release_Notes_2.1.14:
+
+Release 2.1.14
+--------------
+
+One (major) bug in the sequencer runtime was fixed and two minor build problems.
+See :ref:`Known_Problems_2.1.13` for a description of these problems.
+
+Some more details:
+
+* fixed a bug in pvGet/PutComplete
+  
+  Must not epicsEventSignal when epicsEventTryWait returns
+  epicsEventWaitTimeout, since this means we have not yet been called
+  back by CA. This bug could lead to pvGet/PutComplete erroneously
+  returning TRUE even though the callback did not yet arrive.
+
+* added test for simultaneous pvGetComplete
+
+* pvGet/PutComplete return TRUE if no request is pending
+  
+  We issue a warning message in this case, since this is most
+  probably a logical error in the SNL program.
+
+* pvPut/GetComplete return TRUE in case of unassigned var
+  
+  It is friendlier to just go on than to let the program hang.
+  Note that this is still a user error and a message is issued
+  to indicate it.
+  
+  This change only affects the non-safe mode.
+
+* reduce severity of timeouts and user errors from errlogFatal to errlogMajor
+
+The following are fixes for build problems:
+
+* snc: added a dummy member in case struct UserVar is empty
+  
+  Not all C compilers allow empty struct definitions. This fixes
+  a problem when building on solaris-sparc.
+
+* test: split off subThreadSleep to its own C file
+  
+  This fixes a build error with older base releases.
+
+
 .. _Release_Notes_2.1.13:
 
 Release 2.1.13
 --------------
+
+:ref:`Known_Problems_2.1.13`
 
 User relevant changes:
 

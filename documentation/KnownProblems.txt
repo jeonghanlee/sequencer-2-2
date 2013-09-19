@@ -25,11 +25,7 @@ between update from the CA callback and access from the program,
 possibly corrupting the variable's content. This has always been true
 for monitored variables, but not when using asynchronous pvGet.
 
-Fixes for all these problems are available and will be part of the next
-release. Until then, see the `latest snapshot`_ or pull from the darcs
-repository.
-
-.. _latest snapshot: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-snapshot-latest.tar.gz
+(These problems are fixed in 2.1.14.)
 
 
 .. _Known_Problems_2.1.12:
