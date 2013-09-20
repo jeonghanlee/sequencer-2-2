@@ -86,14 +86,14 @@ the `latest snapshot`_, or check out the `darcs`_ repository::
 
 where ``<branch>`` is the branch name. There are currently three branches:
 
-* `branch 2-0`_ is the previous version. This branch is now frozen and will
+* `branch-2-0`_ is the previous version. This branch is now frozen and will
   receive no more patches, nor will there be any new releases.
 
-* `branch 2-1`_ is the current "stable" version. Development is restricted
+* `branch-2-1`_ is the current "stable" version. Development is restricted
   to bug fixes (including fixes for build problems) and improvement of the
   documentation.
 
-* `branch 2-2`_ is where new features are developed that will appear in
+* `branch-2-2`_ is where new features are developed that will appear in
   version 2.2. Release 2.2.0 will soon go into beta testing phase.
 
 See `Contribute`_ for a short description how to record and send
@@ -134,9 +134,9 @@ You can also follow development by using the `repository browser`_.
 .. _1.9.5: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-1.9.5.tar.gz
 .. _1.9.4: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-1.9.4.tar.gz
 .. _repository browser: http://www-csr.bessy.de/cgi-bin/darcsweb.cgi
-.. _branch 2-0: http://www-csr.bessy.de/cgi-bin/darcsweb.cgi?r=seq%20branch-2-0;a=summary
-.. _branch 2-1: http://www-csr.bessy.de/cgi-bin/darcsweb.cgi?r=seq%20branch-2-1;a=summary
-.. _branch 2-2: http://www-csr.bessy.de/cgi-bin/darcsweb.cgi?r=seq%20branch-2-2;a=summary
+.. _branch-2-0: http://www-csr.bessy.de/cgi-bin/darcsweb.cgi?r=seq%20branch-2-0;a=summary
+.. _branch-2-1: http://www-csr.bessy.de/cgi-bin/darcsweb.cgi?r=seq%20branch-2-1;a=summary
+.. _branch-2-2: http://www-csr.bessy.de/cgi-bin/darcsweb.cgi?r=seq%20branch-2-2;a=summary
 .. _old: http://www-csr.bessy.de/control/SoftDist/sequencer/repo/old/
 .. _stable: http://www-csr.bessy.de/control/SoftDist/sequencer/repo/stable/
 .. _experimental: http://www-csr.bessy.de/control/SoftDist/sequencer/repo/experimental/
