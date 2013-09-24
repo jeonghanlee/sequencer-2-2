@@ -46,7 +46,7 @@ static int findStateSet(SPROG *sp, void *param)
 }
 
 /*
- * seqFindStateSet() - find a state set in the state program list from thread id.
+ * seqFindStateSet() - find a state set in the program list from thread id.
  */
 SSCB *seqFindStateSet(epicsThreadId threadId)
 {
@@ -93,22 +93,7 @@ static int addProg(SPROG **ppInstances, seqProgram *pseq, void *param)
     SPROG *sp = (SPROG *)param;
 
     if (!ppInstances || !pseq) {
-        if (!pvSysIsDefined(sp->pvSys)) {
-            pvStat status = pvSysCreate(&sp->pvSys);
-            if (status != pvStatOK) {
-                errlogPrintf("pvSysCreate() failure\n");
-            }
-        }
         return FALSE;
-    }
-    if (!pvSysIsDefined(sp->pvSys)) {
-        SPROG *curSP;
-        foreach(curSP, *ppInstances) {
-            if (pvSysIsDefined(curSP->pvSys)) {
-                sp->pvSys = curSP->pvSys;
-            }
-            break;
-        }
     }
     /* same program name */
     if (strcmp(sp->progName, pseq->progName) == 0) {
@@ -130,10 +115,9 @@ static int addProg(SPROG **ppInstances, seqProgram *pseq, void *param)
         }
         DEBUG("Added program %p, instance %d to instance list.\n",
             sp, sp->instance);
-        if (pvSysIsDefined(sp->pvSys))
-            return TRUE;
+        return TRUE;        /* terminate traversal */
     }
-    return FALSE;
+    return FALSE;           /* continue traversal */
 }
 
 /*

@@ -30,6 +30,7 @@ static struct
 {
     epicsMutexId lock;
     struct sequencerProgram *programs;
+    pvSystem pvSys;
 } globals;
 
 static void seqInitPvt(void *arg)
@@ -45,6 +46,22 @@ static void seqLazyInit()
 {
     static epicsThreadOnceId seqOnceFlag = EPICS_THREAD_ONCE_INIT;
     epicsThreadOnce(&seqOnceFlag, seqInitPvt, NULL);
+}
+
+void createOrAttachPvSystem(struct program_instance *sp)
+{
+    seqLazyInit();
+    epicsMutexMustLock(globals.lock);
+    if (!pvSysIsDefined(globals.pvSys)) {
+        pvStat status = pvSysCreate(&globals.pvSys);
+        if (status != pvStatOK) {
+            errlogPrintf("getPvSystem: pvSysCreate() failure\n");
+        }
+    } else {
+        pvSysAttach(globals.pvSys);
+    }
+    sp->pvSys = globals.pvSys;
+    epicsMutexUnlock(globals.lock);
 }
 
 epicsShareFunc void seqRegisterSequencerProgram(seqProgram *prog)

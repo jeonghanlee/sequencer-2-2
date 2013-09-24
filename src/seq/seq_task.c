@@ -28,9 +28,10 @@ void sequencer (void *arg)	/* ptr to original (global) state program table */
 	/* Get this thread's id */
 	sp->ss->threadId = epicsThreadGetIdSelf();
 
-	/* Add the program to the state program list
-	   and if necessary create pvSys */
+	/* Add the program to the program list */
 	seqAddProg(sp);
+
+	createOrAttachPvSystem(sp);
 
 	if (!pvSysIsDefined(sp->pvSys))
 	{
@@ -262,7 +263,7 @@ static void ss_entry(void *arg)
 	if (ss != sp->ss)
 	{
 		ss->threadId = epicsThreadGetIdSelf();
-		pvSysAttach(sp->pvSys);
+		createOrAttachPvSystem(sp);
 	}
 
 	/* Register this thread with the EPICS watchdog (no callback func) */

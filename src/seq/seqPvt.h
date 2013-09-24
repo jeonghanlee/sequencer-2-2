@@ -247,6 +247,7 @@ void seqAddProg(SPROG *sp);
 /* seqCommands.c */
 typedef int sequencerProgramTraversee(SPROG **sprog, seqProgram *pseq, void *param);
 int traverseSequencerPrograms(sequencerProgramTraversee *traversee, void *param);
+void createOrAttachPvSystem(SPROG *sp);
 
 /* seq_main.c */
 void seq_free(SPROG *sp);
