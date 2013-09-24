@@ -97,7 +97,7 @@ epicsShareFunc pvStat seq_pvGet(SS_ID ss, VAR_ID varId, enum compType compType)
 		{
 		case epicsEventWaitOK:
 			status = check_connected(dbch, meta);
-			if (status) return epicsEventSignal(getSem), status;
+			if (status != pvStatOK) return epicsEventSignal(getSem), status;
 			pvTimeGetCurrentDouble(&after);
 			tmo -= (after - before);
 			break;
@@ -129,7 +129,7 @@ epicsShareFunc pvStat seq_pvGet(SS_ID ss, VAR_ID varId, enum compType compType)
 				ss->getReq[varId] = NULL;
 			}
 			status = check_connected(dbch, meta);
-			if (status) return epicsEventSignal(getSem), status;
+			if (status != pvStatOK) return epicsEventSignal(getSem), status;
 			break;
 		case epicsEventWaitTimeout:
 			errlogSevPrintf(errlogMajor,
@@ -191,7 +191,7 @@ epicsShareFunc pvStat seq_pvGet(SS_ID ss, VAR_ID varId, enum compType compType)
 		{
 		case epicsEventWaitOK:
 			status = check_connected(dbch, meta);
-			if (status) return status;
+			if (status != pvStatOK) return status;
 			if (optTest(sp, OPT_SAFE))
 				/* Copy regardless of whether dirty flag is set or not */
 				ss_read_buffer(ss, ch, FALSE);
@@ -258,7 +258,7 @@ epicsShareFunc boolean seq_pvGetComplete(
 				ss->getReq[varId] = NULL;
 				epicsEventSignal(getSem);
 				status = check_connected(ch->dbch, metaPtr(ch,ss));
-				if (!status && optTest(sp, OPT_SAFE))
+				if (status == pvStatOK && optTest(sp, OPT_SAFE))
 				{
 					/* In safe mode, copy value and meta data from shared buffer
 					   to ss local buffer. */
@@ -393,7 +393,7 @@ epicsShareFunc pvStat seq_pvPut(SS_ID ss, VAR_ID varId, enum compType compType)
 
 	/* Check for channel connected */
 	status = check_connected(dbch, meta);
-	if (status) return status;
+	if (status != pvStatOK) return status;
 
 	/* Determine whether to perform synchronous, asynchronous, or
 	   plain put ((+a) option was never honored for put, so DEFAULT
@@ -519,7 +519,7 @@ epicsShareFunc pvStat seq_pvPut(SS_ID ss, VAR_ID varId, enum compType compType)
 		{
 		case epicsEventWaitOK:
 			status = check_connected(dbch, meta);
-			if (status) return status;
+			if (status != pvStatOK) return status;
 			break;
 		case epicsEventWaitTimeout:
 			meta->status = pvStatTIMEOUT;
