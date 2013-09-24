@@ -302,8 +302,6 @@ static void encode_options(Options options)
 		gen_code(" | OPT_REENT");
 	if (options.safe)
 		gen_code(" | OPT_SAFE");
-	if (options.main)
-		gen_code(" | OPT_MAIN");
 	gen_code("),\n");
 }
 

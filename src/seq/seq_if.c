@@ -1130,7 +1130,6 @@ epicsShareFunc boolean epicsShareAPI seq_optGet(SS_ID ss, const char *opt)
 	case 'c': return optTest(sp, OPT_CONN);
 	case 'd': return optTest(sp, OPT_DEBUG);
 	case 'e': return optTest(sp, OPT_NEWEF);
-	case 'm': return optTest(sp, OPT_MAIN);
 	case 'r': return optTest(sp, OPT_REENT);
 	case 's': return optTest(sp, OPT_SAFE);
 	default:  return FALSE;

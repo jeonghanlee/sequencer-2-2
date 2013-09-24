@@ -59,12 +59,12 @@ struct options
 	uint	async:1;		/* do pvGet() asynchronously */
 	uint	conn:1;			/* wait for all conns to complete */
 	uint	debug:1;		/* run-time debug */
-	uint	reent:1;		/* reentrant at run-time */
+	uint	reent:1;		/* reentrant */
 	uint	safe:1;			/* safe (no globals) */
 	uint	newef:1;		/* new event flag mode */
-	uint	main:1;			/* main program */
 
 					/* compile time options */
+	uint	main:1;			/* generate main program */
 	uint	line:1;			/* generate line markers */
 	uint	warn:1;			/* compiler warnings */
 };

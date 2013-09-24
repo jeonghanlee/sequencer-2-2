@@ -50,11 +50,10 @@ epicsShareFunc void epicsShareAPI seqShow(epicsThreadId tid)
 	printf("  number of channels assigned = %d\n", sp->assignCount);
 	printf("  number of channels connected = %d\n", sp->connectCount);
 	printf("  number of channels monitored = %d\n", sp->monitorCount);
-	printf("  options: async=%d, debug=%d, newef=%d, reent=%d, conn=%d, "
-		"main=%d\n",
+	printf("  options: async=%d, debug=%d, newef=%d, reent=%d, conn=%d\n",
 		optTest(sp, OPT_ASYNC), optTest(sp, OPT_DEBUG),
 		optTest(sp, OPT_NEWEF), optTest(sp, OPT_REENT),
-		optTest(sp, OPT_CONN), optTest(sp, OPT_MAIN));
+		optTest(sp, OPT_CONN));
 	if (optTest(sp, OPT_REENT))
 		printf("  user variables: address = %p, length = %u\n",
 			sp->var, (unsigned)sp->varSize);

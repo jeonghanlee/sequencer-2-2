@@ -44,8 +44,7 @@ extern "C" {
 #define OPT_CONN		((seqMask)1u<<2)	/* wait for all connections */
 #define OPT_REENT		((seqMask)1u<<3)	/* generate reentrant code */
 #define OPT_NEWEF		((seqMask)1u<<4)	/* new event flag mode */
-#define OPT_MAIN		((seqMask)1u<<5)	/* generate main program */
-#define OPT_SAFE		((seqMask)1u<<6)	/* safe mode */
+#define OPT_SAFE		((seqMask)1u<<5)	/* safe mode */
 
 /* Bit encoding for State Specific Options */
 #define OPT_NORESETTIMERS	((seqMask)1u<<0)	/* Don't reset timers on */
