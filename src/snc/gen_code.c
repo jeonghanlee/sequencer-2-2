@@ -43,7 +43,7 @@ static int assert_var_declared(Expr *ep, Expr *scope, void *parg)
 void generate_code(Program *p, const char *header_name)
 {
 	/* assume there have been no errors, so all vars are declared */
-	traverse_expr_tree(p->prog, 1<<E_VAR, 0, 0, assert_var_declared, 0);
+	traverse_expr_tree(p->prog, bit(E_VAR), 0, 0, assert_var_declared, 0);
 
 #ifdef DEBUG
 	report("-------------------- Code Generation --------------------\n");

@@ -352,11 +352,11 @@ static void gen_state_event_mask(Expr *sp, uint num_event_flags,
 		event_mask_args em_args = { event_words, num_event_flags };
 
 		/* look for scalar variables and event flags */
-		traverse_expr_tree(tp->when_cond, 1<<E_VAR, 0, 0,
+		traverse_expr_tree(tp->when_cond, bit(E_VAR), 0, 0,
 			iter_event_mask_scalar, &em_args);
 
 		/* look for arrays and subscripted array elements */
-		traverse_expr_tree(tp->when_cond, (1<<E_VAR)|(1<<E_SUBSCR), 0, 0,
+		traverse_expr_tree(tp->when_cond, bit(E_VAR)|bit(E_SUBSCR), 0, 0,
 			iter_event_mask_array, &em_args);
 	}
 #ifdef DEBUG

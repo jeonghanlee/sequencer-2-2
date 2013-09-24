@@ -1133,7 +1133,7 @@ static void connect_variables(SymTable st, Expr *scope)
 #ifdef DEBUG
 	report("**begin** connect_variables\n");
 #endif
-	traverse_expr_tree(scope, 1u<<E_VAR, 0, 0, connect_variable, &st);
+	traverse_expr_tree(scope, bit(E_VAR), 0, 0, connect_variable, &st);
 #ifdef DEBUG
 	report("**end** connect_variables\n");
 #endif
@@ -1161,7 +1161,7 @@ void traverse_expr_tree(
 #endif
 
 	/* Call the function? */
-	if (call_mask & (1u<<ep->type))
+	if (call_mask & bit(ep->type))
 	{
 		descend = iteratee(ep, scope, parg);
 	}
@@ -1184,7 +1184,7 @@ void traverse_expr_tree(
 	{
 		foreach (cep, ep->children[i])
 		{
-			if (cep && !((1u<<cep->type) & stop_mask))
+			if (!(bit(cep->type) & stop_mask))
 			{
 				traverse_expr_tree(cep, call_mask, stop_mask,
 					scope, iteratee, parg);
@@ -1328,7 +1328,7 @@ static void connect_state_change_stmts(SymTable st, Expr *scope)
 	csc_arg.ssp = 0;
 	csc_arg.in_when = FALSE;
 	traverse_expr_tree(scope,
-		(1u<<S_CHANGE)|(1u<<D_SS)|(1u<<D_ENTEX)|(1u<<D_WHEN),
+		bit(S_CHANGE)|bit(D_SS)|bit(D_ENTEX)|bit(D_WHEN),
 		expr_mask, 0, iter_connect_state_change_stmts, &csc_arg);
 }
 
@@ -1362,7 +1362,7 @@ static void mark_states_reachable_from(Expr *sp)
 
 	traverse_expr_tree(
 		sp,				/* start expression */
-		(1u<<S_CHANGE)|(1u<<D_WHEN),	/* when to call iteratee */
+		bit(S_CHANGE)|bit(D_WHEN),	/* when to call iteratee */
 		expr_mask,			/* when to stop descending */
 		sp,				/* current scope, 0 at top-level */
 		iter_mark_states_reachable,	/* function to call */

@@ -42,7 +42,7 @@ typedef struct sync_queue_list	SyncQList;
 typedef struct var_list		VarList;
 typedef struct expr_pair	ExprPair;
 
-typedef unsigned int		TypeMask;
+typedef unsigned long long	TypeMask;
 typedef unsigned int		uint;
 
 struct sym_table
@@ -234,26 +234,27 @@ struct program
 
 /* Generic iteration on lists */
 #define foreach(e,l)		for (e = l; e != 0; e = e->next)
+#define bit(bitn)		((TypeMask)(1ull)<<(bitn))
 
 /* Commonly used sets of expression types */
 
 /* Expression types that are scopes. By definition, a scope is an expression
    that allows variable declarations as (immediate) subexpressions. */
-#define scope_mask		( (1u<<D_PROG)   | (1u<<D_SS)     | (1u<<D_STATE)\
-				| (1u<<D_ENTEX)  | (1u<<D_WHEN)   | (1u<<S_CMPND) )
+#define scope_mask		( bit(D_PROG)    | bit(D_SS)      | bit(D_STATE)\
+				| bit(D_ENTEX)   | bit(D_WHEN)    | bit(S_CMPND) )
 /* Whether an expression is a scope */
-#define is_scope(e)		(((1u<<((e)->type)) & scope_mask) != 0)
+#define is_scope(e)		((bit((e)->type) & scope_mask) != 0)
 
 /* Expression types that may have sub-scopes */
-#define has_sub_scope_mask	( (1u<<D_ENTEX)  | (1u<<D_PROG)   | (1u<<D_SS)\
-				| (1u<<D_STATE)  | (1u<<D_WHEN)   | (1u<<S_CMPND) | (1u<<S_FOR)\
-				| (1u<<S_IF)     | (1u<<S_STMT)   | (1u<<S_WHILE) )
+#define has_sub_scope_mask	( bit(D_ENTEX)   | bit(D_PROG)    | bit(D_SS)\
+				| bit(D_STATE)   | bit(D_WHEN)    | bit(S_CMPND)  | bit(S_FOR)\
+				| bit(S_IF)      | bit(S_STMT)    | bit(S_WHILE) )
 /* Expression types that are actually expressions i.e. no definitions or statements.
    These are the ones that start with E_. */
-#define	expr_mask		( (1u<<E_BINOP)  | (1u<<E_CAST)   | (1u<<E_CONST)\
-				| (1u<<E_FUNC)   | (1u<<E_INIT)\
-				| (1u<<E_PAREN)  | (1u<<E_POST)   | (1u<<E_PRE)   | (1u<<E_STRING)\
-				| (1u<<E_SUBSCR) | (1u<<E_TERNOP) | (1u<<E_VAR)   | (1u<<T_TEXT) )
+#define	expr_mask		( bit(E_BINOP)   | bit(E_CAST)    | bit(E_CONST)\
+				| bit(E_FUNC)    | bit(E_INIT)\
+				| bit(E_PAREN)   | bit(E_POST)    | bit(E_PRE)    | bit(E_STRING)\
+				| bit(E_SUBSCR)  | bit(E_TERNOP)  | bit(E_VAR)    | bit(T_TEXT) )
 
 #define expr_type_name(e)	expr_type_info[(e)->type].name
 
