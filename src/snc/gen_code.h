@@ -21,6 +21,7 @@ void gen_var_decl(Var *vp);
 void indent(int level);
 
 #define NM_VARS		"_seq_var"
+#define NM_INITVAR	"_seq_initvar_"
 #define NM_CHANS	"_seq_chans"
 #define NM_STATES	"_seq_states"
 #define NM_STATESETS	"_seq_statesets"

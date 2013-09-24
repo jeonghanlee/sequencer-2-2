@@ -129,7 +129,7 @@ static void gen_main(char *prog_name)
 
 void gen_var_decl(Var *vp)
 {
-	gen_type(vp->type, vp->name);
+	gen_type(vp->type, "", vp->name);
 }
 
 /* Generate the UserVar struct containing all program variables with

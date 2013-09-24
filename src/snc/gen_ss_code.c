@@ -766,12 +766,13 @@ static void gen_var_init(Var *vp, int context, int level)
 	{
 		gen_line_marker(vp->init);
 		indent(level); gen_code("{ static ");
-		gen_var_decl(vp);
+		gen_type(vp->type, NM_INITVAR, vp->name);
 		gen_code(" = ");
 		gen_expr(context, vp->init, level);
 		gen_code("; memcpy(&");
 		gen_var_access(vp);
-		gen_code(", &%s, sizeof(%s)); }\n", vp->name, vp->name);
+		gen_code(", &" NM_INITVAR "%s, sizeof(" NM_INITVAR "%s)); }\n",
+			vp->name, vp->name);
 	}
 }
 

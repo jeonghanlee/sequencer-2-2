@@ -64,7 +64,7 @@ unsigned type_array_length2(Type *t);
 unsigned type_assignable(Type *t);
 
 /* generate code for a type, name is an optional variable name  */
-void gen_type(Type *t, char *name);
+void gen_type(Type *t, const char *prefix, const char *name);
 
 /* creating types */
 Type mk_prim_type(enum prim_type_tag tag);
