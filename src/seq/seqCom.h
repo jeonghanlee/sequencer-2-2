@@ -126,10 +126,6 @@ epicsShareFunc void seqQueueShow(epicsThreadId);
 epicsShareFunc void seqStop(epicsThreadId);
 epicsShareFunc epicsThreadId seq(seqProgram *, const char *, unsigned);
 
-/* called by generated main and registrar routines */
-epicsShareFunc void seqRegisterSequencerProgram(seqProgram *p);
-epicsShareFunc void seqRegisterSequencerCommands(void);
-
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

@@ -129,4 +129,8 @@ struct seqProgram
 	unsigned	numQueues;	/* number of syncQ queues */
 };
 
+/* called by generated main and registrar routines */
+epicsShareFunc void seqRegisterSequencerProgram(seqProgram *p);
+epicsShareFunc void seqRegisterSequencerCommands(void);
+
 #endif	/*INCLseqsnch*/
