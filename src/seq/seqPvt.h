@@ -138,7 +138,6 @@ struct state_set
 	epicsThreadId	threadId;	/* thread id */
 	unsigned	numStates;	/* number of states */
 	STATE		*states;	/* ptr to array of state blocks */
-	unsigned	maxNumDelays;	/* max. number of delays */
 	SPROG		*sprog;		/* ptr back to state program block */
 
 	/* dynamic state set data (assigned at runtime) */
@@ -146,10 +145,8 @@ struct state_set
 	int		nextState;	/* next state index, -1 if none */
 	int		prevState;	/* previous state index, -1 if none */
 	const bitMask	*mask;		/* current event mask */
-	unsigned	numDelays;	/* number of delays activated */
-	double		*delay;		/* queued delay values in secs (array) */
-	boolean		*delayExpired;	/* whether delay expired (array) */
-	double		timeEntered;	/* time that a state was entered */
+	double		timeEntered;	/* time that current state was entered */
+	double		wakeupTime;	/* next time state set should wake up */
 	epicsEventId	syncSemId;	/* semaphore for event sync */
 	epicsEventId	dead;		/* event to signal state set exit done */
 	/* these are arrays, one for each channel */

@@ -232,7 +232,6 @@ static void fill_state_struct(Expr *sp, char *ss_name, uint ss_num)
 	gen_code("\t/* state name */        \"%s\",\n", sp->value);
 	gen_code("\t/* action function */   " NM_ACTION "_%s_%d_%s,\n", ss_name, ss_num, sp->value);
 	gen_code("\t/* event function */    " NM_EVENT "_%s_%d_%s,\n", ss_name, ss_num, sp->value);
-	gen_code("\t/* delay function */    " NM_DELAY "_%s_%d_%s,\n", ss_name, ss_num, sp->value);
 	gen_code("\t/* entry function */    ");
 	if (sp->state_entry)
 		gen_code(NM_ENTRY "_%s_%d_%s,\n", ss_name, ss_num, sp->value);
@@ -322,8 +321,7 @@ static void gen_ss_table(Expr *ss_list)
 		gen_code("\t{\n");
 		gen_code("\t/* state set name */    \"%s\",\n", ssp->value);
 		gen_code("\t/* states */            " NM_STATES "_%s,\n", ssp->value);
-		gen_code("\t/* number of states */  %d,\n", ssp->extra.e_ss->num_states);
-		gen_code("\t/* number of delays */  %d\n", ssp->extra.e_ss->num_delays);
+		gen_code("\t/* number of states */  %d\n", ssp->extra.e_ss->num_states);
 		gen_code("\t},\n");
 	}
 	gen_code("};\n");

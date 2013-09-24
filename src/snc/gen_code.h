@@ -29,7 +29,6 @@ void indent(int level);
 #define NM_EXIT		"_seq_exit"
 #define NM_INIT		"_seq_init"
 #define NM_ACTION	"_seq_action"
-#define NM_DELAY	"_seq_delay"
 #define NM_EVENT	"_seq_event"
 #define NM_MASK		"_seq_mask"
 

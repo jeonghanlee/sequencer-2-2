@@ -48,7 +48,7 @@ static struct const_symbol const_symbols[] =
 
 static struct func_symbol func_symbols[] =
 {
-    {"delay",           FT_DELAY,   FALSE,  0,  FALSE,  FALSE},
+    {"delay",           FT_OTHER,   FALSE,  0,  FALSE,  FALSE},
     {"efClear",         FT_EVENT,   FALSE,  0,  TRUE,   FALSE},
     {"efSet",           FT_EVENT,   FALSE,  0,  TRUE,   FALSE},
     {"efTest",          FT_EVENT,   FALSE,  0,  FALSE,  FALSE},

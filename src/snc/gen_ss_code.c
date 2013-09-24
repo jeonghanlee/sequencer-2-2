@@ -36,10 +36,8 @@ static void gen_state_func(
 	const char *extra_args
 );
 static void gen_entex_body(Expr *xp);
-static void gen_delay_body(Expr *xp);
 static void gen_event_body(Expr *xp);
 static void gen_action_body(Expr *xp);
-static int gen_delay(Expr *ep, Expr *scope, void *parg);
 static void gen_expr(int context, Expr *ep, int level);
 static void gen_ef_func(int context, Expr *ep, const char *func_name, uint ef_action_only);
 static void gen_pv_func(int context, Expr *ep,
@@ -116,10 +114,6 @@ void gen_ss_code(Program *program)
 				gen_state_func(ssp->value, ss_num, sp->value,
 					sp->state_exit, gen_entex_body,
 					"Exit", NM_EXIT, "void", "");
-			/* Generate function to set up for delay processing */
-			gen_state_func(ssp->value, ss_num, sp->value,
-				sp->state_whens, gen_delay_body,
-				"Delay", NM_DELAY, "void", "");
 			/* Generate event processing function */
 			gen_state_func(ssp->value, ss_num, sp->value,
 				sp->state_whens, gen_event_body,
@@ -200,39 +194,6 @@ static void gen_entex_body(Expr *xp)
 	{
 		gen_expr(C_ENTEX, ep, 1);
 	}
-}
-
-/* Generate a function for each state that sets up delay processing:
-   This function gets called prior to the event function to guarantee
-   that the initial delay value specified in delay() calls are used.
-   Each delay() call is assigned a (per state) unique id.  The maximum
-   number of delays is recorded in the state set structure. */
-static void gen_delay_body(Expr *xp)
-{
-	Expr	*tp;
-
-	/* for each transition */
-	foreach (tp, xp)
-	{
-		assert(tp->type == D_WHEN);
-		traverse_expr_tree(tp->when_cond, 1u<<E_DELAY, 0, 0, gen_delay, 0);
-	}
-}
-
-/* Generate call to seq_delayInit() with extra arguments ssId and delay id,
-   and cast the argument proper to double.
-   Example:  seq_delayInit(ssId, 1, (double)(<some expression>)); */
-static int gen_delay(Expr *ep, Expr *scope, void *parg)
-{
-	assert(ep->type == E_DELAY);
-	gen_line_marker(ep);
-	/* Generate 1-st part of function w/ 1-st 2 parameters */
-	indent(1); gen_code("seq_delayInit(" NM_SS ", %d, (", ep->extra.e_delay);
-	/* generate the 3-rd parameter (an expression) */
-	gen_expr(C_COND, ep->delay_args, 0);
-	/* Complete the function call */
-	gen_code("));\n");
-	return FALSE;	/* no sense descending into children, as delay cannot be nested */
 }
 
 /* Generate action processing functions:
@@ -472,7 +433,6 @@ static void gen_expr(
 	case E_STRING:
 		gen_code("\"%s\"", ep->value);
 		break;
-	case E_DELAY:
 	case E_FUNC:
 		if (gen_builtin_func(context, ep))
 			break;
@@ -571,9 +531,6 @@ static int gen_builtin_func(int context, Expr *ep)
 	gen_code("seq_%s(" NM_SS "", func_name);
 	switch (sym->type)
 	{
-	case FT_DELAY:
-		gen_code(", %d)", ep->extra.e_delay);
-		break;
 	case FT_EVENT:
 		/* Event flag functions */
 		gen_ef_func(context, ep, func_name, sym->ef_action_only);

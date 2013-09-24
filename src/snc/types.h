@@ -104,7 +104,6 @@ struct state				/* extra data for state clauses */
 struct state_set			/* extra data for state set clauses */
 {
 	uint		num_states;	/* number of states */
-	uint		num_delays;	/* number of delays */
 	VarList		*var_list;	/* list of 'local' variables */
 };
 
@@ -121,7 +120,6 @@ struct expression			/* generic syntax node */
 	{
 		Var	*e_var;		/* variable reference */
 		Var	*e_decl;	/* variable declaration */
-		uint	e_delay;	/* delay id */
 		uint	e_option;	/* option value (1 or 0) */
 		VarList	*e_prog;	/* top-level definitions */
 		StateSet *e_ss;		/* state set data */
@@ -252,7 +250,7 @@ struct program
 				| (1u<<S_IF)     | (1u<<S_STMT)   | (1u<<S_WHILE) )
 /* Expression types that are actually expressions i.e. no definitions or statements.
    These are the ones that start with E_. */
-#define	expr_mask		( (1u<<E_BINOP)  | (1u<<E_CAST)   | (1u<<E_CONST) | (1u<<E_DELAY)\
+#define	expr_mask		( (1u<<E_BINOP)  | (1u<<E_CAST)   | (1u<<E_CONST)\
 				| (1u<<E_FUNC)   | (1u<<E_INIT)\
 				| (1u<<E_PAREN)  | (1u<<E_POST)   | (1u<<E_PRE)   | (1u<<E_STRING)\
 				| (1u<<E_SUBSCR) | (1u<<E_TERNOP) | (1u<<E_VAR)   | (1u<<T_TEXT) )
@@ -285,7 +283,6 @@ enum expr_type			/* description [child expressions...] */
 	E_BINOP,		/* binary operator [left,right] */
 	E_CAST,			/* type cast [operand] */
 	E_CONST,		/* numeric (inkl. character) constant [] */
-	E_DELAY,		/* delay function call [args] */
 	E_FUNC,			/* function call [args] */
 	E_INIT,			/* array or struct initializer [elems] */
 	E_PAREN,		/* parenthesis around an expression [expr] */
@@ -324,7 +321,6 @@ STATIC_ASSERT(NUM_EXPR_TYPES <= 8*sizeof(TypeMask));
 #define cmpnd_defns	children[0]
 #define cmpnd_stmts	children[1]
 #define decl_init	children[0]
-#define delay_args	children[0]
 #define entex_defns	children[0]
 #define entex_stmts	children[1]
 #define for_init	children[0]
@@ -402,7 +398,6 @@ expr_type_info[]
 	{ "E_BINOP",	2 },
 	{ "E_CAST",	2 },
 	{ "E_CONST",	0 },
-	{ "E_DELAY",	1 },
 	{ "E_FUNC",	1 },
 	{ "E_INIT",	1 },
 	{ "E_PAREN",	1 },

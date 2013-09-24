@@ -33,7 +33,7 @@ epicsShareFunc void epicsShareAPI seqShow(epicsThreadId tid)
 	SPROG	*sp;
 	STATE	*st;
 	unsigned nss;
-	double	timeNow, timeElapsed;
+	double	timeNow;
 
 	if (ss == NULL) return;
 	sp = ss->sprog;
@@ -87,9 +87,10 @@ epicsShareFunc void epicsShareAPI seqShow(epicsThreadId tid)
 			st->stateName : "");
 
 		pvTimeGetCurrentDouble(&timeNow);
-		timeElapsed = timeNow - ss->timeEntered;
-		printf("  Elapsed time since state was entered = %.1f "
-			"seconds\n", timeElapsed);
+		printf("  Elapsed time since state was entered = %.2f "
+			"seconds\n", timeNow - ss->timeEntered);
+		printf("  Wake up delay = %.2f "
+			"seconds\n", ss->wakeupTime - timeNow);
 
 		printf("  Get in progress = [");
 		for (n = 0; n < sp->numChans; n++)
@@ -102,15 +103,6 @@ epicsShareFunc void epicsShareAPI seqShow(epicsThreadId tid)
 			if (optTest(sp, OPT_SAFE) || seq_pvAssigned(ss, n))
 				printf("%d",!seq_pvPutComplete(ss, n, 0, 0, 0));
 		printf("]\n");
-
-		printf("  Queued time delays:\n");
-		for (n = 0; n < ss->numDelays; n++)
-		{
-			printf("\tdelay[%d]=%f", n, ss->delay[n]);
-			if (ss->delayExpired[n])
-				printf(" - expired");
-			printf("\n");
-		}
 
 		if (optTest(sp, OPT_SAFE))
 			printf("  User variables: address = %p, length = %u\n",

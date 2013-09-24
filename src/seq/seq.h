@@ -38,6 +38,11 @@ in the file LICENSE that is included with this distribution.
 #include <string.h>
 #include <ctype.h>
 #include <limits.h>
+#include <math.h>
+
+#ifndef INFINITY
+#define INFINITY (1.0/0.0)
+#endif
 
 #include "cantProceed.h"
 #include "epicsEvent.h"

@@ -1193,16 +1193,6 @@ void traverse_expr_tree(
 	}
 }
 
-static int assign_next_delay_id(Expr *ep, Expr *scope, void *parg)
-{
-	uint *delay_id = (uint *)parg;
-
-	assert(ep->type == E_DELAY);
-	ep->extra.e_delay = *delay_id;
-	*delay_id += 1;
-	return TRUE;
-}
-
 /* Check for duplicate state set and state names and resolve transitions between states */
 static uint connect_states(SymTable st, Expr *prog)
 {
@@ -1248,8 +1238,6 @@ static uint connect_states(SymTable st, Expr *prog)
 		foreach (sp, ssp->ss_states)
 		{
 			Expr *tp;
-			/* Each state has its own delay ids */
-			uint delay_id = 0;
 
 			foreach (tp, sp->state_whens)
 			{
@@ -1272,13 +1260,6 @@ static uint connect_states(SymTable st, Expr *prog)
 				report("connect_states: ss = %s, state = %s, when(...){...} state (%s,%d)\n",
 					ssp->value, sp->value, tp->value, next_sp->extra.e_state->index);
 #endif
-				/* assign delay ids */
-				traverse_expr_tree(tp->when_cond, 1u<<E_DELAY, 0, 0,
-					assign_next_delay_id, &delay_id);
-			}
-			if (delay_id > ssp->extra.e_ss->num_delays)
-			{
-				ssp->extra.e_ss->num_delays = delay_id;
 			}
 		}
 		num_ss++;

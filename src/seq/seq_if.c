@@ -983,7 +983,8 @@ epicsShareFunc boolean epicsShareAPI seq_efTestAndClear(SS_ID ss, EV_ID ev_flag)
 	isSet = bitTest(sp->evFlags, ev_flag);
 	bitClear(sp->evFlags, ev_flag);
 
-	DEBUG("efTestAndClear: ev_flag=%d, isSet=%d, ss=%d\n", ev_flag, isSet, (int)ssNum(ss));
+	DEBUG("efTestAndClear: ev_flag=%d, isSet=%d, ss=%d\n", ev_flag, isSet,
+		(int)ssNum(ss));
 
 	if (optTest(sp, OPT_SAFE))
 		ss_read_buffer_selective(sp, ss, ev_flag);
@@ -1068,8 +1069,8 @@ epicsShareFunc void epicsShareAPI seq_pvFlushQ(SS_ID ss, VAR_ID varId)
 	EV_ID	ev_flag = ch->syncedTo;
 	QUEUE	queue = ch->queue;
 
-	DEBUG("pvFlushQ: pv name=%s, count=%d\n", ch->dbch ? ch->dbch->dbName : "<anomymous>",
-		seqQueueUsed(queue));
+	DEBUG("pvFlushQ: pv name=%s, count=%d\n",
+		ch->dbch ? ch->dbch->dbName : "<anomymous>", seqQueueUsed(queue));
 	seqQueueFlush(queue);
 
 	epicsMutexMustLock(sp->programLock);
@@ -1080,39 +1081,25 @@ epicsShareFunc void epicsShareAPI seq_pvFlushQ(SS_ID ss, VAR_ID varId)
 
 /*
  * Test whether a given delay has expired.
+ *
+ * As a side-effect, adjust the state set's wakeupTime if our delay
+ * is shorter than previously tested ones.
  */
-epicsShareFunc boolean epicsShareAPI seq_delay(SS_ID ss, DELAY_ID delayId)
+epicsShareFunc boolean epicsShareAPI seq_delay(SS_ID ss, double delay)
 {
-	double	timeNow, timeElapsed;
-	boolean	expired = FALSE;
+	boolean	expired;
+	double	now, timeExpired;
 
-	/* Calc. elapsed time since state was entered */
-	pvTimeGetCurrentDouble( &timeNow );
-	timeElapsed = timeNow - ss->timeEntered;
+	pvTimeGetCurrentDouble(&now);
+	timeExpired = ss->timeEntered + delay;
+	expired = timeExpired <= now;
+	if (!expired && timeExpired < ss->wakeupTime)
+		ss->wakeupTime = timeExpired;
 
-	/* Check for delay timeout */
-	if (timeElapsed > ss->delay[delayId]-0.000001)
-	{
-		ss->delayExpired[delayId] = TRUE; /* mark as expired */
-		expired = TRUE;
-	}
-	DEBUG("delay(%s,%u): diff=%.10f, %s\n", ss->ssName, delayId,
-		timeElapsed - ss->delay[delayId], expired ? "expired": "unexpired");
+	DEBUG("delay(%s/%s,%.10f): entered=%.10f, diff=%.10f, %s\n", ss->ssName,
+		ss->states[ss->currentState].stateName, delay, ss->timeEntered,
+		timeExpired - now, expired ? "expired": "unexpired");
 	return expired;
-}
-
-/*
- * Initialize delay with given time (in seconds).
- */
-epicsShareFunc void epicsShareAPI seq_delayInit(SS_ID ss, DELAY_ID delayId, double delay)
-{
-	DEBUG("delayInit(%s,%u,%g): numDelays=%d, maxNumDelays=%d\n",
-		ss->ssName, delayId, delay, ss->numDelays, ss->maxNumDelays);
-	assert(delayId <= ss->numDelays);
-	assert(ss->numDelays < ss->maxNumDelays);
-
-	ss->delay[delayId] = delay;
-	ss->numDelays = max(ss->numDelays, delayId + 1);
 }
 
 /*

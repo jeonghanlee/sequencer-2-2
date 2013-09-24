@@ -251,29 +251,13 @@ static boolean init_sscb(SPROG *sp, SSCB *ss, seqSS *seqSS)
 	/* Fill in SSCB */
 	ss->ssName = seqSS->ssName;
 	ss->numStates = seqSS->numStates;
-	ss->maxNumDelays = seqSS->numDelays;
 
-	if (ss->maxNumDelays > 0)
-	{
-		ss->delay = newArray(double, ss->maxNumDelays);
-		if (!ss->delay)
-		{
-			errlogSevPrintf(errlogFatal, "init_sscb: calloc failed\n");
-			return FALSE;
-		}
-		ss->delayExpired = newArray(boolean, ss->maxNumDelays);
-		if (!ss->delayExpired)
-		{
-			errlogSevPrintf(errlogFatal, "init_sscb: calloc failed\n");
-			return FALSE;
-		}
-	}
 	ss->currentState = 0; /* initial state */
 	ss->nextState = 0;
 	ss->prevState = 0;
 	ss->threadId = 0;
-	/* Initialize to start time rather than zero time! */
-	pvTimeGetCurrentDouble(&ss->timeEntered);
+	ss->timeEntered = INFINITY;
+	ss->wakeupTime = INFINITY;
 	ss->sprog = sp;
 
 	ss->syncSemId = epicsEventCreate(epicsEventEmpty);
@@ -557,8 +541,6 @@ void seq_free(SPROG *sp)
 
 		epicsEventDestroy(ss->dead);
 
-		free(ss->delay);
-		free(ss->delayExpired);
 		if (optTest(sp, OPT_SAFE)) free(ss->dirty);
 		if (optTest(sp, OPT_SAFE)) free(ss->var);
 	}

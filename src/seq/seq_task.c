@@ -14,8 +14,6 @@ in the file LICENSE that is included with this distribution.
 #include "seq_debug.h"
 
 static void ss_entry(void *arg);
-static void clearDelays(SSCB *,STATE *);
-static boolean calcTimeout(SSCB *, double *);
 
 /*
  * sequencer() - Sequencer main thread entry point.
@@ -292,6 +290,7 @@ static void ss_entry(void *arg)
 		boolean	ev_trig;
 		int	transNum = 0;	/* highest prio trans. # triggered */
 		STATE	*st = ss->states + ss->currentState;
+		double	now;
 
 		/* Set state to current state */
 		assert(ss->currentState >= 0);
@@ -311,34 +310,31 @@ static void ss_entry(void *arg)
 		/* Flush any outstanding DB requests */
 		pvSysFlush(sp->pvSys);
 
-		clearDelays(ss, st); /* Clear delay list */
-		st->delayFunc(ss, var); /* Set up new delay list */
-
 		/* Setting this semaphore here guarantees that a when() is
-		 * always executed at least once when a state is first
-		 * entered.
+		 * always executed at least once when a state is first entered.
 		 */
 		epicsEventSignal(ss->syncSemId);
+
+		pvTimeGetCurrentDouble(&now);
+
+		/* Set time we entered this state if transition from a different
+		 * state or else if option not to do so is off for this state.
+		 */
+		if ((ss->currentState != ss->prevState) ||
+			!optTest(st, OPT_NORESETTIMERS))
+		{
+			ss->timeEntered = now;
+		}
+		ss->wakeupTime = INFINITY;
 
 		/* Loop until an event is triggered, i.e. when() returns TRUE
 		 */
 		do {
-			double delay = 0.0;
-
 			/* Wake up on PV event, event flag, or expired delay */
-			if (calcTimeout(ss, &delay))
-			{
-				DEBUG("before epicsEventWaitWithTimeout(ss=%d,delay=%f)\n",
-					ss - sp->ss, delay);
-				epicsEventWaitWithTimeout(ss->syncSemId, delay);
-				DEBUG("after epicsEventWaitWithTimeout()\n");
-			}
-			else
-			{
-				DEBUG("before epicsEventWait\n");
-				epicsEventWait(ss->syncSemId);
-				DEBUG("after epicsEventWait\n");
-			}
+			DEBUG("before epicsEventWaitWithTimeout(ss=%d,timeout=%f)\n",
+				ss - sp->ss, ss->wakeupTime - now);
+			epicsEventWaitWithTimeout(ss->syncSemId, ss->wakeupTime - now);
+			DEBUG("after epicsEventWaitWithTimeout()\n");
 
 			/* Check whether we have been asked to exit */
 			if (sp->die) goto exit;
@@ -348,6 +344,8 @@ static void ss_entry(void *arg)
 			 */
 			if (optTest(sp, OPT_SAFE))
 				ss_read_all_buffer(sp, ss);
+
+			ss->wakeupTime = INFINITY;
 
 			/* Check state change conditions */
 			ev_trig = st->eventFunc(ss, var,
@@ -362,6 +360,8 @@ static void ss_entry(void *arg)
 					sp->evFlags[i] &= ~ss->mask[i];
 				}
 			}
+			if (!ev_trig)
+				pvTimeGetCurrentDouble(&now);
 		} while (!ev_trig);
 
 		/* Execute the state change action */
@@ -388,88 +388,6 @@ exit:
 	/* Declare ourselves dead */
 	if (ss != sp->ss)
 		epicsEventSignal(ss->dead);
-}
-
-/*
- * clearDelays() - clear the time delay list.
- */
-static void clearDelays(SSCB *ss, STATE *st)
-{
-	unsigned ndelay;
-
-	/* On state change set time we entered this state; or if transition from
-	 * same state if option to do so is on for this state.
-	 */
-	if ((ss->currentState != ss->prevState) ||
-		!optTest(st, OPT_NORESETTIMERS))
-	{
-		pvTimeGetCurrentDouble(&ss->timeEntered);
-	}
-
-	for (ndelay = 0; ndelay < ss->maxNumDelays; ndelay++)
-	{
-		ss->delay[ndelay] = 0;
-	 	ss->delayExpired[ndelay] = FALSE;
-	}
-
-	ss->numDelays = 0;
-}
-
-/*
- * calcTimeout() - calculate the time-out for pending on events
- * Return whether to time out when waiting for events.
- * If yes, set *pdelay to the timout (in seconds).
- */
-static boolean calcTimeout(SSCB *ss, double *pdelay)
-{
-	unsigned ndelay;
-	boolean	do_timeout = FALSE;
-	double	now, timeElapsed;
-	double	delayMin = 0;
-	/* not really necessary to initialize delayMin,
-	   but tell that to the compiler...
-	 */
-
-	if (ss->numDelays == 0)
-		return FALSE;
-
-	/*
-	 * Calculate the timeElapsed since this state was entered.
-	 */
-	pvTimeGetCurrentDouble(&now);
-	timeElapsed = now - ss->timeEntered;
-	DEBUG("calcTimeout: now=%f, timeElapsed=%f\n", now, timeElapsed);
-
-	/*
-	 * Find the minimum delay among all unexpired timeouts if
-	 * one exists, and set do_timeout in this case.
-	 */
-	for (ndelay = 0; ndelay < ss->numDelays; ndelay++)
-	{
-		double delayN = ss->delay[ndelay];
-
-		if (ss->delayExpired[ndelay])
-			continue; /* skip if this delay entry already expired */
-		if (timeElapsed >= delayN)
-		{	/* just expired */
-			ss->delayExpired[ndelay] = TRUE; /* mark as expired */
-			*pdelay = 0.0;
-			DEBUG("calcTimeout: %d expired\n", ndelay);
-			return TRUE;
-		}
-		if (!do_timeout || delayN<=delayMin)
-		{
-			do_timeout = TRUE;
-			delayMin = delayN;  /* this is the min. delay so far */
-		}
-	}
-	if (do_timeout)
-	{
-		*pdelay = max(0.0, delayMin - timeElapsed);
-	}
-	DEBUG("calcTimeout: do_timeout=%s, *pdelay=%f\n",
-		do_timeout?"yes":"no", *pdelay);
-	return do_timeout;
 }
 
 /*

@@ -27,7 +27,6 @@ enum const_type
 
 enum func_type
 {
-    FT_DELAY,
     FT_EVENT,
     FT_PV,
     FT_OTHER
