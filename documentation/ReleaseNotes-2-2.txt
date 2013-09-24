@@ -10,17 +10,18 @@ PV Library
 ^^^^^^^^^^
 
 The PV library has been almost completely eliminated. What remains is a
-very think layer over CA, implemented in C, and offering only the
+thin layer over CA, implemented in C, and offering only the
 functionality that is actually needed by the sequencer. The API is similar
 (but not identical) to the old C API; particularly, all the pvStat, pvSevr,
 and pvType definitions are as before.
 
 The documentation for the PV layer has been removed, too. The only remaining
-user relevant part of the interface is contained in pvAlarm.h, see next
-paragraph.
+user relevant part of the interface is contained in pvAlarm.h, see
+`Built-in Constants`_ below.
 
 Also removed were the keck examples and the KTL related stuff in other example
 directories.
+
 
 Built-in Constants
 ^^^^^^^^^^^^^^^^^^
@@ -32,18 +33,49 @@ The *snc*-generated C code for built-in constants now uses the name of the
 constant, instead of its value. This makes the code a bit more readable and
 slightly simplifies code generation.
 
+
+Compiler Generates a Header File
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+By suggestion of Pierrick Hanlet <hanlet@fnal.gov>, the compiler
+now generates a header file. This header file can be included
+by C code that accompanies the SNL program, which opens up an alternative
+to embedding such C code into the SNL program in escaped code blocks.
+
+More specifically, what gets written to the header file is (in the order
+listed):
+
+- #includes of epicsTypes.h and seqCom.h
+- escaped code segments appearing before the first state set
+- definition of the _seq_var struct (re-entrant mode only)
+
+In non-reentrant mode, global SNL variables correspond to top-level
+static C variables; including their definitions in another C file
+makes no sense, since they would be copies, not aliases, for the
+variables in the SNL program.
+
+In all cases, the header file gets included by the generated C code.
+
+The rules in configure/RULES_BUILD have been adapted to account for the
+additional header file.
+
+There is currently no way to specify the name of the header file
+via command line option. It always gets the same name as the generated
+C file, with its filename extension replaced by ".h".
+
+
 Foreign Types and Type Casts
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 It is now possible to use foreign types (i.e. types declared in C code) in
 variable declarations and in type casts. All types definable in C *except
-function types* are supported. Note however, all uses of C *type aliases*
-(defined in C with ``typedef``) always need to be prefixed with the new
+function types* are supported. Note however, that uses of C *type aliases*
+(defined in C with ``typedef``) need to be prefixed with the new
 keyword ``typename`` (which I borrowed from C++). Also note that type
 *definitions* are still not supported in SNL. Type casts are now allowed
-in expressions as in C and with the same precedence. The special sizeof
-function is now supported and can be used with a value (expression) or a
-type expression as in C.
+in expressions just as in C, and with the same precedence. Similar with
+the special sizeof function, that can be used with a value (expression) or
+a type expression, just as in C.
 
 The words ``enum``, ``struct``, ``typename``, and ``union`` are reserved
 words and can no longer be used as identifiers.
@@ -56,11 +88,20 @@ state set. In previous versions, this was the other way around. Note that
 this means that escaped C code that appears before the first state set
 cannot access global variables declared in SNL, even if the reentrant
 option is not in effect. Such C code should now be placed after the last
-state set.
+state set, or preferably in a separate file that includes the generated
+header.
 
 Related patches:
 
+* snc: add a name prefix for initialization helper vars
+  
+  This fixes a bug that crept in when implementing the new variable
+  initialization code for variables with global lifetime. The problem
+  was that the initialization variable shadowed the global variable
+  in non-reentrant mode, which made the initialization a no-op.
+
 * snc: swap order of gen_user_var and gen_defn_c_code
+
 * snc: refactored generation of initializers
 
   With foreign types we can no longer generate default initializers
@@ -69,16 +110,6 @@ Related patches:
   initialize the members one by one (using memcpy) from statically
   initialized single values.
 
-FIXME: Maybe I should just bite the bullet and keep the order between
-definitions and escaped code fragments as it is in the source file.
-This would certainly be the most user friendly and intuitively
-understandable solution. Problem: cannot do that for global variables
-as they are all in one big struct, so must make an exception
-for variable declarations.
-
-Another idea would be to add an ``include`` statement to the grammar.
-This is related to the built-in macro feature I have been thinking about
-(see :doc:`Plans`).
 
 New Delay Implementation
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -98,109 +129,182 @@ delay has not yet expired, the minimum time to wait for events is
 adjusted. This adjustment is now more precise, since we do not store
 the delay but rather the (future) time when the wakeup should happen.
 
+
 Removed devSequencer
 ^^^^^^^^^^^^^^^^^^^^
 
 The (broken and ugly) sequencer device support was removed.
 Consequently, seqFindProgByName was be removed as it is no longer needed.
 
+
 Multiple pvSync for multiply assigned arrays
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Now, if you do pvSync(x,ef), where x is an array for which the elements are
-individually assigned to a separate PVs, then all the elements get synced
-with the event flag, just like if you use the sync clause.
+Now, if you do pvSync(x,ef), where x is an array for which the elements
+are individually assigned to a separate PVs, then all the elements get
+synced with the event flag, just like if you use the sync clause.
 
-Names of Generated and API Entities
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Names of Generated Entities
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 These now follow a strict naming convention:
 
-* all generated names start with "_seq" or "_SEQ"
+  Generated names start with "_seq" or "_SEQ".
 
-* most API names start with "seq" or "SEQ", the exceptions being:
-
-  - the ``enum compType`` and its members ``DEFAULT``, ``ASYNC``, ``SYNC``
-  - option constants:
-
-    + ``OPT_DEBUG``
-    + ``OPT_ASYNC``
-    + ``OPT_CONN``
-    + ``OPT_REENT``
-    + ``OPT_NEWEF``
-    + ``OPT_SAFE``
-
-    + ``OPT_NORESETTIMERS``
-    + ``OPT_DOENTRYFROMSELF``
-    + ``OPT_DOEXITTOSELF``
-
-  - names for bitmask operations:
-
-    + ``NBITS``
-    + ``NWORDS``
-    + ``bitSet``, ``bitClear``, ``bitTest``, ``optTest``
-
-  - other constants:
-
-    + ``NOEVFLAG``
-    + ``DEFAULT_QUEUE_SIZE``
-    + ``TRUE``, ``FALSE``
-
-  - typedefs for pointers to internal data structures:
-
-    + ``SS_ID``
-    + ``PROG_ID``
-
-  - other typedefs: ``string``, ``EV_ID``, ``VAR_ID``
-
-Accordingly, some of the names in the API had to be changed:
-
-  ========================= =========================
-  Old                       New
-  ========================= =========================
-  USER_VAR                  SEQ_VARS
-  struct UserVar            struct _seq_var
-  ========================= =========================
-
-FIXME: complete this list
+In particular, ``struct UserVar`` became ``struct _seq_var`` (but see
+below for a compatibility typedef).
 
 In order to prevent name clashes, words starting with "_seq" are no longer
 valid identifiers in SNL.
 
-Unfortunately, this is a breaking change for many programs that heavily use
-escaped code. My justification for making this change is that this is how it
-should have been done from the start. Mixing self-written with generated code
-is fraught with enough hazards as it is, and accidental name capture, though
-not very probable, would be very hard to diagnose for users. Also, this gives
-me a lot more freedom when introducing new features or refactoring the way snc
-generates code.
 
-related patches:
+External API
+^^^^^^^^^^^^
+
+I finally got around to separating the public API (to be called from
+e.g. embedded C code) from the internal interface between the compiler
+generated code and the runtime system. The latter parts have been moved
+from seqCom.h to the new header file seq_snc.h.
+
+In particular, the following changes have been made:
+
+Retained:
+
+- includes of pvAlarm.h and seq_release.h
+
+- enum compType and its members DEFAULT, ASYNC, SYNC
+
+- constants NOEVFLAG and DEFAULT_QUEUE_SIZE
+
+- typedefs string, EV_ID, VAR_ID, SS_ID,
+  seqBool, seqProgram
+
+- all API functions
+
+Added:
+
+- typedef struct _seq_var SEQ_VARS
+
+- builtin "functions" pVar and ssId (like pvIndex these are actually
+  implemented as macros); they replace direct uses of generated
+  identifiers, which have been renamed (see `Names of Generated Entities`_
+  above).
+
+For compatibility I also added:
+
+- typedef SEQ_VARS USER_VAR
+
+Removed:
+
+- DELAY_ID (obsolete, see `New Delay Implementation`_)
+
+Moved to seq_snc.h:
+
+- struct definitions for the static part of the generated program:
+
+  + struct seqChan
+  + struct seqState
+  + struct seqSS
+  + struct seqProgram
+  + typedef PROG_ID
+
+- option constants:
+
+  + OPT_DEBUG
+  + OPT_ASYNC
+  + OPT_CONN
+  + OPT_REENT
+  + OPT_NEWEF
+  + OPT_SAFE
+
+  + OPT_NORESETTIMERS
+  + OPT_DOENTRYFROMSELF
+  + OPT_DOEXITTOSELF
+
+  User code never needs to use these. It can use seq_optGet instead.
+
+- bitmask operations:
+
+  + NBITS
+  + NWORDS
+  + bitSet, bitClear, bitTest, optTest
+
+  Like option values, these were never meant to be part of a public API.
+
+- the constants TRUE and FALSE
+
+- typedefs for generated functions; note that these were renamed, too
+
+
+I hope these changes won't break too many programs that use escaped code
+and use these internals. If it turns out this is hurting people very
+much, I am willing to provide additional compatibility aliases.
+
+My justification for making these potentially breaking changes is that
+this is how it should have been done from the start. Mixing self-written
+with generated code is fraught with enough hazards as it is, and
+accidental name capture, though not very probable, would be very hard to
+diagnose for users. Exposing internal data structures where this is not
+strictly necessary is similarly ill-advised.
+
+A practical benefit is that this gives me a lot more freedom when
+introducing new features or refactoring the way snc generates code.
+
+Related patches:
 
 * make names starting with _seq illegal identifiers in SNL
 * renamed some generated identifiers
 * renamed all generated identifiers to start with _seq
 * renamed function typedefs
 * seq_pvIndex is now a macro
+
 * added new builtin functions pVar and ssId
 
   These are intended for calling C procedures from SNL,
   when the C procedure takes SEQ_VARS* or SS_ID as argument.
 
-Miscellaneous New Features
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-* seq: pvAssign now does macro substitution, like assign syntax
-* snc: pVar and ssId arguments to generated routines are now const pointers
+* pVar and ssId arguments to generated routines are now const pointers
 
   This means that user code can mutate the variables and the (opaque)
   contents of the state set control block, but are not allowed to
   invalidate the pointers themselves.
 
+
+Extra Build Rules
+^^^^^^^^^^^^^^^^^
+
+The extra rules in the top level Makefile to produce documentation with
+or without generating a pdf file have been changed: 'pdf' and 'docs' are
+no longer make variables. Instead there are a number of new targets you
+can specify:
+
+- html: build the docs in html format
+- docs: additionally build the manual in pdf fromat
+- upload etc: these are for my own benefit only, ignore them
+
+Related patches:
+
+* top level Makefile: pdf and docs no longer variables, restructured extra targets
+
+
+Miscellaneous New Features
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* pvAssign now does macro substitution, like assign syntax
+
 * seq: reduce severity of timeouts and user errors from errlogFatal to errlogMajor
 
-* examples: use array version of pvPutComplete
-* disabled examples/parallel because pvPutCompleteArray does not yet work
+* Struct or union members are no longer identified with variables in the
+  SNL syntax. Member selection "operators" ('.' and '->') are no longer treated
+  as binary operators, but get their own internal representation.
+
+  This finally solves the recurring annoyance of snc issuing
+  "undefined variable" warnings for members.
+
+  Declaring members in a foreign declaration is still allowed but
+  becomes obsolete.
+
 
 Various Fixes
 ^^^^^^^^^^^^^
@@ -214,9 +318,12 @@ Various Fixes
   shuts down and deletes mutexes etc before the callback has issued its
   final ss_wakeup call.
 
+
 Raw dump of Changes in test
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* added validation test for access to variables of foreign types
+* added compiler test for member access
 * added tests for foreign types, cast, and sizeof
 * renamed and rearranged some tests
 * added two compiler tests
@@ -229,9 +336,14 @@ Raw dump of Changes in test
 * test/compiler: renamed scripts that test the whole build
 * test/compiler: added a test for identifier starting with _seq
 
+
 Raw dump of Changes in documentation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* updated release notes for 2.2.0
+* added 2.2.0 to Installation page
+* improved wording of frontpage blurb
+* fixed and updated Installation page
 * minor cleanups in reference
 * added a todo item for delay in action code
 * clarified syntax and semantics of option clause
@@ -240,13 +352,17 @@ Raw dump of Changes in documentation
 * removed foreign types from plans
 * removed some text that referred to the removed sequencer device support
 
+
 TODO Before Release
 ^^^^^^^^^^^^^^^^^^^
 
-* fix above FIXME (related to the next point)
-
-* Move appropriate parts of the generated code to a header file that can be
-  included by external C code. This would obviate most uses of escaped C code
-  in SNL programs.
-
 * Maybe re-introduce #defines for event flags
+
+* Fix problem with pvGet timeouts; this is partly done, but may yet have
+  to change, depending on answers from the CA experts. Also, patch needs
+  to be pull from the stable branch.
+
+What to do about pvPutCompleteArray, see these patches:
+
+* examples: use array version of pvPutComplete
+* disabled examples/parallel because pvPutCompleteArray does not yet work
