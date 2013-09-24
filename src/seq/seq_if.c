@@ -297,6 +297,37 @@ epicsShareFunc boolean seq_pvGetComplete(
 	return any?anyDone:allDone;
 }
 
+/*
+ * Cancel the last asynchronous get request.
+ */
+epicsShareFunc void seq_pvGetCancel(
+	SS_ID		ss,
+	VAR_ID		varId,
+	unsigned	length)
+{
+	PROG		*sp = ss->prog;
+	unsigned	n;
+
+	for (n = 0; n < length; n++)
+	{
+		epicsEventId	getSem = ss->getSem[varId+n];
+		CHAN		*ch = ss->prog->chan + varId + n;
+
+		if (!ch->dbch)
+		{
+		        if (!optTest(sp, OPT_SAFE))
+			        errlogSevPrintf(errlogMinor,
+				        "pvGetCancel(%s): user error (variable not assigned)\n",
+				        ch->varName);
+		}
+		else
+		{
+			ss->getReq[varId] = NULL;
+			epicsEventSignal(getSem);
+		}
+	}
+}
+
 /* -------------------------------------------------------------------------- */
 
 struct putq_cp_arg {
@@ -613,6 +644,37 @@ epicsShareFunc boolean seq_pvPutComplete(
 		varId, length, anyDone, allDone);
 
 	return any?anyDone:allDone;
+}
+
+/*
+ * Cancel the last asynchronous put request.
+ */
+epicsShareFunc void seq_pvPutCancel(
+	SS_ID		ss,
+	VAR_ID		varId,
+	unsigned	length)
+{
+	PROG		*sp = ss->prog;
+	unsigned	n;
+
+	for (n = 0; n < length; n++)
+	{
+		epicsEventId	putSem = ss->putSem[varId+n];
+		CHAN		*ch = ss->prog->chan + varId + n;
+
+		if (!ch->dbch)
+		{
+		        if (!optTest(sp, OPT_SAFE))
+			        errlogSevPrintf(errlogMinor,
+				        "pvPutCancel(%s): user error (variable not assigned)\n",
+				        ch->varName);
+		}
+		else
+		{
+			ss->putReq[varId] = NULL;
+			epicsEventSignal(putSem);
+		}
+	}
 }
 
 /* -------------------------------------------------------------------------- */
