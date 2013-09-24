@@ -58,36 +58,6 @@ SSCB *seqFindStateSet(epicsThreadId threadId)
     return args.ss;
 }
 
-struct findByNameArgs {
-    SPROG *sp;
-    const char *progName;
-    int instance;
-};
-
-static int findByName(SPROG *sp, void *param)
-{
-    struct findByNameArgs *pargs = (struct findByNameArgs *)param;
-    int found = strcmp(sp->progName, pargs->progName) == 0 && sp->instance == pargs->instance;
-    if (found)
-        pargs->sp = sp;
-    return found;
-}
-
-/*
- * seqFindProgByName() - find a program in the program instance list by name
- * and instance number.
- */
-epicsShareFunc SPROG *seqFindProgByName(const char *progName, int instance)
-{
-    struct findByNameArgs args;
-
-    args.sp = 0;
-    args.progName = progName;
-    args.instance = instance;
-    seqTraverseProg(findByName, &args);
-    return args.sp;
-}
-
 struct traverseInstancesArgs {
     seqTraversee *func;
     void *param;

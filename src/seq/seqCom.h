@@ -223,8 +223,6 @@ epicsShareFunc epicsThreadId seq(seqProgram *, const char *, unsigned);
 /* called by generated main and registrar routines */
 epicsShareFunc void seqRegisterSequencerProgram(seqProgram *p);
 epicsShareFunc void seqRegisterSequencerCommands(void);
-/* exported for devSequencer */
-epicsShareFunc struct program_instance* seqFindProgByName(const char *, int);
 
 #ifdef __cplusplus
 } /* extern "C" */
