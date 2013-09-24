@@ -68,7 +68,7 @@ static struct func_symbol func_symbols[] =
     {"pvFlushQ",        FT_PV,      FALSE,  0,          FALSE,          FALSE,  FALSE},
     {"pvFreeQ",         FT_PV,      FALSE,  0,          FALSE,          FALSE,  FALSE},
     {"pvGet",           FT_PV,      FALSE,  1,          FALSE,          FALSE,  FALSE},
-    {"pvGetComplete",   FT_PV,      FALSE,  0,          FALSE,          FALSE,  FALSE},
+    {"pvGetComplete",   FT_PV,      TRUE,   2,          FALSE,          FALSE,  FALSE},
     {"pvGetQ",          FT_PV,      FALSE,  0,          FALSE,          FALSE,  FALSE},
     {"pvIndex",         FT_PV,      FALSE,  0,          FALSE,          FALSE,  FALSE},
     {"pvMessage",       FT_PV,      FALSE,  0,          FALSE,          FALSE,  FALSE},

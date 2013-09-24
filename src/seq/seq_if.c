@@ -216,58 +216,88 @@ epicsShareFunc pvStat seq_pvGet(SS_ID ss, VAR_ID varId, enum compType compType)
  * Return whether the last get completed. In safe mode, as a
  * side effect, copy value from shared buffer to state set local buffer.
  */
-epicsShareFunc boolean seq_pvGetComplete(SS_ID ss, VAR_ID varId)
+epicsShareFunc boolean seq_pvGetComplete(
+	SS_ID		ss,
+	VAR_ID		varId,
+	unsigned	length,
+	boolean		any,
+	boolean		*complete)
 {
-	epicsEventId	getSem = ss->getSem[varId];
 	PROG		*sp = ss->prog;
-	CHAN		*ch = sp->chan + varId;
-	pvStat		status;
+	boolean		anyDone = FALSE, allDone = TRUE;
+	unsigned	n;
 
-	if (!ch->dbch)
+	for (n = 0; n < length; n++)
 	{
-		/* Anonymous PVs always complete immediately */
-		if (!optTest(sp, OPT_SAFE))
-			errlogSevPrintf(errlogMajor,
-				"pvGetComplete(%s): user error (variable not assigned)\n",
+		epicsEventId	getSem = ss->getSem[varId+n];
+		boolean		done = FALSE;
+		CHAN		*ch = sp->chan + varId + n;
+		pvStat		status;
+
+		if (!ch->dbch)
+		{
+		        /* Anonymous PVs always complete immediately */
+		        if (!optTest(sp, OPT_SAFE))
+			        errlogSevPrintf(errlogMajor,
+				        "pvGetComplete(%s): user error (variable not assigned)\n",
+				        ch->varName);
+			done = TRUE;
+		}
+		else if (!ss->getReq[varId])
+		{
+			errlogSevPrintf(errlogMinor,
+				"pvGetComplete(%s): no pending get request for this variable\n",
 				ch->varName);
-		return TRUE;
+			done = TRUE;
+		}
+		else
+		{
+			switch (epicsEventTryWait(getSem))
+			{
+			case epicsEventWaitOK:
+				ss->getReq[varId] = NULL;
+				epicsEventSignal(getSem);
+				status = check_connected(ch->dbch, metaPtr(ch,ss));
+				if (!status && optTest(sp, OPT_SAFE))
+				{
+					/* In safe mode, copy value and meta data from shared buffer
+					   to ss local buffer. */
+					/* Copy regardless of whether dirty flag is set or not */
+					ss_read_buffer(ss, ch, FALSE);
+				}
+				done = TRUE;
+				break;
+			case epicsEventWaitTimeout:
+				break;
+			case epicsEventWaitError:
+				ss->getReq[varId] = NULL;
+				epicsEventSignal(getSem);
+				errlogSevPrintf(errlogFatal, "pvGetComplete(%s): "
+					"epicsEventTryWait(getSem[%d]) failure\n", ch->varName, varId);
+				break;
+			}
+		}
+
+		anyDone = anyDone || done;
+		allDone = allDone && done;
+
+		if (complete)
+		{
+			complete[n] = done;
+		}
+		else if (any && done)
+		{
+			break;
+		}
 	}
 
-	if (!ss->getReq[varId])
-	{
-		errlogSevPrintf(errlogMinor,
-			"pvGetComplete(%s): no pending get request for this variable\n",
-			ch->varName);
-		return TRUE;
-	}
+	DEBUG("pvGetComplete: varId=%u, length=%u, anyDone=%u, allDone=%u\n",
+		varId, length, anyDone, allDone);
 
-	switch (epicsEventTryWait(getSem))
-	{
-	case epicsEventWaitOK:
-		ss->getReq[varId] = NULL;
-		epicsEventSignal(getSem);
-		status = check_connected(ch->dbch, metaPtr(ch,ss));
-		/* TODO: returning either TRUE or FALSE here seems wrong. We return TRUE,
-		   so that state sets don't hang. Still means that user code has to check
-		   status by calling pvStatus and/or pvMessage. */
-		if (status) return TRUE;
-		/* In safe mode, copy value and meta data from shared buffer
-		   to ss local buffer. */
-		if (optTest(sp, OPT_SAFE))
-			/* Copy regardless of whether dirty flag is set or not */
-			ss_read_buffer(ss, ch, FALSE);
-		return TRUE;
-	case epicsEventWaitTimeout:
-		return FALSE;
-	case epicsEventWaitError:
-		ss->getReq[varId] = NULL;
-		epicsEventSignal(getSem);
-		errlogSevPrintf(errlogFatal, "pvGetComplete: "
-		  "epicsEventTryWait(getSem[%d]) failure\n", varId);
-	default: /* pacify gcc which does not understand the we checked all possibilities */
-		return FALSE;
-	}
+	return any?anyDone:allDone;
 }
+
+/* -------------------------------------------------------------------------- */
 
 struct putq_cp_arg {
 	CHAN	*ch;
@@ -553,9 +583,6 @@ epicsShareFunc boolean seq_pvPutComplete(
 				ss->putReq[varId] = NULL;
 				epicsEventSignal(putSem);
 				check_connected(ch->dbch, metaPtr(ch,ss));
-				/* TODO: returning either TRUE or FALSE here seems wrong. We return TRUE,
-				   so that state sets don't hang. Still means that user code has to check
-				   status by calling pvStatus and/or pvMessage. */
 				done = TRUE;
 				break;
 			case epicsEventWaitTimeout:
@@ -587,6 +614,8 @@ epicsShareFunc boolean seq_pvPutComplete(
 
 	return any?anyDone:allDone;
 }
+
+/* -------------------------------------------------------------------------- */
 
 /*
  * Assign/Connect to a channel.

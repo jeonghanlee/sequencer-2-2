@@ -85,7 +85,8 @@ epicsShareFunc void seq_pvFlushQ(SS_ID, VAR_ID);
 epicsShareFunc pvStat seq_pvPut(SS_ID, VAR_ID, enum compType);
 epicsShareFunc pvStat seq_pvPutMultiple(SS_ID, VAR_ID,
 	unsigned, enum compType);
-epicsShareFunc seqBool seq_pvGetComplete(SS_ID, VAR_ID);
+epicsShareFunc seqBool seq_pvGetComplete(SS_ID, VAR_ID,
+	unsigned, seqBool, seqBool*);
 epicsShareFunc seqBool seq_pvPutComplete(SS_ID, VAR_ID,
 	unsigned, seqBool, seqBool*);
 epicsShareFunc pvStat seq_pvAssign(SS_ID, VAR_ID, const char *);
