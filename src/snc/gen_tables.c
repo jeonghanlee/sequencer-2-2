@@ -261,6 +261,29 @@ static void encode_state_options(StateOptions options)
 	gen_code(")");
 } 
 
+/* Generate state set table, one entry for each state set */
+static void gen_ss_table(Expr *ss_list)
+{
+	Expr	*ssp;
+	int	num_ss;
+
+	gen_code("\n/* State set table */\n");
+	gen_code("static seqSS " NM_STATESETS "[] = {\n");
+	num_ss = 0;
+	foreach (ssp, ss_list)
+	{
+		if (num_ss > 0)
+			gen_code("\n");
+		num_ss++;
+		gen_code("\t{\n");
+		gen_code("\t/* state set name */    \"%s\",\n", ssp->value);
+		gen_code("\t/* states */            " NM_STATES "_%s,\n", ssp->value);
+		gen_code("\t/* number of states */  %d\n", ssp->extra.e_ss->num_states);
+		gen_code("\t},\n");
+	}
+	gen_code("};\n");
+}
+
 /* Generate a single program structure ("seqProgram") */
 static void gen_prog_table(Program *p)
 {
@@ -302,29 +325,6 @@ static void encode_options(Options options)
 	if (options.safe)
 		gen_code(" | OPT_SAFE");
 	gen_code("),\n");
-}
-
-/* Generate state set table, one entry for each state set */
-static void gen_ss_table(Expr *ss_list)
-{
-	Expr	*ssp;
-	int	num_ss;
-
-	gen_code("\n/* State set table */\n");
-	gen_code("static seqSS " NM_STATESETS "[] = {\n");
-	num_ss = 0;
-	foreach (ssp, ss_list)
-	{
-		if (num_ss > 0)
-			gen_code("\n");
-		num_ss++;
-		gen_code("\t{\n");
-		gen_code("\t/* state set name */    \"%s\",\n", ssp->value);
-		gen_code("\t/* states */            " NM_STATES "_%s,\n", ssp->value);
-		gen_code("\t/* number of states */  %d\n", ssp->extra.e_ss->num_states);
-		gen_code("\t},\n");
-	}
-	gen_code("};\n");
 }
 
 /* Generate event mask for a single state. The event mask has a bit set for each
