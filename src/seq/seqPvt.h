@@ -179,7 +179,7 @@ struct program_instance
 	MACRO		*macros;	/* ptr to macro table */
 	char		*params;	/* program parameters */
 	unsigned	options;	/* options (bit-encoded) */
-	INIT_FUNC	*initFunc;	/* init function */
+	PROG_FUNC	*initFunc;	/* init function */
 	ENTRY_FUNC	*entryFunc;	/* entry function */
 	EXIT_FUNC	*exitFunc;	/* exit function */
 	unsigned	numEvFlags;	/* number of event flags */

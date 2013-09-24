@@ -82,6 +82,7 @@ enum compType {
 #endif
 
 typedef	struct state_set *const SS_ID;	/* state set id, opaque */
+typedef	struct program_instance *const PROG_ID;	/* program id, opaque */
 typedef struct _seq_var SEQ_VARS;	/* defined by program, opaque */
 typedef char string[MAX_STRING_SIZE];	/* the string typedef */
 
@@ -99,6 +100,7 @@ typedef seqBool EVENT_FUNC(SS_ID ssId, SEQ_VARS *const var, int *transNum, int *
 typedef void ENTRY_FUNC(SS_ID ssId, SEQ_VARS *const var);
 typedef void EXIT_FUNC(SS_ID ssId, SEQ_VARS *const var);
 typedef void INIT_FUNC(SEQ_VARS *const var);
+typedef void PROG_FUNC(PROG_ID progId, SEQ_VARS *const vars);
 
 typedef const struct seqChan seqChan;
 typedef const struct seqState seqState;
@@ -153,7 +155,7 @@ struct seqProgram
 	const char	*params;	/* program paramters */
 	unsigned	numEvFlags;	/* number of event flags */
 	seqMask		options;	/* program option mask */
-	INIT_FUNC	*initFunc;	/* init function */
+	PROG_FUNC	*initFunc;	/* init function */
 	ENTRY_FUNC	*entryFunc;	/* entry function */
 	EXIT_FUNC	*exitFunc;	/* exit function */
 	unsigned	numQueues;	/* number of syncQ queues */

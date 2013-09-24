@@ -40,6 +40,7 @@ struct func_symbol
     uint        default_args:2;
     uint        ef_action_only:1;
     uint        ef_args:1;
+    uint        cond_only:1;
 };
 
 /* Insert builtin constants into symbol table */

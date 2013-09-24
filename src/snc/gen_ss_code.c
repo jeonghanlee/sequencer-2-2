@@ -23,21 +23,22 @@ in the file LICENSE that is included with this distribution.
 
 static const int impossible = 0;
 
-static void gen_local_var_decls(Expr *scope, int level);
+static void gen_local_var_decls(Expr *scope, int context, int level);
 static void gen_state_func(
 	const char *ss_name,
 	uint ss_num,
 	const char *state_name,
 	Expr *xp,
-	void (*gen_body)(Expr *xp),
+	void (*gen_body)(Expr *xp, int context),
+	int context,
 	const char *title,
 	const char *prefix,
 	const char *rettype,
 	const char *extra_args
 );
-static void gen_entex_body(Expr *xp);
-static void gen_event_body(Expr *xp);
-static void gen_action_body(Expr *xp);
+static void gen_entex_body(Expr *xp, int context);
+static void gen_event_body(Expr *xp, int context);
+static void gen_action_body(Expr *xp, int context);
 static void gen_expr(int context, Expr *ep, int level);
 static void gen_ef_func(int context, Expr *ep, const char *func_name, uint ef_action_only);
 static void gen_pv_func(int context, Expr *ep,
@@ -47,11 +48,19 @@ static int gen_builtin_const(Expr *ep);
 
 static void gen_prog_func(
 	Expr *prog,
-	const char *name,
 	const char *doc,
-	Expr *xp,
-	void (*gen_body)(Expr *xp));
-static void gen_prog_init_func(Expr *prog);
+	const char *name,
+	void (*gen_body)(Expr *prog)
+);
+static void gen_prog_entex_func(
+	Expr *prog,
+	const char *doc,
+	const char *name,
+	void (*gen_body)(Expr *)
+);
+static void gen_prog_init_body(Expr *prog);
+static void gen_prog_entry_body(Expr *prog);
+static void gen_prog_exit_body(Expr *prog);
 
 /*
  * Expression context. Certain nodes of the syntax tree are
@@ -63,8 +72,8 @@ enum expr_context
 {
 	C_COND,		/* when() condition */
 	C_TRANS,	/* state transition actions */
-	C_ENTEX,	/* entry or exit block */
-	C_INIT		/* variable initialization */
+	C_SS,		/* otherwise inside a state set */
+	C_GLOBAL	/* outside state sets */
 };
 
 /*
@@ -85,16 +94,15 @@ void init_gen_ss_code(Program *program)
 void gen_ss_code(Program *program)
 {
 	Expr	*prog = program->prog;
-	Expr	*ssp;
-	Expr	*sp;
+	Expr	*sp, *ssp;
 	uint	ss_num = 0;
 
 	/* Generate program init func */
-	gen_prog_init_func(prog);
+	gen_prog_func(prog, "init", NM_INIT, gen_prog_init_body);
 
 	/* Generate program entry func */
 	if (prog->prog_entry)
-		gen_prog_func(prog, NM_ENTRY, "entry", prog->prog_entry, gen_entex_body);
+		gen_prog_entex_func(prog, "entry", NM_ENTRY, gen_prog_entry_body);
 
 	/* For each state set ... */
 	foreach (ssp, prog->prog_statesets)
@@ -109,33 +117,33 @@ void gen_ss_code(Program *program)
 			if (sp->state_entry)
 				gen_state_func(ssp->value, ss_num, sp->value, 
 					sp->state_entry, gen_entex_body,
-					"Entry", NM_ENTRY, "void", "");
+					C_SS, "Entry", NM_ENTRY, "void", "");
 			if (sp->state_exit)
 				gen_state_func(ssp->value, ss_num, sp->value,
 					sp->state_exit, gen_entex_body,
-					"Exit", NM_EXIT, "void", "");
+					C_SS, "Exit", NM_EXIT, "void", "");
 			/* Generate event processing function */
 			gen_state_func(ssp->value, ss_num, sp->value,
 				sp->state_whens, gen_event_body,
-				"Event", NM_EVENT, "seqBool",
-				", int *" NM_PTRN ", int *" NM_PNST);
+				C_SS, "Event", NM_EVENT, "seqBool",
+				", int *"NM_PTRN", int *"NM_PNST);
 			/* Generate action processing function */
 			gen_state_func(ssp->value, ss_num, sp->value,
 				sp->state_whens, gen_action_body,
-				"Action", NM_ACTION, "void",
-				", int " NM_TRN ", int *" NM_PNST);
+				C_TRANS, "Action", NM_ACTION, "void",
+				", int "NM_TRN", int *"NM_PNST);
 		}
 		ss_num++;
 	}
 
 	/* Generate program exit func */
 	if (prog->prog_exit)
-		gen_prog_func(prog, NM_EXIT, "exit", prog->prog_exit, gen_entex_body);
+		gen_prog_entex_func(prog, "exit", NM_EXIT, gen_prog_exit_body);
 }
 
 /* Generate a local C variable declaration for each variable declared
    inside the body of an entry, exit, when, or compound statement block. */
-static void gen_local_var_decls(Expr *scope, int level)
+static void gen_local_var_decls(Expr *scope, int context, int level)
 {
 	Var	*vp;
 	VarList	*var_list;
@@ -157,7 +165,7 @@ static void gen_local_var_decls(Expr *scope, int level)
 		if (vp->init)
 		{
 			gen_code(" = ");
-			gen_expr(C_INIT, vp->init, level);
+			gen_expr(context, vp->init, level);
 		}
 		gen_code(";\n");
 	}
@@ -168,7 +176,8 @@ static void gen_state_func(
 	uint ss_num,
 	const char *state_name,
 	Expr *xp,
-	void (*gen_body)(Expr *xp),
+	void (*gen_body)(Expr *xp, int context),
+	int context,
 	const char *title,
 	const char *prefix,
 	const char *rettype,
@@ -179,27 +188,27 @@ static void gen_state_func(
 		title, state_name, ss_name);
 	gen_code("static %s %s_%s_%d_%s(SS_ID " NM_SS ", SEQ_VARS *const " NM_VARS "%s)\n{\n",
 		rettype, prefix, ss_name, ss_num, state_name, extra_args);
-	gen_body(xp);
+	gen_body(xp, context);
 	gen_code("}\n");
 }
 
-static void gen_entex_body(Expr *xp)
+static void gen_entex_body(Expr *xp, int context)
 {
 	Expr	*ep;
 
 	assert(xp->type == D_ENTEX);
-	gen_local_var_decls(xp, 1);
+	gen_local_var_decls(xp, context, 1);
 	gen_defn_c_code(xp, 1);
 	foreach (ep, xp->entex_stmts)
 	{
-		gen_expr(C_ENTEX, ep, 1);
+		gen_expr(context, ep, 1);
 	}
 }
 
 /* Generate action processing functions:
    Each state has one action routine.  It's name is derived from the
    state set name and the state name. */
-static void gen_action_body(Expr *xp)
+static void gen_action_body(Expr *xp, int context)
 {
 	Expr		*tp;
 	int		trans_num;
@@ -222,7 +231,7 @@ static void gen_action_body(Expr *xp)
 		/* block within case permits local variables */
 		indent(level+1); gen_code("{\n");
 		/* for each definition insert corresponding code */
-		gen_local_var_decls(tp, level+2);
+		gen_local_var_decls(tp, context, level+2);
 		gen_defn_c_code(tp, level+2);
 		if (tp->when_defns)
 			gen_code("\n");
@@ -243,7 +252,7 @@ static void gen_action_body(Expr *xp)
 }
 
 /* Generate a C function that checks events for a particular state */
-static void gen_event_body(Expr *xp)
+static void gen_event_body(Expr *xp, int context)
 {
 	Expr		*tp;
 	int		trans_num;
@@ -349,7 +358,7 @@ static void gen_expr(
 	case S_CMPND:
 		indent(level);
 		gen_code("{\n");
-		gen_local_var_decls(ep, level+1);
+		gen_local_var_decls(ep, context, level+1);
 		gen_defn_c_code(ep, level+1);
 		foreach (cep, ep->cmpnd_stmts)
 		{
@@ -528,7 +537,15 @@ static int gen_builtin_func(int context, Expr *ep)
 		sym->ef_action_only, sym->ef_args);
 #endif
 	/* All builtin functions require ssId as 1st parameter */
-	gen_code("seq_%s(" NM_SS "", func_name);
+	assert_at_expr(context != C_GLOBAL, ep,
+		"calling built-in function %s not allowed here\n", func_name);
+	gen_code("seq_%s("NM_SS, func_name);
+	if (context != C_COND && sym->cond_only)
+	{
+		error_at_expr(ep,
+		  "calling built-in function %s not allowed here\n", func_name);
+		return TRUE;
+	}
 	switch (sym->type)
 	{
 	case FT_EVENT:
@@ -743,17 +760,19 @@ static void gen_pv_func(
 #endif
 }
 
-static void gen_var_init(Var *vp, int level)
+static void gen_var_init(Var *vp, int context, int level)
 {
-	assert(vp->init);
-	gen_line_marker(vp->init);
-	indent(level); gen_code("{ static ");
-	gen_var_decl(vp);
-	gen_code(" = ");
-	gen_expr(C_INIT, vp->init, level);
-	gen_code("; memcpy(&");
-	gen_var_access(vp);
-	gen_code(", &%s, sizeof(%s)); }\n", vp->name, vp->name);
+	if (vp->init)
+	{
+		gen_line_marker(vp->init);
+		indent(level); gen_code("{ static ");
+		gen_var_decl(vp);
+		gen_code(" = ");
+		gen_expr(context, vp->init, level);
+		gen_code("; memcpy(&");
+		gen_var_access(vp);
+		gen_code(", &%s, sizeof(%s)); }\n", vp->name, vp->name);
+	}
 }
 
 /* Generate initializers for variables of global lifetime */
@@ -777,7 +796,7 @@ static void gen_user_var_init(Expr *prog, int level)
 					"event flag '%s' cannot be initialized\n",
 					vp->name);
 			else
-				gen_var_init(vp, level);
+				gen_var_init(vp, C_GLOBAL, level);
 		}
 	}
 	/* state and state set variables */
@@ -789,10 +808,7 @@ static void gen_user_var_init(Expr *prog, int level)
 		/* state set variables */
 		foreach(vp, ssp->extra.e_ss->var_list->first)
 		{
-			if (vp->init)
-			{
-				gen_var_init(vp, level);
-			}
+			gen_var_init(vp, C_SS, level);
 		}
 		foreach (sp, ssp->ss_states)
 		{
@@ -800,35 +816,57 @@ static void gen_user_var_init(Expr *prog, int level)
 			/* state variables */
 			foreach (vp, sp->extra.e_state->var_list->first)
 			{
-				if (vp->init)
-				{
-					gen_var_init(vp, level);
-				}
+				gen_var_init(vp, C_SS, level);
 			}
 		}
 	}
 }
 
-static void gen_prog_init_func(Expr *prog)
+static void gen_prog_func(
+	Expr *prog,
+	const char *doc,
+	const char *name,
+	void (*gen_body)(Expr *prog)
+)
 {
 	assert(prog->type == D_PROG);
-	gen_code("\n/* Program init func */\n");
-	gen_code("static void " NM_INIT "(SEQ_VARS *const " NM_VARS ")\n{\n");
-	gen_user_var_init(prog, 1);
+	gen_code("\n/* Program %s func */\n", doc);
+	gen_code("static void %s(PROG_ID "NM_PROG
+		", struct "NM_VARS" *const "NM_VARS")\n{\n",
+		name);
+	gen_body(prog);
 	gen_code("}\n");
 }
 
-static void gen_prog_func(
+static void gen_prog_entex_func(
 	Expr *prog,
-	const char *name,
 	const char *doc,
-	Expr *xp,
-	void (*gen_body)(Expr *xp))
+	const char *name,
+	void (*gen_body)(Expr *)
+)
 {
 	assert(prog->type == D_PROG);
 	gen_code("\n/* Program %s func */\n", doc);
 	gen_code("static void %s(SS_ID " NM_SS ", SEQ_VARS *const " NM_VARS ")\n{\n",
 		name);
-	if (xp && gen_body) gen_body(xp);
+	if (prog && gen_body) gen_body(prog);
 	gen_code("}\n");
+}
+
+static void gen_prog_init_body(Expr *prog)
+{
+	assert(prog->type == D_PROG);
+	gen_user_var_init(prog, 1);
+}
+
+static void gen_prog_entry_body(Expr *prog)
+{
+	assert(prog->type == D_PROG);
+	if (prog->prog_entry) gen_entex_body(prog->prog_entry, C_SS);
+}
+
+static void gen_prog_exit_body(Expr *prog)
+{
+	assert(prog->type == D_PROG);
+	if (prog->prog_exit) gen_entex_body(prog->prog_exit, C_SS);
 }

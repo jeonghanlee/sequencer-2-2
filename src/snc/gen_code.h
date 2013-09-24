@@ -33,6 +33,7 @@ void indent(int level);
 #define NM_MASK		"_seq_mask"
 
 #define NM_SS		"_seq_ss"
+#define NM_PROG		"_seq_prog"	/* program */
 #define NM_TRN		"_seq_trn"
 #define NM_PTRN		"_seq_ptrn"
 #define NM_PNST		"_seq_pnst"

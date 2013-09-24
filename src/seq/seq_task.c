@@ -44,7 +44,7 @@ void sequencer (void *arg)	/* ptr to original (global) state program table */
 	   not the state set local one, even in safe mode. */
 
 	/* Call sequencer init function to initialize variables. */
-	sp->initFunc(sp->var);
+	sp->initFunc(sp, sp->var);
 
 	/* Initialize state set variables. In safe mode, copy variable
 	   block to state set buffers. Must do all this before connecting. */
