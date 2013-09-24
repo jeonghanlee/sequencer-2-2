@@ -45,12 +45,12 @@ in the file LICENSE that is included with this distribution.
 #define ssNum(ss)		((ss)-(ss)->sprog->ss)
 #define chNum(ch)		((ch)-(ch)->sprog->chan)
 
-#define metaPtr(ch,ss) (				\
-	(ch)->dbch					\
-	?(optTest((ch)->sprog,OPT_SAFE)			\
-		?((ch)->dbch->ssMetaData+ssNum(ss))	\
-		:(&(ch)->dbch->metaData))		\
-	:0						\
+#define metaPtr(ch,ss) (			\
+	(ch)->dbch				\
+	?(optTest((ch)->sprog,OPT_SAFE)		\
+		?(ss)->metaData + chNum(ch)	\
+		:&(ch)->dbch->metaData)		\
+	:0					\
 )
 
 /* Generic iteration on lists */
@@ -129,8 +129,6 @@ struct db_channel
 	boolean		connected;	/* whether channel is connected */
 	boolean		gotMonitor;	/* whether we got a monitor after connect */
 	PVMETA		metaData;	/* meta data (shared buffer) */
-	PVMETA		*ssMetaData;	/* array of meta data,
-					   one for each state set (safe mode) */
 };
 
 struct state_set
@@ -159,6 +157,7 @@ struct state_set
 	epicsEventId	*putSemId;	/* semaphores for async put */
 	PVREQ		**getReq;	/* get requests */
 	PVREQ		**putReq;	/* put requests */
+	PVMETA		*metaData;	/* meta data (safe mode) */
 	/* safe mode */
 	boolean		*dirty;		/* array of flags, one for each channel */
 	SEQ_VARS	*var;		/* variable value block */

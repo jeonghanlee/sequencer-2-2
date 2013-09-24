@@ -309,6 +309,15 @@ static boolean init_sscb(SPROG *sp, SSCB *ss, seqSS *seqSS)
 			errlogSevPrintf(errlogFatal, "init_sscb: calloc failed\n");
 			return FALSE;
 		}
+		if (optTest(sp, OPT_SAFE))
+		{
+			ss->metaData = newArray(PVMETA, sp->numChans);
+			if (!ss->metaData)
+			{
+				errlogSevPrintf(errlogFatal, "init_ss: calloc failed\n");
+				return FALSE;
+			}
+		}
 	}
 	for (nch = 0; nch < sp->numChans; nch++)
 	{
@@ -424,15 +433,6 @@ static boolean init_chan(SPROG *sp, CHAN *ch, seqChan *seqChan)
 			{
 				errlogSevPrintf(errlogFatal, "init_chan: epicsStrDup failed\n");
 				return FALSE;
-			}
-			if (optTest(sp, OPT_SAFE) && sp->numSS > 0)
-			{
-				dbch->ssMetaData = newArray(PVMETA, sp->numSS);
-				if (!dbch->ssMetaData)
-				{
-					errlogSevPrintf(errlogFatal, "init_chan: calloc failed\n");
-					return FALSE;
-				}
 			}
 			ch->dbch = dbch;
 			sp->assignCount++;
@@ -551,6 +551,7 @@ void seq_free(SPROG *sp)
 			epicsEventDestroy(ss->getSemId[nch]);
 			epicsEventDestroy(ss->putSemId[nch]);
 		}
+		free(ss->metaData);
 		free(ss->getSemId);
 		free(ss->putSemId);
 
@@ -576,7 +577,6 @@ void seq_free(SPROG *sp)
 
 		if (ch->dbch)
 		{
-			free(ch->dbch->ssMetaData);
 			free(ch->dbch->dbName);
 			free(ch->dbch);
 		}

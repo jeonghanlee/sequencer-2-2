@@ -635,7 +635,6 @@ epicsShareFunc pvStat epicsShareAPI seq_pvAssign(SS_ID ss, VAR_ID varId, const c
 	if (new_pv_name[0] == 0)	/* new name is empty -> free resources */
 	{
 		if (dbch) {
-			free(ch->dbch->ssMetaData);
 			free(ch->dbch);
 		}
 	}
@@ -657,17 +656,6 @@ epicsShareFunc pvStat epicsShareAPI seq_pvAssign(SS_ID ss, VAR_ID varId, const c
 			free(dbch);
 			return pvStatERROR;
 		}
-		if (optTest(sp, OPT_SAFE) && sp->numSS > 0)
-		{
-			dbch->ssMetaData = newArray(PVMETA, sp->numSS);
-			if (!dbch->ssMetaData)
-			{
-				errlogSevPrintf(errlogFatal, "pvAssign: calloc failed\n");
-				free(dbch->dbName);
-				free(dbch);
-				return pvStatERROR;
-			}
-		}
 		ch->dbch = dbch;
 		sp->assignCount++;
 		status = pvVarCreate(
@@ -681,8 +669,6 @@ epicsShareFunc pvStat epicsShareAPI seq_pvAssign(SS_ID ss, VAR_ID varId, const c
 		{
 			errlogSevPrintf(errlogFatal, "pvAssign(var %s, pv %s): pvVarCreate() failure: "
 				"%s\n", ch->varName, dbch->dbName, pvVarGetMess(dbch->pvid));
-			if (ch->dbch->ssMetaData)
-				free(ch->dbch->ssMetaData);
 			free(ch->dbch->dbName);
 			free(ch->dbch);
 		}

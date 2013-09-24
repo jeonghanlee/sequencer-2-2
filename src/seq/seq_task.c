@@ -151,9 +151,10 @@ static void ss_read_buffer_static(SSCB *ss, CHAN *ch, boolean dirty_only)
 	print_channel_value(DEBUG, ch, val);
 
 	memcpy(val, buf, var_size);
-	if (ch->dbch) {
+	if (ch->dbch)
+	{
 		/* structure copy */
-		ch->dbch->ssMetaData[ssNum(ss)] = ch->dbch->metaData;
+		ss->metaData[nch] = ch->dbch->metaData;
 	}
 
 	DEBUG("ss %s: after read %s", ss->ssName, ch->varName);
