@@ -145,6 +145,7 @@ static void gen_user_var(Program *p)
 	Var	*vp;
 	Expr	*sp, *ssp;
 	int	num_globals = 0;
+	uint	num_decls = 0;
 
 	gen_code("\n/* Variable declarations */\n");
 
@@ -155,17 +156,13 @@ static void gen_user_var(Program *p)
 	/* Convert internal type to `C' type */
 	foreach (vp, p->prog->extra.e_prog->first)
 	{
-		if (vp->decl && vp->type->tag >= V_CHAR)
+		if (vp->decl && vp->type->tag != T_NONE && vp->type->tag != T_EVFLAG)
 		{
 			gen_line_marker(vp->decl);
 			if (!opt_reent) gen_code("static");
 			indent(1);
 			gen_var_decl(vp);
-			if (!opt_reent)
-			{
-				gen_code(" = ");
-				gen_var_init(vp, 0);
-			}
+			num_decls++;
 			gen_code(";\n");
 			num_globals++;
 		}
@@ -197,6 +194,7 @@ static void gen_user_var(Program *p)
 			foreach (vp, ssp->extra.e_ss->var_list->first)
 			{
 				indent(level+1); gen_var_decl(vp); gen_code(";\n");
+				num_decls++;
 			}
 			foreach (sp, ssp->ss_states)
 			{
@@ -208,21 +206,24 @@ static void gen_user_var(Program *p)
 					foreach (vp, sp->extra.e_state->var_list->first)
 					{
 						indent(level+2); gen_var_decl(vp); gen_code(";\n");
+						num_decls++;
 					}
 					indent(level+1);
 					gen_code("} %s_%s;\n", NM_VARS, sp->value);
 				}
 			}
 			indent(level); gen_code("} %s_%s", NM_VARS, ssp->value);
-			if (!opt_reent)
-			{
-				gen_code(" = ");
-				gen_ss_user_var_init(ssp, level);
-			}
 			gen_code(";\n");
 		}
 	}
-	if (opt_reent) gen_code("};\n");
+	if (opt_reent)
+	{
+		if (!num_decls)
+		{
+			indent(1); gen_code("char dummy;\n");
+		}
+		gen_code("};\n");
+	}
 	gen_code("\n");
 }
 

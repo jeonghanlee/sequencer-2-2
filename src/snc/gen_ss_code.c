@@ -53,7 +53,7 @@ static void gen_prog_func(
 	const char *doc,
 	Expr *xp,
 	void (*gen_body)(Expr *xp));
-static void gen_prog_init_func(Expr *prog, int opt_reent);
+static void gen_prog_init_func(Expr *prog);
 
 /*
  * Expression context. Certain nodes of the syntax tree are
@@ -92,7 +92,7 @@ void gen_ss_code(Program *program)
 	uint	ss_num = 0;
 
 	/* Generate program init func */
-	gen_prog_init_func(prog, program->options.reent);
+	gen_prog_init_func(prog);
 
 	/* Generate program entry func */
 	if (prog->prog_entry)
@@ -166,40 +166,6 @@ static void gen_local_var_decls(Expr *scope, int level)
 			gen_code(";\n");
 		}
 	}
-}
-
-static void gen_type_default(Type *type)
-{
-	uint n;
-
-	assert(type);
-	switch(type->tag)
-	{
-	case V_STRING:
-		gen_code("\"\"");
-		break;
-	case T_ARRAY:
-		gen_code("{");
-		for (n=0; n<type->val.array.num_elems; n++)
-		{
-			gen_type_default(type->val.array.elem_type);
-			if (n+1<type->val.array.num_elems) gen_code(",");
-		}
-		gen_code("}");
-		break;
-	default:
-		gen_code("0");
-	}
-}
-
-void gen_var_init(Var *vp, int level)
-{
-	assert(vp);
-
-	if (vp->init)
-		gen_expr(C_INIT, vp->init, level);
-	else
-		gen_type_default(vp->type);
 }
 
 static void gen_state_func(
@@ -821,100 +787,69 @@ static void gen_pv_func(
 #endif
 }
 
-/* Generate initializer for the UserVar structs. */
-void gen_ss_user_var_init(Expr *ssp, int level)
+static void gen_var_init(Var *vp, int level)
 {
-	Var *vp;
-	Expr *sp;
-
-	assert(ssp->type == D_SS);
-	gen_code("{\n");
-	foreach(vp, ssp->extra.e_ss->var_list->first)
-	{
-		if (vp->init) gen_line_marker(vp->init);
-		indent(level+1); gen_var_init(vp, level+1); gen_code(",\n");
-	}
-	foreach (sp, ssp->ss_states)
-	{
-		int s_empty;
-
-		assert(sp->type == D_STATE);
-		s_empty = !sp->extra.e_state->var_list->first;
-		if (!s_empty)
-		{
-			indent(level+1); gen_code("{\n");
-			foreach (vp, sp->extra.e_state->var_list->first)
-			{
-				if (vp->init) gen_line_marker(vp->init);
-				indent(level+2); gen_var_init(vp, level+2);
-				gen_code("%s\n", vp->next ? "," : "");
-			}
-			indent(level+1);
-			gen_code("}%s\n", sp->next ? "," : "");
-		}
-	}
-	indent(level); gen_code("}");
+	assert(vp->init);
+	gen_line_marker(vp->init);
+	indent(level); gen_code("{ static ");
+	gen_var_decl(vp);
+	gen_code(" = ");
+	gen_expr(C_INIT, vp->init, level);
+	gen_code("; memcpy(&");
+	gen_var_access(vp);
+	gen_code(", &%s, sizeof(%s)); }\n", vp->name, vp->name);
 }
 
-/* Generate initializer for the UserVar structs. */
+/* Generate initializers for variables of global lifetime */
 static void gen_user_var_init(Expr *prog, int level)
 {
 	Var *vp;
 	Expr *ssp;
-	int num_globals = 0;
 
 	assert(prog->type == D_PROG);
-	gen_code("{\n");
 	/* global variables */
 	foreach(vp, prog->extra.e_prog->first)
 	{
-		if (vp->type->tag >= V_CHAR)
+		if (vp->init)
 		{
-			if (vp->init) gen_line_marker(vp->init);
-			indent(level+1); gen_var_init(vp, level+1); gen_code(",\n");
-			num_globals++;
+			gen_var_init(vp, level);
 		}
 	}
-	if (!num_globals)
-	{
-		indent(level+1); gen_code("0,\n");
-	}
+	/* state and state set variables */
 	foreach (ssp, prog->prog_statesets)
 	{
 		Expr *sp;
-		int ss_empty = !ssp->extra.e_ss->var_list->first;
-		if (ss_empty)
+
+		assert(ssp->type == D_SS);
+		/* state set variables */
+		foreach(vp, ssp->extra.e_ss->var_list->first)
 		{
-			foreach (sp, ssp->ss_states)
+			if (vp->init)
 			{
-				if (sp->extra.e_state->var_list->first)
+				gen_var_init(vp, level);
+			}
+		}
+		foreach (sp, ssp->ss_states)
+		{
+			assert(sp->type == D_STATE);
+			/* state variables */
+			foreach (vp, sp->extra.e_state->var_list->first)
+			{
+				if (vp->init)
 				{
-					ss_empty = 0;
-					break;
+					gen_var_init(vp, level);
 				}
 			}
 		}
-		if (!ss_empty)
-		{
-			indent(level+1);
-			gen_ss_user_var_init(ssp, level+1);
-			gen_code("%s\n", ssp->next ? "," : "");
-		}
 	}
-	indent(level); gen_code("}");
 }
 
-static void gen_prog_init_func(Expr *prog, int opt_reent)
+static void gen_prog_init_func(Expr *prog)
 {
 	assert(prog->type == D_PROG);
 	gen_code("\n/* Program init func */\n");
 	gen_code("static void " NM_INIT "(SEQ_VARS *const " NM_VARS ")\n{\n");
-	if (opt_reent)
-	{
-		indent(1); gen_code("static struct %s pVarInit = ", NM_VARS);
-		gen_user_var_init(prog, 1); gen_code(";\n");
-		indent(1); gen_code("*pVar = pVarInit;\n");
-	}
+	gen_user_var_init(prog, 1);
 	gen_code("}\n");
 }
 
