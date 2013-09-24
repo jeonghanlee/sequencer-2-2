@@ -47,7 +47,7 @@ static void seqLazyInit()
     epicsThreadOnce(&seqOnceFlag, seqInitPvt, NULL);
 }
 
-epicsShareFunc void epicsShareAPI seqRegisterSequencerProgram(seqProgram *prog)
+epicsShareFunc void seqRegisterSequencerProgram(seqProgram *prog)
 {
     struct sequencerProgram *sp = NULL;
 
@@ -227,7 +227,7 @@ static void seqcarCallFunc(const iocshArgBuf *args)
  * This routine is called before multitasking has started, so there's
  * no race condition in the test/set of firstTime.
  */
-epicsShareFunc void epicsShareAPI seqRegisterSequencerCommands(void)
+epicsShareFunc void seqRegisterSequencerCommands(void)
 {
     static int firstTime = 1;
     if (firstTime) {

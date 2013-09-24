@@ -393,7 +393,7 @@ exit:
 /*
  * Delete all state set threads and do general clean-up.
  */
-void epicsShareAPI seqStop(epicsThreadId tid)
+epicsShareFunc void seqStop(epicsThreadId tid)
 {
 	SPROG	*sp;
 

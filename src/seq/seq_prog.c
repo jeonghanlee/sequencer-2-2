@@ -77,7 +77,7 @@ static int findByName(SPROG *sp, void *param)
  * seqFindProgByName() - find a program in the program instance list by name
  * and instance number.
  */
-epicsShareFunc SPROG *epicsShareAPI seqFindProgByName(const char *progName, int instance)
+epicsShareFunc SPROG *seqFindProgByName(const char *progName, int instance)
 {
     struct findByNameArgs args;
 

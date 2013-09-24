@@ -29,7 +29,7 @@ static PVTYPE *find_type(const char *userType);
  * Creates the initial state program thread and returns its thread id.
  * Most initialization is performed here.
  */
-epicsShareFunc epicsThreadId epicsShareAPI seq(
+epicsShareFunc epicsThreadId seq(
 	seqProgram *seqProg, const char *macroDef, unsigned stackSize)
 {
 	epicsThreadId	tid;

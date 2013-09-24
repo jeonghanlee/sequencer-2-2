@@ -166,64 +166,65 @@ struct seqProgram
  */
 
 /* event flag operations */
-epicsShareFunc void epicsShareAPI seq_efSet(SS_ID, EV_ID);
-epicsShareFunc seqBool epicsShareAPI seq_efTest(SS_ID, EV_ID);
-epicsShareFunc seqBool epicsShareAPI seq_efClear(SS_ID, EV_ID);
-epicsShareFunc seqBool epicsShareAPI seq_efTestAndClear(SS_ID, EV_ID);
+epicsShareFunc void seq_efSet(SS_ID, EV_ID);
+epicsShareFunc seqBool seq_efTest(SS_ID, EV_ID);
+epicsShareFunc seqBool seq_efClear(SS_ID, EV_ID);
+epicsShareFunc seqBool seq_efTestAndClear(SS_ID, EV_ID);
 /* pv operations */
-epicsShareFunc pvStat epicsShareAPI seq_pvGet(SS_ID, VAR_ID, enum compType);
-epicsShareFunc pvStat epicsShareAPI seq_pvGetMultiple(SS_ID, VAR_ID,
+epicsShareFunc pvStat seq_pvGet(SS_ID, VAR_ID, enum compType);
+epicsShareFunc pvStat seq_pvGetMultiple(SS_ID, VAR_ID,
 	unsigned, enum compType);
-epicsShareFunc seqBool epicsShareAPI seq_pvGetQ(SS_ID, VAR_ID);
-epicsShareFunc void epicsShareAPI seq_pvFlushQ(SS_ID, VAR_ID);
+epicsShareFunc seqBool seq_pvGetQ(SS_ID, VAR_ID);
+epicsShareFunc void seq_pvFlushQ(SS_ID, VAR_ID);
 /* retain seq_pvFreeQ for compatibility */
 #define seq_pvFreeQ seq_pvFlushQ
-epicsShareFunc pvStat epicsShareAPI seq_pvPut(SS_ID, VAR_ID, enum compType);
-epicsShareFunc pvStat epicsShareAPI seq_pvPutMultiple(SS_ID, VAR_ID,
+epicsShareFunc pvStat seq_pvPut(SS_ID, VAR_ID, enum compType);
+epicsShareFunc pvStat seq_pvPutMultiple(SS_ID, VAR_ID,
 	unsigned, enum compType);
-epicsShareFunc seqBool epicsShareAPI seq_pvGetComplete(SS_ID, VAR_ID);
-epicsShareFunc seqBool epicsShareAPI seq_pvPutComplete(SS_ID, VAR_ID,
+epicsShareFunc seqBool seq_pvGetComplete(SS_ID, VAR_ID);
+epicsShareFunc seqBool seq_pvPutComplete(SS_ID, VAR_ID,
 	unsigned, seqBool, seqBool*);
-epicsShareFunc pvStat epicsShareAPI seq_pvAssign(SS_ID, VAR_ID, const char *);
-epicsShareFunc pvStat epicsShareAPI seq_pvMonitor(SS_ID, VAR_ID);
-epicsShareFunc void epicsShareAPI seq_pvSync(SS_ID, VAR_ID, unsigned, EV_ID);
-epicsShareFunc pvStat epicsShareAPI seq_pvStopMonitor(SS_ID, VAR_ID);
+epicsShareFunc pvStat seq_pvAssign(SS_ID, VAR_ID, const char *);
+epicsShareFunc pvStat seq_pvMonitor(SS_ID, VAR_ID);
+epicsShareFunc void seq_pvSync(SS_ID, VAR_ID, unsigned, EV_ID);
+epicsShareFunc pvStat seq_pvStopMonitor(SS_ID, VAR_ID);
 /* pv info */
-epicsShareFunc char *epicsShareAPI seq_pvName(SS_ID, VAR_ID);
-epicsShareFunc unsigned epicsShareAPI seq_pvCount(SS_ID, VAR_ID);
-epicsShareFunc pvStat epicsShareAPI seq_pvStatus(SS_ID, VAR_ID);
-epicsShareFunc pvSevr epicsShareAPI seq_pvSeverity(SS_ID, VAR_ID);
-epicsShareFunc epicsTimeStamp epicsShareAPI seq_pvTimeStamp(SS_ID, VAR_ID);
-epicsShareFunc const char *epicsShareAPI seq_pvMessage(SS_ID, VAR_ID);
-epicsShareFunc seqBool epicsShareAPI seq_pvAssigned(SS_ID, VAR_ID);
-epicsShareFunc seqBool epicsShareAPI seq_pvConnected(SS_ID, VAR_ID);
+epicsShareFunc char *seq_pvName(SS_ID, VAR_ID);
+epicsShareFunc unsigned seq_pvCount(SS_ID, VAR_ID);
+epicsShareFunc pvStat seq_pvStatus(SS_ID, VAR_ID);
+epicsShareFunc pvSevr seq_pvSeverity(SS_ID, VAR_ID);
+epicsShareFunc epicsTimeStamp seq_pvTimeStamp(SS_ID, VAR_ID);
+epicsShareFunc const char *seq_pvMessage(SS_ID, VAR_ID);
+epicsShareFunc seqBool seq_pvAssigned(SS_ID, VAR_ID);
+epicsShareFunc seqBool seq_pvConnected(SS_ID, VAR_ID);
 
 #define seq_pvIndex(ssId, varId)	varId
 #define seq_ssId(ssId)			ssId
 #define seq_pVar(ssId)			_seq_var
 
 /* global operations */
-epicsShareFunc void epicsShareAPI seq_pvFlush(SS_ID);
-epicsShareFunc seqBool epicsShareAPI seq_delay(SS_ID, double);
-epicsShareFunc char *epicsShareAPI seq_macValueGet(SS_ID, const char *);
-epicsShareFunc void epicsShareAPI seq_exit(SS_ID);
+epicsShareFunc void seq_pvFlush(SS_ID);
+epicsShareFunc seqBool seq_delay(SS_ID, double);
+epicsShareFunc char *seq_macValueGet(SS_ID, const char *);
+epicsShareFunc void seq_exit(SS_ID);
 /* global info */
-epicsShareFunc unsigned epicsShareAPI seq_pvChannelCount(SS_ID);
-epicsShareFunc unsigned epicsShareAPI seq_pvConnectCount(SS_ID);
-epicsShareFunc unsigned epicsShareAPI seq_pvAssignCount(SS_ID);
-epicsShareFunc seqBool epicsShareAPI seq_optGet(SS_ID, const char *);
+epicsShareFunc unsigned seq_pvChannelCount(SS_ID);
+epicsShareFunc unsigned seq_pvConnectCount(SS_ID);
+epicsShareFunc unsigned seq_pvAssignCount(SS_ID);
+epicsShareFunc seqBool seq_optGet(SS_ID, const char *);
+
 /* shell commands */
-epicsShareFunc void epicsShareAPI seqShow(epicsThreadId);
-epicsShareFunc void epicsShareAPI seqChanShow(epicsThreadId, const char *);
-epicsShareFunc void epicsShareAPI seqcar(int level);
-epicsShareFunc void epicsShareAPI seqQueueShow(epicsThreadId);
-epicsShareFunc void epicsShareAPI seqStop(epicsThreadId);
-epicsShareFunc epicsThreadId epicsShareAPI seq(seqProgram *, const char *, unsigned);
+epicsShareFunc void seqShow(epicsThreadId);
+epicsShareFunc void seqChanShow(epicsThreadId, const char *);
+epicsShareFunc void seqcar(int level);
+epicsShareFunc void seqQueueShow(epicsThreadId);
+epicsShareFunc void seqStop(epicsThreadId);
+epicsShareFunc epicsThreadId seq(seqProgram *, const char *, unsigned);
 /* called by generated main and registrar routines */
-epicsShareFunc void epicsShareAPI seqRegisterSequencerProgram(seqProgram *p);
-epicsShareFunc void epicsShareAPI seqRegisterSequencerCommands(void);
+epicsShareFunc void seqRegisterSequencerProgram(seqProgram *p);
+epicsShareFunc void seqRegisterSequencerCommands(void);
 /* exported for devSequencer */
-epicsShareFunc struct program_instance* epicsShareAPI seqFindProgByName(const char *, int);
+epicsShareFunc struct program_instance* seqFindProgByName(const char *, int);
 
 #ifdef __cplusplus
 } /* extern "C" */

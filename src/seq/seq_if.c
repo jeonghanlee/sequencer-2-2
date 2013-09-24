@@ -54,7 +54,7 @@ static pvStat check_connected(DBCHAN *dbch, PVMETA *meta)
  * Get value from a channel.
  * TODO: add optional timeout argument.
  */
-epicsShareFunc pvStat epicsShareAPI seq_pvGet(SS_ID ss, VAR_ID varId, enum compType compType)
+epicsShareFunc pvStat seq_pvGet(SS_ID ss, VAR_ID varId, enum compType compType)
 {
 	SPROG		*sp = ss->sprog;
 	CHAN		*ch = sp->chan + varId;
@@ -216,7 +216,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvGet(SS_ID ss, VAR_ID varId, enum compT
  * Return whether the last get completed. In safe mode, as a
  * side effect, copy value from shared buffer to state set local buffer.
  */
-epicsShareFunc boolean epicsShareAPI seq_pvGetComplete(SS_ID ss, VAR_ID varId)
+epicsShareFunc boolean seq_pvGetComplete(SS_ID ss, VAR_ID varId)
 {
 	epicsEventId	getSem = ss->getSemId[varId];
 	SPROG		*sp = ss->sprog;
@@ -331,7 +331,7 @@ static void anonymous_put(SS_ID ss, CHAN *ch)
 /*
  * Put a variable's value to a PV.
  */
-epicsShareFunc pvStat epicsShareAPI seq_pvPut(SS_ID ss, VAR_ID varId, enum compType compType)
+epicsShareFunc pvStat seq_pvPut(SS_ID ss, VAR_ID varId, enum compType compType)
 {
 	SPROG	*sp = ss->sprog;
 	CHAN	*ch = sp->chan + varId;
@@ -512,7 +512,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvPut(SS_ID ss, VAR_ID varId, enum compT
 /*
  * Return whether the last put completed.
  */
-epicsShareFunc boolean epicsShareAPI seq_pvPutComplete(
+epicsShareFunc boolean seq_pvPutComplete(
 	SS_ID		ss,
 	VAR_ID		varId,
 	unsigned	length,
@@ -593,7 +593,7 @@ epicsShareFunc boolean epicsShareAPI seq_pvPutComplete(
  * Assign to a zero-length string ("") disconnects/de-assigns,
  * in safe mode, creates an anonymous PV.
  */
-epicsShareFunc pvStat epicsShareAPI seq_pvAssign(SS_ID ss, VAR_ID varId, const char *pvName)
+epicsShareFunc pvStat seq_pvAssign(SS_ID ss, VAR_ID varId, const char *pvName)
 {
 	SPROG	*sp = ss->sprog;
 	CHAN	*ch = sp->chan + varId;
@@ -682,7 +682,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvAssign(SS_ID ss, VAR_ID varId, const c
 /*
  * Initiate a monitor.
  */
-epicsShareFunc pvStat epicsShareAPI seq_pvMonitor(SS_ID ss, VAR_ID varId)
+epicsShareFunc pvStat seq_pvMonitor(SS_ID ss, VAR_ID varId)
 {
 	SPROG	*sp = ss->sprog;
 	CHAN	*ch = sp->chan + varId;
@@ -708,7 +708,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvMonitor(SS_ID ss, VAR_ID varId)
 /*
  * Cancel a monitor.
  */
-epicsShareFunc pvStat epicsShareAPI seq_pvStopMonitor(SS_ID ss, VAR_ID varId)
+epicsShareFunc pvStat seq_pvStopMonitor(SS_ID ss, VAR_ID varId)
 {
 	SPROG	*sp = ss->sprog;
 	CHAN	*ch = sp->chan + varId;
@@ -735,7 +735,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvStopMonitor(SS_ID ss, VAR_ID varId)
  * Synchronize pv with an event flag.
  * ev_flag == 0 means unSync.
  */
-epicsShareFunc void epicsShareAPI seq_pvSync(SS_ID ss, VAR_ID varId, unsigned length, EV_ID new_ev_flag)
+epicsShareFunc void seq_pvSync(SS_ID ss, VAR_ID varId, unsigned length, EV_ID new_ev_flag)
 {
 	SPROG	*sp = ss->sprog;
 	unsigned i;
@@ -787,7 +787,7 @@ epicsShareFunc void epicsShareAPI seq_pvSync(SS_ID ss, VAR_ID varId, unsigned le
 /*
  * Return total number of database channels.
  */
-epicsShareFunc unsigned epicsShareAPI seq_pvChannelCount(SS_ID ss)
+epicsShareFunc unsigned seq_pvChannelCount(SS_ID ss)
 {
 	return ss->sprog->numChans;
 }
@@ -795,7 +795,7 @@ epicsShareFunc unsigned epicsShareAPI seq_pvChannelCount(SS_ID ss)
 /*
  * Return number of database channels connected.
  */
-epicsShareFunc unsigned epicsShareAPI seq_pvConnectCount(SS_ID ss)
+epicsShareFunc unsigned seq_pvConnectCount(SS_ID ss)
 {
 	return ss->sprog->connectCount;
 }
@@ -803,13 +803,13 @@ epicsShareFunc unsigned epicsShareAPI seq_pvConnectCount(SS_ID ss)
 /*
  * Return number of database channels assigned.
  */
-epicsShareFunc unsigned epicsShareAPI seq_pvAssignCount(SS_ID ss)
+epicsShareFunc unsigned seq_pvAssignCount(SS_ID ss)
 {
 	return ss->sprog->assignCount;
 }
 
 /* Flush outstanding PV requests */
-epicsShareFunc void epicsShareAPI seq_pvFlush(SS_ID ss)
+epicsShareFunc void seq_pvFlush(SS_ID ss)
 {
 	pvSysFlush(ss->sprog->pvSys);
 }
@@ -817,7 +817,7 @@ epicsShareFunc void epicsShareAPI seq_pvFlush(SS_ID ss)
 /*
  * Return whether database channel is connected.
  */
-epicsShareFunc boolean epicsShareAPI seq_pvConnected(SS_ID ss, VAR_ID varId)
+epicsShareFunc boolean seq_pvConnected(SS_ID ss, VAR_ID varId)
 {
 	CHAN *ch = ss->sprog->chan + varId;
 	return ch->dbch && ch->dbch->connected;
@@ -826,7 +826,7 @@ epicsShareFunc boolean epicsShareAPI seq_pvConnected(SS_ID ss, VAR_ID varId)
 /*
  * Return whether database channel is assigned.
  */
-epicsShareFunc boolean epicsShareAPI seq_pvAssigned(SS_ID ss, VAR_ID varId)
+epicsShareFunc boolean seq_pvAssigned(SS_ID ss, VAR_ID varId)
 {
 	return ss->sprog->chan[varId].dbch != NULL;
 }
@@ -835,7 +835,7 @@ epicsShareFunc boolean epicsShareAPI seq_pvAssigned(SS_ID ss, VAR_ID varId)
  * Return number elements in an array, which is the lesser of
  * the array size and the element count returned by the PV layer.
  */
-epicsShareFunc unsigned epicsShareAPI seq_pvCount(SS_ID ss, VAR_ID varId)
+epicsShareFunc unsigned seq_pvCount(SS_ID ss, VAR_ID varId)
 {
 	CHAN *ch = ss->sprog->chan + varId;
 	return ch->dbch ? ch->dbch->dbCount : ch->count;
@@ -844,7 +844,7 @@ epicsShareFunc unsigned epicsShareAPI seq_pvCount(SS_ID ss, VAR_ID varId)
 /*
  * Return a channel name of an assigned variable.
  */
-epicsShareFunc char *epicsShareAPI seq_pvName(SS_ID ss, VAR_ID varId)
+epicsShareFunc char *seq_pvName(SS_ID ss, VAR_ID varId)
 {
 	CHAN *ch = ss->sprog->chan + varId;
 	return ch->dbch ? ch->dbch->dbName : NULL;
@@ -853,7 +853,7 @@ epicsShareFunc char *epicsShareAPI seq_pvName(SS_ID ss, VAR_ID varId)
 /*
  * Return channel alarm status.
  */
-epicsShareFunc pvStat epicsShareAPI seq_pvStatus(SS_ID ss, VAR_ID varId)
+epicsShareFunc pvStat seq_pvStatus(SS_ID ss, VAR_ID varId)
 {
 	CHAN	*ch = ss->sprog->chan + varId;
 	PVMETA	*meta = metaPtr(ch,ss);
@@ -863,7 +863,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvStatus(SS_ID ss, VAR_ID varId)
 /*
  * Return channel alarm severity.
  */
-epicsShareFunc pvSevr epicsShareAPI seq_pvSeverity(SS_ID ss, VAR_ID varId)
+epicsShareFunc pvSevr seq_pvSeverity(SS_ID ss, VAR_ID varId)
 {
 	CHAN	*ch = ss->sprog->chan + varId;
 	PVMETA	*meta = metaPtr(ch,ss);
@@ -873,7 +873,7 @@ epicsShareFunc pvSevr epicsShareAPI seq_pvSeverity(SS_ID ss, VAR_ID varId)
 /*
  * Return channel error message.
  */
-epicsShareFunc const char *epicsShareAPI seq_pvMessage(SS_ID ss, VAR_ID varId)
+epicsShareFunc const char *seq_pvMessage(SS_ID ss, VAR_ID varId)
 {
 	CHAN	*ch = ss->sprog->chan + varId;
 	PVMETA	*meta = metaPtr(ch,ss);
@@ -883,7 +883,7 @@ epicsShareFunc const char *epicsShareAPI seq_pvMessage(SS_ID ss, VAR_ID varId)
 /*
  * Return channel time stamp.
  */
-epicsShareFunc epicsTimeStamp epicsShareAPI seq_pvTimeStamp(SS_ID ss, VAR_ID varId)
+epicsShareFunc epicsTimeStamp seq_pvTimeStamp(SS_ID ss, VAR_ID varId)
 {
 	CHAN	*ch = ss->sprog->chan + varId;
 	PVMETA	*meta = metaPtr(ch,ss);
@@ -903,7 +903,7 @@ epicsShareFunc epicsTimeStamp epicsShareAPI seq_pvTimeStamp(SS_ID ss, VAR_ID var
  * Set an event flag, then wake up each state
  * set that might be waiting on that event flag.
  */
-epicsShareFunc void epicsShareAPI seq_efSet(SS_ID ss, EV_ID ev_flag)
+epicsShareFunc void seq_efSet(SS_ID ss, EV_ID ev_flag)
 {
 	SPROG	*sp = ss->sprog;
 
@@ -925,7 +925,7 @@ epicsShareFunc void epicsShareAPI seq_efSet(SS_ID ss, EV_ID ev_flag)
 /*
  * Return whether event flag is set.
  */
-epicsShareFunc boolean epicsShareAPI seq_efTest(SS_ID ss, EV_ID ev_flag)
+epicsShareFunc boolean seq_efTest(SS_ID ss, EV_ID ev_flag)
 /* event flag */
 {
 	SPROG	*sp = ss->sprog;
@@ -949,7 +949,7 @@ epicsShareFunc boolean epicsShareAPI seq_efTest(SS_ID ss, EV_ID ev_flag)
 /*
  * Clear event flag.
  */
-epicsShareFunc boolean epicsShareAPI seq_efClear(SS_ID ss, EV_ID ev_flag)
+epicsShareFunc boolean seq_efClear(SS_ID ss, EV_ID ev_flag)
 {
 	SPROG	*sp = ss->sprog;
 	boolean	isSet;
@@ -972,7 +972,7 @@ epicsShareFunc boolean epicsShareAPI seq_efClear(SS_ID ss, EV_ID ev_flag)
  * Atomically test event flag against outstanding events, then clear it
  * and return whether it was set.
  */
-epicsShareFunc boolean epicsShareAPI seq_efTestAndClear(SS_ID ss, EV_ID ev_flag)
+epicsShareFunc boolean seq_efTestAndClear(SS_ID ss, EV_ID ev_flag)
 {
 	SPROG	*sp = ss->sprog;
 	boolean	isSet;
@@ -1024,7 +1024,7 @@ static void *getq_cp(void *dest, const void *value, size_t elemSize)
 /*
  * Get value from a queued PV.
  */
-epicsShareFunc boolean epicsShareAPI seq_pvGetQ(SS_ID ss, VAR_ID varId)
+epicsShareFunc boolean seq_pvGetQ(SS_ID ss, VAR_ID varId)
 {
 	SPROG	*sp = ss->sprog;
 	CHAN	*ch = sp->chan + varId;
@@ -1062,7 +1062,7 @@ epicsShareFunc boolean epicsShareAPI seq_pvGetQ(SS_ID ss, VAR_ID varId)
 /*
  * Flush elements on syncQ queue and clear event flag.
  */
-epicsShareFunc void epicsShareAPI seq_pvFlushQ(SS_ID ss, VAR_ID varId)
+epicsShareFunc void seq_pvFlushQ(SS_ID ss, VAR_ID varId)
 {
 	SPROG	*sp = ss->sprog;
 	CHAN	*ch = sp->chan + varId;
@@ -1085,7 +1085,7 @@ epicsShareFunc void epicsShareAPI seq_pvFlushQ(SS_ID ss, VAR_ID varId)
  * As a side-effect, adjust the state set's wakeupTime if our delay
  * is shorter than previously tested ones.
  */
-epicsShareFunc boolean epicsShareAPI seq_delay(SS_ID ss, double delay)
+epicsShareFunc boolean seq_delay(SS_ID ss, double delay)
 {
 	boolean	expired;
 	double	now, timeExpired;
@@ -1106,7 +1106,7 @@ epicsShareFunc boolean epicsShareAPI seq_delay(SS_ID ss, double delay)
  * Return the value of an option (e.g. "a").
  * FALSE means "-" and TRUE means "+".
  */
-epicsShareFunc boolean epicsShareAPI seq_optGet(SS_ID ss, const char *opt)
+epicsShareFunc boolean seq_optGet(SS_ID ss, const char *opt)
 {
 	SPROG	*sp = ss->sprog;
 
@@ -1126,7 +1126,7 @@ epicsShareFunc boolean epicsShareAPI seq_optGet(SS_ID ss, const char *opt)
 /* 
  * Given macro name, return pointer to its value.
  */
-epicsShareFunc char *epicsShareAPI seq_macValueGet(SS_ID ss, const char *name)
+epicsShareFunc char *seq_macValueGet(SS_ID ss, const char *name)
 {
 	return seqMacValGet(ss->sprog, name);
 }
@@ -1134,7 +1134,7 @@ epicsShareFunc char *epicsShareAPI seq_macValueGet(SS_ID ss, const char *name)
 /* 
  * Immediately terminate all state sets and jump to global exit block.
  */
-epicsShareFunc void epicsShareAPI seq_exit(SS_ID ss)
+epicsShareFunc void seq_exit(SS_ID ss)
 {
 	SPROG *sp = ss->sprog;
 	/* Ask all state set threads to exit */
