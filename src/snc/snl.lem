@@ -399,6 +399,8 @@ expr(p) ::= LPAREN(t) comma_expr(x) RPAREN.		{ p = expr(E_PAREN, t, x); }
 // Primary Expression and Unary Postfix Operators
 expr(p) ::= NAME(t) LPAREN args(xs) RPAREN.	 [POST] { p = expr(E_FUNC,   t, xs); }
 expr(p) ::= EXIT(t) LPAREN args(xs) RPAREN.	 [POST] { p = expr(E_FUNC,   t, xs); }
+expr(p) ::= SIZEOF(t) LPAREN expr(x) RPAREN.	 [POST] { p = expr(E_FUNC,   t, x); }
+expr(p) ::= SIZEOF(t) LPAREN type_expr(x) RPAREN.[POST] { p = expr(E_FUNC,   t, x); }
 expr(p) ::= expr(x) LBRACKET(t) expr(y) RBRACKET.[POST] { p = expr(E_SUBSCR, t, x, y); }
 expr(p) ::= expr(x) PERIOD(t)  expr(y).		 [POST] { p = expr(E_BINOP,  t, x, y); }
 expr(p) ::= expr(x) POINTER(t) expr(y).		 [POST] { p = expr(E_BINOP,  t, x, y); }

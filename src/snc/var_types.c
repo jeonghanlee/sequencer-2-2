@@ -243,7 +243,7 @@ static void gen_array_pointer(Type *t, enum type_tag last_tag, char *name)
         break;
     default:
         if (name)
-            gen_code("%s", name);
+            gen_code(" %s", name);
         break;
     }
 }
@@ -254,13 +254,13 @@ void gen_type(Type *t, char *name)
 
     switch (bt->tag) {
     case T_EVFLAG:
-        gen_code("evflag ");
+        gen_code("evflag");
         break;
     case T_PRIM:
-        gen_code("%s ", prim_type_name[bt->val.prim]);
+        gen_code("%s", prim_type_name[bt->val.prim]);
         break;
     case T_FOREIGN:
-        gen_code("%s%s ", foreign_type_prefix[bt->val.foreign.tag], bt->val.foreign.name);
+        gen_code("%s%s", foreign_type_prefix[bt->val.foreign.tag], bt->val.foreign.name);
         break;
     default:
         assert(impossible);

@@ -251,6 +251,7 @@ snl:
 	"option"	{ KEYWORD(OPTION,	"option"); }
 	"program"	{ KEYWORD(PROGRAM,	"program"); }
 	"short"		{ TYPEWORD(SHORT,	"short"); }
+	"sizeof"	{ TYPEWORD(SIZEOF,	"sizeof"); }
 	"ss"		{ KEYWORD(SS,		"ss"); }
 	"state"		{ KEYWORD(STATE,	"state"); }
 	"string"	{ KEYWORD(STRING,	"string"); }

@@ -16,7 +16,7 @@ ss test {
     state sizes {
         when () {
             char c;
-            char *p;
+            char *p = &c;
             testOk1(sizeof(char)==1);
             testOk1(sizeof(*p)==1);
             c = *p;

@@ -151,20 +151,21 @@ static void gen_local_var_decls(Expr *scope, int level)
 	/* Convert internal type to `C' type */
 	foreach (vp, var_list->first)
 	{
-		if (vp->decl && vp->type->tag != T_NONE)
-		{
-			gen_line_marker(vp->decl);
-			indent(level);
-			gen_var_decl(vp);
+		assert(vp->type->tag != T_NONE);
+		assert(vp->type->tag != T_EVFLAG);
+		assert(vp->decl);
 
-			/* optional initialisation */
-			if (vp->init)
-			{
-				gen_code(" = ");
-				gen_expr(C_INIT, vp->init, level);
-			}
-			gen_code(";\n");
+		gen_line_marker(vp->decl);
+		indent(level);
+		gen_var_decl(vp);
+
+		/* optional initialisation */
+		if (vp->init)
+		{
+			gen_code(" = ");
+			gen_expr(C_INIT, vp->init, level);
 		}
+		gen_code(";\n");
 	}
 }
 
@@ -513,9 +514,7 @@ static void gen_expr(
 		break;
 	case E_CAST:
 		gen_code("(");
-		/* gen_type_expr(ep->cast_type); */
-		assert(ep->cast_type->type == D_DECL);
-		gen_var_decl(ep->cast_type->extra.e_decl);
+		gen_expr(context, ep->cast_type, 0);
 		gen_code(")");
 		gen_expr(context, ep->cast_operand, 0);
 		break;
@@ -532,12 +531,15 @@ static void gen_expr(
 		indent(level);
 		gen_code("%s\n", ep->value);
 		break;
+	case D_DECL:
+		gen_var_decl(ep->extra.e_decl);
+		break;
 	default:
-		assert(impossible);
 #ifdef DEBUG
 		report_at_expr(ep, "unhandled expression (%s:%s)\n",
 			expr_type_name(ep), ep->value);
 #endif
+		assert(impossible);
 	}
 }
 
@@ -812,7 +814,16 @@ static void gen_user_var_init(Expr *prog, int level)
 	{
 		if (vp->init)
 		{
-			gen_var_init(vp, level);
+			if (vp->type->tag == T_NONE)
+				error_at_expr(vp->init,
+					"foreign variable '%s' cannot be initialized\n",
+					vp->name);
+			else if (vp->type->tag == T_EVFLAG)
+				error_at_expr(vp->init,
+					"event flag '%s' cannot be initialized\n",
+					vp->name);
+			else
+				gen_var_init(vp, level);
 		}
 	}
 	/* state and state set variables */
