@@ -64,7 +64,6 @@ void generate_code(Program *p, const char *header_name)
 	gen_code("#define INCL%sh\n", p->name);
 
 	/* Includes */
-	gen_code("#include \"epicsTypes.h\"\n");
 	gen_code("#include \"seqCom.h\"\n");
 
 	/* Generate literal C code intermixed with global definitions */
@@ -96,6 +95,7 @@ void generate_code(Program *p, const char *header_name)
 	gen_code("#include <stdio.h>\n");
 	gen_code("#include <limits.h>\n");
 	gen_code("\n");
+	gen_code("#include \"seq_snc.h\"\n");
 	gen_code("#include \"%s\"\n", header_name);
 
 	if (!p->options.reent)

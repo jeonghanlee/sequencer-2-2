@@ -33,7 +33,7 @@ in the file LICENSE that is included with this distribution.
 #ifndef	INCLseqPvth
 #define	INCLseqPvth
 
-#include "seqCom.h"
+#include "seq_snc.h"
 #define boolean seqBool
 #define bitMask seqMask
 

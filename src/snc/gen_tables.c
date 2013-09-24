@@ -21,7 +21,7 @@ in the file LICENSE that is included with this distribution.
 #  include <alloca.h>
 #endif
 
-#include "seqCom.h"
+#include "seq_snc.h"
 #include "analysis.h"
 #include "main.h"
 #include "sym_table.h"
