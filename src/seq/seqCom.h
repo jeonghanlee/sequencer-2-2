@@ -43,6 +43,8 @@ extern "C" {
 
 #define DEFAULT_QUEUE_SIZE	2	/* default queue size (elements) */
 
+#define DEFAULT_TIMEOUT		10.0	/* default timeout for SYNC operations */
+
 /* I/O completion type (extra argument passed to seq_pvGet() and seq_pvPut()) */
 enum compType {
 	DEFAULT,
@@ -75,14 +77,14 @@ epicsShareFunc seqBool seq_efTest(SS_ID, EV_ID);
 epicsShareFunc seqBool seq_efClear(SS_ID, EV_ID);
 epicsShareFunc seqBool seq_efTestAndClear(SS_ID, EV_ID);
 /* pv operations */
-epicsShareFunc pvStat seq_pvGet(SS_ID, VAR_ID, enum compType);
+epicsShareFunc pvStat seq_pvGet(SS_ID, VAR_ID, enum compType, double tmo);
 epicsShareFunc pvStat seq_pvGetMultiple(SS_ID, VAR_ID,
 	unsigned, enum compType);
 epicsShareFunc seqBool seq_pvGetQ(SS_ID, VAR_ID);
 epicsShareFunc void seq_pvFlushQ(SS_ID, VAR_ID);
 /* retain seq_pvFreeQ for compatibility */
 #define seq_pvFreeQ seq_pvFlushQ
-epicsShareFunc pvStat seq_pvPut(SS_ID, VAR_ID, enum compType);
+epicsShareFunc pvStat seq_pvPut(SS_ID, VAR_ID, enum compType, double tmo);
 epicsShareFunc pvStat seq_pvPutMultiple(SS_ID, VAR_ID,
 	unsigned, enum compType);
 epicsShareFunc seqBool seq_pvGetComplete(SS_ID, VAR_ID,

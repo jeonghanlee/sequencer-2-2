@@ -42,7 +42,9 @@ static void gen_action_body(Expr *xp, int context);
 static void gen_expr(int context, Expr *ep, int level);
 static void gen_ef_func(int context, Expr *ep, const char *func_name, uint ef_action_only);
 static void gen_pv_func(int context, Expr *ep,
-	const char *func_name, uint add_length, uint num_params, uint ef_args);
+	const char *func_name, uint add_length,
+	uint num_params, uint ef_args,
+	const char *default_values[]);
 static int gen_builtin_func(int context, Expr *ep);
 static int gen_builtin_const(Expr *ep);
 
@@ -562,7 +564,7 @@ static int gen_builtin_func(int context, Expr *ep)
 		break;
 	case FT_PV:
 		gen_pv_func(context, ep, func_name, sym->add_length,
-			sym->default_args, sym->ef_args);
+			sym->default_args, sym->ef_args, sym->default_values);
 		break;
 	case FT_OTHER:
 		/* just fill in user-supplied parameters */
@@ -646,7 +648,8 @@ static void gen_pv_func(
 	const char	*func_name,	/* function name */
 	uint		add_length,	/* add array length after channel id */
 	uint		num_params,	/* number of params to add (if omitted) */
-	uint		ef_args		/* extra args are event flags */
+	uint		ef_args,	/* extra args are event flags */
+	const char	*default_values[]/* param values to add (if omitted) */
 )
 {
 	Expr	*ap, *subscr = 0;
@@ -757,7 +760,7 @@ static void gen_pv_func(
 	   extra zero parameters */
 	while (num_extra_parms < num_params)
 	{
-		gen_code(", 0");
+		gen_code(", %s", default_values[num_extra_parms]);
 		num_extra_parms++;
 	}
 

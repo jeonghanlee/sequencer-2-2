@@ -33,8 +33,6 @@ in the file LICENSE that is included with this distribution.
 #include "seq.h"
 #include "seq_debug.h"
 
-double seq_sync_timeout = 10.0;
-
 static pvStat check_connected(DBCHAN *dbch, PVMETA *meta)
 {
 	if (!dbch->connected)
@@ -54,7 +52,7 @@ static pvStat check_connected(DBCHAN *dbch, PVMETA *meta)
  * Get value from a channel.
  * TODO: add optional timeout argument.
  */
-epicsShareFunc pvStat seq_pvGet(SS_ID ss, VAR_ID varId, enum compType compType)
+epicsShareFunc pvStat seq_pvGet(SS_ID ss, VAR_ID varId, enum compType compType, double tmo)
 {
 	PROG		*sp = ss->prog;
 	CHAN		*ch = sp->chan + varId;
@@ -63,7 +61,6 @@ epicsShareFunc pvStat seq_pvGet(SS_ID ss, VAR_ID varId, enum compType compType)
 	epicsEventId	getSem = ss->getSem[varId];
 	DBCHAN		*dbch = ch->dbch;
 	PVMETA		*meta = metaPtr(ch,ss);
-	double		tmo = seq_sync_timeout;
 
 	/* Anonymous PV and safe mode, just copy from shared buffer.
 	   Note that completion is always immediate, so no distinction
@@ -93,6 +90,13 @@ epicsShareFunc pvStat seq_pvGet(SS_ID ss, VAR_ID varId, enum compType compType)
 	{
 		double before, after;
 		pvTimeGetCurrentDouble(&before);
+		if (tmo <= 0.0)
+		{
+			errlogSevPrintf(errlogMajor,
+				"pvGet(%s,SYNC,%f): user error (timeout must be positive)\n",
+				ch->varName, tmo);
+			return pvStatERROR;
+		}
 		switch (epicsEventWaitWithTimeout(getSem, tmo))
 		{
 		case epicsEventWaitOK:
@@ -100,6 +104,8 @@ epicsShareFunc pvStat seq_pvGet(SS_ID ss, VAR_ID varId, enum compType compType)
 			if (status != pvStatOK) return epicsEventSignal(getSem), status;
 			pvTimeGetCurrentDouble(&after);
 			tmo -= (after - before);
+			if (tmo <= 0.0)
+				tmo = 0.001;
 			break;
 		case epicsEventWaitTimeout:
 			errlogSevPrintf(errlogMajor,
@@ -392,7 +398,7 @@ static void anonymous_put(SS_ID ss, CHAN *ch)
 /*
  * Put a variable's value to a PV.
  */
-epicsShareFunc pvStat seq_pvPut(SS_ID ss, VAR_ID varId, enum compType compType)
+epicsShareFunc pvStat seq_pvPut(SS_ID ss, VAR_ID varId, enum compType compType, double tmo)
 {
 	PROG	*sp = ss->prog;
 	CHAN	*ch = sp->chan + varId;
@@ -403,7 +409,6 @@ epicsShareFunc pvStat seq_pvPut(SS_ID ss, VAR_ID varId, enum compType compType)
 	DBCHAN	*dbch = ch->dbch;
 	PVMETA	*meta = metaPtr(ch,ss);
 	epicsEventId	putSem = ss->putSem[varId];
-	double	tmo = seq_sync_timeout;
 
 	DEBUG("pvPut: pv name=%s, var=%p\n", dbch ? dbch->dbName : "<anonymous>", var);
 
@@ -433,11 +438,20 @@ epicsShareFunc pvStat seq_pvPut(SS_ID ss, VAR_ID varId, enum compType compType)
 	{
 		double before, after;
 		pvTimeGetCurrentDouble(&before);
+		if (tmo <= 0.0)
+		{
+			errlogSevPrintf(errlogMajor,
+				"pvPut(%s,SYNC,%f): user error (timeout must be positive)\n",
+				ch->varName, tmo);
+			return pvStatERROR;
+		}
 		switch (epicsEventWaitWithTimeout(putSem, tmo))
 		{
 		case epicsEventWaitOK:
 			pvTimeGetCurrentDouble(&after);
 			tmo -= (after - before);
+			if (tmo <= 0.0)
+				tmo = 0.001;
 			break;
 		case epicsEventWaitTimeout:
 			errlogSevPrintf(errlogMajor,

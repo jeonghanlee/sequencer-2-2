@@ -46,47 +46,57 @@ static struct const_symbol const_symbols[] =
     {0,                     CT_NONE}
 };
 
+const char *pvGetPutArgs[] = {
+    "DEFAULT",
+    "DEFAULT_TIMEOUT"
+};
+
+const char *pvGetPutCompleteArgs[] = {
+    "FALSE",
+    "NULL"
+};
+
 static struct func_symbol func_symbols[] =
 {
     /* name             type    add_length default_args ef_action_only  ef_args cond_only */
-    {"delay",           FT_OTHER,   FALSE,  0,          FALSE,          FALSE,  TRUE },
-    {"efClear",         FT_EVENT,   FALSE,  0,          TRUE,           FALSE,  FALSE},
-    {"efSet",           FT_EVENT,   FALSE,  0,          TRUE,           FALSE,  FALSE},
-    {"efTest",          FT_EVENT,   FALSE,  0,          FALSE,          FALSE,  FALSE},
-    {"efTestAndClear",  FT_EVENT,   FALSE,  0,          FALSE,          FALSE,  FALSE},
-    {"macValueGet",     FT_OTHER,   FALSE,  0,          FALSE,          FALSE,  FALSE},
-    {"optGet",          FT_OTHER,   FALSE,  0,          FALSE,          FALSE,  FALSE},
-    {"pvAssign",        FT_PV,      FALSE,  0,          FALSE,          FALSE,  FALSE},
-    {"pvAssignCount",   FT_OTHER,   FALSE,  0,          FALSE,          FALSE,  FALSE},
-    {"pvAssigned",      FT_PV,      FALSE,  0,          FALSE,          FALSE,  FALSE},
-    {"pvChannelCount",  FT_OTHER,   FALSE,  0,          FALSE,          FALSE,  FALSE},
-    {"pvConnectCount",  FT_OTHER,   FALSE,  0,          FALSE,          FALSE,  FALSE},
-    {"pvConnected",     FT_PV,      FALSE,  0,          FALSE,          FALSE,  FALSE},
-    {"pvCount",         FT_PV,      FALSE,  0,          FALSE,          FALSE,  FALSE},
-    {"pvDisconnect",    FT_PV,      FALSE,  0,          FALSE,          FALSE,  FALSE},
-    {"pvFlush",         FT_OTHER,   FALSE,  0,          FALSE,          FALSE,  FALSE},
-    {"pvFlushQ",        FT_PV,      FALSE,  0,          FALSE,          FALSE,  FALSE},
-    {"pvFreeQ",         FT_PV,      FALSE,  0,          FALSE,          FALSE,  FALSE},
-    {"pvGet",           FT_PV,      FALSE,  1,          FALSE,          FALSE,  FALSE},
-    {"pvGetCancel",     FT_PV,      TRUE,   0,          FALSE,          FALSE,  FALSE},
-    {"pvGetComplete",   FT_PV,      TRUE,   2,          FALSE,          FALSE,  FALSE},
-    {"pvGetQ",          FT_PV,      FALSE,  0,          FALSE,          FALSE,  FALSE},
-    {"pvIndex",         FT_PV,      FALSE,  0,          FALSE,          FALSE,  FALSE},
-    {"pvMessage",       FT_PV,      FALSE,  0,          FALSE,          FALSE,  FALSE},
-    {"pvMonitor",       FT_PV,      FALSE,  0,          FALSE,          FALSE,  FALSE},
-    {"pvName",          FT_PV,      FALSE,  0,          FALSE,          FALSE,  FALSE},
-    {"pvPut",           FT_PV,      FALSE,  1,          FALSE,          FALSE,  FALSE},
-    {"pvPutCancel",     FT_PV,      TRUE,   0,          FALSE,          FALSE,  FALSE},
-    {"pvPutComplete",   FT_PV,      TRUE,   2,          FALSE,          FALSE,  FALSE},
-    {"pvSeverity",      FT_PV,      FALSE,  0,          FALSE,          FALSE,  FALSE},
-    {"pvStatus",        FT_PV,      FALSE,  0,          FALSE,          FALSE,  FALSE},
-    {"pvStopMonitor",   FT_PV,      FALSE,  0,          FALSE,          FALSE,  FALSE},
-    {"pvSync",          FT_PV,      TRUE,   0,          FALSE,          TRUE ,  FALSE},
-    {"pvTimeStamp",     FT_PV,      FALSE,  0,          FALSE,          FALSE,  FALSE},
-    {"seqLog",          FT_OTHER,   FALSE,  0,          FALSE,          FALSE,  FALSE},
-    {"pVar",            FT_OTHER,   FALSE,  0,          FALSE,          FALSE,  FALSE},
-    {"ssId",            FT_OTHER,   FALSE,  0,          FALSE,          FALSE,  FALSE},
-    {0,                 FT_OTHER,   FALSE,  0,          FALSE,          FALSE,  FALSE}
+    {"delay",           FT_OTHER,   FALSE,  0,          FALSE,          FALSE,  TRUE ,  0},
+    {"efClear",         FT_EVENT,   FALSE,  0,          TRUE,           FALSE,  FALSE,  0},
+    {"efSet",           FT_EVENT,   FALSE,  0,          TRUE,           FALSE,  FALSE,  0},
+    {"efTest",          FT_EVENT,   FALSE,  0,          FALSE,          FALSE,  FALSE,  0},
+    {"efTestAndClear",  FT_EVENT,   FALSE,  0,          FALSE,          FALSE,  FALSE,  0},
+    {"macValueGet",     FT_OTHER,   FALSE,  0,          FALSE,          FALSE,  FALSE,  0},
+    {"optGet",          FT_OTHER,   FALSE,  0,          FALSE,          FALSE,  FALSE,  0},
+    {"pvAssign",        FT_PV,      FALSE,  0,          FALSE,          FALSE,  FALSE,  0},
+    {"pvAssignCount",   FT_OTHER,   FALSE,  0,          FALSE,          FALSE,  FALSE,  0},
+    {"pvAssigned",      FT_PV,      FALSE,  0,          FALSE,          FALSE,  FALSE,  0},
+    {"pvChannelCount",  FT_OTHER,   FALSE,  0,          FALSE,          FALSE,  FALSE,  0},
+    {"pvConnectCount",  FT_OTHER,   FALSE,  0,          FALSE,          FALSE,  FALSE,  0},
+    {"pvConnected",     FT_PV,      FALSE,  0,          FALSE,          FALSE,  FALSE,  0},
+    {"pvCount",         FT_PV,      FALSE,  0,          FALSE,          FALSE,  FALSE,  0},
+    {"pvDisconnect",    FT_PV,      FALSE,  0,          FALSE,          FALSE,  FALSE,  0},
+    {"pvFlush",         FT_OTHER,   FALSE,  0,          FALSE,          FALSE,  FALSE,  0},
+    {"pvFlushQ",        FT_PV,      FALSE,  0,          FALSE,          FALSE,  FALSE,  0},
+    {"pvFreeQ",         FT_PV,      FALSE,  0,          FALSE,          FALSE,  FALSE,  0},
+    {"pvGet",           FT_PV,      FALSE,  2,          FALSE,          FALSE,  FALSE,  pvGetPutArgs},
+    {"pvGetCancel",     FT_PV,      TRUE,   0,          FALSE,          FALSE,  FALSE,  0},
+    {"pvGetComplete",   FT_PV,      TRUE,   2,          FALSE,          FALSE,  FALSE,  pvGetPutCompleteArgs},
+    {"pvGetQ",          FT_PV,      FALSE,  0,          FALSE,          FALSE,  FALSE,  0},
+    {"pvIndex",         FT_PV,      FALSE,  0,          FALSE,          FALSE,  FALSE,  0},
+    {"pvMessage",       FT_PV,      FALSE,  0,          FALSE,          FALSE,  FALSE,  0},
+    {"pvMonitor",       FT_PV,      FALSE,  0,          FALSE,          FALSE,  FALSE,  0},
+    {"pvName",          FT_PV,      FALSE,  0,          FALSE,          FALSE,  FALSE,  0},
+    {"pvPut",           FT_PV,      FALSE,  2,          FALSE,          FALSE,  FALSE,  pvGetPutArgs},
+    {"pvPutCancel",     FT_PV,      TRUE,   0,          FALSE,          FALSE,  FALSE,  0},
+    {"pvPutComplete",   FT_PV,      TRUE,   2,          FALSE,          FALSE,  FALSE,  pvGetPutCompleteArgs},
+    {"pvSeverity",      FT_PV,      FALSE,  0,          FALSE,          FALSE,  FALSE,  0},
+    {"pvStatus",        FT_PV,      FALSE,  0,          FALSE,          FALSE,  FALSE,  0},
+    {"pvStopMonitor",   FT_PV,      FALSE,  0,          FALSE,          FALSE,  FALSE,  0},
+    {"pvSync",          FT_PV,      TRUE,   0,          FALSE,          TRUE ,  FALSE,  0},
+    {"pvTimeStamp",     FT_PV,      FALSE,  0,          FALSE,          FALSE,  FALSE,  0},
+    {"seqLog",          FT_OTHER,   FALSE,  0,          FALSE,          FALSE,  FALSE,  0},
+    {"pVar",            FT_OTHER,   FALSE,  0,          FALSE,          FALSE,  FALSE,  0},
+    {"ssId",            FT_OTHER,   FALSE,  0,          FALSE,          FALSE,  FALSE,  0},
+    {0,                 FT_OTHER,   FALSE,  0,          FALSE,          FALSE,  FALSE,  0}
 };
 
 /* Insert builtin constants into symbol table */
