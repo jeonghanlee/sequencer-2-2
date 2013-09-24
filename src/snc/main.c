@@ -270,6 +270,22 @@ void error_at(const char *src_file, int line_num, const char *format, ...)
 	va_end(args);
 }
 
+/* location plus message and report a bug in snc */
+void assert_at(int cond, const char *src_file, int line_num, const char *format, ...)
+{
+	if (!cond)
+	{
+		va_list args;
+
+		report_loc(src_file, line_num);
+		fprintf(stderr, "snc bug (assertion failed): ");
+		va_start(args, format);
+		vfprintf(stderr, format, args);
+		va_end(args);
+		exit(EXIT_FAILURE);
+	}
+}
+
 void report_at_expr(Expr *ep, const char *format, ...)
 {
 	va_list args;
@@ -305,6 +321,22 @@ void error_at_expr(Expr *ep, const char *format, ...)
 	va_start(args, format);
 	vfprintf(stderr, format, args);
 	va_end(args);
+}
+
+/* with location from this expression and report a bug in snc */
+void assert_at_expr(int cond, struct expression *ep, const char *format, ...)
+{
+	if (!cond)
+	{
+		va_list args;
+
+		report_loc(ep->src_file, ep->line_num);
+		fprintf(stderr, "snc bug (assertion failed): ");
+		va_start(args, format);
+		vfprintf(stderr, format, args);
+		va_end(args);
+		exit(EXIT_FAILURE);
+	}
 }
 
 void report(const char *format, ...)

@@ -535,11 +535,8 @@ static void gen_expr(
 		gen_var_decl(ep->extra.e_decl);
 		break;
 	default:
-#ifdef DEBUG
-		report_at_expr(ep, "unhandled expression (%s:%s)\n",
+		assert_at_expr(impossible, ep, "unhandled expression (%s:%s)\n",
 			expr_type_name(ep), ep->value);
-#endif
-		assert(impossible);
 	}
 }
 

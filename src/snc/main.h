@@ -39,6 +39,10 @@ __attribute__((format(printf,3,4)));
 void error_at(const char *src_file, int line_num, const char *format, ...)
 __attribute__((format(printf,3,4)));
 
+/* location plus message and report a bug in snc */
+void assert_at(int cond, const char *src_file, int line_num, const char *format, ...)
+__attribute__((format(printf,4,5)));
+
 /* with location from this expression */
 struct expression;
 void report_at_expr(struct expression *ep, const char *format, ...)
@@ -51,6 +55,10 @@ __attribute__((format(printf,2,3)));
 /* with location from this expression and increase error count */
 void error_at_expr(struct expression *ep, const char *format, ...)
 __attribute__((format(printf,2,3)));
+
+/* with location from this expression and report a bug in snc */
+void assert_at_expr(int cond, struct expression *ep, const char *format, ...)
+__attribute__((format(printf,3,4)));
 
 /* message only */
 void report(const char *format, ...)
