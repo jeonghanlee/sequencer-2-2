@@ -16,10 +16,10 @@ in the file LICENSE that is included with this distribution.
 /*
  * seqFindProg() - find a program in the state program list from thread id.
  */
-SPROG *seqFindProg(epicsThreadId threadId)
+PROG *seqFindProg(epicsThreadId threadId)
 {
     SSCB *ss = seqFindStateSet(threadId);
-    return ss ? ss->sprog : NULL;
+    return ss ? ss->prog : NULL;
 }
 
 struct findStateSetArgs {
@@ -27,7 +27,7 @@ struct findStateSetArgs {
     epicsThreadId threadId;
 };
 
-static int findStateSet(SPROG *sp, void *param)
+static int findStateSet(PROG *sp, void *param)
 {
     struct findStateSetArgs *pargs = (struct findStateSetArgs *)param;
     unsigned nss;
@@ -63,10 +63,10 @@ struct traverseInstancesArgs {
     void *param;
 };
 
-static int traverseInstances(SPROG **ppInstances, seqProgram *pseq, void *param)
+static int traverseInstances(PROG **ppInstances, seqProgram *pseq, void *param)
 {
     struct traverseInstancesArgs *pargs = (struct traverseInstancesArgs *)param;
-    SPROG *sp;
+    PROG *sp;
     if (!ppInstances) return FALSE;
     foreach(sp, *ppInstances) {
         if (pargs->func(sp, pargs->param))
@@ -88,16 +88,16 @@ void seqTraverseProg(seqTraversee * func, void *param)
     traverseSequencerPrograms(traverseInstances, &args);
 }
 
-static int addProg(SPROG **ppInstances, seqProgram *pseq, void *param)
+static int addProg(PROG **ppInstances, seqProgram *pseq, void *param)
 {
-    SPROG *sp = (SPROG *)param;
+    PROG *sp = (PROG *)param;
 
     if (!ppInstances || !pseq) {
         return FALSE;
     }
     /* same program name */
     if (strcmp(sp->progName, pseq->progName) == 0) {
-        SPROG *curSP, *lastSP = NULL;
+        PROG *curSP, *lastSP = NULL;
         int instance = -1;
 
         /* determine maximum instance number for this program */
@@ -124,19 +124,19 @@ static int addProg(SPROG **ppInstances, seqProgram *pseq, void *param)
  * seqAddProg() - add a program to the program instance list.
  * Precondition: must not be already in the list.
  */
-void seqAddProg(SPROG *sp)
+void seqAddProg(PROG *sp)
 {
     traverseSequencerPrograms(addProg, sp);
 }
 
-static int delProg(SPROG **ppInstances, seqProgram *pseq, void *param)
+static int delProg(PROG **ppInstances, seqProgram *pseq, void *param)
 {
-    SPROG *sp = (SPROG *)param;
+    PROG *sp = (PROG *)param;
 
     if (!ppInstances || !pseq)
         return FALSE;
     if (strcmp(sp->progName, pseq->progName) == 0) {
-        SPROG *curSP;
+        PROG *curSP;
 
         if (*ppInstances == sp) {
             *ppInstances = sp->next;
@@ -157,7 +157,7 @@ static int delProg(SPROG **ppInstances, seqProgram *pseq, void *param)
 /*
  * seqDelProg() - delete a program from the program instance list.
  */
-void seqDelProg(SPROG *sp)
+void seqDelProg(PROG *sp)
 {
     traverseSequencerPrograms(delProg, sp);
 }

@@ -20,7 +20,7 @@ static void ss_entry(void *arg);
  */
 void sequencer (void *arg)	/* ptr to original (global) state program table */
 {
-	SPROG		*sp = (SPROG *)arg;
+	PROG		*sp = (PROG *)arg;
 	unsigned	nss;
 	size_t		threadLen;
 	char		threadName[THREAD_NAME_SIZE+10];
@@ -179,7 +179,7 @@ void ss_read_buffer(SSCB *ss, CHAN *ch, boolean dirty_only)
  * ss_read_all_buffer() - Call ss_read_buffer_static
  * for all channels.
  */
-static void ss_read_all_buffer(SPROG *sp, SSCB *ss)
+static void ss_read_all_buffer(PROG *sp, SSCB *ss)
 {
 	unsigned nch;
 
@@ -194,10 +194,10 @@ static void ss_read_all_buffer(SPROG *sp, SSCB *ss)
 /*
  * ss_read_all_buffer_selective() - Call ss_read_buffer_static
  * for all channels that are sync'ed to the given event flag.
- * NOTE: calling code must take sp->programLock, as we traverse
+ * NOTE: calling code must take sp->lock, as we traverse
  * the list of channels synced to this event flag.
  */
-void ss_read_buffer_selective(SPROG *sp, SSCB *ss, EV_ID ev_flag)
+void ss_read_buffer_selective(PROG *sp, SSCB *ss, EV_ID ev_flag)
 {
 	CHAN *ch = sp->syncedChans[ev_flag];
 	while (ch)
@@ -215,7 +215,7 @@ void ss_read_buffer_selective(SPROG *sp, SSCB *ss, EV_ID ev_flag)
  */
 void ss_write_buffer(CHAN *ch, void *val, PVMETA *meta, boolean dirtify)
 {
-	SPROG *sp = ch->sprog;
+	PROG *sp = ch->prog;
 	char *buf = bufPtr(ch);		/* shared buffer */
 	/* Must use dbCount for db channels, else we overwrite
 	   elements we didn't get */
@@ -251,7 +251,7 @@ void ss_write_buffer(CHAN *ch, void *val, PVMETA *meta, boolean dirtify)
 static void ss_entry(void *arg)
 {
 	SSCB		*ss = (SSCB *)arg;
-	SPROG		*sp = ss->sprog;
+	PROG		*sp = ss->prog;
 	SEQ_VARS	*var;
 
 	if (optTest(sp, OPT_SAFE))
@@ -314,7 +314,7 @@ static void ss_entry(void *arg)
 		/* Setting this semaphore here guarantees that a when() is
 		 * always executed at least once when a state is first entered.
 		 */
-		epicsEventSignal(ss->syncSemId);
+		epicsEventSignal(ss->syncSem);
 
 		pvTimeGetCurrentDouble(&now);
 
@@ -334,7 +334,7 @@ static void ss_entry(void *arg)
 			/* Wake up on PV event, event flag, or expired delay */
 			DEBUG("before epicsEventWaitWithTimeout(ss=%d,timeout=%f)\n",
 				ss - sp->ss, ss->wakeupTime - now);
-			epicsEventWaitWithTimeout(ss->syncSemId, ss->wakeupTime - now);
+			epicsEventWaitWithTimeout(ss->syncSem, ss->wakeupTime - now);
 			DEBUG("after epicsEventWaitWithTimeout()\n");
 
 			/* Check whether we have been asked to exit */
@@ -396,7 +396,7 @@ exit:
  */
 epicsShareFunc void seqStop(epicsThreadId tid)
 {
-	SPROG	*sp;
+	PROG	*sp;
 
 	/* Check that this is indeed a state program thread */
 	sp = seqFindProg(tid);
@@ -409,7 +409,7 @@ epicsShareFunc void seqStop(epicsThreadId tid)
  * ss_wakeup() -- wake up each state set that is waiting on this event
  * based on the current event mask; eventNum = 0 means wake all state sets.
  */
-void ss_wakeup(SPROG *sp, unsigned eventNum)
+void ss_wakeup(PROG *sp, unsigned eventNum)
 {
 	unsigned nss;
 
@@ -418,7 +418,7 @@ void ss_wakeup(SPROG *sp, unsigned eventNum)
 	{
 		SSCB *ss = sp->ss + nss;
 
-		epicsMutexMustLock(sp->programLock);
+		epicsMutexMustLock(sp->lock);
 		/* If event bit in mask is set, wake that state set */
 		DEBUG("ss_wakeup: eventNum=%d, mask=%u, state set=%d\n", eventNum, 
 			ss->mask? *ss->mask : 0, (int)ssNum(ss));
@@ -426,8 +426,8 @@ void ss_wakeup(SPROG *sp, unsigned eventNum)
 			(ss->mask && bitTest(ss->mask, eventNum)))
 		{
 			DEBUG("ss_wakeup: waking up state set=%d\n", (int)ssNum(ss));
-			epicsEventSignal(ss->syncSemId); /* wake up ss thread */
+			epicsEventSignal(ss->syncSem); /* wake up ss thread */
 		}
-		epicsMutexUnlock(sp->programLock);
+		epicsMutexUnlock(sp->lock);
 	}
 }

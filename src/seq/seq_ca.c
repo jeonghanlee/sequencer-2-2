@@ -46,7 +46,7 @@ static void proc_db_events(
  * seq_connect() - Initiate connect & monitor requests to PVs.
  * If wait is TRUE, wait for all connections to be established.
  */
-pvStat seq_connect(SPROG *sp, boolean wait)
+pvStat seq_connect(PROG *sp, boolean wait)
 {
 	pvStat		status;
 	unsigned	nch;
@@ -96,12 +96,12 @@ pvStat seq_connect(SPROG *sp, boolean wait)
 			if (sp->die)
 				return pvStatERROR;
 
-			epicsMutexMustLock(sp->programLock);
+			epicsMutexMustLock(sp->lock);
 			ac = sp->assignCount;
 			mc = sp->monitorCount;
 			cc = sp->connectCount;
 			gmc = sp->gotMonitorCount;
-			epicsMutexUnlock(sp->programLock);
+			epicsMutexUnlock(sp->lock);
 
 			ready = ac == cc && mc == gmc;
 			if (!ready)
@@ -147,7 +147,7 @@ static void seq_get_handler(
 	PVREQ	*rq = (PVREQ *)arg;
 	CHAN	*ch = rq->ch;
 	SSCB	*ss = rq->ss;
-	SPROG	*sp = ch->sprog;
+	PROG	*sp = ch->prog;
 
 	assert(ch->dbch != NULL);
 	freeListFree(sp->pvReqPool, arg);
@@ -166,7 +166,7 @@ static void seq_put_handler(
 	PVREQ	*rq = (PVREQ *)arg;
 	CHAN	*ch = rq->ch;
 	SSCB	*ss = rq->ss;
-	SPROG	*sp = ch->sprog;
+	PROG	*sp = ch->prog;
 
 	assert(ch->dbch != NULL);
 	freeListFree(sp->pvReqPool, arg);
@@ -182,7 +182,7 @@ static void seq_mon_handler(
 	pvType type, unsigned count, pvValue *value, void *arg, pvStat status)
 {
 	CHAN	*ch = (CHAN *)arg;
-	SPROG	*sp = ch->sprog;
+	PROG	*sp = ch->prog;
 	DBCHAN	*dbch = ch->dbch;
 
 	assert(dbch != NULL);
@@ -190,14 +190,14 @@ static void seq_mon_handler(
 	if (!dbch->gotMonitor)
 	{
 		dbch->gotMonitor = TRUE;
-		epicsMutexMustLock(sp->programLock);
+		epicsMutexMustLock(sp->lock);
 		sp->gotMonitorCount++;
 		if (sp->gotMonitorCount == sp->monitorCount
 			&& sp->connectCount == sp->assignCount)
 		{
 			epicsEventSignal(sp->ready);
 		}
-		epicsMutexUnlock(sp->programLock);
+		epicsMutexUnlock(sp->lock);
 	}
 }
 
@@ -246,7 +246,7 @@ static void proc_db_events(
 	pvStat		status
 )
 {
-	SPROG	*sp = ch->sprog;
+	PROG	*sp = ch->prog;
 	DBCHAN	*dbch = ch->dbch;
 	static const char *event_type_name[] = {"get","put","mon"};
 
@@ -305,7 +305,7 @@ static void proc_db_events(
 		}
 	}
 
-	epicsMutexMustLock(sp->programLock);
+	epicsMutexMustLock(sp->lock);
 
 	/* Signal completion */
 	if (ss)
@@ -313,10 +313,10 @@ static void proc_db_events(
 		switch (evtype)
 		{
 		case pvEventGet:
-			epicsEventSignal(ss->getSemId[chNum(ch)]);
+			epicsEventSignal(ss->getSem[chNum(ch)]);
 			break;
 		case pvEventPut:
-			epicsEventSignal(ss->putSemId[chNum(ch)]);
+			epicsEventSignal(ss->putSem[chNum(ch)]);
 			break;
 		default:
 			break;
@@ -330,17 +330,17 @@ static void proc_db_events(
 	/* Wake up each state set that uses this channel in an event */
 	ss_wakeup(sp, ch->eventNum);
 
-	epicsMutexUnlock(sp->programLock);
+	epicsMutexUnlock(sp->lock);
 }
 
 /* Disconnect all database channels */
-void seq_disconnect(SPROG *sp)
+void seq_disconnect(PROG *sp)
 {
 	unsigned nch;
 
 	DEBUG("seq_disconnect: sp = %p\n", sp);
 
-	epicsMutexMustLock(sp->programLock);
+	epicsMutexMustLock(sp->lock);
 	for (nch = 0; nch < sp->numChans; nch++)
 	{
 		CHAN	*ch = sp->chan + nch;
@@ -369,7 +369,7 @@ void seq_disconnect(SPROG *sp)
 			sp->gotMonitorCount--;
 		}
 	}
-	epicsMutexUnlock(sp->programLock);
+	epicsMutexUnlock(sp->lock);
 
 	pvSysFlush(sp->pvSys);
 }
@@ -377,7 +377,7 @@ void seq_disconnect(SPROG *sp)
 pvStat seq_camonitor(CHAN *ch, boolean turn_on)
 {
 	DBCHAN	*dbch = ch->dbch;
-	SPROG	*sp = ch->sprog;
+	PROG	*sp = ch->prog;
 	pvStat	status;
 
 	assert(ch);
@@ -397,9 +397,9 @@ pvStat seq_camonitor(CHAN *ch, boolean turn_on)
 	{
 		status = pvVarMonitorOff(&dbch->pvid);
 		dbch->gotMonitor = FALSE;
-		epicsMutexMustLock(sp->programLock);
+		epicsMutexMustLock(sp->lock);
 		sp->gotMonitorCount -= 1;
-		epicsMutexUnlock(sp->programLock);
+		epicsMutexUnlock(sp->lock);
 	}
 	if (status != pvStatOK)
 		errlogSevPrintf(errlogFatal, "seq_camonitor: pvVarMonitor%s(var '%s', pv '%s') failure: %s\n",
@@ -414,10 +414,10 @@ pvStat seq_camonitor(CHAN *ch, boolean turn_on)
 void seq_conn_handler(int connected, void *arg)
 {
 	CHAN	*ch = (CHAN *)arg;
-	SPROG	*sp = ch->sprog;
+	PROG	*sp = ch->prog;
 	DBCHAN	*dbch = ch->dbch;
 
-	epicsMutexMustLock(sp->programLock);
+	epicsMutexMustLock(sp->lock);
 
 	assert(dbch != NULL);
 
@@ -438,8 +438,8 @@ void seq_conn_handler(int connected, void *arg)
 			/* terminate outstanding requests that wait for completion */
 			for (nss = 0; nss < sp->numSS; nss++)
 			{
-				epicsEventSignal(sp->ss[nss].getSemId[chNum(ch)]);
-				epicsEventSignal(sp->ss[nss].putSemId[chNum(ch)]);
+				epicsEventSignal(sp->ss[nss].getSem[chNum(ch)]);
+				epicsEventSignal(sp->ss[nss].putSem[chNum(ch)]);
 			}
 		}
 		else
@@ -481,7 +481,7 @@ void seq_conn_handler(int connected, void *arg)
 				ch->varName, dbch->dbName);
 		}
 	}
-	epicsMutexUnlock(sp->programLock);
+	epicsMutexUnlock(sp->lock);
 
 	/* Wake up each state set that is waiting for event processing.
 	   Why each one? Because pvConnectCount and pvMonitorCount should

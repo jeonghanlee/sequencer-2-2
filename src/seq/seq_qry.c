@@ -30,13 +30,13 @@ void print_channel_value(pr_fun *pr, CHAN *ch, void *val)
 epicsShareFunc void seqShow(epicsThreadId tid)
 {
 	SSCB	*ss = seqQryFind(tid);
-	SPROG	*sp;
+	PROG	*sp;
 	STATE	*st;
 	unsigned nss;
 	double	timeNow;
 
 	if (ss == NULL) return;
-	sp = ss->sprog;
+	sp = ss->prog;
 
 	/* Print info about state program */
 	printf("State Program: \"%s\"\n", sp->progName);
@@ -46,7 +46,7 @@ epicsShareFunc void seqShow(epicsThreadId tid)
 	if (sp->numQueues > 0)
 		printf("  queue array address = %p\n",sp->queues);
 	printf("  number of channels = %d\n", sp->numChans);
-	/* Note: need not take programLock since read-ony */
+	/* Note: need not take lock since read-ony */
 	printf("  number of channels assigned = %d\n", sp->assignCount);
 	printf("  number of channels connected = %d\n", sp->connectCount);
 	printf("  number of channels monitored = %d\n", sp->monitorCount);
@@ -117,14 +117,14 @@ epicsShareFunc void seqShow(epicsThreadId tid)
 epicsShareFunc void seqChanShow(epicsThreadId tid, const char *str)
 {
 	SSCB	*ss = seqQryFind(tid);
-	SPROG	*sp;
+	PROG	*sp;
 	int	nch = 0;
 	int	dn = 1;
 	char	connQual;
 	int	match, showAll;
 
 	if (ss == NULL) return;
-	sp = ss->sprog;
+	sp = ss->prog;
 
 	printf("State Program: \"%s\"\n", sp->progName);
 	printf("Number of channels=%d\n", sp->numChans);
@@ -228,7 +228,7 @@ struct seqStats
 	int	nConn;
 };
 
-static int seqcarCollect(SPROG *sp, void *param)
+static int seqcarCollect(PROG *sp, void *param)
 {
 	struct seqStats	*pstats = (struct seqStats *) param;
 	unsigned	nch;
@@ -281,12 +281,12 @@ epicsShareFunc void seqcar(int level)
 epicsShareFunc void seqQueueShow(epicsThreadId tid)
 {
 	SSCB	*ss = seqQryFind(tid);
-	SPROG	*sp;
+	PROG	*sp;
 	int	nq = 0;
 	int	dn = 1;
 
 	if (ss == NULL) return;
-	sp = ss->sprog;
+	sp = ss->prog;
 	printf("State Program: \"%s\"\n", sp->progName);
 	printf("Number of queues = %d\n", sp->numQueues);
 	/* terminate whenever nq leaves the range */
@@ -382,7 +382,7 @@ static SSCB *seqQryFind(epicsThreadId tid)
 }
 
 /* This routine is called by seqTraverseProg() for seqShowAll() */
-static int seqShowSP(SPROG *sp, void *parg)
+static int seqShowSP(PROG *sp, void *parg)
 {
 	unsigned	nss;
 	const char	*progName;

@@ -26,13 +26,13 @@ struct macro
 static unsigned seqMacParseName(const char *str);
 static unsigned seqMacParseValue(const char *str);
 static const char *skipBlanks(const char *pchr);
-static MACRO *seqMacTblGet(SPROG *sp, char *name);
+static MACRO *seqMacTblGet(PROG *sp, char *name);
 
 /* 
  *seqMacEval - substitute macro value into a string containing:
  * ....{mac_name}....
  */
-void seqMacEval(SPROG *sp, const char *inStr, char *outStr, size_t maxChar)
+void seqMacEval(PROG *sp, const char *inStr, char *outStr, size_t maxChar)
 {
 	char	name[50], *value, *tmp;
 	size_t	valLth, nameLth;
@@ -98,7 +98,7 @@ void seqMacEval(SPROG *sp, const char *inStr, char *outStr, size_t maxChar)
 /*
  * seqMacValGet - internal routine to convert macro name to macro value.
  */
-char *seqMacValGet(SPROG *sp, const char *name)
+char *seqMacValGet(PROG *sp, const char *name)
 {
 	MACRO	*mac;
 
@@ -121,7 +121,7 @@ char *seqMacValGet(SPROG *sp, const char *name)
  * Assumes the table may already contain entries (values may be changed).
  * String for name and value are allocated dynamically from pool.
  */
-void seqMacParse(SPROG *sp, const char *macStr)
+void seqMacParse(PROG *sp, const char *macStr)
 {
 	unsigned	nChar;
 	MACRO		*mac;		/* macro tbl entry */
@@ -254,7 +254,7 @@ static const char *skipBlanks(const char *pchr)
  * seqMacTblGet - find a match for the specified name, otherwise
  * return a new empty slot in macro table.
  */
-static MACRO *seqMacTblGet(SPROG *sp, char *name)
+static MACRO *seqMacTblGet(PROG *sp, char *name)
 {
 	MACRO	*mac, *lastMac = NULL;
 
@@ -281,7 +281,7 @@ static MACRO *seqMacTblGet(SPROG *sp, char *name)
 /*
  * seqMacFree - free all the memory
  */
-void seqMacFree(SPROG *sp)
+void seqMacFree(PROG *sp)
 {
 	MACRO	*mac, *lastMac = NULL;
 

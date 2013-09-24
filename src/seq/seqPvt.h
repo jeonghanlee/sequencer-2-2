@@ -40,14 +40,14 @@ in the file LICENSE that is included with this distribution.
 #include "seq_queue.h"
 
 #define valPtr(ch,ss)		((char*)(ss)->var+(ch)->offset)
-#define bufPtr(ch)		((char*)(ch)->sprog->var+(ch)->offset)
+#define bufPtr(ch)		((char*)(ch)->prog->var+(ch)->offset)
 
-#define ssNum(ss)		((ss)-(ss)->sprog->ss)
-#define chNum(ch)		((ch)-(ch)->sprog->chan)
+#define ssNum(ss)		((ss)-(ss)->prog->ss)
+#define chNum(ch)		((ch)-(ch)->prog->chan)
 
 #define metaPtr(ch,ss) (			\
 	(ch)->dbch				\
-	?(optTest((ch)->sprog,OPT_SAFE)		\
+	?(optTest((ch)->prog,OPT_SAFE)		\
 		?(ss)->metaData + chNum(ch)	\
 		:&(ch)->dbch->metaData)		\
 	:0					\
@@ -76,7 +76,7 @@ typedef struct channel		CHAN;
 typedef seqState		STATE;
 typedef struct macro		MACRO;
 typedef struct state_set	SSCB;
-typedef struct program_instance	SPROG;
+typedef struct program_instance	PROG;
 typedef struct pvreq		PVREQ;
 typedef const struct pv_type	PVTYPE;
 typedef struct pv_meta_data	PVMETA;
@@ -85,12 +85,12 @@ typedef struct pv_meta_data	PVMETA;
 struct channel
 {
 	/* static channel data (assigned once on startup) */
-	size_t		offset;		/* offset to value (e.g. in sprog->var) */
+	size_t		offset;		/* offset to value (e.g. in prog->var) */
 	const char	*varName;	/* variable name */
 	unsigned	count;		/* number of elements in array */
 	unsigned	eventNum;	/* event number */
 	PVTYPE		*type;		/* request type info */
-	SPROG		*sprog;		/* state program that owns this struct*/
+	PROG		*prog;		/* state program that owns this struct*/
 
 	/* dynamic channel data (assigned at runtime) */
 	DBCHAN		*dbch;		/* channel assigned to a named db pv */
@@ -138,7 +138,7 @@ struct state_set
 	epicsThreadId	threadId;	/* thread id */
 	unsigned	numStates;	/* number of states */
 	STATE		*states;	/* ptr to array of state blocks */
-	SPROG		*sprog;		/* ptr back to state program block */
+	PROG		*prog;		/* ptr back to state program block */
 
 	/* dynamic state set data (assigned at runtime) */
 	int		currentState;	/* current state index, -1 if none */
@@ -147,11 +147,11 @@ struct state_set
 	const bitMask	*mask;		/* current event mask */
 	double		timeEntered;	/* time that current state was entered */
 	double		wakeupTime;	/* next time state set should wake up */
-	epicsEventId	syncSemId;	/* semaphore for event sync */
+	epicsEventId	syncSem;	/* semaphore for event sync */
 	epicsEventId	dead;		/* event to signal state set exit done */
 	/* these are arrays, one for each channel */
-	epicsEventId	*getSemId;	/* semaphores for async get */
-	epicsEventId	*putSemId;	/* semaphores for async put */
+	epicsEventId	*getSem;	/* semaphores for async get */
+	epicsEventId	*putSem;	/* semaphores for async put */
 	PVREQ		**getReq;	/* get requests */
 	PVREQ		**putReq;	/* put requests */
 	PVMETA		*metaData;	/* meta data (safe mode) */
@@ -185,8 +185,8 @@ struct program_instance
 	unsigned	numEvFlags;	/* number of event flags */
 
 	/* dynamic program data (assigned at runtime) */
-	epicsMutexId	programLock;	/* mutex for locking dynamic program data */
-        /* the following five members must always be protected by programLock */
+	epicsMutexId	lock;	/* mutex for locking dynamic program data */
+        /* the following five members must always be protected by lock */
 	bitMask		*evFlags;	/* event bits for event flags & channels */
 	CHAN		**syncedChans;	/* for each event flag, start of synced list */
 	unsigned	assignCount;	/* number of channels assigned to ext. pv */
@@ -199,7 +199,7 @@ struct program_instance
 	boolean		die;		/* flag set when seqStop is called */
 	epicsEventId	ready;		/* all channels connected & got 1st monitor */
 	epicsEventId	dead;		/* event to signal exit of main thread done */
-	SPROG		*next;		/* next element in program list (global lock) */
+	PROG		*next;		/* next element in program list */
 };
 
 /* Request data for pvPut and pvGet */
@@ -220,37 +220,37 @@ struct pvreq
 void sequencer(void *arg);
 void ss_write_buffer(CHAN *ch, void *val, PVMETA *meta, boolean dirtify);
 void ss_read_buffer(SSCB *ss, CHAN *ch, boolean dirty_only);
-void ss_read_buffer_selective(SPROG *sp, SSCB *ss, EV_ID ev_flag);
-void ss_wakeup(SPROG *sp, unsigned eventNum);
+void ss_read_buffer_selective(PROG *sp, SSCB *ss, EV_ID ev_flag);
+void ss_wakeup(PROG *sp, unsigned eventNum);
 
 /* seq_mac.c */
-void seqMacParse(SPROG *sp, const char *macStr);
-char *seqMacValGet(SPROG *sp, const char *name);
-void seqMacEval(SPROG *sp, const char *inStr, char *outStr, size_t maxChar);
-void seqMacFree(SPROG *sp);
+void seqMacParse(PROG *sp, const char *macStr);
+char *seqMacValGet(PROG *sp, const char *name);
+void seqMacEval(PROG *sp, const char *inStr, char *outStr, size_t maxChar);
+void seqMacFree(PROG *sp);
 
 /* seq_ca.c */
 pvConnFunc seq_conn_handler;
 pvEventFunc seq_event_handler;
-pvStat seq_connect(SPROG *sp, boolean wait);
-void seq_disconnect(SPROG *sp);
+pvStat seq_connect(PROG *sp, boolean wait);
+void seq_disconnect(PROG *sp);
 pvStat seq_camonitor(CHAN *ch, boolean on);
 
 /* seq_prog.c */
-typedef int seqTraversee(SPROG *prog, void *param);
+typedef int seqTraversee(PROG *prog, void *param);
 void seqTraverseProg(seqTraversee *func, void *param);
 SSCB *seqFindStateSet(epicsThreadId threadId);
-SPROG *seqFindProg(epicsThreadId threadId);
-void seqDelProg(SPROG *sp);
-void seqAddProg(SPROG *sp);
+PROG *seqFindProg(epicsThreadId threadId);
+void seqDelProg(PROG *sp);
+void seqAddProg(PROG *sp);
 
 /* seqCommands.c */
-typedef int sequencerProgramTraversee(SPROG **sprog, seqProgram *pseq, void *param);
+typedef int sequencerProgramTraversee(PROG **prog, seqProgram *pseq, void *param);
 int traverseSequencerPrograms(sequencerProgramTraversee *traversee, void *param);
-void createOrAttachPvSystem(SPROG *sp);
+void createOrAttachPvSystem(PROG *sp);
 
 /* seq_main.c */
-void seq_free(SPROG *sp);
+void seq_free(PROG *sp);
 
 /* debug/query support */
 typedef int pr_fun(const char *format,...);

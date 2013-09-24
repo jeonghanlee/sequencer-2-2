@@ -56,11 +56,11 @@ static pvStat check_connected(DBCHAN *dbch, PVMETA *meta)
  */
 epicsShareFunc pvStat seq_pvGet(SS_ID ss, VAR_ID varId, enum compType compType)
 {
-	SPROG		*sp = ss->sprog;
+	PROG		*sp = ss->prog;
 	CHAN		*ch = sp->chan + varId;
 	pvStat		status;
 	PVREQ		*req;
-	epicsEventId	getSem = ss->getSemId[varId];
+	epicsEventId	getSem = ss->getSem[varId];
 	DBCHAN		*dbch = ch->dbch;
 	PVMETA		*meta = metaPtr(ch,ss);
 	double		tmo = seq_sync_timeout;
@@ -218,8 +218,8 @@ epicsShareFunc pvStat seq_pvGet(SS_ID ss, VAR_ID varId, enum compType compType)
  */
 epicsShareFunc boolean seq_pvGetComplete(SS_ID ss, VAR_ID varId)
 {
-	epicsEventId	getSem = ss->getSemId[varId];
-	SPROG		*sp = ss->sprog;
+	epicsEventId	getSem = ss->getSem[varId];
+	PROG		*sp = ss->prog;
 	CHAN		*ch = sp->chan + varId;
 	pvStat		status;
 
@@ -263,7 +263,7 @@ epicsShareFunc boolean seq_pvGetComplete(SS_ID ss, VAR_ID varId)
 		ss->getReq[varId] = NULL;
 		epicsEventSignal(getSem);
 		errlogSevPrintf(errlogFatal, "pvGetComplete: "
-		  "epicsEventTryWait(getSemId[%d]) failure\n", varId);
+		  "epicsEventTryWait(getSem[%d]) failure\n", varId);
 	default: /* pacify gcc which does not understand the we checked all possibilities */
 		return FALSE;
 	}
@@ -325,7 +325,7 @@ static void anonymous_put(SS_ID ss, CHAN *ch)
 	if (ch->syncedTo)
 		seq_efSet(ss, ch->syncedTo);
 	/* Wake up each state set that uses this channel in an event */
-	ss_wakeup(ss->sprog, ch->eventNum);
+	ss_wakeup(ss->prog, ch->eventNum);
 }
 
 /*
@@ -333,7 +333,7 @@ static void anonymous_put(SS_ID ss, CHAN *ch)
  */
 epicsShareFunc pvStat seq_pvPut(SS_ID ss, VAR_ID varId, enum compType compType)
 {
-	SPROG	*sp = ss->sprog;
+	PROG	*sp = ss->prog;
 	CHAN	*ch = sp->chan + varId;
 	pvStat	status;
 	unsigned count;
@@ -341,7 +341,7 @@ epicsShareFunc pvStat seq_pvPut(SS_ID ss, VAR_ID varId, enum compType compType)
 	PVREQ	*req;
 	DBCHAN	*dbch = ch->dbch;
 	PVMETA	*meta = metaPtr(ch,ss);
-	epicsEventId	putSem = ss->putSemId[varId];
+	epicsEventId	putSem = ss->putSem[varId];
 	double	tmo = seq_sync_timeout;
 
 	DEBUG("pvPut: pv name=%s, var=%p\n", dbch ? dbch->dbName : "<anonymous>", var);
@@ -519,13 +519,13 @@ epicsShareFunc boolean seq_pvPutComplete(
 	boolean		any,
 	boolean		*complete)
 {
-	SPROG		*sp = ss->sprog;
+	PROG		*sp = ss->prog;
 	boolean		anyDone = FALSE, allDone = TRUE;
 	unsigned	n;
 
 	for (n = 0; n < length; n++)
 	{
-		epicsEventId	putSem = ss->putSemId[varId+n];
+		epicsEventId	putSem = ss->putSem[varId+n];
 		boolean		done = FALSE;
 		CHAN		*ch = sp->chan + varId + n;
 
@@ -595,7 +595,7 @@ epicsShareFunc boolean seq_pvPutComplete(
  */
 epicsShareFunc pvStat seq_pvAssign(SS_ID ss, VAR_ID varId, const char *pvName)
 {
-	SPROG	*sp = ss->sprog;
+	PROG	*sp = ss->prog;
 	CHAN	*ch = sp->chan + varId;
 	pvStat	status = pvStatOK;
 	DBCHAN	*dbch = ch->dbch;
@@ -605,7 +605,7 @@ epicsShareFunc pvStat seq_pvAssign(SS_ID ss, VAR_ID varId, const char *pvName)
 
 	DEBUG("Assign %s to \"%s\"\n", ch->varName, new_pv_name);
 
-	epicsMutexMustLock(sp->programLock);
+	epicsMutexMustLock(sp->lock);
 
 	if (dbch)	/* was assigned to a named PV */
 	{
@@ -674,7 +674,7 @@ epicsShareFunc pvStat seq_pvAssign(SS_ID ss, VAR_ID varId, const char *pvName)
 		}
 	}
 
-	epicsMutexUnlock(sp->programLock);
+	epicsMutexUnlock(sp->lock);
 
 	return status;
 }
@@ -684,7 +684,7 @@ epicsShareFunc pvStat seq_pvAssign(SS_ID ss, VAR_ID varId, const char *pvName)
  */
 epicsShareFunc pvStat seq_pvMonitor(SS_ID ss, VAR_ID varId)
 {
-	SPROG	*sp = ss->sprog;
+	PROG	*sp = ss->prog;
 	CHAN	*ch = sp->chan + varId;
 	DBCHAN	*dbch = ch->dbch;
 
@@ -710,7 +710,7 @@ epicsShareFunc pvStat seq_pvMonitor(SS_ID ss, VAR_ID varId)
  */
 epicsShareFunc pvStat seq_pvStopMonitor(SS_ID ss, VAR_ID varId)
 {
-	SPROG	*sp = ss->sprog;
+	PROG	*sp = ss->prog;
 	CHAN	*ch = sp->chan + varId;
 	DBCHAN	*dbch = ch->dbch;
 
@@ -737,12 +737,12 @@ epicsShareFunc pvStat seq_pvStopMonitor(SS_ID ss, VAR_ID varId)
  */
 epicsShareFunc void seq_pvSync(SS_ID ss, VAR_ID varId, unsigned length, EV_ID new_ev_flag)
 {
-	SPROG	*sp = ss->sprog;
+	PROG	*sp = ss->prog;
 	unsigned i;
 
 	assert(new_ev_flag >= 0 && new_ev_flag <= sp->numEvFlags);
 
-	epicsMutexMustLock(sp->programLock);
+	epicsMutexMustLock(sp->lock);
 	for (i=0; i<length; i++)
 	{
 		CHAN	*this_ch = sp->chan + varId + i;
@@ -781,7 +781,7 @@ epicsShareFunc void seq_pvSync(SS_ID ss, VAR_ID varId, unsigned length, EV_ID ne
 			}
 		}
 	}
-	epicsMutexUnlock(sp->programLock);
+	epicsMutexUnlock(sp->lock);
 }
 
 /*
@@ -789,7 +789,7 @@ epicsShareFunc void seq_pvSync(SS_ID ss, VAR_ID varId, unsigned length, EV_ID ne
  */
 epicsShareFunc unsigned seq_pvChannelCount(SS_ID ss)
 {
-	return ss->sprog->numChans;
+	return ss->prog->numChans;
 }
 
 /*
@@ -797,7 +797,7 @@ epicsShareFunc unsigned seq_pvChannelCount(SS_ID ss)
  */
 epicsShareFunc unsigned seq_pvConnectCount(SS_ID ss)
 {
-	return ss->sprog->connectCount;
+	return ss->prog->connectCount;
 }
 
 /*
@@ -805,13 +805,13 @@ epicsShareFunc unsigned seq_pvConnectCount(SS_ID ss)
  */
 epicsShareFunc unsigned seq_pvAssignCount(SS_ID ss)
 {
-	return ss->sprog->assignCount;
+	return ss->prog->assignCount;
 }
 
 /* Flush outstanding PV requests */
 epicsShareFunc void seq_pvFlush(SS_ID ss)
 {
-	pvSysFlush(ss->sprog->pvSys);
+	pvSysFlush(ss->prog->pvSys);
 }
 
 /*
@@ -819,7 +819,7 @@ epicsShareFunc void seq_pvFlush(SS_ID ss)
  */
 epicsShareFunc boolean seq_pvConnected(SS_ID ss, VAR_ID varId)
 {
-	CHAN *ch = ss->sprog->chan + varId;
+	CHAN *ch = ss->prog->chan + varId;
 	return ch->dbch && ch->dbch->connected;
 }
 
@@ -828,7 +828,7 @@ epicsShareFunc boolean seq_pvConnected(SS_ID ss, VAR_ID varId)
  */
 epicsShareFunc boolean seq_pvAssigned(SS_ID ss, VAR_ID varId)
 {
-	return ss->sprog->chan[varId].dbch != NULL;
+	return ss->prog->chan[varId].dbch != NULL;
 }
 
 /*
@@ -837,7 +837,7 @@ epicsShareFunc boolean seq_pvAssigned(SS_ID ss, VAR_ID varId)
  */
 epicsShareFunc unsigned seq_pvCount(SS_ID ss, VAR_ID varId)
 {
-	CHAN *ch = ss->sprog->chan + varId;
+	CHAN *ch = ss->prog->chan + varId;
 	return ch->dbch ? ch->dbch->dbCount : ch->count;
 }
 
@@ -846,7 +846,7 @@ epicsShareFunc unsigned seq_pvCount(SS_ID ss, VAR_ID varId)
  */
 epicsShareFunc char *seq_pvName(SS_ID ss, VAR_ID varId)
 {
-	CHAN *ch = ss->sprog->chan + varId;
+	CHAN *ch = ss->prog->chan + varId;
 	return ch->dbch ? ch->dbch->dbName : NULL;
 }
 
@@ -855,7 +855,7 @@ epicsShareFunc char *seq_pvName(SS_ID ss, VAR_ID varId)
  */
 epicsShareFunc pvStat seq_pvStatus(SS_ID ss, VAR_ID varId)
 {
-	CHAN	*ch = ss->sprog->chan + varId;
+	CHAN	*ch = ss->prog->chan + varId;
 	PVMETA	*meta = metaPtr(ch,ss);
 	return ch->dbch ? meta->status : pvStatOK;
 }
@@ -865,7 +865,7 @@ epicsShareFunc pvStat seq_pvStatus(SS_ID ss, VAR_ID varId)
  */
 epicsShareFunc pvSevr seq_pvSeverity(SS_ID ss, VAR_ID varId)
 {
-	CHAN	*ch = ss->sprog->chan + varId;
+	CHAN	*ch = ss->prog->chan + varId;
 	PVMETA	*meta = metaPtr(ch,ss);
 	return ch->dbch ? meta->severity : pvSevrOK;
 }
@@ -875,7 +875,7 @@ epicsShareFunc pvSevr seq_pvSeverity(SS_ID ss, VAR_ID varId)
  */
 epicsShareFunc const char *seq_pvMessage(SS_ID ss, VAR_ID varId)
 {
-	CHAN	*ch = ss->sprog->chan + varId;
+	CHAN	*ch = ss->prog->chan + varId;
 	PVMETA	*meta = metaPtr(ch,ss);
 	return ch->dbch ? meta->message : "";
 }
@@ -885,7 +885,7 @@ epicsShareFunc const char *seq_pvMessage(SS_ID ss, VAR_ID varId)
  */
 epicsShareFunc epicsTimeStamp seq_pvTimeStamp(SS_ID ss, VAR_ID varId)
 {
-	CHAN	*ch = ss->sprog->chan + varId;
+	CHAN	*ch = ss->prog->chan + varId;
 	PVMETA	*meta = metaPtr(ch,ss);
 	if (ch->dbch)
 	{
@@ -905,13 +905,13 @@ epicsShareFunc epicsTimeStamp seq_pvTimeStamp(SS_ID ss, VAR_ID varId)
  */
 epicsShareFunc void seq_efSet(SS_ID ss, EV_ID ev_flag)
 {
-	SPROG	*sp = ss->sprog;
+	PROG	*sp = ss->prog;
 
 	DEBUG("efSet: sp=%p, ss=%p, ev_flag=%d\n", sp, ss,
 		ev_flag);
-	assert(ev_flag > 0 && ev_flag <= ss->sprog->numEvFlags);
+	assert(ev_flag > 0 && ev_flag <= ss->prog->numEvFlags);
 
-	epicsMutexMustLock(sp->programLock);
+	epicsMutexMustLock(sp->lock);
 
 	/* Set this bit */
 	bitSet(sp->evFlags, ev_flag);
@@ -919,7 +919,7 @@ epicsShareFunc void seq_efSet(SS_ID ss, EV_ID ev_flag)
 	/* Wake up state sets that are waiting for this event flag */
 	ss_wakeup(sp, ev_flag);
 
-	epicsMutexUnlock(sp->programLock);
+	epicsMutexUnlock(sp->lock);
 }
 
 /*
@@ -928,11 +928,11 @@ epicsShareFunc void seq_efSet(SS_ID ss, EV_ID ev_flag)
 epicsShareFunc boolean seq_efTest(SS_ID ss, EV_ID ev_flag)
 /* event flag */
 {
-	SPROG	*sp = ss->sprog;
+	PROG	*sp = ss->prog;
 	boolean	isSet;
 
-	assert(ev_flag > 0 && ev_flag <= ss->sprog->numEvFlags);
-	epicsMutexMustLock(sp->programLock);
+	assert(ev_flag > 0 && ev_flag <= ss->prog->numEvFlags);
+	epicsMutexMustLock(sp->lock);
 
 	isSet = bitTest(sp->evFlags, ev_flag);
 
@@ -941,7 +941,7 @@ epicsShareFunc boolean seq_efTest(SS_ID ss, EV_ID ev_flag)
 	if (optTest(sp, OPT_SAFE))
 		ss_read_buffer_selective(sp, ss, ev_flag);
 
-	epicsMutexUnlock(sp->programLock);
+	epicsMutexUnlock(sp->lock);
 
 	return isSet;
 }
@@ -951,11 +951,11 @@ epicsShareFunc boolean seq_efTest(SS_ID ss, EV_ID ev_flag)
  */
 epicsShareFunc boolean seq_efClear(SS_ID ss, EV_ID ev_flag)
 {
-	SPROG	*sp = ss->sprog;
+	PROG	*sp = ss->prog;
 	boolean	isSet;
 
-	assert(ev_flag > 0 && ev_flag <= ss->sprog->numEvFlags);
-	epicsMutexMustLock(sp->programLock);
+	assert(ev_flag > 0 && ev_flag <= ss->prog->numEvFlags);
+	epicsMutexMustLock(sp->lock);
 
 	isSet = bitTest(sp->evFlags, ev_flag);
 	bitClear(sp->evFlags, ev_flag);
@@ -963,7 +963,7 @@ epicsShareFunc boolean seq_efClear(SS_ID ss, EV_ID ev_flag)
 	/* Wake up state sets that are waiting for this event flag */
 	ss_wakeup(sp, ev_flag);
 
-	epicsMutexUnlock(sp->programLock);
+	epicsMutexUnlock(sp->lock);
 
 	return isSet;
 }
@@ -974,11 +974,11 @@ epicsShareFunc boolean seq_efClear(SS_ID ss, EV_ID ev_flag)
  */
 epicsShareFunc boolean seq_efTestAndClear(SS_ID ss, EV_ID ev_flag)
 {
-	SPROG	*sp = ss->sprog;
+	PROG	*sp = ss->prog;
 	boolean	isSet;
 
-	assert(ev_flag > 0 && ev_flag <= ss->sprog->numEvFlags);
-	epicsMutexMustLock(sp->programLock);
+	assert(ev_flag > 0 && ev_flag <= ss->prog->numEvFlags);
+	epicsMutexMustLock(sp->lock);
 
 	isSet = bitTest(sp->evFlags, ev_flag);
 	bitClear(sp->evFlags, ev_flag);
@@ -989,7 +989,7 @@ epicsShareFunc boolean seq_efTestAndClear(SS_ID ss, EV_ID ev_flag)
 	if (optTest(sp, OPT_SAFE))
 		ss_read_buffer_selective(sp, ss, ev_flag);
 
-	epicsMutexUnlock(sp->programLock);
+	epicsMutexUnlock(sp->lock);
 
 	return isSet;
 }
@@ -1026,7 +1026,7 @@ static void *getq_cp(void *dest, const void *value, size_t elemSize)
  */
 epicsShareFunc boolean seq_pvGetQ(SS_ID ss, VAR_ID varId)
 {
-	SPROG	*sp = ss->sprog;
+	PROG	*sp = ss->prog;
 	CHAN	*ch = sp->chan + varId;
 	void	*var = valPtr(ch,ss);
 	EV_ID	ev_flag = ch->syncedTo;
@@ -1047,13 +1047,13 @@ epicsShareFunc boolean seq_pvGetQ(SS_ID ss, VAR_ID varId)
 
 	if (ev_flag)
 	{
-		epicsMutexMustLock(sp->programLock);
+		epicsMutexMustLock(sp->lock);
 		/* If queue is now empty, clear the event flag */
 		if (seqQueueIsEmpty(ch->queue))
 		{
 			bitClear(sp->evFlags, ev_flag);
 		}
-		epicsMutexUnlock(sp->programLock);
+		epicsMutexUnlock(sp->lock);
 	}
 
 	return (!was_empty);
@@ -1064,7 +1064,7 @@ epicsShareFunc boolean seq_pvGetQ(SS_ID ss, VAR_ID varId)
  */
 epicsShareFunc void seq_pvFlushQ(SS_ID ss, VAR_ID varId)
 {
-	SPROG	*sp = ss->sprog;
+	PROG	*sp = ss->prog;
 	CHAN	*ch = sp->chan + varId;
 	EV_ID	ev_flag = ch->syncedTo;
 	QUEUE	queue = ch->queue;
@@ -1073,10 +1073,10 @@ epicsShareFunc void seq_pvFlushQ(SS_ID ss, VAR_ID varId)
 		ch->dbch ? ch->dbch->dbName : "<anomymous>", seqQueueUsed(queue));
 	seqQueueFlush(queue);
 
-	epicsMutexMustLock(sp->programLock);
+	epicsMutexMustLock(sp->lock);
 	/* Clear event flag */
 	bitClear(sp->evFlags, ev_flag);
-	epicsMutexUnlock(sp->programLock);
+	epicsMutexUnlock(sp->lock);
 }
 
 /*
@@ -1108,7 +1108,7 @@ epicsShareFunc boolean seq_delay(SS_ID ss, double delay)
  */
 epicsShareFunc boolean seq_optGet(SS_ID ss, const char *opt)
 {
-	SPROG	*sp = ss->sprog;
+	PROG	*sp = ss->prog;
 
 	assert(opt);
 	switch (opt[0])
@@ -1128,7 +1128,7 @@ epicsShareFunc boolean seq_optGet(SS_ID ss, const char *opt)
  */
 epicsShareFunc char *seq_macValueGet(SS_ID ss, const char *name)
 {
-	return seqMacValGet(ss->sprog, name);
+	return seqMacValGet(ss->prog, name);
 }
 
 /* 
@@ -1136,7 +1136,7 @@ epicsShareFunc char *seq_macValueGet(SS_ID ss, const char *name)
  */
 epicsShareFunc void seq_exit(SS_ID ss)
 {
-	SPROG *sp = ss->sprog;
+	PROG *sp = ss->prog;
 	/* Ask all state set threads to exit */
 	sp->die = TRUE;
 	/* Take care that we die even if waiting for initial connect */

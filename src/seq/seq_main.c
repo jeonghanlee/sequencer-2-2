@@ -14,9 +14,9 @@ in the file LICENSE that is included with this distribution.
 #include "seq.h"
 #include "seq_debug.h"
 
-static boolean init_sprog(SPROG *sp, seqProgram *seqProg);
-static boolean init_sscb(SPROG *sp, SSCB *ss, seqSS *seqSS);
-static boolean init_chan(SPROG *sp, CHAN *ch, seqChan *seqChan);
+static boolean init_sprog(PROG *sp, seqProgram *seqProg);
+static boolean init_sscb(PROG *sp, SSCB *ss, seqSS *seqSS);
+static boolean init_chan(PROG *sp, CHAN *ch, seqChan *seqChan);
 static PVTYPE *find_type(const char *userType);
 
 /*
@@ -33,7 +33,7 @@ epicsShareFunc epicsThreadId seq(
 	seqProgram *seqProg, const char *macroDef, unsigned stackSize)
 {
 	epicsThreadId	tid;
-	SPROG		*sp;
+	PROG		*sp;
 	char		*str;
 	const char	*threadName;
 	unsigned int	smallStack;
@@ -60,7 +60,7 @@ epicsShareFunc epicsThreadId seq(
 		return 0;
 	}
 
-	sp = new(SPROG);
+	sp = new(PROG);
 	if (!sp)
 	{
 		errlogSevPrintf(errlogFatal, "seq: calloc failed\n");
@@ -125,7 +125,7 @@ epicsShareFunc epicsThreadId seq(
  * Copy data from seqCom.h structures into this thread's dynamic structures
  * as defined in seq.h.
  */
-static boolean init_sprog(SPROG *sp, seqProgram *seqProg)
+static boolean init_sprog(PROG *sp, seqProgram *seqProg)
 {
 	unsigned nss, nch;
 
@@ -157,8 +157,8 @@ static boolean init_sprog(SPROG *sp, seqProgram *seqProg)
 		sp->numEvFlags, sp->progName, sp->varSize);
 
 	/* Create semaphores */
-	sp->programLock = epicsMutexCreate();
-	if (!sp->programLock)
+	sp->lock = epicsMutexCreate();
+	if (!sp->lock)
 	{
 		errlogSevPrintf(errlogFatal, "init_sprog: epicsMutexCreate failed\n");
 		return FALSE;
@@ -244,7 +244,7 @@ static boolean init_sprog(SPROG *sp, seqProgram *seqProg)
 /*
  * Initialize a state set control block
  */
-static boolean init_sscb(SPROG *sp, SSCB *ss, seqSS *seqSS)
+static boolean init_sscb(PROG *sp, SSCB *ss, seqSS *seqSS)
 {
 	unsigned nch;
 
@@ -258,10 +258,10 @@ static boolean init_sscb(SPROG *sp, SSCB *ss, seqSS *seqSS)
 	ss->threadId = 0;
 	ss->timeEntered = INFINITY;
 	ss->wakeupTime = INFINITY;
-	ss->sprog = sp;
+	ss->prog = sp;
 
-	ss->syncSemId = epicsEventCreate(epicsEventEmpty);
-	if (!ss->syncSemId)
+	ss->syncSem = epicsEventCreate(epicsEventEmpty);
+	if (!ss->syncSem)
 	{
 		errlogSevPrintf(errlogFatal, "init_sscb: epicsEventCreate failed\n");
 		return FALSE;
@@ -269,14 +269,14 @@ static boolean init_sscb(SPROG *sp, SSCB *ss, seqSS *seqSS)
 
 	if (sp->numChans > 0)
 	{
-		ss->getSemId = newArray(epicsEventId, sp->numChans);
-		if (!ss->getSemId)
+		ss->getSem = newArray(epicsEventId, sp->numChans);
+		if (!ss->getSem)
 		{
 			errlogSevPrintf(errlogFatal, "init_sscb: calloc failed\n");
 			return FALSE;
 		}
-		ss->putSemId = newArray(epicsEventId, sp->numChans);
-		if (!ss->putSemId)
+		ss->putSem = newArray(epicsEventId, sp->numChans);
+		if (!ss->putSem)
 		{
 			errlogSevPrintf(errlogFatal, "init_sscb: calloc failed\n");
 			return FALSE;
@@ -305,14 +305,14 @@ static boolean init_sscb(SPROG *sp, SSCB *ss, seqSS *seqSS)
 	}
 	for (nch = 0; nch < sp->numChans; nch++)
 	{
-		ss->getSemId[nch] = epicsEventCreate(epicsEventFull);
-		if (!ss->getSemId[nch])
+		ss->getSem[nch] = epicsEventCreate(epicsEventFull);
+		if (!ss->getSem[nch])
 		{
 			errlogSevPrintf(errlogFatal, "init_sscb: epicsEventCreate failed\n");
 			return FALSE;
 		}
-		ss->putSemId[nch] = epicsEventCreate(epicsEventFull);
-		if (!ss->putSemId[nch])
+		ss->putSem[nch] = epicsEventCreate(epicsEventFull);
+		if (!ss->putSem[nch])
 		{
 			errlogSevPrintf(errlogFatal, "init_sscb: epicsEventCreate failed\n");
 			return FALSE;
@@ -363,10 +363,10 @@ static boolean init_sscb(SPROG *sp, SSCB *ss, seqSS *seqSS)
 /*
  * Build the database channel structures.
  */
-static boolean init_chan(SPROG *sp, CHAN *ch, seqChan *seqChan)
+static boolean init_chan(PROG *sp, CHAN *ch, seqChan *seqChan)
 {
 	DEBUG("init_chan: ch=%p\n", ch);
-	ch->sprog = sp;
+	ch->prog = sp;
 	ch->varName = seqChan->varName;
 	ch->offset = seqChan->offset;
 	ch->count = seqChan->count;
@@ -520,7 +520,7 @@ static PVTYPE *find_type(const char *userType)
 }
 
 /* Free all allocated memory in a program structure */
-void seq_free(SPROG *sp)
+void seq_free(PROG *sp)
 {
 	unsigned nss, nch, nq;
 
@@ -529,15 +529,15 @@ void seq_free(SPROG *sp)
 	{
 		SSCB *ss = sp->ss + nss;
 
-		epicsEventDestroy(ss->syncSemId);
+		epicsEventDestroy(ss->syncSem);
 		for (nch = 0; nch < sp->numChans; nch++)
 		{
-			epicsEventDestroy(ss->getSemId[nch]);
-			epicsEventDestroy(ss->putSemId[nch]);
+			epicsEventDestroy(ss->getSem[nch]);
+			epicsEventDestroy(ss->putSem[nch]);
 		}
 		free(ss->metaData);
-		free(ss->getSemId);
-		free(ss->putSemId);
+		free(ss->getSem);
+		free(ss->putSem);
 
 		epicsEventDestroy(ss->dead);
 
@@ -548,7 +548,7 @@ void seq_free(SPROG *sp)
 	free(sp->ss);
 
 	/* Delete program-wide semaphores */
-	epicsMutexDestroy(sp->programLock);
+	epicsMutexDestroy(sp->lock);
 	epicsEventDestroy(sp->ready);
 
 	seqMacFree(sp);
