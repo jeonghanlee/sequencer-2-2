@@ -142,7 +142,7 @@ static boolean init_sprog(SPROG *sp, seqProgram *seqProg)
 	sp->numQueues = seqProg->numQueues;
 
 	/* Allocate user variable area if reentrant option (+r) is set */
-	if ((sp->options & OPT_REENT) && sp->varSize > 0)
+	if (optTest(sp, OPT_REENT) && sp->varSize > 0)
 	{
 		sp->var = (SEQ_VARS *)newArray(char, sp->varSize);
 		if (!sp->var)
@@ -338,7 +338,7 @@ static boolean init_sscb(SPROG *sp, SSCB *ss, seqSS *seqSS)
 	ss->states = seqSS->states;
 
 	/* Allocate separate user variable area if safe mode option (+s) is set */
-	if (sp->options & OPT_SAFE)
+	if (optTest(sp, OPT_SAFE))
 	{
 		if (sp->numChans > 0)
 		{
@@ -425,7 +425,7 @@ static boolean init_chan(SPROG *sp, CHAN *ch, seqChan *seqChan)
 				errlogSevPrintf(errlogFatal, "init_chan: epicsStrDup failed\n");
 				return FALSE;
 			}
-			if ((sp->options & OPT_SAFE) && sp->numSS > 0)
+			if (optTest(sp, OPT_SAFE) && sp->numSS > 0)
 			{
 				dbch->ssMetaData = newArray(PVMETA, sp->numSS);
 				if (!dbch->ssMetaData)
@@ -558,8 +558,8 @@ void seq_free(SPROG *sp)
 
 		free(ss->delay);
 		free(ss->delayExpired);
-		if (sp->options & OPT_SAFE) free(ss->dirty);
-		if (sp->options & OPT_SAFE) free(ss->var);
+		if (optTest(sp, OPT_SAFE)) free(ss->dirty);
+		if (optTest(sp, OPT_SAFE)) free(ss->var);
 	}
 
 	free(sp->ss);
@@ -589,6 +589,6 @@ void seq_free(SPROG *sp)
 
 	free(sp->evFlags);
 	free(sp->syncedChans);
-	if (sp->options & OPT_REENT) free(sp->var);
+	if (optTest(sp, OPT_REENT)) free(sp->var);
 	free(sp);
 }

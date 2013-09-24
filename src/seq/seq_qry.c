@@ -52,10 +52,10 @@ epicsShareFunc void epicsShareAPI seqShow(epicsThreadId tid)
 	printf("  number of channels monitored = %d\n", sp->monitorCount);
 	printf("  options: async=%d, debug=%d, newef=%d, reent=%d, conn=%d, "
 		"main=%d\n",
-		(sp->options & OPT_ASYNC) != 0, (sp->options & OPT_DEBUG) != 0,
-		(sp->options & OPT_NEWEF) != 0, (sp->options & OPT_REENT) != 0,
-		(sp->options & OPT_CONN)  != 0, (sp->options & OPT_MAIN)  != 0);
-	if (sp->options & OPT_REENT)
+		optTest(sp, OPT_ASYNC), optTest(sp, OPT_DEBUG),
+		optTest(sp, OPT_NEWEF), optTest(sp, OPT_REENT),
+		optTest(sp, OPT_CONN), optTest(sp, OPT_MAIN));
+	if (optTest(sp, OPT_REENT))
 		printf("  user variables: address = %p, length = %u\n",
 			sp->var, (unsigned)sp->varSize);
 	printf("\n");
@@ -94,13 +94,13 @@ epicsShareFunc void epicsShareAPI seqShow(epicsThreadId tid)
 
 		printf("  Get in progress = [");
 		for (n = 0; n < sp->numChans; n++)
-			if ((sp->options & OPT_SAFE) || seq_pvAssigned(ss, n))
+			if (optTest(sp, OPT_SAFE) || seq_pvAssigned(ss, n))
 				printf("%d",!seq_pvGetComplete(ss, n));
 		printf("]\n");
 
 		printf("  Put in progress = [");
 		for (n = 0; n < sp->numChans; n++)
-			if ((sp->options & OPT_SAFE) || seq_pvAssigned(ss, n))
+			if (optTest(sp, OPT_SAFE) || seq_pvAssigned(ss, n))
 				printf("%d",!seq_pvPutComplete(ss, n, 0, 0, 0));
 		printf("]\n");
 
@@ -113,7 +113,7 @@ epicsShareFunc void epicsShareAPI seqShow(epicsThreadId tid)
 			printf("\n");
 		}
 
-		if (sp->options & OPT_SAFE)
+		if (optTest(sp, OPT_SAFE))
 			printf("  User variables: address = %p, length = %u\n",
 				sp->var, (unsigned)sp->varSize);
 		printf("\n");

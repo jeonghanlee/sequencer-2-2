@@ -47,7 +47,7 @@ in the file LICENSE that is included with this distribution.
 
 #define metaPtr(ch,ss) (				\
 	(ch)->dbch					\
-	?(((ch)->sprog->options&OPT_SAFE)		\
+	?(optTest((ch)->sprog,OPT_SAFE)			\
 		?((ch)->dbch->ssMetaData+ssNum(ss))	\
 		:(&(ch)->dbch->metaData))		\
 	:0						\

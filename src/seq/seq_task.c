@@ -53,7 +53,7 @@ void sequencer (void *arg)	/* ptr to original (global) state program table */
 	{
 		SSCB	*ss = sp->ss + nss;
 
-		if (sp->options & OPT_SAFE)
+		if (optTest(sp, OPT_SAFE))
 			memcpy(ss->var, sp->var, sp->varSize);
 	}
 
@@ -62,11 +62,11 @@ void sequencer (void *arg)	/* ptr to original (global) state program table */
 
 	/* Initiate connect & monitor requests to database channels, waiting
 	   for all connections to be established if the option is set. */
-	if (seq_connect(sp, ((sp->options & OPT_CONN) != 0)) != pvStatOK)
+	if (seq_connect(sp, optTest(sp, OPT_CONN) != pvStatOK))
 		goto exit;
 
 	/* Emulate the 'first monitor event' for anonymous PVs */
-	if ((sp->options & OPT_SAFE) != 0)
+	if (optTest(sp, OPT_SAFE))
 	{
 		unsigned nch;
 		for (nch=0; nch<sp->numChans; nch++)
@@ -237,7 +237,7 @@ void ss_write_buffer(CHAN *ch, void *val, PVMETA *meta, boolean dirtify)
 	DEBUG("ss_write_buffer: after write %s", ch->varName);
 	print_channel_value(DEBUG, ch, buf);
 
-	if ((sp->options & OPT_SAFE) && dirtify)
+	if (optTest(sp, OPT_SAFE) && dirtify)
 		for (nss = 0; nss < sp->numSS; nss++)
 			sp->ss[nss].dirty[nch] = TRUE;
 
@@ -254,7 +254,7 @@ static void ss_entry(void *arg)
 	SPROG		*sp = ss->sprog;
 	SEQ_VARS	*var;
 
-	if (sp->options & OPT_SAFE)
+	if (optTest(sp, OPT_SAFE))
 		var = ss->var;
 	else
 		var = sp->var;
@@ -273,7 +273,7 @@ static void ss_entry(void *arg)
 	   entering the event loop. Must do this using
 	   ss_read_all_buffer since CA and other state sets could
 	   already post events resp. pvPut. */
-	if (sp->options & OPT_SAFE)
+	if (optTest(sp, OPT_SAFE))
 		ss_read_all_buffer(sp, ss);
 
 	/* Initial state is the first one */
@@ -302,7 +302,7 @@ static void ss_entry(void *arg)
 		 * even if it's the same state if option to do so is enabled.
 		 */
 		if (st->entryFunc && (ss->prevState != ss->currentState
-			|| (st->options & OPT_DOENTRYFROMSELF)))
+			|| optTest(st, OPT_DOENTRYFROMSELF)))
 		{
 			st->entryFunc(ss, var);
 		}
@@ -345,7 +345,7 @@ static void ss_entry(void *arg)
 			/* Copy dirty variable values from CA buffer
 			 * to user (safe mode only).
 			 */
-			if (sp->options & OPT_SAFE)
+			if (optTest(sp, OPT_SAFE))
 				ss_read_all_buffer(sp, ss);
 
 			/* Check state change conditions */
@@ -353,7 +353,7 @@ static void ss_entry(void *arg)
 				&transNum, &ss->nextState);
 
 			/* Clear all event flags (old ef mode only) */
-			if (ev_trig && !(sp->options & OPT_NEWEF))
+			if (ev_trig && !optTest(sp, OPT_NEWEF))
 			{
 				unsigned i;
 				for (i = 0; i < NWORDS(sp->numEvFlags); i++)
@@ -371,7 +371,7 @@ static void ss_entry(void *arg)
 
 		/* If changing state, do exit actions */
 		if (st->exitFunc && (ss->currentState != ss->nextState
-			|| (st->options & OPT_DOEXITTOSELF)))
+			|| optTest(st, OPT_DOEXITTOSELF)))
 		{
 			st->exitFunc(ss, var);
 		}
@@ -400,7 +400,7 @@ static void clearDelays(SSCB *ss, STATE *st)
 	 * same state if option to do so is on for this state.
 	 */
 	if ((ss->currentState != ss->prevState) ||
-		!(st->options & OPT_NORESETTIMERS))
+		!optTest(st, OPT_NORESETTIMERS))
 	{
 		pvTimeGetCurrentDouble(&ss->timeEntered);
 	}

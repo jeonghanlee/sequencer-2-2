@@ -39,19 +39,19 @@ extern "C" {
 #endif
 
 /* Bit encoding for run-time options */
-#define OPT_DEBUG		(1<<0)	/* turn on debugging */
-#define OPT_ASYNC		(1<<1)	/* use async. gets */
-#define OPT_CONN		(1<<2)	/* wait for all connections */
-#define OPT_REENT		(1<<3)	/* generate reentrant code */
-#define OPT_NEWEF		(1<<4)	/* new event flag mode */
-#define OPT_MAIN		(1<<5)	/* generate main program */
-#define OPT_SAFE		(1<<6)	/* safe mode */
+#define OPT_DEBUG		((seqMask)1u<<0)	/* turn on debugging */
+#define OPT_ASYNC		((seqMask)1u<<1)	/* use async. gets */
+#define OPT_CONN		((seqMask)1u<<2)	/* wait for all connections */
+#define OPT_REENT		((seqMask)1u<<3)	/* generate reentrant code */
+#define OPT_NEWEF		((seqMask)1u<<4)	/* new event flag mode */
+#define OPT_MAIN		((seqMask)1u<<5)	/* generate main program */
+#define OPT_SAFE		((seqMask)1u<<6)	/* safe mode */
 
 /* Bit encoding for State Specific Options */
-#define OPT_NORESETTIMERS	(1<<0)	/* Don't reset timers on */
-					/* entry to state from same state */
-#define OPT_DOENTRYFROMSELF	(1<<1)	/* Do entry{} even if from same state */
-#define OPT_DOEXITTOSELF	(1<<2)	/* Do exit{} even if to same state */
+#define OPT_NORESETTIMERS	((seqMask)1u<<0)	/* Don't reset timers on */
+							/* entry to state from same state */
+#define OPT_DOENTRYFROMSELF	((seqMask)1u<<1)	/* Do entry{} even if from same state */
+#define OPT_DOEXITTOSELF	((seqMask)1u<<2)	/* Do exit{} even if to same state */
 
 /* seqMask macros */
 #define NBITS			(8*sizeof(seqMask))	/* # bits in seqMask word */
@@ -60,6 +60,9 @@ extern "C" {
 #define bitSet(words, bitnum)	( words[(bitnum)/NBITS] |=  (1u<<((bitnum)%NBITS)))
 #define bitClear(words, bitnum)	( words[(bitnum)/NBITS] &= ~(1u<<((bitnum)%NBITS)))
 #define bitTest(words, bitnum)	((words[(bitnum)/NBITS] &  (1u<<((bitnum)%NBITS))) != 0)
+
+#define optTest(sp,opt)		(((sp)->options & (opt)) != 0)
+					/* test if opt is set in program instance sp */
 
 #define NOEVFLAG		0	/* argument to pvSync to remove sync */
 

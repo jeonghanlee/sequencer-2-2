@@ -68,7 +68,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvGet(SS_ID ss, VAR_ID varId, enum compT
 	/* Anonymous PV and safe mode, just copy from shared buffer.
 	   Note that completion is always immediate, so no distinction
 	   between SYNC and ASYNC needed. See also pvGetComplete. */
-	if ((sp->options & OPT_SAFE) && !dbch)
+	if (optTest(sp, OPT_SAFE) && !dbch)
 	{
 		/* Copy regardless of whether dirty flag is set or not */
 		ss_read_buffer(ss, ch, FALSE);
@@ -86,7 +86,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvGet(SS_ID ss, VAR_ID varId, enum compT
 
 	if (compType == DEFAULT)
 	{
-		compType = (sp->options & OPT_ASYNC) ? ASYNC : SYNC;
+		compType = optTest(sp, OPT_ASYNC) ? ASYNC : SYNC;
 	}
 
 	if (compType == SYNC)
@@ -192,7 +192,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvGet(SS_ID ss, VAR_ID varId, enum compT
 		case epicsEventWaitOK:
 			status = check_connected(dbch, meta);
 			if (status) return status;
-			if (sp->options & OPT_SAFE)
+			if (optTest(sp, OPT_SAFE))
 				/* Copy regardless of whether dirty flag is set or not */
 				ss_read_buffer(ss, ch, FALSE);
 			break;
@@ -226,7 +226,7 @@ epicsShareFunc boolean epicsShareAPI seq_pvGetComplete(SS_ID ss, VAR_ID varId)
 	if (!ch->dbch)
 	{
 		/* Anonymous PVs always complete immediately */
-		if (!(sp->options & OPT_SAFE))
+		if (!optTest(sp, OPT_SAFE))
 			errlogSevPrintf(errlogMajor,
 				"pvGetComplete(%s): user error (variable not assigned)\n",
 				ch->varName);
@@ -253,7 +253,7 @@ epicsShareFunc boolean epicsShareAPI seq_pvGetComplete(SS_ID ss, VAR_ID varId)
 		if (status) return TRUE;
 		/* In safe mode, copy value and meta data from shared buffer
 		   to ss local buffer. */
-		if (sp->options & OPT_SAFE)
+		if (optTest(sp, OPT_SAFE))
 			/* Copy regardless of whether dirty flag is set or not */
 			ss_read_buffer(ss, ch, FALSE);
 		return TRUE;
@@ -347,7 +347,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvPut(SS_ID ss, VAR_ID varId, enum compT
 	DEBUG("pvPut: pv name=%s, var=%p\n", dbch ? dbch->dbName : "<anonymous>", var);
 
 	/* First handle anonymous PV (safe mode only) */
-	if ((sp->options & OPT_SAFE) && !dbch)
+	if (optTest(sp, OPT_SAFE) && !dbch)
 	{
 		anonymous_put(ss, ch);
 		return pvStatOK;
@@ -657,7 +657,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvAssign(SS_ID ss, VAR_ID varId, const c
 			free(dbch);
 			return pvStatERROR;
 		}
-		if ((sp->options & OPT_SAFE) && sp->numSS > 0)
+		if (optTest(sp, OPT_SAFE) && sp->numSS > 0)
 		{
 			dbch->ssMetaData = newArray(PVMETA, sp->numSS);
 			if (!dbch->ssMetaData)
@@ -702,7 +702,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvMonitor(SS_ID ss, VAR_ID varId)
 	CHAN	*ch = sp->chan + varId;
 	DBCHAN	*dbch = ch->dbch;
 
-	if (!dbch && (sp->options & OPT_SAFE))
+	if (!dbch && optTest(sp, OPT_SAFE))
 	{
 		ch->monitored = TRUE;
 		return pvStatOK;
@@ -728,7 +728,7 @@ epicsShareFunc pvStat epicsShareAPI seq_pvStopMonitor(SS_ID ss, VAR_ID varId)
 	CHAN	*ch = sp->chan + varId;
 	DBCHAN	*dbch = ch->dbch;
 
-	if (!dbch && (sp->options & OPT_SAFE))
+	if (!dbch && optTest(sp, OPT_SAFE))
 	{
 		ch->monitored = FALSE;
 		return pvStatOK;
@@ -952,7 +952,7 @@ epicsShareFunc boolean epicsShareAPI seq_efTest(SS_ID ss, EV_ID ev_flag)
 
 	DEBUG("efTest: ev_flag=%d, isSet=%d\n", ev_flag, isSet);
 
-	if (sp->options & OPT_SAFE)
+	if (optTest(sp, OPT_SAFE))
 		ss_read_buffer_selective(sp, ss, ev_flag);
 
 	epicsMutexUnlock(sp->programLock);
@@ -999,7 +999,7 @@ epicsShareFunc boolean epicsShareAPI seq_efTestAndClear(SS_ID ss, EV_ID ev_flag)
 
 	DEBUG("efTestAndClear: ev_flag=%d, isSet=%d, ss=%d\n", ev_flag, isSet, (int)ssNum(ss));
 
-	if (sp->options & OPT_SAFE)
+	if (optTest(sp, OPT_SAFE))
 		ss_read_buffer_selective(sp, ss, ev_flag);
 
 	epicsMutexUnlock(sp->programLock);
@@ -1140,13 +1140,13 @@ epicsShareFunc boolean epicsShareAPI seq_optGet(SS_ID ss, const char *opt)
 	assert(opt);
 	switch (opt[0])
 	{
-	case 'a': return ( (sp->options & OPT_ASYNC) != 0);
-	case 'c': return ( (sp->options & OPT_CONN)  != 0);
-	case 'd': return ( (sp->options & OPT_DEBUG) != 0);
-	case 'e': return ( (sp->options & OPT_NEWEF) != 0);
-	case 'm': return ( (sp->options & OPT_MAIN)  != 0);
-	case 'r': return ( (sp->options & OPT_REENT) != 0);
-	case 's': return ( (sp->options & OPT_SAFE)  != 0);
+	case 'a': return optTest(sp, OPT_ASYNC);
+	case 'c': return optTest(sp, OPT_CONN);
+	case 'd': return optTest(sp, OPT_DEBUG);
+	case 'e': return optTest(sp, OPT_NEWEF);
+	case 'm': return optTest(sp, OPT_MAIN);
+	case 'r': return optTest(sp, OPT_REENT);
+	case 's': return optTest(sp, OPT_SAFE);
 	default:  return FALSE;
 	}
 }
