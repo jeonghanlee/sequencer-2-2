@@ -476,6 +476,14 @@ static void gen_expr(
 		gen_code(" %s ", ep->value);
 		gen_expr(context, ep->binop_right, 0);
 		break;
+	case E_SELECT:
+		gen_expr(context, ep->select_left, 0);
+		gen_code("%s", ep->value);
+		gen_expr(context, ep->select_right, 0);
+		break;
+	case E_MEMBER:
+		gen_code("%s", ep->value);
+		break;
 	case E_PAREN:
 		gen_code("(");
 		gen_expr(context, ep->paren_expr, 0);

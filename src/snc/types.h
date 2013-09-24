@@ -253,7 +253,8 @@ struct program
    These are the ones that start with E_. */
 #define	expr_mask		( bit(E_BINOP)   | bit(E_CAST)    | bit(E_CONST)\
 				| bit(E_FUNC)    | bit(E_INIT)\
-				| bit(E_PAREN)   | bit(E_POST)    | bit(E_PRE)    | bit(E_STRING)\
+				| bit(E_PAREN)   | bit(E_POST)    | bit(E_PRE)\
+				| bit(E_SELECT)	 | bit(E_STRING)\
 				| bit(E_SUBSCR)  | bit(E_TERNOP)  | bit(E_VAR)    | bit(T_TEXT) )
 
 #define expr_type_name(e)	expr_type_info[(e)->type].name
@@ -286,9 +287,11 @@ enum expr_type			/* description [child expressions...] */
 	E_CONST,		/* numeric (inkl. character) constant [] */
 	E_FUNC,			/* function call [args] */
 	E_INIT,			/* array or struct initializer [elems] */
+	E_MEMBER,		/* struct or union member [] */
 	E_PAREN,		/* parenthesis around an expression [expr] */
 	E_POST,			/* unary postfix operator [operand] */
 	E_PRE,			/* unary prefix operator [operand] */
+	E_SELECT,		/* member selection [left,right] */
 	E_STRING,		/* string constant [] */
 	E_SUBSCR,		/* subscripted expr [operand,index] */
 	E_TERNOP,		/* ternary operator [cond,then,else] */
@@ -343,6 +346,8 @@ STATIC_ASSERT(NUM_EXPR_TYPES <= 8*sizeof(TypeMask));
 #define prog_statesets	children[3]
 #define prog_exit	children[4]
 #define prog_ccode	children[5]
+#define select_left	children[0]
+#define select_right	children[1]
 #define ss_defns	children[0]
 #define ss_states	children[1]
 #define state_defns	children[0]
@@ -401,9 +406,11 @@ expr_type_info[]
 	{ "E_CONST",	0 },
 	{ "E_FUNC",	1 },
 	{ "E_INIT",	1 },
+	{ "E_MEMBER",	0 },
 	{ "E_PAREN",	1 },
 	{ "E_POST",	1 },
 	{ "E_PRE",	1 },
+	{ "E_SELECT",	2 },
 	{ "E_STRING",	0 },
 	{ "E_SUBSCR",	2 },
 	{ "E_TERNOP",	3 },

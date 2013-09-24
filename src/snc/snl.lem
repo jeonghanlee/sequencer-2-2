@@ -402,8 +402,8 @@ expr(p) ::= EXIT(t) LPAREN args(xs) RPAREN.	 [POST] { p = expr(E_FUNC,   t, xs);
 expr(p) ::= SIZEOF(t) LPAREN expr(x) RPAREN.	 [POST] { p = expr(E_FUNC,   t, x); }
 expr(p) ::= SIZEOF(t) LPAREN type_expr(x) RPAREN.[POST] { p = expr(E_FUNC,   t, x); }
 expr(p) ::= expr(x) LBRACKET(t) expr(y) RBRACKET.[POST] { p = expr(E_SUBSCR, t, x, y); }
-expr(p) ::= expr(x) PERIOD(t)  expr(y).		 [POST] { p = expr(E_BINOP,  t, x, y); }
-expr(p) ::= expr(x) POINTER(t) expr(y).		 [POST] { p = expr(E_BINOP,  t, x, y); }
+expr(p) ::= expr(x) PERIOD(t) member(y).	 [POST] { p = expr(E_SELECT, t, x, y); }
+expr(p) ::= expr(x) POINTER(t) member(y).	 [POST] { p = expr(E_SELECT, t, x, y); }
 expr(p) ::= expr(x) INCR(t).			 [POST] { p = expr(E_POST,   t, x); }
 expr(p) ::= expr(x) DECR(t).			 [POST] { p = expr(E_POST,   t, x); }
 
@@ -471,6 +471,8 @@ args(p) ::= expr(x).				{ p = x; }
 args(p) ::= .					{ p = 0; }
 
 string(p) ::= STRCON(t).			{ p = expr(E_STRING, t); }
+
+member(p) ::= NAME(t).				{ p = expr(E_MEMBER, t); }
 
 // Literal (C) code
 
