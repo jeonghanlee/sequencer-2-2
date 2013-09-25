@@ -46,6 +46,24 @@ The following are fixes for build problems:
   
   This fixes a build error with older base releases.
 
+A number of improvements to the documentation have been made, too:
+
+* re-write of the Using chapter which is now up-to-date
+
+* re-structured explanation of runtime behaviour in Tutorial
+
+* moved explanation for -e switch from Using to Compiling
+
+* distinguish program parameters from CPP macros
+  
+  Program parameters are now consistently referred to as such. The term
+  "macro" is used only for C preprocessor macros. Wordings were adapted
+  accordingly and some related improvements made.
+
+* fix the branch names in the Installation page (thanks to Lewis Muir)
+
+* improved wording of frontpage blurb
+
 
 .. _Release_Notes_2.1.13:
 
