@@ -1735,6 +1735,7 @@ macValueGet
 Returns a pointer to the value of the specified program parameter, if
 it exists, else ``NULL``. See `Program Name and Parameters`_.
 
+.. _Shell Commands:
 
 Shell Commands
 --------------
