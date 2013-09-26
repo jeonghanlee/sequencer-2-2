@@ -186,7 +186,7 @@ struct program_instance
 
 	/* dynamic program data (assigned at runtime) */
 	epicsMutexId	lock;	/* mutex for locking dynamic program data */
-        /* the following five members must always be protected by lock */
+	/* the following five members must always be protected by lock */
 	bitMask		*evFlags;	/* event bits for event flags & channels */
 	CHAN		**syncedChans;	/* for each event flag, start of synced list */
 	unsigned	assignCount;	/* number of channels assigned to ext. pv */

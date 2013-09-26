@@ -242,11 +242,11 @@ epicsShareFunc boolean seq_pvGetComplete(
 
 		if (!ch->dbch)
 		{
-		        /* Anonymous PVs always complete immediately */
-		        if (!optTest(sp, OPT_SAFE))
-			        errlogSevPrintf(errlogMajor,
-				        "pvGetComplete(%s): user error (variable not assigned)\n",
-				        ch->varName);
+			/* Anonymous PVs always complete immediately */
+			if (!optTest(sp, OPT_SAFE))
+				errlogSevPrintf(errlogMajor,
+					"pvGetComplete(%s): user error (variable not assigned)\n",
+					ch->varName);
 			done = TRUE;
 		}
 		else if (!ss->getReq[varId])
@@ -321,10 +321,10 @@ epicsShareFunc void seq_pvGetCancel(
 
 		if (!ch->dbch)
 		{
-		        if (!optTest(sp, OPT_SAFE))
-			        errlogSevPrintf(errlogMinor,
-				        "pvGetCancel(%s): user error (variable not assigned)\n",
-				        ch->varName);
+			if (!optTest(sp, OPT_SAFE))
+				errlogSevPrintf(errlogMinor,
+					"pvGetCancel(%s): user error (variable not assigned)\n",
+					ch->varName);
 		}
 		else
 		{
@@ -606,11 +606,11 @@ epicsShareFunc boolean seq_pvPutComplete(
 
 		if (!ch->dbch)
 		{
-		        /* Anonymous PVs always complete immediately */
+			/* Anonymous PVs always complete immediately */
 			if (!(sp->options & OPT_SAFE))
-			        errlogSevPrintf(errlogMajor,
-				        "pvPutComplete(%s): user error (variable not assigned)\n",
-				        ch->varName);
+				errlogSevPrintf(errlogMajor,
+					"pvPutComplete(%s): user error (variable not assigned)\n",
+					ch->varName);
 			done = TRUE;
 		}
 		else if (!ss->putReq[varId])
@@ -678,10 +678,10 @@ epicsShareFunc void seq_pvPutCancel(
 
 		if (!ch->dbch)
 		{
-		        if (!optTest(sp, OPT_SAFE))
-			        errlogSevPrintf(errlogMinor,
-				        "pvPutCancel(%s): user error (variable not assigned)\n",
-				        ch->varName);
+			if (!optTest(sp, OPT_SAFE))
+				errlogSevPrintf(errlogMinor,
+					"pvPutCancel(%s): user error (variable not assigned)\n",
+					ch->varName);
 		}
 		else
 		{
