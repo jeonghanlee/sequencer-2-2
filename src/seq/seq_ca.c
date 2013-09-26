@@ -438,7 +438,9 @@ void seq_conn_handler(int connected, void *arg)
 			/* terminate outstanding requests that wait for completion */
 			for (nss = 0; nss < sp->numSS; nss++)
 			{
+				sp->ss[nss].getReq[chNum(ch)] = NULL;
 				epicsEventSignal(sp->ss[nss].getSem[chNum(ch)]);
+				sp->ss[nss].putReq[chNum(ch)] = NULL;
 				epicsEventSignal(sp->ss[nss].putSem[chNum(ch)]);
 			}
 		}
