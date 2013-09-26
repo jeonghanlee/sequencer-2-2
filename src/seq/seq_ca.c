@@ -308,27 +308,29 @@ static void proc_db_events(
 	epicsMutexMustLock(sp->lock);
 
 	/* Signal completion */
-	if (ss)
+	switch (evtype)
 	{
-		switch (evtype)
-		{
-		case pvEventGet:
-			epicsEventSignal(ss->getSem[chNum(ch)]);
+	case pvEventPut:
+		ss->putReq[chNum(ch)] = NULL;
+		epicsEventSignal(ss->syncSem);
+		break;
+	case pvEventGet:
+		ss->getReq[chNum(ch)] = NULL;
+		epicsEventSignal(ss->syncSem);
+		if (optTest(sp, OPT_SAFE))
 			break;
-		case pvEventPut:
-			epicsEventSignal(ss->putSem[chNum(ch)]);
-			break;
-		default:
-			break;
-		}
+		/* else: fall through */
+	case pvEventMonitor:
+		/* Wake up each state set that uses this channel in a when condition. */
+		/* In safe mode this is only necessary for monitor events, since the
+		   effects of get events are local to the state set. */
+		ss_wakeup(sp, ch->eventNum);
+		break;
 	}
 
 	/* If there's an event flag associated with this channel, set it */
 	if (ch->syncedTo)
 		seq_efSet(sp->ss, ch->syncedTo);
-
-	/* Wake up each state set that uses this channel in an event */
-	ss_wakeup(sp, ch->eventNum);
 
 	epicsMutexUnlock(sp->lock);
 }
@@ -436,12 +438,14 @@ void seq_conn_handler(int connected, void *arg)
 				seq_camonitor(ch, FALSE);
 			}
 			/* terminate outstanding requests that wait for completion */
+			/* TODO: can there be a race condition with pvPut/pvGet? */
 			for (nss = 0; nss < sp->numSS; nss++)
 			{
-				sp->ss[nss].getReq[chNum(ch)] = NULL;
-				epicsEventSignal(sp->ss[nss].getSem[chNum(ch)]);
-				sp->ss[nss].putReq[chNum(ch)] = NULL;
-				epicsEventSignal(sp->ss[nss].putSem[chNum(ch)]);
+				SSCB *ss = sp->ss + nss;
+
+				ss->getReq[chNum(ch)] = NULL;
+				ss->putReq[chNum(ch)] = NULL;
+				epicsEventSignal(ss->syncSem);
 			}
 		}
 		else

@@ -246,8 +246,6 @@ static boolean init_sprog(PROG *sp, seqProgram *seqProg)
  */
 static boolean init_sscb(PROG *sp, SSCB *ss, seqSS *seqSS)
 {
-	unsigned nch;
-
 	/* Fill in SSCB */
 	ss->ssName = seqSS->ssName;
 	ss->numStates = seqSS->numStates;
@@ -269,18 +267,6 @@ static boolean init_sscb(PROG *sp, SSCB *ss, seqSS *seqSS)
 
 	if (sp->numChans > 0)
 	{
-		ss->getSem = newArray(epicsEventId, sp->numChans);
-		if (!ss->getSem)
-		{
-			errlogSevPrintf(errlogFatal, "init_sscb: calloc failed\n");
-			return FALSE;
-		}
-		ss->putSem = newArray(epicsEventId, sp->numChans);
-		if (!ss->putSem)
-		{
-			errlogSevPrintf(errlogFatal, "init_sscb: calloc failed\n");
-			return FALSE;
-		}
 		ss->getReq = newArray(PVREQ*, sp->numChans);
 		if (!ss->getReq)
 		{
@@ -303,22 +289,7 @@ static boolean init_sscb(PROG *sp, SSCB *ss, seqSS *seqSS)
 			}
 		}
 	}
-	for (nch = 0; nch < sp->numChans; nch++)
-	{
-		ss->getSem[nch] = epicsEventCreate(epicsEventFull);
-		if (!ss->getSem[nch])
-		{
-			errlogSevPrintf(errlogFatal, "init_sscb: epicsEventCreate failed\n");
-			return FALSE;
-		}
-		ss->putSem[nch] = epicsEventCreate(epicsEventFull);
-		if (!ss->putSem[nch])
-		{
-			errlogSevPrintf(errlogFatal, "init_sscb: epicsEventCreate failed\n");
-			return FALSE;
-		}
-		/* note: do not pre-allocate request structures */
-	}
+	/* note: do not pre-allocate request structures */
 	ss->dead = epicsEventCreate(epicsEventEmpty);
 	if (!ss->dead)
 	{
@@ -530,14 +501,7 @@ void seq_free(PROG *sp)
 		SSCB *ss = sp->ss + nss;
 
 		epicsEventDestroy(ss->syncSem);
-		for (nch = 0; nch < sp->numChans; nch++)
-		{
-			epicsEventDestroy(ss->getSem[nch]);
-			epicsEventDestroy(ss->putSem[nch]);
-		}
 		free(ss->metaData);
-		free(ss->getSem);
-		free(ss->putSem);
 
 		epicsEventDestroy(ss->dead);
 

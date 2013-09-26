@@ -150,10 +150,8 @@ struct state_set
 	epicsEventId	syncSem;	/* semaphore for event sync */
 	epicsEventId	dead;		/* event to signal state set exit done */
 	/* these are arrays, one for each channel */
-	epicsEventId	*getSem;	/* semaphores for async get */
-	epicsEventId	*putSem;	/* semaphores for async put */
-	PVREQ		**getReq;	/* get requests */
-	PVREQ		**putReq;	/* put requests */
+	PVREQ		**getReq;	/* currently pending get requests */
+	PVREQ		**putReq;	/* currently pending put requests */
 	PVMETA		*metaData;	/* meta data (safe mode) */
 	/* safe mode */
 	boolean		*dirty;		/* array of flags, one for each channel */
