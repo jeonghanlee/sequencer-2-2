@@ -10,8 +10,10 @@ program pvGetCancelTest
 
 %%#include "../testSupport.h"
 
+#define NRUNS 50
+
 entry {
-    seq_test_init(8);
+    seq_test_init(8*NRUNS);
     testDiag("start");
 }
 
@@ -21,12 +23,22 @@ ss pvGetCancel {
     assign x to { "pvGetCancel1", "pvGetCancel2"};
     assign y to { "pvGetCancel1", "pvGetCancel2"};
     typename pvStat status;
+    int n = 0;
 
+    state done {
+        when (n < NRUNS) {
+            n++;
+        } state test
+        when (delay(0.2)) {
+        } exit
+    }
     state test {
         entry {
             testOk1(pvGet(x[0],ASYNC) == pvStatOK);
             testOk1(pvGet(x[1],ASYNC) == pvStatOK);
             pvGetCancel(x);
+            x[0] = x[1] = 0;
+            y[0] = y[1] = 1;
             testOk1(pvPut(y[0],SYNC) == pvStatOK);
             testOk1(pvPut(y[1],SYNC) == pvStatOK);
             testOk1(pvGet(x[0],ASYNC) == pvStatOK);
@@ -40,10 +52,6 @@ ss pvGetCancel {
             testOk1(x[0] == y[0]);
             testOk1(x[1] == y[1]);
         } state done
-    }
-    state done {
-        when (delay(0.2)) {
-        } exit
     }
 }
 
