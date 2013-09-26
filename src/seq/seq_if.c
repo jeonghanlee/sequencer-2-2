@@ -38,7 +38,7 @@ static pvStat check_connected(DBCHAN *dbch, PVMETA *meta)
 	if (!dbch->connected)
 	{
 		meta->status = pvStatDISCONN;
-		meta->severity = pvSevrINVALID;
+		meta->severity = pvSevrERROR;
 		meta->message = "disconnected";
 		return meta->status;
 	}
@@ -173,7 +173,7 @@ epicsShareFunc pvStat seq_pvGet(SS_ID ss, VAR_ID varId, enum compType compType, 
 	if (status != pvStatOK)
 	{
 		meta->status = pvStatERROR;
-		meta->severity = pvSevrMAJOR;
+		meta->severity = pvSevrERROR;
 		meta->message = "get failure";
 		errlogSevPrintf(errlogFatal, "pvGet(var %s, pv %s): pvVarGetCallback() failure: %s\n",
 			ch->varName, dbch->dbName, pvVarGetMess(dbch->pvid));
@@ -204,12 +204,12 @@ epicsShareFunc pvStat seq_pvGet(SS_ID ss, VAR_ID varId, enum compType compType, 
 			break;
 		case epicsEventWaitTimeout:
 			meta->status = pvStatTIMEOUT;
-			meta->severity = pvSevrMAJOR;
+			meta->severity = pvSevrERROR;
 			meta->message = "get completion timeout";
 			return meta->status;
 		case epicsEventWaitError:
 			meta->status = pvStatERROR;
-			meta->severity = pvSevrMAJOR;
+			meta->severity = pvSevrERROR;
 			meta->message = "get completion failure";
 			return meta->status;
 		}
@@ -483,7 +483,7 @@ epicsShareFunc pvStat seq_pvPut(SS_ID ss, VAR_ID varId, enum compType compType, 
 			break;
 		case epicsEventWaitTimeout:
 			meta->status = pvStatERROR;
-			meta->severity = pvSevrMAJOR;
+			meta->severity = pvSevrERROR;
 			meta->message = "already one put pending";
 			status = meta->status;
 			errlogSevPrintf(errlogMajor,
@@ -568,13 +568,13 @@ epicsShareFunc pvStat seq_pvPut(SS_ID ss, VAR_ID varId, enum compType compType, 
 			break;
 		case epicsEventWaitTimeout:
 			meta->status = pvStatTIMEOUT;
-			meta->severity = pvSevrMAJOR;
+			meta->severity = pvSevrERROR;
 			meta->message = "put completion timeout";
 			return meta->status;
 			break;
 		case epicsEventWaitError:
 			meta->status = pvStatERROR;
-			meta->severity = pvSevrMAJOR;
+			meta->severity = pvSevrERROR;
 			meta->message = "put completion failure";
 			return meta->status;
 			break;
