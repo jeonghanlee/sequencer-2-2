@@ -249,7 +249,7 @@ epicsShareFunc boolean seq_pvGetComplete(
 					ch->varName);
 			done = TRUE;
 		}
-		else if (!ss->getReq[varId])
+		else if (!ss->getReq[varId+n])
 		{
 			errlogSevPrintf(errlogMinor,
 				"pvGetComplete(%s): no pending get request for this variable\n",
@@ -261,7 +261,7 @@ epicsShareFunc boolean seq_pvGetComplete(
 			switch (epicsEventTryWait(getSem))
 			{
 			case epicsEventWaitOK:
-				ss->getReq[varId] = NULL;
+				ss->getReq[varId+n] = NULL;
 				epicsEventSignal(getSem);
 				status = check_connected(ch->dbch, metaPtr(ch,ss));
 				if (status == pvStatOK && optTest(sp, OPT_SAFE))
@@ -276,7 +276,7 @@ epicsShareFunc boolean seq_pvGetComplete(
 			case epicsEventWaitTimeout:
 				break;
 			case epicsEventWaitError:
-				ss->getReq[varId] = NULL;
+				ss->getReq[varId+n] = NULL;
 				epicsEventSignal(getSem);
 				errlogSevPrintf(errlogFatal, "pvGetComplete(%s): "
 					"epicsEventTryWait(getSem[%d]) failure\n", ch->varName, varId);
@@ -328,7 +328,7 @@ epicsShareFunc void seq_pvGetCancel(
 		}
 		else
 		{
-			ss->getReq[varId] = NULL;
+			ss->getReq[varId+n] = NULL;
 			epicsEventSignal(getSem);
 		}
 	}
@@ -613,7 +613,7 @@ epicsShareFunc boolean seq_pvPutComplete(
 					ch->varName);
 			done = TRUE;
 		}
-		else if (!ss->putReq[varId])
+		else if (!ss->putReq[varId+n])
 		{
 		        errlogSevPrintf(errlogMinor,
 			        "pvPutComplete(%s): no pending put request for this variable\n",
@@ -625,7 +625,7 @@ epicsShareFunc boolean seq_pvPutComplete(
 			switch (epicsEventTryWait(putSem))
 			{
 			case epicsEventWaitOK:
-				ss->putReq[varId] = NULL;
+				ss->putReq[varId+n] = NULL;
 				epicsEventSignal(putSem);
 				check_connected(ch->dbch, metaPtr(ch,ss));
 				done = TRUE;
@@ -633,7 +633,7 @@ epicsShareFunc boolean seq_pvPutComplete(
 			case epicsEventWaitTimeout:
 				break;
 			case epicsEventWaitError:
-				ss->putReq[varId] = NULL;
+				ss->putReq[varId+n] = NULL;
 				epicsEventSignal(putSem);
 				errlogSevPrintf(errlogFatal, "pvPutComplete(%s): "
 				  "epicsEventTryWait(putSem[%d]) failure\n", ch->varName, varId);
@@ -685,7 +685,7 @@ epicsShareFunc void seq_pvPutCancel(
 		}
 		else
 		{
-			ss->putReq[varId] = NULL;
+			ss->putReq[varId+n] = NULL;
 			epicsEventSignal(putSem);
 		}
 	}
