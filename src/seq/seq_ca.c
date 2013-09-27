@@ -280,6 +280,7 @@ static void proc_db_events(
 	{
 		/* Copy value and meta data into user variable shared buffer
 		   (can get NULL value pointer for put completion only) */
+		assert((value==NULL)==(evtype == pvEventPut));
 		if (value != NULL)
 		{
 			void *val = pv_value_ptr(value,type);
