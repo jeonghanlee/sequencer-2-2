@@ -6,22 +6,8 @@ Release Notes for Version 2.2
 Release 2.2.0
 -------------
 
-PV Library
-^^^^^^^^^^
-
-The PV library has been almost completely eliminated. What remains is a
-thin layer over CA, implemented in C, and offering only the
-functionality that is actually needed by the sequencer. The API is similar
-(but not identical) to the old C API; particularly, all the pvStat, pvSevr,
-and pvType definitions are as before.
-
-The documentation for the PV layer has been removed, too. The only remaining
-user relevant part of the interface is contained in pvAlarm.h, see
-`Built-in Constants`_ below.
-
-Also removed were the keck examples and the KTL related stuff in other example
-directories.
-
+This is a new feature release. As with all dot-zero releases, be careful
+before using this in production systems.
 
 Built-in Constants
 ^^^^^^^^^^^^^^^^^^
@@ -47,12 +33,16 @@ listed):
 
 - #includes of epicsTypes.h and seqCom.h
 - escaped code segments appearing before the first state set
-- definition of the _seq_var struct (re-entrant mode only)
+- definition of the ``_seq_var`` struct (re-entrant mode only)
 
-In non-reentrant mode, global SNL variables correspond to top-level
-static C variables; including their definitions in another C file
-makes no sense, since they would be copies, not aliases, for the
-variables in the SNL program.
+Note that the order here has changed slightly, relative to version 2.1.
+See below for a rationale. (The struct ``_seq_var`` was previously named
+UserVar, see section `Names of Generated Entities`_ below for details.)
+
+Since in non-reentrant mode there is no ``_seq_var`` struct (global SNL
+variables are mapped to top-level static C variables), including their
+definitions in another C file makes no sense: they would be copies,
+not aliases, of the variables in the SNL program.
 
 In all cases, the header file gets included by the generated C code.
 
@@ -115,7 +105,7 @@ New Delay Implementation
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 While it was always allowed to use arbitrary expressions for the
-argument to delay(), this never worked as one would expect if the
+argument to :c:func:`delay`, this never worked as one would expect if the
 expression depended on e.g. monitored variables. The reason is that
 previously the delay expression was evaluated once for all delays
 appearing in conditions inside a state when the state was entered.
@@ -130,11 +120,40 @@ adjusted. This adjustment is now more precise, since we do not store
 the delay but rather the (future) time when the wakeup should happen.
 
 
+Removed PV Library
+^^^^^^^^^^^^^^^^^^
+
+The PV library has been almost completely eliminated. What remains is a
+thin layer over CA, implemented in C, and offering only the
+functionality that is actually needed by the sequencer. The API is similar
+(but not identical) to the old C API; particularly, all the pvStat, pvSevr,
+and pvType definitions are as before.
+
+The documentation for the PV layer has been removed, too. The only remaining
+user relevant part of the interface is contained in pvAlarm.h, see
+`Built-in Constants`_ above.
+
+Also removed were the keck examples and the KTL related stuff in other example
+directories.
+
+
 Removed devSequencer
 ^^^^^^^^^^^^^^^^^^^^
 
 The (broken and ugly) sequencer device support was removed.
 Consequently, seqFindProgByName was be removed as it is no longer needed.
+
+
+Default Queue Size
+^^^^^^^^^^^^^^^^^^
+
+The default size of a queue is now 2, instead of 100. The old default
+value was impractical since from version 2.1 onward queues are preallocated.
+Note that queues overwrite the *last* entry in case the queue is full. This
+means a queue size of 1 doesn't make much sense. It also means that with
+a size of 2 you effectively get sample-and-hold behaviour: the *first*
+event will be stored in the queue and is available (via :c:func:`pvGetQ`)
+regardless of events that have happened later.
 
 
 Multiple pvSync for multiply assigned arrays
@@ -145,6 +164,73 @@ are individually assigned to a separate PVs, then all the elements get
 synced with the event flag, just like if you use the sync clause.
 
 
+Additional Arguments for pvGetComplete
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The built-in function :c:func:`pvGetComplete` now accepts 2 more (optional)
+arguments, just like :c:func:`pvPutComplete`, in order to check for completion
+if the variable is an array with elements assigned to different PVs.
+
+Warning: This change is incompatible!
+
+Previously, ``pvGetComplete(x)``
+was equivalent to ``pvGetComplete(x[0])``, even for array variables with
+multiply assigned elements. That is, ``pvGetComplete(x)`` would check
+only for completion of the first array element, whereas now it checks
+completion for *all* elements.
+
+Patches:
+
+* enhanced pvGetComplete with extra optional args, like pvPutComplete
+  
+  This brings asynchronous pvGet to the same standard w.r.t. multi-PV
+  arrays as pvPut. Another slight improvement: in non-safe mode, if
+  a variable is not assigned to a PV, then return TRUE, so that
+  when testing in a condition it does not hang forever.
+
+* documented new features of pvGetComplete
+
+
+Timeout Arguments for pvGet and pvPut
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+For both :c:func:`pvGet` and :c:func:`pvPut` there is now the possibility to
+specify a timeout that differs from the default of 10 seconds. This is done
+by giving an extra argument after the ``SYNC`` keyword, as in::
+
+  pvGet(var,SYNC,1.0);
+
+As before, the default behaviour for ``pvGet(var)`` i.e. neither an explicit
+``SYNC`` nor ``ASYNC``, is synchronous, unless option :option:`-a` is in effect.
+In this case, or if ``SYNC`` is given with no extra argument, the standard
+default timeout of 10 seconds is assumed.
+
+This means that the new feature is fully backwards compatible, i.e. existing
+programs behave as before.
+
+* added extra optional timeout argument to pvGet and pvPut
+
+  This patch also gets rid of the ugly seq_sync_timeout hack.
+
+* documented extra timeout argument for pvGet and pvPut
+* adapted tests to use pvGet/Put timeouts
+
+
+New Built-in Functions pvGetCancel and pvPutCancel
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+It is now possible to cancel and asynchronous get or put request by calling
+:c:func:`pvGetCancel` resp. :c:func:`pvPutCancel`.
+
+.. todo:: sometimes test fails, debug, add test for pvPutCancel
+
+Patches:
+
+* added pvGetCancel and pvPutCancel
+* documented pvPutCancel and pvGetCancel
+* added test for pvGetCancel
+
+
 Names of Generated Entities
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -153,7 +239,10 @@ These now follow a strict naming convention:
   Generated names start with "_seq" or "_SEQ".
 
 In particular, ``struct UserVar`` became ``struct _seq_var`` (but see
-below for a compatibility typedef).
+below for a compatibility typedef). The variables (actually function
+parameters) ``ssId`` and ``pVar`` have been renamed, too. Since these are
+often passed to foreign C procedures, I added similarly named built-in
+procedures (``ssId()`` resp. ``pVar``) that return these values.
 
 In order to prevent name clashes, words starting with "_seq" are no longer
 valid identifiers in SNL.
@@ -176,11 +265,13 @@ Retained:
 - enum compType and its members DEFAULT, ASYNC, SYNC
 
 - constants NOEVFLAG and DEFAULT_QUEUE_SIZE
+  (but note that DEFAULT_QUEUE_SIZE is now 2 instead of 100)
 
 - typedefs string, EV_ID, VAR_ID, SS_ID,
   seqBool, seqProgram
 
-- all API functions
+- all functions except seqRegisterSequencerProgram and seqRegisterSequencerCommands
+  but including seq_pvIndex
 
 Added:
 
@@ -190,6 +281,10 @@ Added:
   implemented as macros); they replace direct uses of generated
   identifiers, which have been renamed (see `Names of Generated Entities`_
   above).
+
+- new builtin functions pvGetCancel, pvPutCancel
+
+- the constant DEFAULT_TIMEOUT
 
 For compatibility I also added:
 
@@ -236,6 +331,7 @@ Moved to seq_snc.h:
 
 - typedefs for generated functions; note that these were renamed, too
 
+- the functions seqRegisterSequencerProgram and seqRegisterSequencerCommands
 
 I hope these changes won't break too many programs that use escaped code
 and use these internals. If it turns out this is hurting people very
@@ -270,6 +366,14 @@ Related patches:
   contents of the state set control block, but are not allowed to
   invalidate the pointers themselves.
 
+* moved non-API internals from seqCom.h to new seq_snc.h
+
+  Another one of the long overdue re-factorings. The new header file
+  seq_snc.h contains all the definitions that are shared between the
+  snc generated code and the run-time library. What remains in seqCom.h
+  is the public API for C code that wants to interact with an SNL program.
+
+* removed seqRegisterSequencer* from public API
 
 Extra Build Rules
 ^^^^^^^^^^^^^^^^^
@@ -293,7 +397,7 @@ Miscellaneous New Features
 
 * pvAssign now does macro substitution, like assign syntax
 
-* seq: reduce severity of timeouts and user errors from errlogFatal to errlogMajor
+* reduce severity of timeouts and user errors from errlogFatal to errlogMajor
 
 * Struct or union members are no longer identified with variables in the
   SNL syntax. Member selection "operators" ('.' and '->') are no longer treated
@@ -303,7 +407,7 @@ Miscellaneous New Features
   "undefined variable" warnings for members.
 
   Declaring members in a foreign declaration is still allowed but
-  becomes obsolete.
+  is now obsolete.
 
 
 Various Fixes
@@ -317,9 +421,10 @@ Various Fixes
   This prevents a race condition resulting in a crash when the program
   shuts down and deletes mutexes etc before the callback has issued its
   final ss_wakeup call.
+* seq: fixed connect and monitor accounting in seq_disconnect and seq_camonitor
 
 
-Raw dump of Changes in test
+Raw Dump of Changes in test
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * added validation test for access to variables of foreign types
@@ -337,7 +442,7 @@ Raw dump of Changes in test
 * test/compiler: added a test for identifier starting with _seq
 
 
-Raw dump of Changes in documentation
+Raw Dump of Changes in documentation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * updated release notes for 2.2.0
@@ -351,6 +456,8 @@ Raw dump of Changes in documentation
 * superficial change to reference
 * removed foreign types from plans
 * removed some text that referred to the removed sequencer device support
+* distinguish program parameters from CPP macros
+* parameter expansion in pvAssign
 
 
 TODO Before Release
@@ -358,11 +465,11 @@ TODO Before Release
 
 * Maybe re-introduce #defines for event flags
 
-* Fix problem with pvGet timeouts; this is partly done, but may yet have
-  to change, depending on answers from the CA experts. Also, patch needs
-  to be pull from the stable branch.
+* Update reference to document all the changes and new features
 
 What to do about pvPutCompleteArray, see these patches:
 
 * examples: use array version of pvPutComplete
 * disabled examples/parallel because pvPutCompleteArray does not yet work
+
+See also pvPutMultiple and pvGetMultiple these are w/o implementation.
