@@ -940,6 +940,8 @@ Ternary Operator
 
 The ternary operator (there is only one) is right-associative.
 
+.. _Assignment Operators:
+
 Assignment Operators
 ~~~~~~~~~~~~~~~~~~~~
 
