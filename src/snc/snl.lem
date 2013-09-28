@@ -179,8 +179,6 @@ subscript(p) ::= LBRACKET INTCON(n) RBRACKET.	{ p = n; }
 
 declaration(p) ::= basetype(t) init_declarators(ds) SEMICOLON.
 						{ p = decl_add_base_type(ds, t); }
-declaration(p) ::= FOREIGN init_declarators(ds) SEMICOLON.
-						{ p = decl_add_base_type(ds, mk_no_type()); }
 
 init_declarators(p) ::= init_declarator(x).	{ p = x; }
 init_declarators(p) ::= init_declarators(xs) COMMA init_declarator(x).
@@ -198,6 +196,14 @@ direct_declarator(p) ::= LPAREN declarator(x) RPAREN.
 						{ p = x; }
 direct_declarator(p) ::= direct_declarator(x) subscript(s).
 						{ p = decl_postfix_array(x, s.str); }
+
+declaration(p) ::= FOREIGN declarators(ds) SEMICOLON.
+						{ p = decl_add_base_type(ds, mk_no_type()); }
+
+declarators(p) ::= declarator(x).		{ p = x; }
+declarators(p) ::= declarators(xs) COMMA declarator(x).
+						{ p = link_expr(xs, x); }
+
 
 // Initializer
 // Note: comma operator not allowed in 'expr'.
