@@ -4,7 +4,7 @@ Introduction
 About
 -----
 
-.. include:: about.inc
+.. include:: About.txt
 
 .. _Overview:
 

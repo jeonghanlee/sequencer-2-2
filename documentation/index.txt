@@ -10,7 +10,7 @@ State Notation Language and Sequencer
 Welcome to the home page of the **EPICS Sequencer** project.
 
 
-.. include:: about.inc
+.. include:: About.txt
 
 .. toctree::
    :hidden:

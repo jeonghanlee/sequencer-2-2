@@ -2398,13 +2398,3 @@ variable, and then does a pvPut::
            } state doit
        }
    }
-
-
-Syntax Summary
---------------
-
-What follows is a summary of all syntax rules. It is guaranteed to be
-up-to-date as it is automatically generated from the parser generator
-specification.
-
-.. include:: bnf.inc

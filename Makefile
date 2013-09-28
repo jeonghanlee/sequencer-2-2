@@ -31,7 +31,7 @@ docs: src
 docs.clean:
 	$(MAKE) -C documentation clean
 
-clean: docs.clean
+realclean clean: docs.clean
 
 upload_docs: docs
 	rsync -r -t $(TOP)/html/ $(USER_AT_HOST):$(SEQ_PATH)/

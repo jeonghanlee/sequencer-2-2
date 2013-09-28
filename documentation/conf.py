@@ -72,7 +72,7 @@ release = get_seq_release()
 #today_fmt = '%B %d, %Y'
 
 # List of documents that shouldn't be included in the build.
-#unused_docs = []
+unused_docs = ['Syntax', 'About']
 
 # List of directories, relative to source directory, that shouldn't be searched
 # for source files.

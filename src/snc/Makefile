@@ -29,8 +29,7 @@ snc_SRCS += builtin.c       # builtin constants and functions
 snc_LIBS += Com seq
 
 # locally overwrite default value for this variable
-INSTALL_DOC = $(INSTALL_LOCATION)/documentation
-DOCS += bnf.inc
+HTMLS += Syntax.txt
 
 include $(TOP)/configure/RULES
 #----------------------------------------
@@ -38,6 +37,7 @@ include $(TOP)/configure/RULES
 
 vpath %.lem ..
 vpath %.lt ..
+vpath %.txt $(COMMON_DIR)
 
 # this extra dependency needed for 3.14.8 compatibility
 lexer.o: snl.h
@@ -59,11 +59,8 @@ endif
 $(COMMON_DIR)/snl.bnf: snl.lem
 	$(LEMON) o=. -g $< > $@
 
-$(COMMON_DIR)/bnf.inc: ../bnf2txt.pl snl.re $(COMMON_DIR)/snl.bnf
+$(COMMON_DIR)/Syntax.txt: ../bnf2txt.pl snl.re $(COMMON_DIR)/snl.bnf
 	$(PERL) $^ > $@
-
-$(INSTALL_DOC)/%: $(COMMON_DIR)/%
-	$(INSTALL) -d -m 644 $< $(INSTALL_DOC)
 
 ifdef BASE_3_14
 %$(DEP): %.c
