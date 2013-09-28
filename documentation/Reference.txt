@@ -46,13 +46,6 @@ Identifiers follow the same rules as in C. They are used for variables
 (including foreign variables and event flags), the program name,
 states, state sets, and options.
 
-For clarity, we define the following aliases:
-
-.. productionlist::
-   event_flag: `identifier`
-   variable: `identifier`
-   member: `identifier`
-
 Literals
 ^^^^^^^^
 
@@ -824,13 +817,7 @@ For example::
 State Entry and Exit Blocks
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The syntax is the same as for global entry blocks:
-
-.. productionlist::
-   entry: "entry" `block`
-   entry: 
-   exit: "exit" `block`
-   exit: 
+The syntax is the same as for `Global Entry and Exit Blocks`_.
 
 Entry blocks are executed when the state is entered, before any of the
 conditions for state transitions are evaluated.
