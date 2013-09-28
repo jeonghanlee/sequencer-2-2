@@ -726,29 +726,22 @@ The following example illustrates this::
 What's Happening at Run Time
 ----------------------------
 
-At run time the sequencer blocks until something "interesting" occurs,
-where "interesting" means things like receiving a monitor from a PV
-used in a :token:`when` clause, an event flag changing state, or a
-delay timer expiring. More precisely, there are five types of sequencer
-event:
+At run time the sequencer blocks until something "interesting" occurs, where
+"interesting" means things like receiving a monitor from a PV used in a
+:token:`when` clause, an event flag changing state, or a delay timer
+expiring. See section :ref:`Transitions` in the :doc:`Reference` for a
+detailed list.
 
--  a process variable monitor is posted
--  an asynchronous :c:func:`pvGet` or :c:func:`pvPut` completes
--  a time :c:func:`delay` elapses
--  an event flag is set or cleared
--  a process variable connects or disconnects
+The sequencer then scans the list of :token:`when` statements for the
+current state and evaluates each expression in turn. If a :token:`when`
+expression evaluates to non-zero the actions within that :token:`when` block
+are executed and the sequencer enters the state specified by that
+:token:`when` statement. The sequencer then blocks again waiting for
+something "interesting" to happen.
 
-The sequencer then scans the list of
-:token:`when` statements for the current state and evaluates each
-expression in turn. If a :token:`when` expression evaluates to
-non-zero the actions within that :token:`when` block are executed and
-the sequencer enters the state specified by that :token:`when`
-statement. The sequencer then blocks again waiting for something
-"interesting" to happen.
-
-Note, however, that whenever a new state is entered, the
-corresponding :token:`when` conditions for that state are evaluated once
-without first waiting for events.
+Note, however, that whenever a new state is entered, the corresponding
+:token:`when` conditions for that state are evaluated once without first
+waiting for events.
 
 A Common Misconception
 ^^^^^^^^^^^^^^^^^^^^^^
