@@ -798,7 +798,7 @@ static void analyse_sync(SymTable st, Expr *scope, Expr *defn)
 	}
 	if (evp->type->tag != T_EVFLAG)
 	{
-		error_at_expr(defn, "variable '%s' is not a event flag\n", ef_name);
+		error_at_expr(defn, "variable '%s' is not an event flag\n", ef_name);
 		return;
 	}
 	if (defn->sync_subscr)
@@ -953,7 +953,7 @@ static void analyse_syncq(SymTable st, SyncQList *syncq_list, Expr *scope, Expr 
 		}
 		if (evp->type->tag != T_EVFLAG)
 		{
-			error_at_expr(defn, "variable '%s' is not a event flag\n", ef_name);
+			error_at_expr(defn, "variable '%s' is not an event flag\n", ef_name);
 			return;
 		}
 		if (evp->chan.evflag->queued)
