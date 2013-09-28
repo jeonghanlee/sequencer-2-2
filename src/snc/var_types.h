@@ -16,8 +16,7 @@ enum type_tag {
     T_PRIM,     /* primitive types: numbers, char, string */
     T_FOREIGN,  /* foreign types (declared in C code) */
     T_POINTER,
-    T_ARRAY,
-    T_PV,
+    T_ARRAY
 };
 
 enum foreign_type_tag {
