@@ -1042,6 +1042,13 @@ Left-associative Binary Operators
    expr: `expr` "&" `expr`
    expr: `expr` "%" `expr`
 
+.. note:: Like in most programming languages, evaluation of conditional
+   expressions using ``&&`` and ``||`` is done *lazily*: the second operand
+   is not evaluated if evaluation of the first already determines the
+   result. This particularly applies to the boolean expressions in
+   :token:`transition` clauses. See the built-in function :c:func:`pvGetQ`
+   for an extended discussion.
+
 Ternary Operator
 ~~~~~~~~~~~~~~~~
 
@@ -1461,22 +1468,21 @@ combining a call to pvGetQ with other conditions in the same
         } state ...
 
 would remove the head from the queue every time the condition gets
-evaluated, regardless of whether ``other_condition`` is ``TRUE``. This is most
-probably not the desired effect, as you would lose an
-unknown number of messages. (Of course it *could* be exactly what you want,
-especially if ``other_condition`` were in fact ``!suppress_output``.)
-Whereas ::
+evaluated, regardless of whether ``other_condition`` is ``TRUE``. This is
+most probably not the desired effect, as you would lose an unknown number of
+messages. (Of course it *could* be exactly what you want, for instance if
+``other_condition`` were something like ``!suppress_output``.) Whereas ::
 
         when (other_condition && pvGetQ(msg)) {
            printf(msg);
         } state ...
 
-is "safe", in the sense that no messages will be lost. BTW, If you
-combine with a disjunction ("||") it is the other way around, i.e. pvGetQ
-should appear as the first operand. This is all merely a result of the
-evaluation order imposed by the C language; similar remarks apply
-whenever you want to use an expression inside a :token:`transition` clause that
-potentially has a side-effect.
+is "safe", in the sense that no messages will be lost. BTW, If you combine
+with a disjunction ("||") it is the other way around, i.e. pvGetQ should
+appear as the first operand. This is all merely a result of the evaluation
+order imposed by the C language (and thus by SNL); similar remarks apply
+whenever you want to use an expression inside a :token:`transition` clause
+that potentially has a side-effect.
 
 
 pvFreeQ
