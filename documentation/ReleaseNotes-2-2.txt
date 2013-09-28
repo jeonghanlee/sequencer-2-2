@@ -67,8 +67,8 @@ in expressions just as in C, and with the same precedence. Similar with
 the special sizeof function, that can be used with a value (expression) or
 a type expression, just as in C.
 
-The words ``enum``, ``struct``, ``typename``, and ``union`` are reserved
-words and can no longer be used as identifiers.
+The words ``enum``, ``struct``, ``typename``, ``union``, and ``void`` are
+reserved words and can no longer be used as identifiers.
 
 In order to make it possible to ``%%#include`` type declarations (so they
 appear in the generated C code but not in the code that SNL has to parse)
