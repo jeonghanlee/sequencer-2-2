@@ -141,6 +141,7 @@ has the effect of sending a get request to the PV "Input_voltage",
 waiting for the response, and then updating the variable with the
 new value.
 
+.. _A Complete Program:
 
 A Complete Program
 ------------------
