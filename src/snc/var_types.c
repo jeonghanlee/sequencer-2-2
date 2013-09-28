@@ -171,6 +171,16 @@ Type mk_ef_type()
     return t;
 }
 
+Type mk_void_type()
+{
+    Type t;
+
+    memset(&t, 0, sizeof(Type));
+
+    t.tag = T_VOID;
+    return t;
+}
+
 Type mk_no_type()
 {
     Type t;
@@ -255,6 +265,9 @@ void gen_type(Type *t, const char *prefix, const char *name)
     switch (bt->tag) {
     case T_EVFLAG:
         gen_code("evflag");
+        break;
+    case T_VOID:
+        gen_code("void");
         break;
     case T_PRIM:
         gen_code("%s", prim_type_name[bt->val.prim]);

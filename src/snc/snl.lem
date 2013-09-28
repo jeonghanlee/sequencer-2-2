@@ -240,9 +240,10 @@ prim_type(p) ::= STRING.			{ p = P_STRING; }
 
 %type basetype {Type}
 basetype(p) ::= prim_type(x).			{ p = mk_prim_type(x); }
-basetype(p) ::= EVFLAG.			{ p = mk_ef_type(); }
+basetype(p) ::= EVFLAG.				{ p = mk_ef_type(); }
+basetype(p) ::= VOID.				{ p = mk_void_type(); }
 basetype(p) ::= ENUM NAME(x).			{ p = mk_foreign_type(F_ENUM, x.str); }
-basetype(p) ::= STRUCT NAME(x).		{ p = mk_foreign_type(F_STRUCT, x.str); }
+basetype(p) ::= STRUCT NAME(x).			{ p = mk_foreign_type(F_STRUCT, x.str); }
 basetype(p) ::= UNION NAME(x).			{ p = mk_foreign_type(F_UNION, x.str); }
 basetype(p) ::= TYPENAME NAME(x).		{ p = mk_foreign_type(F_TYPENAME, x.str); }
 

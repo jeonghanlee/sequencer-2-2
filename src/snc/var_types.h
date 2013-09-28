@@ -12,6 +12,7 @@ in the file LICENSE that is included with this distribution.
 enum type_tag {
     T_NONE,     /* undeclared (or declared as foreign) variable */
     T_EVFLAG,   /* event flags */
+    T_VOID,     /* void type */
     T_PRIM,     /* primitive types: numbers, char, string */
     T_FOREIGN,  /* foreign types (declared in C code) */
     T_POINTER,
@@ -70,6 +71,7 @@ void gen_type(Type *t, const char *prefix, const char *name);
 Type mk_prim_type(enum prim_type_tag tag);
 Type mk_foreign_type(enum foreign_type_tag tag, char *name);
 Type mk_ef_type();
+Type mk_void_type();
 Type mk_no_type();
 
 
