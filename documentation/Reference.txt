@@ -2175,6 +2175,19 @@ these variable are updated from their globally visible copies.
 C Compatibility Features
 ------------------------
 
+.. todo::
+
+   - extract this section into its own file/chapter
+
+   - update to version 2.2 (see release notes for many details)
+   
+   - reduce verbosity, e.g. move examples and motivations to the tutorial
+
+   - should I start to deprecate escape to C code? with the generated header
+     file, is there anything that cannot be done in a separate C file?
+     (%%#include comes to mind, but that could be replaced by a SNL
+     directive)
+
 Foreign Variables and Functions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
