@@ -45,8 +45,7 @@ static void gen_pv_func(int context, Expr *ep,
 	const char *func_name, uint add_length,
 	uint num_params, uint ef_args,
 	const char *default_values[]);
-static int gen_builtin_func(int context, Expr *ep);
-static int gen_builtin_const(Expr *ep);
+static void gen_builtin_func(int context, Expr *ep);
 
 static void gen_prog_func(
 	Expr *prog,
@@ -437,17 +436,33 @@ static void gen_expr(
 		gen_code("]");
 		break;
 	case E_CONST:
-		if (gen_builtin_const(ep))
-			break;
-		gen_code("%s", ep->value);
+		if (ep->extra.e_const)
+			gen_code("%s", ep->extra.e_const->name);
+		else
+			gen_code("%s", ep->value);
 		break;
 	case E_STRING:
 		gen_code("\"%s\"", ep->value);
 		break;
 	case E_FUNC:
-		if (ep->func_expr->type == E_VAR && gen_builtin_func(context, ep))
+		if (ep->func_expr->type == E_BUILTIN)
+		{
+			gen_builtin_func(context, ep);
 			break;
-		gen_expr(context, ep->func_expr, 0);
+		}
+		if (ep->func_expr->type == E_VAR &&
+				ep->func_expr->extra.e_var->type->tag != T_NONE)
+		{
+			/* we don't yet support variables of function type */
+			error_at_expr(ep->func_expr,
+				"variable '%s' is not a function\n",
+				ep->func_expr->extra.e_var->name);
+			report_at_expr(ep->func_expr->extra.e_var->decl,
+				"variable '%s' is declared here\n",
+				ep->func_expr->extra.e_var->name);
+		}
+		else
+			gen_expr(context, ep->func_expr, 0);
 		gen_code("(");
 		foreach (cep, ep->func_args)
 		{
@@ -520,54 +535,39 @@ static void gen_expr(
 	}
 }
 
-static int gen_builtin_const(Expr *ep)
-{
-	char	*const_name = ep->value;
-	struct const_symbol *sym = lookup_builtin_const(global_sym_table, const_name);
-
-	if (!sym)
-		return CT_NONE;
-	gen_code("%s", const_name);
-	return sym->type;
-}
-
 /* Generate builtin function call */
-static int gen_builtin_func(int context, Expr *ep)
+static void gen_builtin_func(int context, Expr *ep)
 {
-	char	*func_name = ep->func_expr->value;
-	Expr	*ap;			/* argument expr */
-	struct func_symbol *sym;
+	Expr *ap;	/* argument expr */
+	struct func_symbol *sym = ep->func_expr->extra.e_builtin;
 
-	if (ep->func_expr->type != E_VAR)
-		return FALSE;
-	sym = lookup_builtin_func(global_sym_table, func_name);
-	if (!sym)
-		return FALSE;	/* not a special function */
+	assert(ep->func_expr->type == E_BUILTIN);
+	assert(sym);
 
 #ifdef	DEBUG
 	report("gen_builtin_func: name=%s, type=%u, add_length=%u, "
 		"default_args=%u, ef_action_only=%u, ef_args=%u\n",
-		func_name, sym->type, sym->add_length, sym->default_args,
+		sym->name, sym->type, sym->add_length, sym->default_args,
 		sym->ef_action_only, sym->ef_args);
 #endif
 	/* All builtin functions require ssId as 1st parameter */
 	assert_at_expr(context != C_GLOBAL, ep,
-		"calling built-in function %s not allowed here\n", func_name);
-	gen_code("seq_%s("NM_SS, func_name);
+		"calling built-in function %s not allowed here\n", sym->name);
+	gen_code("seq_%s("NM_SS, sym->name);
 	if (context != C_COND && sym->cond_only)
 	{
 		error_at_expr(ep,
-		  "calling built-in function %s not allowed here\n", func_name);
-		return TRUE;
+		  "calling built-in function %s not allowed here\n", sym->name);
+		return;
 	}
 	switch (sym->type)
 	{
 	case FT_EVENT:
 		/* Event flag functions */
-		gen_ef_func(context, ep, func_name, sym->ef_action_only);
+		gen_ef_func(context, ep, sym->name, sym->ef_action_only);
 		break;
 	case FT_PV:
-		gen_pv_func(context, ep, func_name, sym->add_length,
+		gen_pv_func(context, ep, sym->name, sym->add_length,
 			sym->default_args, sym->ef_args, sym->default_values);
 		break;
 	case FT_OTHER:
@@ -582,7 +582,6 @@ static int gen_builtin_func(int context, Expr *ep)
 	default:
 		assert(impossible);
 	}
-	return TRUE;
 }
 
 /* Check an event flag argument */
@@ -665,7 +664,7 @@ static void gen_pv_func(
 	if (ap == 0)
 	{
 		error_at_expr(ep,
-			"function '%s' requires a parameter\n", func_name);
+			"function '%s' requires an argument\n", func_name);
 		return;
 	}
 
@@ -746,9 +745,12 @@ static void gen_pv_func(
 			/* special case: constant NOEVFLAG */
 			if (ap->type == E_CONST)
 			{
-				if (gen_builtin_const(ap)!=CT_EVFLAG)
+				if (ap->extra.e_const && ap->extra.e_const->type == CT_EVFLAG)
+					gen_expr(context, ap, 0);
+				else
 					error_at_expr(ap,
-					  "argument %d to built-in function %s must be an event flag\n",
+					  "argument %d to built-in function %s must "
+					  "be an event flag\n",
 					  num_extra_parms+1, func_name);
 			}
 			else

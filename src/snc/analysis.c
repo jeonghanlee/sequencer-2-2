@@ -1101,10 +1101,21 @@ static int connect_variable(Expr *ep, Expr *scope, void *parg)
 	if (!vp)
 	{
 		VarList *var_list = var_list_from_scope(scope);
-		struct const_symbol *csym = lookup_builtin_const(st, ep->value);
+		struct const_symbol *csym;
+		struct func_symbol *fsym;
+
+		csym = lookup_builtin_const(st, ep->value);
 		if (csym)
 		{
 			ep->type = E_CONST;
+			ep->extra.e_const = csym;
+			return FALSE;
+		}
+		fsym = lookup_builtin_func(st, ep->value);
+		if (fsym)
+		{
+			ep->type = E_BUILTIN;
+			ep->extra.e_builtin = fsym;
 			return FALSE;
 		}
 

@@ -41,6 +41,8 @@ typedef struct chan_list	ChanList;
 typedef struct sync_queue_list	SyncQList;
 typedef struct var_list		VarList;
 typedef struct expr_pair	ExprPair;
+typedef struct func_symbol	FuncSym;
+typedef struct const_symbol	ConstSym;
 
 typedef unsigned long long	TypeMask;
 typedef unsigned int		uint;
@@ -129,6 +131,8 @@ struct expression			/* generic syntax node */
 		Expr	*e_change;	/* declaration of target state */
 		VarList	*e_entex;	/* local declarations */
 		VarList	*e_cmpnd;	/* block local definitions */
+		FuncSym	*e_builtin;	/* builtin function */
+		ConstSym *e_const;	/* builtin constant */
 	}	extra;
 };
 
@@ -284,6 +288,7 @@ enum expr_type			/* description [child expressions...] */
 	D_WHEN,			/* when statement [cond,defns,stmts] */
 
 	E_BINOP,		/* binary operator [left,right] */
+	E_BUILTIN,		/* builtin function [] */
 	E_CAST,			/* type cast [operand] */
 	E_CONST,		/* numeric (inkl. character) constant [] */
 	E_FUNC,			/* function call [expr,args] */
@@ -404,6 +409,7 @@ expr_type_info[]
 	{ "D_SYNCQ",	3 },
 	{ "D_WHEN",	3 },
 	{ "E_BINOP",	2 },
+	{ "E_BUILTIN",	0 },
 	{ "E_CAST",	2 },
 	{ "E_CONST",	0 },
 	{ "E_FUNC",	2 },
