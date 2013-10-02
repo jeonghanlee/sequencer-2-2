@@ -445,9 +445,10 @@ static void gen_expr(
 		gen_code("\"%s\"", ep->value);
 		break;
 	case E_FUNC:
-		if (gen_builtin_func(context, ep))
+		if (ep->func_expr->type == E_VAR && gen_builtin_func(context, ep))
 			break;
-		gen_code("%s(", ep->value);
+		gen_expr(context, ep->func_expr, 0);
+		gen_code("(");
 		foreach (cep, ep->func_args)
 		{
 			gen_expr(context, cep, 0);
@@ -533,10 +534,13 @@ static int gen_builtin_const(Expr *ep)
 /* Generate builtin function call */
 static int gen_builtin_func(int context, Expr *ep)
 {
-	char	*func_name = ep->value;	/* function name */
+	char	*func_name = ep->func_expr->value;
 	Expr	*ap;			/* argument expr */
-	struct func_symbol *sym = lookup_builtin_func(global_sym_table, func_name);
+	struct func_symbol *sym;
 
+	if (ep->func_expr->type != E_VAR)
+		return FALSE;
+	sym = lookup_builtin_func(global_sym_table, func_name);
 	if (!sym)
 		return FALSE;	/* not a special function */
 
@@ -688,7 +692,7 @@ static void gen_pv_func(
 	}
 
 #ifdef	DEBUG
-	report("gen_pv_func: fun=%s, var=%s\n", ep->value, vp->name);
+	report("gen_pv_func: fun=%s, var=%s\n", func_name, vp->name);
 #endif
 	gen_code(", ");
 	if (vp->assign == M_NONE)
@@ -767,7 +771,7 @@ static void gen_pv_func(
 	/* Close the parameter list */
 	gen_code(")");
 #ifdef	DEBUG
-	report("gen_pv_func: done (fun=%s, var=%s)\n", ep->value, vp->name);
+	report("gen_pv_func: done (fun=%s, var=%s)\n", func_name, vp->name);
 #endif
 }
 

@@ -44,7 +44,7 @@ in the file LICENSE that is included with this distribution.
 %token_type { Token }
 %default_type { Expr* }
 
-/* Standard C operator table
+/* Standard C operator table, highest precedence first.
   Primary Expression Operators  () [] . -> expr++ expr--  left-to-right
   Unary Operators  * & + - ! ~ ++expr --expr (typecast) sizeof()  right-to-left
   Binary Operators  * / %  left-to-right
@@ -62,8 +62,10 @@ in the file LICENSE that is included with this distribution.
   Comma  ,  left-to-right
 */
 
-// PRE and POST are pseudo tokens, they only for the
-// precedence declaration.
+// PRE and POST are pseudo tokens used for precedence declaration.
+// They are needed for operators that can appear in more than
+// one position (and then have different precedences) because lemon
+// allows only one precedence declaration for each token.
 
 // The comma operator is implemented as an extra production,
 // so we need no explicit precedence for it.
@@ -80,10 +82,8 @@ in the file LICENSE that is included with this distribution.
 %left	LSHIFT RSHIFT.
 %left	ADD SUB.
 %left	ASTERISK SLASH MOD.
-%right	CAST.
-%right	NOT INCR DECR PRE.
-%left	LBRACKET RBRACKET POINTER PERIOD POST.
-// LPAREN RPAREN not listed as we do not support indirect calls. */
+%right	NOT TILDE INCR DECR PRE. // omitted duplicates: ADD SUB ASTERISK AMPERSAND
+%left	LBRACKET LPAREN POINTER PERIOD POST.  // omitted duplicates: INCR DECR
 
 program ::=
 	PROGRAM NAME(n)
@@ -400,19 +400,17 @@ expr(p) ::= FPCON(x).				{ p = expr(E_CONST, x); }
 expr(p) ::= string(x).				{ p = x; }
 expr(p) ::= variable(v).			{ p = expr(E_VAR, v); }
 
-// Parenthesized
-expr(p) ::= LPAREN(t) comma_expr(x) RPAREN.		{ p = expr(E_PAREN, t, x); }
-
 // Primary Expression and Unary Postfix Operators
-expr(p) ::= NAME(t) LPAREN args(xs) RPAREN.	 [POST] { p = expr(E_FUNC,   t, xs); }
-expr(p) ::= EXIT(t) LPAREN args(xs) RPAREN.	 [POST] { p = expr(E_FUNC,   t, xs); }
-expr(p) ::= SIZEOF(t) LPAREN expr(x) RPAREN.	 [POST] { p = expr(E_FUNC,   t, x); }
-expr(p) ::= SIZEOF(t) LPAREN type_expr(x) RPAREN.[POST] { p = expr(E_FUNC,   t, x); }
-expr(p) ::= expr(x) LBRACKET(t) expr(y) RBRACKET.[POST] { p = expr(E_SUBSCR, t, x, y); }
-expr(p) ::= expr(x) PERIOD(t) member(y).	 [POST] { p = expr(E_SELECT, t, x, y); }
-expr(p) ::= expr(x) POINTER(t) member(y).	 [POST] { p = expr(E_SELECT, t, x, y); }
-expr(p) ::= expr(x) INCR(t).			 [POST] { p = expr(E_POST,   t, x); }
-expr(p) ::= expr(x) DECR(t).			 [POST] { p = expr(E_POST,   t, x); }
+expr(p) ::= LPAREN(t) comma_expr(x) RPAREN.		{ p = expr(E_PAREN,  t, x); }
+expr(p) ::= expr(x) LPAREN(t) args(y) RPAREN.		{ p = expr(E_FUNC,   t, x, y); }
+expr(p) ::= EXIT(n) LPAREN(t) args(y) RPAREN.		{ p = expr(E_FUNC,   t, expr(E_VAR, n), y); }
+expr(p) ::= SIZEOF(n) LPAREN(t) expr(y) RPAREN.		{ p = expr(E_FUNC,   t, expr(E_VAR, n), y); }
+expr(p) ::= SIZEOF(n) LPAREN(t) type_expr(y) RPAREN.	{ p = expr(E_FUNC,   t, expr(E_VAR, n), y); }
+expr(p) ::= expr(x) LBRACKET(t) expr(y) RBRACKET.	{ p = expr(E_SUBSCR, t, x, y); }
+expr(p) ::= expr(x) PERIOD(t) member(y).		{ p = expr(E_SELECT, t, x, y); }
+expr(p) ::= expr(x) POINTER(t) member(y).		{ p = expr(E_SELECT, t, x, y); }
+expr(p) ::= expr(x) INCR(t). [POST]			{ p = expr(E_POST,   t, x); }
+expr(p) ::= expr(x) DECR(t). [POST]			{ p = expr(E_POST,   t, x); }
 
 // Unary Prefix Operators
 expr(p) ::= ADD(t)	expr(x). [PRE]		{ p = expr(E_PRE, t, x); }
@@ -425,7 +423,7 @@ expr(p) ::= INCR(t)	expr(x). [PRE]		{ p = expr(E_PRE, t, x); }
 expr(p) ::= DECR(t)	expr(x). [PRE]		{ p = expr(E_PRE, t, x); }
 
 // Type Cast
-expr(p) ::= LPAREN(t) type_expr(c) RPAREN expr(x). [CAST] { p = expr(E_CAST, t, c, x); }
+expr(p) ::= LPAREN(t) type_expr(c) RPAREN expr(x). [PRE] { p = expr(E_CAST, t, c, x); }
 
 // Binary Operators, left-to-right
 expr(p) ::= expr(x) SUB(t)	expr(y).	{ p = expr(E_BINOP, t, x, y); }

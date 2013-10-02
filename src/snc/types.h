@@ -286,7 +286,7 @@ enum expr_type			/* description [child expressions...] */
 	E_BINOP,		/* binary operator [left,right] */
 	E_CAST,			/* type cast [operand] */
 	E_CONST,		/* numeric (inkl. character) constant [] */
-	E_FUNC,			/* function call [args] */
+	E_FUNC,			/* function call [expr,args] */
 	E_INIT,			/* array or struct initializer [elems] */
 	E_MEMBER,		/* struct or union member [] */
 	E_PAREN,		/* parenthesis around an expression [expr] */
@@ -332,7 +332,8 @@ STATIC_ASSERT(NUM_EXPR_TYPES <= 8*sizeof(TypeMask));
 #define for_cond	children[1]
 #define for_iter	children[2]
 #define for_stmt	children[3]
-#define func_args	children[0]
+#define func_expr	children[0]
+#define func_args	children[1]
 #define if_cond		children[0]
 #define if_then		children[1]
 #define if_else		children[2]
@@ -405,7 +406,7 @@ expr_type_info[]
 	{ "E_BINOP",	2 },
 	{ "E_CAST",	2 },
 	{ "E_CONST",	0 },
-	{ "E_FUNC",	1 },
+	{ "E_FUNC",	2 },
 	{ "E_INIT",	1 },
 	{ "E_MEMBER",	0 },
 	{ "E_PAREN",	1 },
