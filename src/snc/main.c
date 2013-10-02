@@ -188,6 +188,9 @@ static void parse_option(char *s)
 	case 'w':
 		options.warn = opt_val;
 		break;
+	case 'W':
+		options.xwarn = opt_val;
+		break;
 	default:
 		report("unknown option ignored: '%s'\n", s);
 		break;
@@ -302,6 +305,19 @@ void warning_at_expr(Expr *ep, const char *format, ...)
 	va_list args;
 
 	if (!options.warn) return;
+	report_loc(ep->src_file, ep->line_num);
+	fprintf(stderr, "warning: ");
+
+	va_start(args, format);
+	vfprintf(stderr, format, args);
+	va_end(args);
+}
+
+void extra_warning_at_expr(Expr *ep, const char *format, ...)
+{
+	va_list args;
+
+	if (!options.xwarn) return;
 	report_loc(ep->src_file, ep->line_num);
 	fprintf(stderr, "warning: ");
 

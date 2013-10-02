@@ -67,9 +67,10 @@ struct options
 	uint	main:1;			/* generate main program */
 	uint	line:1;			/* generate line markers */
 	uint	warn:1;			/* compiler warnings */
+	uint	xwarn:1;		/* extra compiler warnings */
 };
 
-#define DEFAULT_OPTIONS {0,1,0,0,0,1,0,1,1}
+#define DEFAULT_OPTIONS {0,1,0,0,0,1,0,1,1,0}
 
 struct state_options			/* run-time state options */
 {

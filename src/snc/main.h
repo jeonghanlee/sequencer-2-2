@@ -52,6 +52,10 @@ __attribute__((format(printf,2,3)));
 void warning_at_expr(struct expression *ep, const char *format, ...)
 __attribute__((format(printf,2,3)));
 
+/* with location from this expression but only if extra warnings are enabled */
+void extra_warning_at_expr(struct expression *ep, const char *format, ...)
+__attribute__((format(printf,2,3)));
+
 /* with location from this expression and increase error count */
 void error_at_expr(struct expression *ep, const char *format, ...)
 __attribute__((format(printf,2,3)));

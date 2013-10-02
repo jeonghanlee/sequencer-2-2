@@ -1108,7 +1108,7 @@ static int connect_variable(Expr *ep, Expr *scope, void *parg)
 			return FALSE;
 		}
 
-		warning_at_expr(ep, "variable '%s' used but not declared\n",
+		extra_warning_at_expr(ep, "variable '%s' used but not declared\n",
 			ep->value);
 		/* create a pseudo declaration so we can finish the analysis phase */
 		vp = new(Var);
