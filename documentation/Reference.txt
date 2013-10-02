@@ -1021,7 +1021,9 @@ Left-associative Binary Operators
    expr: `expr` "&" `expr`
    expr: `expr` "%" `expr`
 
-.. note:: Like in most programming languages, evaluation of conditional
+.. note::
+
+   Like in most programming languages, evaluation of conditional
    expressions using ``&&`` and ``||`` is done *lazily*: the second operand
    is not evaluated if evaluation of the first already determines the
    result. This particularly applies to the boolean expressions in
