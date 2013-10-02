@@ -19,8 +19,6 @@ static void efSet_x(SS_ID ssId, EV_ID x)
 }
 }%
 
-foreign pVar, ssId;
-
 entry {
     seq_test_init(2);
 }
