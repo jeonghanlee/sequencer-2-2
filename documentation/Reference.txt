@@ -523,14 +523,6 @@ is marked for potential (dynamic) assignment with :c:func:`pvAssign`.
 .. note:: An :token:`assign` clause using an empty string for the PV name is
    interpreted differently in :ref:`safe mode`, see :ref:`anonymous pvs`.
 
-.. todo:: In safe mode it might make sense to implicitly declare every
-   global variable as assigned (wholesale, if it is an array) by default.
-   An explicit assign/connect statement will override this, of course.
-   This is because un-assigned global variables are not very useful in
-   safe mode, since the only reason to use global variables at all is to
-   enable communication between state sets (and to avoid having to type
-   the same declarations in every state set that uses a certain channel).
-
 An array variable assigned wholesale to one process variable (using
 the first syntactic variant above) or an element of a
 two-dimensional variable assigned to an array process variable
