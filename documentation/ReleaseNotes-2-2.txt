@@ -35,7 +35,7 @@ listed):
 - escaped code segments appearing before the first state set
 - definition of the ``_seq_var`` struct (re-entrant mode only)
 
-Note that the order here has changed slightly, relative to version 2.1.
+Note that the order here has changed relative to version 2.1.
 See below for a rationale. (The struct ``_seq_var`` was previously named
 UserVar, see section `Names of Generated Entities`_ below for details.)
 
