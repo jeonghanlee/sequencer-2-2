@@ -13,6 +13,7 @@ option +s;
 %{
 static void incr(SS_ID ssId, int *pv, VAR_ID v);
 static void set_i(SEQ_VARS *const pVar, int value);
+static void null(void);
 }%
 
 int i = 0;
@@ -32,6 +33,7 @@ ss myss {
             i_saved = i;
             set_i(pVar(), 1);
             testOk1(i == 1);
+            null();
         } state doit
         when (i == 10) {
         } exit
@@ -53,5 +55,9 @@ static void incr(SS_ID ssId, int *pv, VAR_ID v)
 static void set_i(SEQ_VARS *const pVar, int value)
 {
     pVar->i = value;
+}
+
+static void null(void)
+{
 }
 }%
