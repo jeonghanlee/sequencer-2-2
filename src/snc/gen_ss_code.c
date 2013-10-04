@@ -660,7 +660,6 @@ static void gen_pv_func(
 	uint	num_extra_parms = 0;
 
 	ap = ep->func_args;
-	/* first parameter is always */
 	if (ap == 0)
 	{
 		error_at_expr(ep,
@@ -671,6 +670,16 @@ static void gen_pv_func(
 	if (ap->type == E_VAR)
 	{
 		vp = ap->extra.e_var;
+		if (vp->assign == M_MULTI && !global_options.newpv)
+		{
+			error_at_expr(ap,
+			  "1st argument '%s' to function '%s' must not be a multi-PV array\n",
+			  vp->name, func_name);
+			report_at_expr(ap, "Perhaps you meant %s[0]?\n", vp->name);
+			report_at_expr(ap, "Use option +p to allow this but then "
+			  "pv functions operate on all contained PVs\n");
+			return;
+		}
 	}
 	else if (ap->type == E_SUBSCR)
 	{

@@ -182,6 +182,9 @@ static void parse_option(char *s)
 	case 'm':
 		options.main = opt_val;
 		break;
+	case 'p':
+		options.newpv = opt_val;
+		break;
 	case 's':
 		options.safe = opt_val;
 		break;
