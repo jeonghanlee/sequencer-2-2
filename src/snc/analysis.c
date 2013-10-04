@@ -241,9 +241,11 @@ static void analyse_option(Options *options, Expr *defn)
 		case 'e': options->newef = optval; break;
 		case 'l': options->line = optval; break;
 		case 'm': options->main = optval; break;
+		case 'p': options->newpv = optval; break;
 		case 'r': options->reent = optval; break;
 		case 's': options->safe = optval; break;
 		case 'w': options->warn = optval; break;
+		case 'W': options->xwarn = optval; break;
 		default: report_at_expr(defn,
 		  "warning: unknown option '%s'\n", optname);
 		}
