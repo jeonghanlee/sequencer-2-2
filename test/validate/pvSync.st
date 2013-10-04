@@ -8,7 +8,7 @@ program pvSyncTest
 
 %%#include "../testSupport.h"
 
-option +s;
+option +sp;
 
 #define NTESTS 1000
 
@@ -31,7 +31,7 @@ sync i to ef_i;
 sync a to ef_a;
 
 entry {
-    seq_test_init(4*NTESTS);
+    seq_test_init(5*NTESTS);
     pvSync(x,ef_x);
     efSet(ef_putx);
     efClear(ef_i);
@@ -68,15 +68,13 @@ ss pvSyncY {
             pvSync(a, ef_a);
             testDiag("after pvSync(a, ef_a)");
             a[i] = i;
-            testOk1(pvPut(a)==pvStatOK);
+            testOk1(pvPut(a[i])==pvStatOK);
             testDiag("after pvPut(a[i])");
         } state pvUnsync
     }
     state pvUnsync {
         when (efTestAndClear(ef_a) && testOk1(a[i]==i)) {
-#if 0
             testOk1(a[i]==i);
-#endif
             if (i >= NTESTS-1) {
                 state done;
             }
