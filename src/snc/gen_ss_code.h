@@ -15,7 +15,6 @@ in the file LICENSE that is included with this distribution.
 
 #include "types.h"
 
-void init_gen_ss_code(Program *program);
-void gen_ss_code(Program *program);
+void gen_ss_code(Expr *prog, Options options);
 
 #endif	/*INCLgensscodeh*/

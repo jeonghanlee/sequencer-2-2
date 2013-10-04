@@ -49,10 +49,6 @@ void generate_code(Program *p, const char *header_name)
 	report("-------------------- Code Generation --------------------\n");
 #endif
 
-	/* Initialize tables in gen_ss_code module */
-	/* TODO: find a better way to do this */
-	init_gen_ss_code(p);
-
 	set_gen_h();
 
 	/* Initial comments */
@@ -105,7 +101,7 @@ void generate_code(Program *p, const char *header_name)
 	}
 
 	/* Generate code for each state set */
-	gen_ss_code(p);
+	gen_ss_code(p->prog, p->options);
 
 	/* Generate tables */
 	gen_tables(p);

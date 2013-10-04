@@ -78,25 +78,20 @@ enum expr_context
 };
 
 /*
- * HACK: use global variables to make program options and
- * symbol table available to subroutines
+ * HACK: use global variable to make reentrant option available
+ * to gen_var_access below. Otherwise we'd have to pass it through
+ * almost every subroutine in this module.
  */
-static int global_opt_reent;
-static SymTable global_sym_table;
-
-void init_gen_ss_code(Program *program)
-{
-	/* HACK: intialise globals */
-	global_opt_reent = program->options.reent;
-	global_sym_table = program->sym_table;
-}
+static Options global_options;
 
 /* Generate state set C code from analysed syntax tree */
-void gen_ss_code(Program *program)
+void gen_ss_code(Expr *prog, Options options)
 {
-	Expr	*prog = program->prog;
 	Expr	*sp, *ssp;
 	uint	ss_num = 0;
+
+	/* HACK: intialise global variable as implicit parameter */
+	global_options = options;
 
 	/* Generate program init func */
 	gen_prog_func(prog, "init", NM_INIT, gen_prog_init_body);
@@ -298,7 +293,7 @@ static void gen_event_body(Expr *xp, int context)
 
 static void gen_var_access(Var *vp)
 {
-	const char *pre = global_opt_reent ? NM_VARS_ARG "->" : "";
+	const char *pre = global_options.reent ? NM_VARS_ARG "->" : "";
 
 	assert(vp);
 	assert(vp->scope);
