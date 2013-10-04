@@ -13,8 +13,6 @@ option +r;
 int x = 0;
 assign x;
 
-foreign pvStatERROR;
-
 #define NTESTS 3
 
 entry {

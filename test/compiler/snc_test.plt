@@ -7,7 +7,6 @@ use Test::More;
 my $success = {
   cast => 0,
   exOpt_DuplOpt => 0,
-  foreignTypes => 0,
   include_windows_h => 0,
   member => 0,
   namingConflict => 0,
@@ -19,6 +18,7 @@ my $success = {
 
 my $warning = {
   exOpt_UnrecOpt => 1,
+  foreignTypes => 1,
   state_not_reachable => 3,
   syncq_no_size => 1,
 };

@@ -20,7 +20,7 @@ monitor multiple2;              /* should all have monitored flag */
 ss test {
     state test {
         when (FALSE) {
-            %%multiple2[0] = 0;
+            multiple2[0] = 0;
         } state test
     }
 }

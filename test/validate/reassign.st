@@ -15,8 +15,6 @@ assign x to "pv1";
 assign y to "";
 assign z to "pv1";
 
-foreign pvStatOK;
-
 #define NTESTS 30
 
 entry {

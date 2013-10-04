@@ -9,8 +9,6 @@ program foreignTypesTest
 %%enum enum_t { zero, one, two };
 %%typedef short typedef_t;
 
-foreign zero, one, two;
-
 struct struct_t s = {1, {0.1}};
 union union_t u = {13};
 enum enum_t e = one;

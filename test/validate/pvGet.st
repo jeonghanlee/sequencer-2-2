@@ -14,8 +14,6 @@ option +s;
 %%int shared = 0;
 %%epicsMutexId mutex;
 
-foreign shared, mutex;
-
 int anon;
 assign anon;
 

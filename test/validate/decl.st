@@ -10,8 +10,6 @@ program declTest
 
 option +s;
 
-foreign MAX_STRING_SIZE;
-
 int *(*(*complicated)[2][3])[1] = 0;
 
 evflag ef;
@@ -19,11 +17,7 @@ evflag ef;
 /* struct member access */
 %%struct r { int x; } rv;
 
-/* declare the variable and the tag to avoid warnings */
-foreign rv, x;
-
-%%TS_STAMP ts;
-foreign ts;
+typename TS_STAMP ts;
 
 int var;
 assign var;
