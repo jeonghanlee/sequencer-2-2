@@ -22,7 +22,6 @@ TESTPROD_HOST += entryVar
 TESTPROD_HOST += exitOptx
 TESTPROD_HOST += optt
 TESTPROD_HOST += stop
-TESTPROD_HOST += subscript
 TESTPROD_HOST += syncq
 
 REGRESSION_TESTS_WITH_DB += bittypes

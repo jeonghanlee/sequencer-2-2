@@ -12,6 +12,7 @@ my $success = {
   member => 0,
   namingConflict => 0,
   nesting_depth => 0,
+  subscript => 0,
   sync_not_monitored => 0,
   syncq_not_monitored => 0,
 };
