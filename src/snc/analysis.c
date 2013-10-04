@@ -283,6 +283,7 @@ static void analyse_declaration(SymTable st, Expr *scope, Expr *defn)
 {
 	Var *vp;
         VarList *var_list;
+	static uint seen_foreign = FALSE;
 
 	assert(scope);			/* precondition */
 	assert(defn);			/* precondition */
@@ -294,7 +295,12 @@ static void analyse_declaration(SymTable st, Expr *scope, Expr *defn)
 #ifdef DEBUG
 	report("declaration: %s\n", vp->name);
 #endif
-
+	if (vp->type->tag == T_NONE && !seen_foreign)
+	{
+		warning_at_expr(defn,
+			"foreign declarations are deprecated\n");
+		seen_foreign = TRUE;
+	}
 	if (scope->type != D_PROG && 
 		(vp->type->tag == T_NONE || vp->type->tag == T_EVFLAG))
 	{
@@ -1119,7 +1125,7 @@ static int connect_variable(Expr *ep, Expr *scope, void *parg)
 			return FALSE;
 		}
 
-		extra_warning_at_expr(ep, "variable '%s' used but not declared\n",
+		extra_warning_at_expr(ep, "treating undeclared object '%s' as foreign\n",
 			ep->value);
 		/* create a pseudo declaration so we can finish the analysis phase */
 		vp = new(Var);

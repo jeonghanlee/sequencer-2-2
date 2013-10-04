@@ -197,6 +197,7 @@ direct_declarator(p) ::= LPAREN declarator(x) RPAREN.
 direct_declarator(p) ::= direct_declarator(x) subscript(s).
 						{ p = decl_postfix_array(x, s.str); }
 
+// deprecated
 declaration(p) ::= FOREIGN declarators(ds) SEMICOLON.
 						{ p = decl_add_base_type(ds, mk_no_type()); }
 
