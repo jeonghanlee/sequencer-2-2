@@ -82,7 +82,7 @@ in the file LICENSE that is included with this distribution.
 %left	LSHIFT RSHIFT.
 %left	ADD SUB.
 %left	ASTERISK SLASH MOD.
-%right	NOT TILDE INCR DECR PRE. // omitted duplicates: ADD SUB ASTERISK AMPERSAND
+%right	NOT TILDE INCR DECR SIZEOF PRE. // omitted duplicates: ADD SUB ASTERISK AMPERSAND
 %left	LBRACKET LPAREN POINTER PERIOD POST.  // omitted duplicates: INCR DECR
 
 program ::=
@@ -405,7 +405,6 @@ expr(p) ::= variable(v).			{ p = expr(E_VAR, v); }
 expr(p) ::= LPAREN(t) comma_expr(x) RPAREN.		{ p = expr(E_PAREN,  t, x); }
 expr(p) ::= expr(x) LPAREN(t) args(y) RPAREN.		{ p = expr(E_FUNC,   t, x, y); }
 expr(p) ::= EXIT(n) LPAREN(t) args(y) RPAREN.		{ p = expr(E_FUNC,   t, expr(E_VAR, n), y); }
-expr(p) ::= SIZEOF(n) LPAREN(t) expr(y) RPAREN.		{ p = expr(E_FUNC,   t, expr(E_VAR, n), y); }
 expr(p) ::= SIZEOF(n) LPAREN(t) type_expr(y) RPAREN.	{ p = expr(E_FUNC,   t, expr(E_VAR, n), y); }
 expr(p) ::= expr(x) LBRACKET(t) expr(y) RBRACKET.	{ p = expr(E_SUBSCR, t, x, y); }
 expr(p) ::= expr(x) PERIOD(t) member(y).		{ p = expr(E_SELECT, t, x, y); }
@@ -422,6 +421,7 @@ expr(p) ::= NOT(t)	expr(x). [PRE]		{ p = expr(E_PRE, t, x); }
 expr(p) ::= TILDE(t)	expr(x). [PRE]		{ p = expr(E_PRE, t, x); }
 expr(p) ::= INCR(t)	expr(x). [PRE]		{ p = expr(E_PRE, t, x); }
 expr(p) ::= DECR(t)	expr(x). [PRE]		{ p = expr(E_PRE, t, x); }
+expr(p) ::= SIZEOF(t)	expr(x). [PRE]		{ p = expr(E_FUNC, t, expr(E_VAR, t), x); }
 
 // Type Cast
 expr(p) ::= LPAREN(t) type_expr(c) RPAREN expr(x). [PRE] { p = expr(E_CAST, t, c, x); }
