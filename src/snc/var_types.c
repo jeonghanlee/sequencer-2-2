@@ -220,6 +220,7 @@ static unsigned type_assignable_array(Type *t, int depth)
     case T_FOREIGN:
     case T_POINTER:
     case T_EVFLAG:
+    case T_VOID:
         return FALSE;
     case T_ARRAY:
         return type_assignable_array(t->val.array.elem_type, depth + 1);
