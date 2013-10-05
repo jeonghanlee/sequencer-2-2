@@ -253,14 +253,14 @@ type_expr(p) ::= basetype(t) opt_abstract_declarator(d). {
 }
 
 opt_abstract_declarator(p) ::= . {
-	p = abstract_decl_create();
+	p = abs_decl_create();
 }
 opt_abstract_declarator(p) ::= abstract_declarator(x). {
 	p = x;
 }
 
 abstract_declarator(p) ::= ASTERISK. {
-	p = decl_prefix_pointer(abstract_decl_create());
+	p = decl_prefix_pointer(abs_decl_create());
 }
 abstract_declarator(p) ::= ASTERISK direct_abstract_declarator(x). {
 	p = decl_prefix_pointer(x);
@@ -276,7 +276,7 @@ direct_abstract_declarator(p) ::= direct_abstract_declarator(x) subscript(s). {
 	p = decl_postfix_array(x, s.str);
 }
 direct_abstract_declarator(p) ::= subscript(s). {
-	p = decl_postfix_array(abstract_decl_create(), s.str);
+	p = decl_postfix_array(abs_decl_create(), s.str);
 }
 
 // Option spec

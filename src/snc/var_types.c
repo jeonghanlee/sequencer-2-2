@@ -95,7 +95,7 @@ Expr *decl_create(Token id)
     return d;
 }
 
-Expr *abstract_decl_create(void)
+Expr *abs_decl_create(void)
 {
     Token t = {0,0,0};
     return decl_create(t);

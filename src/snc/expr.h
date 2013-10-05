@@ -41,7 +41,7 @@ uint strtoui(
 /* defined in var_types.c */
 Expr *decl_add_base_type(Expr *ds, Type t);
 Expr *decl_add_init(Expr *d, Expr *init);
-Expr *abstract_decl_create(void);
+Expr *abs_decl_create(void);
 Expr *decl_create(Token name);
 Expr *decl_postfix_array(Expr *d, char *s);
 Expr *decl_prefix_pointer(Expr *d);
