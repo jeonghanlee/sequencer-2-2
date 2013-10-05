@@ -225,10 +225,11 @@ static unsigned type_assignable_array(Type *t, int depth)
     case T_ARRAY:
         return type_assignable_array(t->val.array.elem_type, depth + 1);
     case T_PRIM:
-    /* make the compiler happy: */
-    default:
         return TRUE;
     }
+    /* avoid bogus compiler warning: */
+    assert(impossible);
+    return FALSE;
 }
 
 unsigned type_assignable(Type *t)
