@@ -178,40 +178,33 @@ subscript(p) ::= LBRACKET INTCON(n) RBRACKET.	{ p = n; }
 // Declarations
 
 declaration(p) ::= basetype(t) init_declarators(ds) SEMICOLON.
-						{ p = decl_add_base_type(ds, t); }
+							{ p = decl_add_base_type(ds, t); }
 
-init_declarators(p) ::= init_declarator(x).	{ p = x; }
+init_declarators(p) ::= init_declarator(x).		{ p = x; }
 init_declarators(p) ::= init_declarators(xs) COMMA init_declarator(x).
-						{ p = link_expr(xs, x); }
+							{ p = link_expr(xs, x); }
 
-init_declarator(p) ::= declarator(x).		{ p = x; }
-init_declarator(p) ::= declarator(x) EQUAL init_expr(i).
-						{ p = decl_add_init(x, i); }
+init_declarator(p) ::= declarator(x).			{ p = x; }
+init_declarator(p) ::= declarator(x) EQUAL init_expr(i).{ p = decl_add_init(x, i); }
 
-declarator(p) ::= ASTERISK declarator(x).	{ p = decl_prefix_pointer(x); }
-declarator(p) ::= direct_declarator(x).		{ p = x; }
-
-direct_declarator(p) ::= variable(n).		{ p = decl_create(n); }
-direct_declarator(p) ::= LPAREN declarator(x) RPAREN.
-						{ p = x; }
-direct_declarator(p) ::= direct_declarator(x) subscript(s).
-						{ p = decl_postfix_array(x, s.str); }
+declarator(p) ::= variable(n).				{ p = decl_create(n); }
+declarator(p) ::= declarator(x) subscript(s).	[POST]	{ p = decl_postfix_array(x, s.str); }
+declarator(p) ::= LPAREN declarator(x) RPAREN.	[PRE]	{ p = x; }
+declarator(p) ::= ASTERISK declarator(x).	[PRE]	{ p = decl_prefix_pointer(x); }
 
 // deprecated
-declaration(p) ::= FOREIGN declarators(ds) SEMICOLON.
-						{ p = decl_add_base_type(ds, mk_no_type()); }
+declaration(p) ::= FOREIGN declarators(ds) SEMICOLON.	{ p = decl_add_base_type(ds, mk_no_type()); }
 
-declarators(p) ::= declarator(x).		{ p = x; }
-declarators(p) ::= declarators(xs) COMMA declarator(x).
-						{ p = link_expr(xs, x); }
+declarators(p) ::= declarator(x).			{ p = x; }
+declarators(p) ::= declarators(xs) COMMA declarator(x).	{ p = link_expr(xs, x); }
 
 
 // Initializer
 // Note: comma operator not allowed in 'expr'.
 init_expr(p) ::= LPAREN(tc) type_expr(c) RPAREN LBRACE(tx) init_exprs(x) RBRACE.
-						{ p = expr(E_CAST, tc, c, expr(E_INIT, tx, x)); }
-init_expr(p) ::= LBRACE(t) init_exprs(x) RBRACE.{ p = expr(E_INIT, t, x); }
-init_expr(p) ::= expr(x).			{ p = x; }
+							{ p = expr(E_CAST, tc, c, expr(E_INIT, tx, x)); }
+init_expr(p) ::= LBRACE(t) init_exprs(x) RBRACE.	{ p = expr(E_INIT, t, x); }
+init_expr(p) ::= expr(x).				{ p = x; }
 
 init_exprs(p) ::= init_exprs(xs) COMMA init_expr(x).	{ p = link_expr(xs, x); }
 init_exprs(p) ::= init_expr(x).				{ p = x; }
@@ -248,36 +241,21 @@ basetype(p) ::= STRUCT NAME(x).			{ p = mk_foreign_type(F_STRUCT, x.str); }
 basetype(p) ::= UNION NAME(x).			{ p = mk_foreign_type(F_UNION, x.str); }
 basetype(p) ::= TYPENAME NAME(x).		{ p = mk_foreign_type(F_TYPENAME, x.str); }
 
-type_expr(p) ::= basetype(t) opt_abstract_declarator(d). {
-	p = decl_add_base_type(d, t);
-}
+type_expr(p) ::= basetype(t).			{ p = decl_add_base_type(abs_decl_create(), t); }
+type_expr(p) ::= basetype(t) abs_decl(d).	{ p = decl_add_base_type(d, t); }
 
-opt_abstract_declarator(p) ::= . {
-	p = abs_decl_create();
-}
-opt_abstract_declarator(p) ::= abstract_declarator(x). {
-	p = x;
-}
+// abstract_declarator
+abs_decl(p) ::= LPAREN abs_decl(x) RPAREN.	{ p = x; }
+abs_decl(p) ::= ASTERISK. [PRE]			{ p = decl_prefix_pointer(abs_decl_create()); }
+abs_decl(p) ::= ASTERISK abs_decl(d). [PRE]	{ p = decl_prefix_pointer(d); }
+abs_decl(p) ::= subscript(s). [POST]		{ p = decl_postfix_array(abs_decl_create(), s.str); }
+abs_decl(p) ::= abs_decl(d) subscript(s). [POST]{ p = decl_postfix_array(d, s.str); }
 
-abstract_declarator(p) ::= ASTERISK. {
-	p = decl_prefix_pointer(abs_decl_create());
-}
-abstract_declarator(p) ::= ASTERISK direct_abstract_declarator(x). {
-	p = decl_prefix_pointer(x);
-}
-abstract_declarator(p) ::= direct_abstract_declarator(x). {
-	p = x;
-}
-
-direct_abstract_declarator(p) ::= LPAREN abstract_declarator(x) RPAREN. {
-	p = x;
-}
-direct_abstract_declarator(p) ::= direct_abstract_declarator(x) subscript(s). {
-	p = decl_postfix_array(x, s.str);
-}
-direct_abstract_declarator(p) ::= subscript(s). {
-	p = decl_postfix_array(abs_decl_create(), s.str);
-}
+// not supported: empty brackets, empty parameter list
+// abs_decl ::= LBRACKET RBRACKET.
+// abs_decl ::= abs_decl LBRACKET RBRACKET.
+// abs_decl ::= LPAREN RPAREN.
+// abs_decl ::= abs_decl LPAREN RPAREN.
 
 // Option spec
 
