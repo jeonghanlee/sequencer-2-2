@@ -14,6 +14,7 @@ my $success = {
   subscript => 0,
   sync_not_monitored => 0,
   syncq_not_monitored => 0,
+  type_expr => 0,
 };
 
 my $warning = {

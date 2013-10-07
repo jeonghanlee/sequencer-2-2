@@ -20,6 +20,7 @@ TESTSCRIPTS_HOST += snc_test.t
 #TESTSCRIPTS_HOST += build64_test.t
 #TESTSCRIPTS_CROSS += build64_test.t
 
+TESTPROD_HOST += type_expr
 TESTPROD_HOST += funcdef
 
 PROD_LIBS += seq pv
