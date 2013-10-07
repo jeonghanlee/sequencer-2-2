@@ -33,6 +33,20 @@ in the file LICENSE that is included with this distribution.
 #include "seq.h"
 #include "seq_debug.h"
 
+static void completion_failure(pvEventType evtype, PVMETA *meta)
+{
+	meta->status = pvStatERROR;
+	meta->severity = pvSevrERROR;
+	meta->message = pvEventGet ? "get completion failure" : "put completion failure";
+}
+
+static void completion_timeout(pvEventType evtype, PVMETA *meta)
+{
+	meta->status = pvStatTIMEOUT;
+	meta->severity = pvSevrERROR;
+	meta->message = pvEventGet ? "get completion failure" : "put completion failure";;
+}
+
 static pvStat check_connected(DBCHAN *dbch, PVMETA *meta)
 {
 	if (!dbch->connected)
@@ -59,9 +73,6 @@ static pvStat check_pending(
 	double tmo)
 {
 	const char *call = evtype == pvEventGet ? "pvGet" : "pvPut";
-	const char *op = evtype == pvEventGet ? "get" : "put";
-	const char *tmo_msg = evtype == pvEventGet ? "get completion timeout" : "put completion timeout";
-	const char *err_msg = evtype == pvEventGet ? "get completion failure" : "put completion failure";
 
 	assert(evtype != pvEventMonitor);
 	if (compType == SYNC)
@@ -95,19 +106,15 @@ static pvStat check_pending(
 				errlogSevPrintf(errlogMajor,
 					"%s(ss %s, var %s, pv %s): failed (timeout "
 					"waiting for other %s requests to finish)\n",
-					call, ss->ssName, varName, dbch->dbName, op
+					call, ss->ssName, varName, dbch->dbName, call
 				);
-				meta->status = pvStatTIMEOUT;
-				meta->severity = pvSevrERROR;
-				meta->message = tmo_msg;
+				completion_timeout(evtype, meta);
 				return meta->status;
 			case epicsEventWaitError:
 				errlogSevPrintf(errlogFatal,
 					"%s: epicsEventWaitWithTimeout() failure\n", call);
-				meta->status = pvStatERROR;
-				meta->severity = pvSevrERROR;
-				meta->message = err_msg;
-				return pvStatERROR;
+				completion_failure(evtype, meta);
+				return meta->status;
 			}
 		}
 	}
@@ -118,12 +125,42 @@ static pvStat check_pending(
 				"%s(ss %s, var %s, pv %s): user error "
 				"(there is already a %s pending for this variable/"
 				"state set combination)\n",
-				call, ss->ssName, varName, dbch->dbName, op
+				call, ss->ssName, varName, dbch->dbName, call
 			);
 			return pvStatERROR;
 		}
 	}
 	return pvStatOK;
+}
+
+static pvStat wait_complete(
+	pvEventType evtype,
+	SS_ID ss,
+	PVREQ **req,
+	DBCHAN *dbch,
+	PVMETA *meta,
+	double tmo)
+{
+	const char *call = evtype == pvEventGet ? "pvGet" : "pvPut";
+	while (*req)
+	{
+		switch (epicsEventWaitWithTimeout(ss->syncSem, tmo))
+		{
+		case epicsEventWaitOK:
+			break;
+		case epicsEventWaitTimeout:
+			*req = NULL;			/* cancel the request */
+			completion_timeout(evtype, meta);
+			return meta->status;
+		case epicsEventWaitError:
+			errlogSevPrintf(errlogFatal,
+				"%s: epicsEventWaitWithTimeout() failure\n", call);
+			*req = NULL;			/* cancel the request */
+			completion_failure(evtype, meta);
+			return meta->status;
+		}
+	}
+	return check_connected(dbch, meta);
 }
 
 /*
@@ -187,7 +224,7 @@ epicsShareFunc pvStat seq_pvGet(SS_ID ss, VAR_ID varId, enum compType compType, 
 	{
 		meta->status = pvStatERROR;
 		meta->severity = pvSevrERROR;
-		meta->message = "get failure";
+		meta->message = pvVarGetMess(dbch->pvid);
 		errlogSevPrintf(errlogFatal,
 			"pvGet(var %s, pv %s): pvVarGetCallback() failure: %s\n",
 			ch->varName, dbch->dbName, pvVarGetMess(dbch->pvid));
@@ -200,30 +237,8 @@ epicsShareFunc pvStat seq_pvGet(SS_ID ss, VAR_ID varId, enum compType compType, 
 	/* Synchronous: wait for completion */
 	if (compType == SYNC)
 	{
-		while (ss->getReq[varId])
-		{
-			pvSysFlush(sp->pvSys);
-			switch (epicsEventWaitWithTimeout(ss->syncSem, tmo))
-			{
-			case epicsEventWaitOK:
-				break;
-			case epicsEventWaitTimeout:
-				ss->getReq[varId] = NULL;	/* cancel the request */
-				meta->status = pvStatTIMEOUT;
-				meta->severity = pvSevrERROR;
-				meta->message = "get completion timeout";
-				return meta->status;
-			case epicsEventWaitError:
-				errlogSevPrintf(errlogFatal,
-					"pvGet: epicsEventWaitWithTimeout() failure\n");
-				ss->getReq[varId] = NULL;	/* cancel the request */
-				meta->status = pvStatERROR;
-				meta->severity = pvSevrERROR;
-				meta->message = "get completion failure";
-				return meta->status;
-			}
-		}
-		status = check_connected(dbch, meta);
+		pvSysFlush(sp->pvSys);
+		status = wait_complete(pvEventGet, ss, ss->getReq + varId, dbch, meta, tmo);
 		if (status != pvStatOK)
 			return status;
 		if (optTest(sp, OPT_SAFE))
@@ -480,33 +495,10 @@ epicsShareFunc pvStat seq_pvPut(SS_ID ss, VAR_ID varId, enum compType compType, 
 	/* Synchronous: wait for completion */
 	if (compType == SYNC)
 	{
-		while (ss->putReq[varId])
-		{
-			pvSysFlush(sp->pvSys);
-			switch (epicsEventWaitWithTimeout(ss->syncSem, tmo))
-			{
-			case epicsEventWaitOK:
-				status = check_connected(dbch, meta);
-				if (status != pvStatOK) return status;
-				break;
-			case epicsEventWaitTimeout:
-				ss->putReq[varId] = NULL;	/* cancel the request */
-				meta->status = pvStatTIMEOUT;
-				meta->severity = pvSevrERROR;
-				meta->message = "put completion timeout";
-				return meta->status;
-				break;
-			case epicsEventWaitError:
-				errlogSevPrintf(errlogFatal,
-					"pvPut: epicsEventWaitWithTimeout() failure\n");
-				ss->putReq[varId] = NULL;	/* cancel the request */
-				meta->status = pvStatERROR;
-				meta->severity = pvSevrERROR;
-				meta->message = "put completion failure";
-				return meta->status;
-				break;
-			}
-		}
+		pvSysFlush(sp->pvSys);
+		status = wait_complete(pvEventPut, ss, ss->putReq + varId, dbch, meta, tmo);
+		if (status != pvStatOK)
+			return status;
 	}
 
 	return pvStatOK;
