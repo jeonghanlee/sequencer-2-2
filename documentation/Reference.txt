@@ -255,7 +255,7 @@ Foreign Declarations
    declarators: `declarator`
    declarators: `declarators` "," `declarator`
 
-.. versionadded: 2.1
+.. versionadded:: 2.1
 
 Foreign declarations are used let the SNL compiler know about the existence
 of C variables or C preprocessor macros (without arguments) that have been 
@@ -263,7 +263,7 @@ defined outside the SNL program or in escaped C code. No warning will be
 issued if such a variable or macro is used in the program even if warnings
 are enabled.
 
-.. versionadded: 2.2
+.. versionadded:: 2.2
 
 It is no longer needed to declare struct or union members as foreign
 entities, since the parser no longer confuses them with variables. See
@@ -991,7 +991,7 @@ Unary Prefix Operators
    expr: "++" `expr`
    expr: "--" `expr`
 
-.. versionadded: 2.2
+.. versionadded:: 2.2
 
 Type casts:
 
