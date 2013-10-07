@@ -35,13 +35,13 @@ enum func_type
 struct func_symbol
 {
     const char  *name;
-    uint        type:2;
-    uint        add_length:1;
-    uint        default_args:2;
-    uint        ef_action_only:1;
-    uint        ef_args:1;
-    uint        cond_only:1;
-    const char  **default_values;
+    uint        type            :2; /* see enum func_type */
+    uint        add_length      :1; /* if multi-pv is supported, must pass array size */
+    uint        default_args    :2; /* number of optional parameters */
+    uint        ef_action_only  :1; /* not allowed in when-conditions */
+    uint        ef_args         :1; /* extra parameter must be an event flag */
+    uint        cond_only       :1; /* only allowed in when-conditions */
+    const char  **default_values;   /* defaults for optional parameters */
 };
 
 /* Insert builtin constants into symbol table */
