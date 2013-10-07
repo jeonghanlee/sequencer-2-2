@@ -106,12 +106,12 @@ Program
 -------
 
 .. productionlist::
-   program: "program" `identifier` `program_param` `global_defns` `entry` `state_sets` `exit` `c_codes`
+   program: "program" `identifier` `program_param` `global_defns` `entry` `state_sets` `exit` `functions` `c_codes`
 
 This is the overall structure of an SNL program. After the keyword
 "program" comes the name of the program, followed by an optional program
 parameter, global definitions, an optional entry block, the state sets, an
-optional exit block, and finally some embedded C code.
+optional exit block, function definitions, and finally some embedded C code.
 
 Program Name and Parameters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -914,6 +914,24 @@ number of block definitions and afterwards any number of statements.
 
 Block definitions are: declarations and embedded C code.
 
+Function Definitions
+^^^^^^^^^^^^^^^^^^^^
+
+.. versionadded:: 2.2
+
+.. productionlist::
+   function: "function" `basetype` `declarator` `block`
+   functions: 
+   functions: `functions` `function`
+
+Function definitions are very much like those in C, except that they
+must be introduced with the keyword "function". They also have slightly
+differing semantics. The most important difference is that functions
+declared in SNL get passed certain implicit parameters. This makes it
+possible to call all the built-in functions as if the code were a normal
+action block.
+
+
 Statements and Expressions
 --------------------------
 
@@ -925,6 +943,7 @@ Statements
    statements: 
    statement: "break" ";"
    statement: "continue" ";"
+   statement: "return" `opt_expr` ";"
    statement: "state" `identifier` ";"
    statement: `c_code`
    statement: `block`
@@ -935,8 +954,8 @@ Statements
    statement: `opt_expr` ";"
    for_statement: "for" "(" `opt_expr` ";" `opt_expr` ";" `opt_expr` ")" `statement`
 
-As can be seen, most C statements are supported. Not supported are
-the switch/case statement and the return statement.
+As can be seen, most C statements are supported. Not supported is
+the switch/case statement.
 
 .. versionadded:: 2.1
 
@@ -944,6 +963,10 @@ The *state change statement* is not borrowed from C; it is only available
 in the action block of a state :token:`transition` and has the effect
 of immediately jumping out of the action block, overriding the statically
 specified new state (given after the block) with its state argument.
+
+.. versionadded:: 2.2
+
+The return statement can be used only inside `Function Definitions`_.
 
 Expressions
 ^^^^^^^^^^^
