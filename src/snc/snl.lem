@@ -193,11 +193,10 @@ declarator(p) ::= LPAREN declarator(x) RPAREN.	[PRE]	{ p = x; }
 declarator(p) ::= ASTERISK declarator(x).	[PRE]	{ p = decl_prefix_pointer(x); }
 
 // deprecated
-declaration(p) ::= FOREIGN declarators(ds) SEMICOLON.	{ p = decl_add_base_type(ds, mk_no_type()); }
+declaration(p) ::= FOREIGN variables(ds) SEMICOLON.	{ p = decl_add_base_type(ds, mk_no_type()); }
 
-declarators(p) ::= declarator(x).			{ p = x; }
-declarators(p) ::= declarators(xs) COMMA declarator(x).	{ p = link_expr(xs, x); }
-
+variables(p) ::= variable(x).				{ p = decl_create(x); }
+variables(p) ::= variables(xs) COMMA variable(x).	{ p = link_expr(xs, decl_create(x)); }
 
 // Initializer
 // Note: comma operator not allowed in 'expr'.
