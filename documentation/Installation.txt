@@ -342,7 +342,7 @@ program to your application, write something like ::
 
 into your Makefile. Here, ``xyz.st`` is the name of your SNL program, and
 ``abc`` is the name of the library or binary to produce. Note that ``.st``
-files are run through the C preprocessor (*cpp*) before giving them to
+files are run through the C preprocessor (:program:`cpp`) before giving them to
 the SNL compiler. Use the extension ``.stt`` to avoid this. For details,
 see Chapter 4 of the `EPICS Application Developer's Guide`_.
 

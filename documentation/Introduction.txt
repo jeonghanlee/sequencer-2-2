@@ -45,7 +45,7 @@ of its syntax and semantics are directly inherited from C. The language is
 designed for seamless integration with C code; for instance, you can
 directly call C procedures in SNL action blocks and state transition
 conditions, and the types of variables you can declare in SNL map directly
-to C types. The compiler for SNL (called *snc*, see :doc:`Compiling`) takes
+to C types. The compiler for SNL (called :program:`snc`, see :doc:`Compiling`) takes
 a very minimalistic approach to compilation by generating portable standard
 C89/90 code that works on all platforms supported by EPICS. In fact, most of
 the SNL action code is compiled almost verbatim to C, and the generated code
