@@ -92,9 +92,10 @@ program ::=
 	entry(en)
 	state_sets(ss)
 	exit(ex)
+        functions(fs)
 	c_codes(cc).
 {
-	*presult =  expr(D_PROG, n, pp, ds, en, ss, ex, cc);
+	*presult =  expr(D_PROG, n, pp, ds, en, ss, ex, fs, cc);
 }
 
 program_param(p) ::= LPAREN string(x) RPAREN.	{ p = x; }
@@ -359,6 +360,8 @@ statements(p) ::= .				{ p = 0; }
 
 statement(p) ::= BREAK(t) SEMICOLON.		{ p = expr(S_JUMP, t); }
 statement(p) ::= CONTINUE(t) SEMICOLON.		{ p = expr(S_JUMP, t); }
+statement(p) ::= RETURN(t) opt_expr(x) SEMICOLON.
+						{ p = expr(S_RETURN, t, x); }
 statement(p) ::= STATE NAME(t) SEMICOLON.	{ p = expr(S_CHANGE, t); }
 statement(p) ::= c_code(x).			{ p = x; }
 statement(p) ::= block(x).			{ p = x; }
@@ -459,7 +462,7 @@ opt_expr(p) ::= comma_expr(x).			{ p = x; }
 opt_expr(p) ::= .				{ p = 0; }
 
 // Function arguments
-// Ssyntactically the same as opt_expr but interpreted differently.
+// Syntactically the same as opt_expr but interpreted differently.
 args(p) ::= args(xs) COMMA expr(x).		{ p = link_expr(xs, x); }
 args(p) ::= expr(x).				{ p = x; }
 args(p) ::= .					{ p = 0; }
@@ -467,6 +470,15 @@ args(p) ::= .					{ p = 0; }
 string(p) ::= STRCON(t).			{ p = expr(E_STRING, t); }
 
 member(p) ::= NAME(t).				{ p = expr(E_MEMBER, t); }
+
+// Functions
+
+functions(p) ::= .					{ p = 0; }
+functions(p) ::= functions(fs) function(f).		{ p = link_expr(fs, f); }
+
+function(p) ::= FUNCTION(l) basetype(t) declarator(d) block(b). {
+	p = expr(D_FUNCDEF, l, decl_add_base_type(d, t), 0, b);
+}
 
 // Literal (C) code
 

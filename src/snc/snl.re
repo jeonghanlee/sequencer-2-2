@@ -244,12 +244,14 @@ snl:
 	"float"		{ TYPEWORD(FLOAT,	"float"); }
 	"for"		{ KEYWORD(FOR,		"for"); }
 	"foreign"	{ TYPEWORD(FOREIGN,	"foreign"); }
+	"function"	{ TYPEWORD(FUNCTION,	"function"); }
 	"if"		{ KEYWORD(IF,		"if"); }
 	"int"		{ TYPEWORD(INT,		"int"); }
 	"long"		{ TYPEWORD(LONG,	"long"); }
 	"monitor"	{ KEYWORD(MONITOR,	"monitor"); }
 	"option"	{ KEYWORD(OPTION,	"option"); }
 	"program"	{ KEYWORD(PROGRAM,	"program"); }
+	"return"	{ KEYWORD(RETURN,	"return"); }
 	"short"		{ TYPEWORD(SHORT,	"short"); }
 	"sizeof"	{ TYPEWORD(SIZEOF,	"sizeof"); }
 	"ss"		{ KEYWORD(SS,		"ss"); }

@@ -62,6 +62,7 @@ static void gen_prog_entex_func(
 static void gen_prog_init_body(Expr *prog);
 static void gen_prog_entry_body(Expr *prog);
 static void gen_prog_exit_body(Expr *prog);
+static void gen_funcdef(Expr *fp);
 
 /*
  * Expression context. Certain nodes of the syntax tree are
@@ -74,7 +75,8 @@ enum expr_context
 	C_COND,		/* when() condition */
 	C_TRANS,	/* state transition actions */
 	C_SS,		/* otherwise inside a state set */
-	C_GLOBAL	/* outside state sets */
+	C_FUNC,		/* inside a function definition */
+	C_GLOBAL	/* outside state sets and functions */
 };
 
 /*
@@ -87,7 +89,7 @@ static Options global_options;
 /* Generate state set C code from analysed syntax tree */
 void gen_ss_code(Expr *prog, Options options)
 {
-	Expr	*sp, *ssp;
+	Expr	*sp, *ssp, *fp;
 	uint	ss_num = 0;
 
 	/* HACK: intialise global variable as implicit parameter */
@@ -135,6 +137,12 @@ void gen_ss_code(Expr *prog, Options options)
 	/* Generate program exit func */
 	if (prog->prog_exit)
 		gen_prog_entex_func(prog, "exit", NM_EXIT, gen_prog_exit_body);
+
+	/* Generate function definitions */
+	foreach(fp, prog->prog_funcdefs)
+	{
+		gen_funcdef(fp);
+	}
 }
 
 /* Generate a local C variable declaration for each variable declared
@@ -304,7 +312,7 @@ static void gen_var_access(Var *vp)
 	{
 		gen_code("%d/*%s*/", vp->chan.evflag->index, vp->name);
 	}
-	else if (vp->type->tag == T_NONE)
+	else if (vp->type->tag == T_NONE || vp->type->tag == T_FUNCTION)
 	{
 		gen_code("%s", vp->name);
 	}
@@ -407,6 +415,15 @@ static void gen_expr(
 		indent(level);
 		gen_code("{*" NM_PNST " = %d; return;}\n", ep->extra.e_change->extra.e_state->index);
 		break;
+	case S_RETURN:
+		if (context != C_FUNC)
+		{
+			error_at_expr(ep, "return statement not allowed here\n");
+			break;
+		}
+		indent(level);
+		gen_code("return "); gen_expr(context, ep->return_expr, level); gen_code(";\n");
+		break;
 	/* Expressions */
 	case E_VAR:
 		gen_var_access(ep->extra.e_var);
@@ -434,6 +451,13 @@ static void gen_expr(
 		}
 		gen_expr(context, ep->func_expr, 0);
 		gen_code("(");
+		if (ep->func_expr->type == E_VAR && ep->func_expr->extra.e_var->type->tag == T_FUNCTION)
+		{
+			/* direct call and not a foreign function => add implicit parameters */
+			gen_code(NM_SS ", " NM_VARS_ARG);
+			if (ep->func_args)
+				gen_code(", ");
+		}
 		foreach (cep, ep->func_args)
 		{
 			gen_expr(context, cep, 0);
@@ -880,4 +904,24 @@ static void gen_prog_exit_body(Expr *prog)
 {
 	assert(prog->type == D_PROG);
 	gen_entex_body(prog->prog_exit, C_SS);
+}
+
+static void gen_funcdef(Expr *fp)
+{
+	Expr *param_decl;
+	Var *vp = fp->funcdef_decl->extra.e_decl;
+
+	assert(fp->type == D_FUNCDEF);
+	gen_line_marker(vp->decl);
+	gen_code("static ");
+	gen_type(vp->type->val.function.return_type, "", vp->name);
+	gen_code("(SS_ID " NM_SS ", SEQ_VARS *const " NM_VARS_ARG);
+	foreach (param_decl,  fp->funcdef_params)
+	{
+		vp = param_decl->extra.e_decl;
+		gen_code(", ");
+		gen_var_decl(vp);
+	}
+	gen_code(")\n");
+	gen_block(fp->funcdef_block, C_FUNC, 0);
 }

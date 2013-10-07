@@ -28,7 +28,7 @@ enum foreign_type_tag {
 };
 
 struct array_type {
-    unsigned    num_elems;
+    unsigned num_elems;
     struct type *elem_type;
 };
 
@@ -37,8 +37,7 @@ struct pointer_type {
 };
 
 struct function_type {
-    unsigned    num_params;
-    struct type **param_types;  /* array of pointers */
+    struct expression *param_decls;
     struct type *return_type;
 };
 

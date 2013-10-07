@@ -24,6 +24,7 @@ in the file LICENSE that is included with this distribution.
 
 static const int impossible = 0;
 
+static void analyse_funcdefs(Expr *prog);
 static void analyse_definitions(Program *p);
 static void analyse_option(Options *options, Expr *defn);
 static void analyse_state_option(StateOptions *options, Expr *defn);
@@ -76,6 +77,7 @@ Program *analyse_program(Expr *prog, Options options)
 	report("created symbol table, channel list, and syncq list\n");
 #endif
 
+	analyse_funcdefs(p->prog);
 	analyse_definitions(p);
 	p->num_ss = connect_states(p->sym_table, prog);
 	connect_variables(p->sym_table, prog);
@@ -84,6 +86,52 @@ Program *analyse_program(Expr *prog, Options options)
 		check_states_reachable_from_first(ss);
 	p->num_event_flags = assign_ef_bits(p->prog);
 	return p;
+}
+
+static void analyse_funcdefs(Expr *prog)
+{
+	Expr *f;
+
+	assert(prog->type == D_PROG);
+	foreach(f, prog->prog_funcdefs)
+	{
+		Expr *d = f->funcdef_decl;
+		Var *var = d->extra.e_decl;
+		Expr *p;
+
+		assert(f->type == D_FUNCDEF);
+		if (var->type->tag != T_FUNCTION)
+		{
+			error_at_expr(d, "not a function type\n");
+			continue;
+		}
+		f->funcdef_params = var->type->val.function.param_decls;
+		assert(f->funcdef_params);	/* invariant enforced by syntax */
+		p = f->funcdef_params;
+		if (p->extra.e_decl->type->tag == T_VOID)
+		{
+			/* no other params should be there */
+			if (p->next)
+			{
+				error_at_expr(p->next, "void must be the only parameter\n");
+			}
+			if (p->extra.e_decl->name)
+			{
+				error_at_expr(p, "void parameter should not have a name\n");
+			}
+			/* void means empty parameter list */
+			f->funcdef_params = var->type->val.function.param_decls = 0;
+		}
+		foreach(p, f->funcdef_params)
+		{
+			/* check parameter has a name */
+			if (!p->extra.e_decl->name)
+			{
+				error_at_expr(p, "function parameter must have a name\n");
+			}
+		}
+		prog->prog_defns = link_expr(prog->prog_defns, d);
+	}
 }
 
 static int analyse_defn(Expr *scope, Expr *parent_scope, void *parg)
@@ -171,6 +219,8 @@ VarList **pvar_list_from_scope(Expr *scope)
 		return &scope->extra.e_state->var_list;
 	case S_CMPND:
 		return &scope->extra.e_cmpnd;
+	case D_FUNCDEF:
+		return &scope->extra.e_funcdef;
 	default:
 		assert(impossible); return NULL;
 	}
@@ -191,6 +241,8 @@ Expr *defn_list_from_scope(Expr *scope)
 		return scope->state_defns;
 	case S_CMPND:
 		return scope->cmpnd_defns;
+	case D_FUNCDEF:
+		return scope->funcdef_params;
 	default:
 		assert(impossible); return NULL;
 	}
@@ -304,6 +356,8 @@ static void analyse_declaration(SymTable st, Expr *scope, Expr *defn)
 	}
 
 	var_list = var_list_from_scope(scope);
+
+	assert(vp->name);
 
 	if (!sym_table_insert(st, vp->name, var_list, vp))
 	{

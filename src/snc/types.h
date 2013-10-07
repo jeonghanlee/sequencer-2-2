@@ -123,14 +123,15 @@ struct expression			/* generic syntax node */
 		Var	*e_var;		/* variable reference */
 		Var	*e_decl;	/* variable declaration */
 		uint	e_option;	/* option value (1 or 0) */
-		VarList	*e_prog;	/* top-level definitions */
+		VarList	*e_prog;	/* top-level declarations */
 		StateSet *e_ss;		/* state set data */
 		State	*e_state;	/* state data */
 		When	*e_when;	/* transition data */
 		Expr	*e_change;	/* declaration of target state */
-		VarList	*e_cmpnd;	/* block local definitions */
+		VarList	*e_cmpnd;	/* block local declarations */
 		FuncSym	*e_builtin;	/* builtin function */
 		ConstSym *e_const;	/* builtin constant */
+		VarList *e_funcdef;	/* parameter declarations */
 	}	extra;
 };
 
@@ -238,12 +239,12 @@ struct program
 
 /* Expression types that are scopes. By definition, a scope is an expression
    that allows variable declarations as (immediate) subexpressions. */
-#define scope_mask		( bit(D_PROG)    | bit(D_SS)      | bit(D_STATE)  | bit(S_CMPND) )
+#define scope_mask		( bit(D_PROG) | bit(D_FUNCDEF) | bit(D_SS) | bit(D_STATE) | bit(S_CMPND) )
 /* Whether an expression is a scope */
 #define is_scope(e)		((bit((e)->type) & scope_mask) != 0)
 
 /* Expression types that may have sub-scopes */
-#define has_sub_scope_mask	( bit(D_ENTEX)   | bit(D_PROG)    | bit(D_SS)\
+#define has_sub_scope_mask	( bit(D_ENTEX)   | bit(D_FUNCDEF) | bit(D_PROG)   | bit(D_SS)\
 				| bit(D_STATE)   | bit(D_WHEN)    | bit(S_CMPND)  | bit(S_FOR)\
 				| bit(S_IF)      | bit(S_STMT)    | bit(S_WHILE) )
 /* Expression types that are actually expressions i.e. no definitions or statements.
@@ -270,9 +271,10 @@ enum expr_type			/* description [child expressions...] */
 	D_ASSIGN,		/* assign statement [subscr,pvs] */
 	D_DECL,			/* variable declaration [init] */
 	D_ENTEX,		/* entry or exit statement [block] */
+	D_FUNCDEF,		/* function definition [decl,params,block] */
 	D_MONITOR,		/* monitor statement [subscr] */
 	D_OPTION,		/* option definition [] */
-	D_PROG,			/* whole program [param,defns,entry,statesets,exit,ccode] */
+	D_PROG,			/* whole program [param,defns,entry,statesets,exit,funcdefs,ccode] */
 	D_SS,			/* state set statement [defns,states] */
 	D_STATE,		/* state statement [defns,entry,whens,exit] */
 	D_SYNC,			/* sync statement [subscr,evflag] */
@@ -300,6 +302,7 @@ enum expr_type			/* description [child expressions...] */
 	S_FOR,			/* for statement [init,cond,iter,stmt] */
 	S_IF,			/* if statement [cond,then,else] */
 	S_JUMP,			/* break or continue stmt [] */
+	S_RETURN,		/* return stmt [expr] */
 	S_STMT,			/* simple statement, i.e. 'expr;'  [expr] */
 	S_WHILE,		/* while statement [cond,stmt] */
 
@@ -330,6 +333,9 @@ STATIC_ASSERT(NUM_EXPR_TYPES <= 8*sizeof(TypeMask));
 #define for_stmt	children[3]
 #define func_expr	children[0]
 #define func_args	children[1]
+#define funcdef_decl	children[0]
+#define funcdef_params	children[1]
+#define funcdef_block	children[2]
 #define if_cond		children[0]
 #define if_then		children[1]
 #define if_else		children[2]
@@ -343,7 +349,9 @@ STATIC_ASSERT(NUM_EXPR_TYPES <= 8*sizeof(TypeMask));
 #define prog_entry	children[2]
 #define prog_statesets	children[3]
 #define prog_exit	children[4]
-#define prog_ccode	children[5]
+#define prog_funcdefs	children[5]
+#define prog_ccode	children[6]
+#define return_expr	children[0]
 #define select_left	children[0]
 #define select_right	children[1]
 #define ss_defns	children[0]
@@ -368,12 +376,6 @@ STATIC_ASSERT(NUM_EXPR_TYPES <= 8*sizeof(TypeMask));
 #define while_cond	children[0]
 #define while_stmt	children[1]
 
-/* Accessors for var_lists (only for scopes) */
-#define prog_var_list	extra.e_prog
-#define ss_var_list	extra.e_ss->var_list
-#define state_var_list	extra.e_state->var_list
-#define cmpnd_var_list	extra.e_cmpnd;
-
 #ifndef expr_type_GLOBAL
 extern
 #endif
@@ -388,9 +390,10 @@ expr_type_info[]
 	{ "D_ASSIGN",	2 },
 	{ "D_DECL",	1 },
 	{ "D_ENTEX",	1 },
+	{ "D_FUNCDEF",	3 },
 	{ "D_MONITOR",	1 },
 	{ "D_OPTION",	0 },
-	{ "D_PROG",	6 },
+	{ "D_PROG",	7 },
 	{ "D_SS",	2 },
 	{ "D_STATE",	4 },
 	{ "D_SYNC",	2 },
@@ -416,6 +419,7 @@ expr_type_info[]
 	{ "S_FOR",	4 },
 	{ "S_IF",	3 },
 	{ "S_JUMP",	0 },
+	{ "S_RETURN",	1 },
 	{ "S_STMT",	1 },
 	{ "S_WHILE",	2 },
 	{ "T_TEXT",	0 },

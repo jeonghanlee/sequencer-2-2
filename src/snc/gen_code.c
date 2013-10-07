@@ -152,7 +152,8 @@ static void gen_user_var(Program *p)
 	/* Convert internal type to `C' type */
 	foreach (vp, p->prog->extra.e_prog->first)
 	{
-		if (vp->decl && vp->type->tag != T_NONE && vp->type->tag != T_EVFLAG)
+		if (vp->decl && vp->type->tag != T_NONE && vp->type->tag != T_EVFLAG &&
+			vp->type->tag != T_FUNCTION)
 		{
 			gen_line_marker(vp->decl);
 			if (!opt_reent) gen_code("static");
@@ -219,6 +220,25 @@ static void gen_user_var(Program *p)
 			indent(1); gen_code("char dummy;\n");
 		}
 		gen_code("};\n");
+	}
+	foreach (vp, p->prog->extra.e_prog->first)
+	{
+		if (vp->decl && vp->type->tag == T_FUNCTION)
+		{
+			Expr *param_decl;
+
+			gen_line_marker(vp->decl);
+			gen_code("static ");
+			gen_type(vp->type->val.function.return_type, "", vp->name);
+			gen_code("(SS_ID " NM_SS ", SEQ_VARS *const " NM_VARS_ARG);
+			foreach (param_decl, vp->type->val.function.param_decls)
+			{
+				Var *vp = param_decl->extra.e_decl;
+				gen_code(", ");
+				gen_var_decl(vp);
+			}
+			gen_code(");\n");
+		}
 	}
 	gen_code("\n");
 }
