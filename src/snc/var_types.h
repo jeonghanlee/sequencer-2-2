@@ -16,7 +16,8 @@ enum type_tag {
     T_PRIM,     /* primitive types: numbers, char, string */
     T_FOREIGN,  /* foreign types (declared in C code) */
     T_POINTER,
-    T_ARRAY
+    T_ARRAY,
+    T_FUNCTION,
 };
 
 enum foreign_type_tag {
@@ -35,6 +36,12 @@ struct pointer_type {
     struct type *value_type;
 };
 
+struct function_type {
+    unsigned    num_params;
+    struct type **param_types;  /* array of pointers */
+    struct type *return_type;
+};
+
 struct foreign_type {
     enum foreign_type_tag tag;
     char *name;
@@ -45,10 +52,11 @@ typedef struct type Type;
 struct type {
     enum type_tag tag;
     union {
-        enum prim_type_tag  prim;
-        struct foreign_type foreign;
-        struct pointer_type pointer;
-        struct array_type   array;
+        enum prim_type_tag      prim;
+        struct foreign_type     foreign;
+        struct pointer_type     pointer;
+        struct array_type       array;
+        struct function_type    function;
     } val;
     struct type *parent;
 };

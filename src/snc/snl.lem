@@ -189,8 +189,17 @@ init_declarator(p) ::= declarator(x) EQUAL init_expr(i).{ p = decl_add_init(x, i
 
 declarator(p) ::= variable(n).				{ p = decl_create(n); }
 declarator(p) ::= declarator(x) subscript(s).	[POST]	{ p = decl_postfix_array(x, s.str); }
+declarator(p) ::= declarator(x)
+		LPAREN param_decls(ps) RPAREN.	[POST]	{ p = decl_postfix_function(x, ps); }
 declarator(p) ::= LPAREN declarator(x) RPAREN.	[PRE]	{ p = x; }
 declarator(p) ::= ASTERISK declarator(x).	[PRE]	{ p = decl_prefix_pointer(x); }
+
+param_decls(p) ::= param_decl(x).			{ p = x; }
+param_decls(p) ::= param_decls(xs) COMMA param_decl(x).	{ p = link_expr(xs, x); }
+
+// allow parameter declaration with or without identifier
+param_decl(p) ::= basetype(t) declarator(d).		{ p = decl_add_base_type(d, t); }
+param_decl(p) ::= type_expr(x).				{ p = x; }
 
 // deprecated
 declaration(p) ::= FOREIGN variables(ds) SEMICOLON.	{ p = decl_add_base_type(ds, mk_no_type()); }
@@ -249,6 +258,10 @@ abs_decl(p) ::= ASTERISK. [PRE]			{ p = decl_prefix_pointer(abs_decl_create()); 
 abs_decl(p) ::= ASTERISK abs_decl(d). [PRE]	{ p = decl_prefix_pointer(d); }
 abs_decl(p) ::= subscript(s). [POST]		{ p = decl_postfix_array(abs_decl_create(), s.str); }
 abs_decl(p) ::= abs_decl(d) subscript(s). [POST]{ p = decl_postfix_array(d, s.str); }
+abs_decl(p) ::= LPAREN param_decls(ps) RPAREN. [POST]
+						{ p = decl_postfix_function(abs_decl_create(), ps); }
+abs_decl(p) ::= abs_decl(d) LPAREN param_decls(ps) RPAREN. [POST]
+						{ p = decl_postfix_function(d, ps); }
 
 // not supported: empty brackets, empty parameter list
 // abs_decl ::= LBRACKET RBRACKET.

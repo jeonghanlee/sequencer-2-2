@@ -55,6 +55,15 @@ Expr *decl_add_base_type(Expr *ds, Type basetype)
                 }
                 t->parent->val.pointer.value_type = t;
                 break;
+            case T_FUNCTION:
+                if (basetype.tag == T_NONE) {
+                    error_at_expr(d, "cannot declare function returning foreign variable\n");
+                }
+                if (basetype.tag == T_EVFLAG) {
+                    error_at_expr(d, "cannot declare returning event flag\n");
+                }
+                t->parent->val.function.return_type = t;
+                break;
             default:
                 assert(impossible);
             }
@@ -121,6 +130,36 @@ Expr *decl_postfix_array(Expr *d, char *s)
     t->parent = d->extra.e_decl->type;
     d->extra.e_decl->type = t;
     return d;
+}
+
+Expr *decl_postfix_function(Expr *decl, Expr *param_decls)
+{
+    Type *t = new(Type);
+    Expr *param_decl;
+    unsigned n = 0;
+
+    assert(decl->type == D_DECL);          /* pre-condition */
+
+#ifdef DEBUG
+    report("decl_postfix_function\n");
+#endif
+
+    t->tag = T_FUNCTION;
+    foreach (param_decl, param_decls) {
+        n++;
+    }
+    t->val.function.num_params = n;
+    t->val.function.param_types = newArray(Type*, n);
+    n = 0;
+    foreach (param_decl, param_decls) {
+        assert(param_decl->type == D_DECL);   /* pre-condition */
+        assert(param_decl->extra.e_decl);     /* pre-condition */
+        t->val.function.param_types[n] = param_decl->extra.e_decl->type;
+        n++;
+    }
+    t->parent = decl->extra.e_decl->type;
+    decl->extra.e_decl->type = t;
+    return decl;
 }
 
 Expr *decl_prefix_pointer(Expr *d)
@@ -219,6 +258,7 @@ static unsigned type_assignable_array(Type *t, int depth)
     case T_NONE:
     case T_FOREIGN:
     case T_POINTER:
+    case T_FUNCTION:
     case T_EVFLAG:
     case T_VOID:
         return FALSE;
@@ -239,7 +279,9 @@ unsigned type_assignable(Type *t)
 
 static void gen_array_pointer(Type *t, enum type_tag last_tag, const char *prefix, const char *name)
 {
-    int paren = last_tag == T_ARRAY;
+    int paren = last_tag == T_ARRAY || last_tag == T_FUNCTION;
+    int i;
+
     switch (t->tag) {
     case T_POINTER:
         if (paren)
@@ -252,6 +294,16 @@ static void gen_array_pointer(Type *t, enum type_tag last_tag, const char *prefi
     case T_ARRAY:
         gen_array_pointer(t->parent, t->tag, prefix, name);
         gen_code("[%d]", t->val.array.num_elems);
+        break;
+    case T_FUNCTION:
+        gen_array_pointer(t->parent, t->tag, prefix, name);
+        gen_code("(");
+        for (i = 0; i < t->val.function.num_params; i++) {
+            if (i > 0)
+                gen_code (", ");
+            gen_type(t->val.function.param_types[i], 0, 0);
+        }
+        gen_code(")");
         break;
     default:
         if (name)

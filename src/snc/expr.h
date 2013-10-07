@@ -44,6 +44,7 @@ Expr *decl_add_init(Expr *d, Expr *init);
 Expr *abs_decl_create(void);
 Expr *decl_create(Token name);
 Expr *decl_postfix_array(Expr *d, char *s);
+Expr *decl_postfix_function(Expr *d, Expr *args);
 Expr *decl_prefix_pointer(Expr *d);
 
 #endif	/*INCLparseh*/

@@ -432,19 +432,7 @@ static void gen_expr(
 			gen_builtin_func(context, ep);
 			break;
 		}
-		if (ep->func_expr->type == E_VAR &&
-				ep->func_expr->extra.e_var->type->tag != T_NONE)
-		{
-			/* we don't yet support variables of function type */
-			error_at_expr(ep->func_expr,
-				"variable '%s' is not a function\n",
-				ep->func_expr->extra.e_var->name);
-			report_at_expr(ep->func_expr->extra.e_var->decl,
-				"variable '%s' is declared here\n",
-				ep->func_expr->extra.e_var->name);
-		}
-		else
-			gen_expr(context, ep->func_expr, 0);
+		gen_expr(context, ep->func_expr, 0);
 		gen_code("(");
 		foreach (cep, ep->func_args)
 		{
