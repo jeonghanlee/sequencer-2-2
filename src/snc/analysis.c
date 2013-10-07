@@ -169,11 +169,6 @@ VarList **pvar_list_from_scope(Expr *scope)
 	case D_STATE:
 		assert(scope->extra.e_state);	/* invariant */
 		return &scope->extra.e_state->var_list;
-	case D_WHEN:
-		assert(scope->extra.e_when);	/* invariant */
-		return &scope->extra.e_when->var_list;
-	case D_ENTEX:
-		return &scope->extra.e_entex;
 	case S_CMPND:
 		return &scope->extra.e_cmpnd;
 	default:
@@ -194,10 +189,6 @@ Expr *defn_list_from_scope(Expr *scope)
 		return scope->ss_defns;
 	case D_STATE:
 		return scope->state_defns;
-	case D_WHEN:
-		return scope->when_defns;
-	case D_ENTEX:
-		return scope->entex_defns;
 	case S_CMPND:
 		return scope->cmpnd_defns;
 	default:

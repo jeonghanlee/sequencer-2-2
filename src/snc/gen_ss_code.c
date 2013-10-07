@@ -182,23 +182,30 @@ static void gen_state_func(
 {
 	gen_code("\n/* %s function for state \"%s\" in state set \"%s\" */\n",
 		title, state_name, ss_name);
-	gen_code("static %s %s_%s_%d_%s(SS_ID " NM_SS ", SEQ_VARS *const " NM_VARS_ARG "%s)\n{\n",
+	gen_code("static %s %s_%s_%d_%s(SS_ID " NM_SS ", SEQ_VARS *const " NM_VARS_ARG "%s)\n",
 		rettype, prefix, ss_name, ss_num, state_name, extra_args);
 	gen_body(xp, context);
-	gen_code("}\n");
+}
+
+static void gen_block(Expr *xp, int context, int level)
+{
+	Expr	*cxp;
+
+	assert(xp->type == S_CMPND);
+	gen_code("{\n");
+	gen_local_var_decls(xp, context, level+1);
+	gen_defn_c_code(xp, level+1);
+	foreach (cxp, xp->cmpnd_stmts)
+	{
+		gen_expr(context, cxp, level+1);
+	}
+	indent(level); gen_code("}\n");
 }
 
 static void gen_entex_body(Expr *xp, int context)
 {
-	Expr	*ep;
-
 	assert(xp->type == D_ENTEX);
-	gen_local_var_decls(xp, context, 1);
-	gen_defn_c_code(xp, 1);
-	foreach (ep, xp->entex_stmts)
-	{
-		gen_expr(context, ep, 1);
-	}
+	gen_block(xp->entex_block, context, 0);
 }
 
 /* Generate action processing functions:
@@ -210,6 +217,7 @@ static void gen_action_body(Expr *xp, int context)
 	int		trans_num;
 	const int	level = 1;
 
+	gen_code("{\n");
 	/* "switch" statment based on the transition number */
 	indent(level); gen_code("switch(" NM_TRN ")\n");
 	indent(level); gen_code("{\n");
@@ -218,33 +226,18 @@ static void gen_action_body(Expr *xp, int context)
 	/* For each transition ("when" statement) ... */
 	foreach (tp, xp)
 	{
-		Expr *ap;
-
 		assert(tp->type == D_WHEN);
 		/* one case for each transition */
-		indent(level); gen_code("case %d:\n", trans_num);
-
-		/* block within case permits local variables */
-		indent(level+1); gen_code("{\n");
-		/* for each definition insert corresponding code */
-		gen_local_var_decls(tp, context, level+2);
-		gen_defn_c_code(tp, level+2);
-		if (tp->when_defns)
-			gen_code("\n");
-		/* for each action statement insert action code */
-		foreach (ap, tp->when_stmts)
-		{
-			gen_expr(C_TRANS, ap, level+2);
-		}
-		/* end of block */
-		indent(level+1); gen_code("}\n");
-
+		indent(level); gen_code("case %d: ", trans_num);
+		gen_block(tp->when_block, context, level+1);
 		/* end of case */
 		indent(level+1); gen_code("return;\n");
 		trans_num++;
 	}
 	/* end of switch stmt */
 	indent(level); gen_code("}\n");
+	/* end of function */
+	gen_code("}\n");
 }
 
 /* Generate a C function that checks events for a particular state */
@@ -254,6 +247,7 @@ static void gen_event_body(Expr *xp, int context)
 	int		trans_num;
 	const int	level = 1;
 
+	gen_code("{\n");
 	trans_num = 0;
 	/* For each transition generate an "if" statement ... */
 	foreach (tp, xp)
@@ -289,6 +283,8 @@ static void gen_event_body(Expr *xp, int context)
 		trans_num++;
 	}
 	indent(level); gen_code("return FALSE;\n");
+	/* end of function */
+	gen_code("}\n");
 }
 
 static void gen_var_access(Var *vp)
@@ -352,16 +348,7 @@ static void gen_expr(
 	{
 	/* Statements */
 	case S_CMPND:
-		indent(level);
-		gen_code("{\n");
-		gen_local_var_decls(ep, context, level+1);
-		gen_defn_c_code(ep, level+1);
-		foreach (cep, ep->cmpnd_stmts)
-		{
-			gen_expr(context, cep, level+1);
-		}
-		indent(level);
-		gen_code("}\n");
+		gen_block(ep, context, level+1);
 		break;
 	case S_STMT:
 		gen_line_marker(ep);
@@ -869,8 +856,7 @@ static void gen_prog_func(
 {
 	assert(prog->type == D_PROG);
 	gen_code("\n/* Program %s func */\n", doc);
-	gen_code("static void %s(PROG_ID "NM_PROG
-		", SEQ_VARS *const "NM_VARS_ARG")\n{\n",
+	gen_code("static void %s(PROG_ID "NM_PROG", SEQ_VARS *const "NM_VARS_ARG")\n{\n",
 		name);
 	gen_body(prog);
 	gen_code("}\n");
@@ -885,10 +871,9 @@ static void gen_prog_entex_func(
 {
 	assert(prog->type == D_PROG);
 	gen_code("\n/* Program %s func */\n", doc);
-	gen_code("static void %s(SS_ID " NM_SS ", SEQ_VARS *const " NM_VARS_ARG ")\n{\n",
+	gen_code("static void %s(SS_ID " NM_SS ", SEQ_VARS *const " NM_VARS_ARG ")\n",
 		name);
-	if (prog && gen_body) gen_body(prog);
-	gen_code("}\n");
+	gen_body(prog);
 }
 
 static void gen_prog_init_body(Expr *prog)
@@ -900,11 +885,11 @@ static void gen_prog_init_body(Expr *prog)
 static void gen_prog_entry_body(Expr *prog)
 {
 	assert(prog->type == D_PROG);
-	if (prog->prog_entry) gen_entex_body(prog->prog_entry, C_SS);
+	gen_entex_body(prog->prog_entry, C_SS);
 }
 
 static void gen_prog_exit_body(Expr *prog)
 {
 	assert(prog->type == D_PROG);
-	if (prog->prog_exit) gen_entex_body(prog->prog_exit, C_SS);
+	gen_entex_body(prog->prog_exit, C_SS);
 }

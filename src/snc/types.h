@@ -40,7 +40,6 @@ typedef struct variable		Var;
 typedef struct chan_list	ChanList;
 typedef struct sync_queue_list	SyncQList;
 typedef struct var_list		VarList;
-typedef struct expr_pair	ExprPair;
 typedef struct func_symbol	FuncSym;
 typedef struct const_symbol	ConstSym;
 
@@ -94,7 +93,6 @@ struct token				/* for the lexer and parser */
 struct when				/* extra data for when clauses */
 {
 	Expr		*next_state;	/* declaration of target state */
-	VarList		*var_list;	/* list of local variables */
 };
 
 struct state				/* extra data for state clauses */
@@ -130,7 +128,6 @@ struct expression			/* generic syntax node */
 		State	*e_state;	/* state data */
 		When	*e_when;	/* transition data */
 		Expr	*e_change;	/* declaration of target state */
-		VarList	*e_entex;	/* local declarations */
 		VarList	*e_cmpnd;	/* block local definitions */
 		FuncSym	*e_builtin;	/* builtin function */
 		ConstSym *e_const;	/* builtin constant */
@@ -211,11 +208,6 @@ struct var_list
 	Expr	*parent_scope;		/* next surrounding scope */
 };
 
-struct expr_pair
-{
-	Expr	*left, *right;
-};
-
 struct program
 {
 	/* result of parsing phase */
@@ -246,8 +238,7 @@ struct program
 
 /* Expression types that are scopes. By definition, a scope is an expression
    that allows variable declarations as (immediate) subexpressions. */
-#define scope_mask		( bit(D_PROG)    | bit(D_SS)      | bit(D_STATE)\
-				| bit(D_ENTEX)   | bit(D_WHEN)    | bit(S_CMPND) )
+#define scope_mask		( bit(D_PROG)    | bit(D_SS)      | bit(D_STATE)  | bit(S_CMPND) )
 /* Whether an expression is a scope */
 #define is_scope(e)		((bit((e)->type) & scope_mask) != 0)
 
@@ -278,7 +269,7 @@ enum expr_type			/* description [child expressions...] */
 {
 	D_ASSIGN,		/* assign statement [subscr,pvs] */
 	D_DECL,			/* variable declaration [init] */
-	D_ENTEX,		/* entry or exit statement [defns,stmts] */
+	D_ENTEX,		/* entry or exit statement [block] */
 	D_MONITOR,		/* monitor statement [subscr] */
 	D_OPTION,		/* option definition [] */
 	D_PROG,			/* whole program [param,defns,entry,statesets,exit,ccode] */
@@ -286,7 +277,7 @@ enum expr_type			/* description [child expressions...] */
 	D_STATE,		/* state statement [defns,entry,whens,exit] */
 	D_SYNC,			/* sync statement [subscr,evflag] */
 	D_SYNCQ,		/* syncq statement [subscr,evflag,maxqsize] */
-	D_WHEN,			/* when statement [cond,defns,stmts] */
+	D_WHEN,			/* when statement [cond,block] */
 
 	E_BINOP,		/* binary operator [left,right] */
 	E_BUILTIN,		/* builtin function [] */
@@ -332,8 +323,7 @@ STATIC_ASSERT(NUM_EXPR_TYPES <= 8*sizeof(TypeMask));
 #define cmpnd_defns	children[0]
 #define cmpnd_stmts	children[1]
 #define decl_init	children[0]
-#define entex_defns	children[0]
-#define entex_stmts	children[1]
+#define entex_block	children[0]
 #define for_init	children[0]
 #define for_cond	children[1]
 #define for_iter	children[2]
@@ -374,8 +364,7 @@ STATIC_ASSERT(NUM_EXPR_TYPES <= 8*sizeof(TypeMask));
 #define ternop_then	children[1]
 #define ternop_else	children[2]
 #define when_cond	children[0]
-#define when_defns	children[1]
-#define when_stmts	children[2]
+#define when_block	children[1]
 #define while_cond	children[0]
 #define while_stmt	children[1]
 
@@ -383,8 +372,6 @@ STATIC_ASSERT(NUM_EXPR_TYPES <= 8*sizeof(TypeMask));
 #define prog_var_list	extra.e_prog
 #define ss_var_list	extra.e_ss->var_list
 #define state_var_list	extra.e_state->var_list
-#define when_var_list	extra.e_when->var_list
-#define entex_var_list	extra.e_entex;
 #define cmpnd_var_list	extra.e_cmpnd;
 
 #ifndef expr_type_GLOBAL
@@ -400,7 +387,7 @@ expr_type_info[]
 = {
 	{ "D_ASSIGN",	2 },
 	{ "D_DECL",	1 },
-	{ "D_ENTEX",	2 },
+	{ "D_ENTEX",	1 },
 	{ "D_MONITOR",	1 },
 	{ "D_OPTION",	0 },
 	{ "D_PROG",	6 },
@@ -408,7 +395,7 @@ expr_type_info[]
 	{ "D_STATE",	4 },
 	{ "D_SYNC",	2 },
 	{ "D_SYNCQ",	3 },
-	{ "D_WHEN",	3 },
+	{ "D_WHEN",	2 },
 	{ "E_BINOP",	2 },
 	{ "E_BUILTIN",	0 },
 	{ "E_CAST",	2 },

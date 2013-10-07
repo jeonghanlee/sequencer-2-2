@@ -305,10 +305,10 @@ state_defn(p) ::= syncq(x).			{ p = x; }
 state_defn(p) ::= declaration(x).		{ p = x; }
 state_defn(p) ::= option(x).			{ p = x; }
 
-entry(p) ::= ENTRY(t) block(b).			{ p = expr(D_ENTEX, t, b.left, b.right); }
+entry(p) ::= ENTRY(t) block(b).			{ p = expr(D_ENTEX, t, b); }
 entry(p) ::= .					{ p = 0; }
 
-exit(p) ::= EXIT(t) block(b).			{ p = expr(D_ENTEX, t, b.left, b.right); }
+exit(p) ::= EXIT(t) block(b).			{ p = expr(D_ENTEX, t, b); }
 exit(p) ::= .					{ p = 0; }
 
 transitions(p) ::= transitions(xs) transition(x).{ p = link_expr(xs, x); }
@@ -316,21 +316,20 @@ transitions(p) ::= transition(x).		{ p = x; }
 
 transition(p) ::= WHEN(t) LPAREN opt_expr(c) RPAREN block(b) STATE NAME(n). {
 	t.str = n.str;
-	p = expr(D_WHEN, t, c, b.left, b.right);
+	p = expr(D_WHEN, t, c, b);
 }
 transition(p) ::= WHEN(t) LPAREN opt_expr(c) RPAREN block(b) EXIT. {
 	t.str = 0;
-	p = expr(D_WHEN, t, c, b.left, b.right);
+	p = expr(D_WHEN, t, c, b);
 }
 transition(p) ::= WHEN(t) LPAREN opt_expr(c) RPAREN block(b) error. {
 	t.str = 0;
-	p = expr(D_WHEN, t, c, b.left, b.right);
+	p = expr(D_WHEN, t, c, b);
 	report("expected 'state' or 'exit'\n");
 }
 
-%type block {ExprPair}
-block(p) ::= LBRACE block_defns(ds) statements(xs) RBRACE. {
-	p.left = ds; p.right = xs;
+block(p) ::= LBRACE(t) block_defns(ds) statements(xs) RBRACE. {
+	p = expr(S_CMPND, t, ds, xs);
 }
 
 block_defns(p) ::= block_defns(ds) block_defn(d). {
@@ -350,8 +349,7 @@ statement(p) ::= BREAK(t) SEMICOLON.		{ p = expr(S_JUMP, t); }
 statement(p) ::= CONTINUE(t) SEMICOLON.		{ p = expr(S_JUMP, t); }
 statement(p) ::= STATE NAME(t) SEMICOLON.	{ p = expr(S_CHANGE, t); }
 statement(p) ::= c_code(x).			{ p = x; }
-statement(p) ::= LBRACE(t) block_defns(ds) statements(xs) RBRACE.
-						{ p = expr(S_CMPND, t, ds, xs); }
+statement(p) ::= block(x).			{ p = x; }
 statement(p) ::= IF(t) LPAREN comma_expr(c) RPAREN statement(th).
 						{ p = expr(S_IF, t, c, th, 0); }
 statement(p) ::= IF(t) LPAREN comma_expr(c) RPAREN statement(th) ELSE statement(el).
