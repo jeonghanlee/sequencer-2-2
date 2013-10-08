@@ -17,8 +17,8 @@ in the file LICENSE that is included with this distribution.
 
 /* defined in expr.c */
 Expr *expr(
-	uint	type,		/* E_BINOP, E_ASGNOP, etc */
-	Token	tok,		/* "==", "+=", var name, constant, etc. */
+	uint	type,
+	Token	tok,
 	...
 );
 
@@ -28,8 +28,8 @@ Expr *opt_defn(
 );
 
 Expr *link_expr(
-	Expr	*ep1,		/* beginning of 1-st structure or list */
-	Expr	*ep2		/* beginning 2-nd (append it to 1-st) */
+	Expr	*ep1,
+	Expr	*ep2
 );
 
 uint strtoui(
