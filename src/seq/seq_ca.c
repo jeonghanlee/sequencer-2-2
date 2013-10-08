@@ -358,18 +358,6 @@ void seq_disconnect(PROG *sp)
 		if (status != pvStatOK)
 			errlogSevPrintf(errlogFatal, "seq_disconnect(var '%s', pv '%s'): pvVarDestroy() failure: "
 				"%s\n", ch->varName, dbch->dbName, pvVarGetMess(dbch->pvid));
-
-		/* Clear monitor & connect indicators */
-		if (dbch->connected)
-		{
-			dbch->connected = FALSE;
-			sp->connectCount--;
-		}
-		if (dbch->gotMonitor)
-		{
-			dbch->gotMonitor = FALSE;
-			sp->gotMonitorCount--;
-		}
 	}
 	epicsMutexUnlock(sp->lock);
 
