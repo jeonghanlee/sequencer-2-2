@@ -245,7 +245,6 @@ snl:
 	"float"		{ TYPEWORD(FLOAT,	"float"); }
 	"for"		{ KEYWORD(FOR,		"for"); }
 	"foreign"	{ TYPEWORD(FOREIGN,	"foreign"); }
-	"function"	{ TYPEWORD(FUNCTION,	"function"); }
 	"if"		{ KEYWORD(IF,		"if"); }
 	"int"		{ TYPEWORD(INT,		"int"); }
 	"long"		{ TYPEWORD(LONG,	"long"); }

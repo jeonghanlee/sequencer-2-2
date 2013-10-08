@@ -479,8 +479,8 @@ member(p) ::= NAME(t).				{ p = expr(E_MEMBER, t); }
 functions(p) ::= .					{ p = 0; }
 functions(p) ::= functions(fs) function(f).		{ p = link_expr(fs, f); }
 
-function(p) ::= FUNCTION(l) basetype(t) declarator(d) block(b). {
-	p = expr(D_FUNCDEF, l, decl_add_base_type(d, t), b);
+function(p) ::= basetype(t) declarator(d) block(b). {
+	p = expr(D_FUNCDEF, token_from_expr(d), decl_add_base_type(d, t), b);
 }
 
 // Literal (C) code
