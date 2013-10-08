@@ -121,3 +121,12 @@ uint strtoui(
 	*pnumber = result;
 	return TRUE;
 }
+
+Token token_from_expr(Expr *e)
+{
+	Token t;
+	t.str = e->value;
+	t.line = e->line_num;
+	t.file = e->src_file;
+	return t;
+}

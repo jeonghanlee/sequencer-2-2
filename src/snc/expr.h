@@ -38,6 +38,8 @@ uint strtoui(
 	uint *pnumber		/* location for result if successful */
 );
 
+Token token_from_expr(Expr *e);
+
 /* defined in var_types.c */
 Expr *decl_add_base_type(Expr *ds, Type t);
 Expr *decl_add_init(Expr *d, Expr *init);
