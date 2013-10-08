@@ -202,8 +202,7 @@ static void seq_mon_handler(
 }
 
 /*
- * seq_get_handler() - Sequencer callback handler.
- * Called when a "get" completes.
+ * seq_event_handler() - main CA event handler.
  */
 void seq_event_handler(
 	pvEventType evt, void *arg, pvType type, unsigned count, pvValue *value, pvStat status)
