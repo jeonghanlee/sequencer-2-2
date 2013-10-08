@@ -692,53 +692,77 @@ epicsShareFunc pvStat seq_pvAssign(SS_ID ss, VAR_ID varId, const char *pvName)
 /*
  * Initiate a monitor.
  */
-epicsShareFunc pvStat seq_pvMonitor(SS_ID ss, VAR_ID varId)
+epicsShareFunc pvStat seq_pvMonitor(SS_ID ss, VAR_ID varId, unsigned length)
 {
 	PROG	*sp = ss->prog;
-	CHAN	*ch = sp->chan + varId;
-	DBCHAN	*dbch = ch->dbch;
+	pvStat	status = pvStatOK;
+	unsigned i;
 
-	if (!dbch && optTest(sp, OPT_SAFE))
+	for (i=0; i<length; i++)
 	{
+		CHAN	*ch = sp->chan + varId + i;
+		DBCHAN	*dbch = ch->dbch;
+
+		if (!dbch && optTest(sp, OPT_SAFE))
+		{
+			ch->monitored = TRUE;
+			continue;
+		}
+		if (!dbch)
+		{
+			errlogSevPrintf(errlogMajor,
+				"pvMonitor(%s): user error (not assigned to a PV)\n",
+				ch->varName
+			);
+			return pvStatERROR;
+		}
 		ch->monitored = TRUE;
-		return pvStatOK;
+		status = seq_camonitor(ch, TRUE);
+		if (status != pvStatOK)
+		{
+			pv_call_failure(dbch, metaPtr(ch,ss), status);
+			break;
+		}
 	}
-	if (!dbch)
-	{
-		errlogSevPrintf(errlogMajor,
-			"pvMonitor(%s): user error (variable not assigned)\n",
-			ch->varName
-		);
-		return pvStatERROR;
-	}
-	ch->monitored = TRUE;
-	return seq_camonitor(ch, TRUE);
+	return status;
 }
 
 /*
  * Cancel a monitor.
  */
-epicsShareFunc pvStat seq_pvStopMonitor(SS_ID ss, VAR_ID varId)
+epicsShareFunc pvStat seq_pvStopMonitor(SS_ID ss, VAR_ID varId, unsigned length)
 {
 	PROG	*sp = ss->prog;
-	CHAN	*ch = sp->chan + varId;
-	DBCHAN	*dbch = ch->dbch;
+	pvStat	status = pvStatOK;
+	unsigned i;
 
-	if (!dbch && optTest(sp, OPT_SAFE))
+	for (i=0; i<length; i++)
 	{
+		CHAN	*ch = sp->chan + varId + i;
+		DBCHAN	*dbch = ch->dbch;
+
+		if (!dbch && optTest(sp, OPT_SAFE))
+		{
+			ch->monitored = FALSE;
+			continue;
+		}
+		if (!dbch)
+		{
+			errlogSevPrintf(errlogMajor,
+				"pvStopMonitor(%s): user error (not assigned to a PV)\n",
+				ch->varName
+			);
+			return pvStatERROR;
+		}
 		ch->monitored = FALSE;
-		return pvStatOK;
+		status =  seq_camonitor(ch, FALSE);
+		if (status != pvStatOK)
+		{
+			pv_call_failure(dbch, metaPtr(ch,ss), status);
+			break;
+		}
 	}
-	if (!dbch)
-	{
-		errlogSevPrintf(errlogMajor,
-			"pvStopMonitor(%s): user error (variable not assigned)\n",
-			ch->varName
-		);
-		return pvStatERROR;
-	}
-	ch->monitored = FALSE;
-	return seq_camonitor(ch, FALSE);
+	return status;
 }
 
 /*
