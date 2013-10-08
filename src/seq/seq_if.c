@@ -47,6 +47,13 @@ static void completion_timeout(pvEventType evtype, PVMETA *meta)
 	meta->message = pvEventGet ? "get completion failure" : "put completion failure";;
 }
 
+static void pv_call_failure(DBCHAN *dbch, PVMETA *meta, pvStat status)
+{
+	meta->status = status;
+	meta->severity = pvSevrERROR;
+	meta->message = pvVarGetMess(dbch->pvid);
+}
+
 static pvStat check_connected(DBCHAN *dbch, PVMETA *meta)
 {
 	if (!dbch->connected)
@@ -222,9 +229,7 @@ epicsShareFunc pvStat seq_pvGet(SS_ID ss, VAR_ID varId, enum compType compType, 
 			req);			/* user arg */
 	if (status != pvStatOK)
 	{
-		meta->status = pvStatERROR;
-		meta->severity = pvSevrERROR;
-		meta->message = pvVarGetMess(dbch->pvid);
+		pv_call_failure(dbch, meta, status);
 		errlogSevPrintf(errlogFatal,
 			"pvGet(var %s, pv %s): pvVarGetCallback() failure: %s\n",
 			ch->varName, dbch->dbName, pvVarGetMess(dbch->pvid));
@@ -460,6 +465,7 @@ epicsShareFunc pvStat seq_pvPut(SS_ID ss, VAR_ID varId, enum compType compType, 
 				(pvValue *)var);	/* data value */
 		if (status != pvStatOK)
 		{
+			pv_call_failure(dbch, meta, status);
 			errlogSevPrintf(errlogFatal, "pvPut(var %s, pv %s): pvVarPutNoBlock() failure: %s\n",
 				ch->varName, dbch->dbName, pvVarGetMess(dbch->pvid));
 			return status;
@@ -483,6 +489,7 @@ epicsShareFunc pvStat seq_pvPut(SS_ID ss, VAR_ID varId, enum compType compType, 
 				req);			/* user arg */
 		if (status != pvStatOK)
 		{
+			pv_call_failure(dbch, meta, status);
 			errlogSevPrintf(errlogFatal, "pvPut(var %s, pv %s): pvVarPutCallback() failure: %s\n",
 				ch->varName, dbch->dbName, pvVarGetMess(dbch->pvid));
 			ss->putReq[varId] = NULL;	/* cancel the request */
