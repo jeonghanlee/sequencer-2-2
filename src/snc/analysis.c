@@ -20,6 +20,7 @@ in the file LICENSE that is included with this distribution.
 #include "main.h"
 #include "expr.h"
 #include "builtin.h"
+#include "gen_code.h"
 #include "analysis.h"
 
 static const int impossible = 0;
@@ -97,7 +98,9 @@ static void analyse_funcdefs(Expr *prog)
 	{
 		Expr *d = f->funcdef_decl;
 		Var *var = d->extra.e_decl;
+		struct function_type *fun_type = &var->type->val.function;
 		Expr *p;
+		Token t;
 
 		assert(f->type == D_FUNCDEF);
 		if (var->type->tag != T_FUNCTION)
@@ -105,9 +108,9 @@ static void analyse_funcdefs(Expr *prog)
 			error_at_expr(d, "not a function type\n");
 			continue;
 		}
-		f->funcdef_params = var->type->val.function.param_decls;
-		assert(f->funcdef_params);	/* invariant enforced by syntax */
-		p = f->funcdef_params;
+
+		p = fun_type->param_decls;
+		assert(p);			/* invariant enforced by syntax */
 		if (p->extra.e_decl->type->tag == T_VOID)
 		{
 			/* no other params should be there */
@@ -120,9 +123,9 @@ static void analyse_funcdefs(Expr *prog)
 				error_at_expr(p, "void parameter should not have a name\n");
 			}
 			/* void means empty parameter list */
-			f->funcdef_params = var->type->val.function.param_decls = 0;
+			fun_type->param_decls = 0;
 		}
-		foreach(p, f->funcdef_params)
+		foreach(p, fun_type->param_decls)
 		{
 			/* check parameter has a name */
 			if (!p->extra.e_decl->name)
@@ -130,6 +133,25 @@ static void analyse_funcdefs(Expr *prog)
 				error_at_expr(p, "function parameter must have a name\n");
 			}
 		}
+		/* prepend "SEQ_VARS *const _seq_vars" to parameter list */
+		t.str = NM_VARS_ARG;
+		t.line = d->line_num;
+		t.file = d->src_file;
+		p = decl_add_base_type(
+			decl_create(t),
+			/* HACK! act as if "SEQ_VARS *const" were an identifier */
+			mk_foreign_type(F_TYPENAME, "SEQ_VARS *const")
+		);
+		fun_type->param_decls = link_expr(p, fun_type->param_decls);
+		/* prepend "SS_ID _seq_ss" to parameter list*/
+		t.str = NM_SS;
+		t.line = d->line_num;
+		t.file = d->src_file;
+		p = decl_add_base_type(
+			decl_create(t),
+			mk_foreign_type(F_TYPENAME, "SS_ID")
+		);
+		fun_type->param_decls = link_expr(p, fun_type->param_decls);
 		prog->prog_defns = link_expr(prog->prog_defns, d);
 	}
 }

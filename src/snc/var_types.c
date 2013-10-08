@@ -354,12 +354,6 @@ static void gen_array_pointer(Type *t, enum type_tag last_tag, const char *prefi
 void gen_type(Type *t, const char *prefix, const char *name)
 {
     Type *bt = base_type(t);
-    Type *saved_bt = bt;
-
-    /* DIRTY HACK: overwrite parent pointer so we can use this for the return type of a function */
-    if (bt->tag == T_FUNCTION) {
-        bt = t->parent = bt->parent;
-    }
 
     switch (bt->tag) {
     case T_EVFLAG:
@@ -378,6 +372,4 @@ void gen_type(Type *t, const char *prefix, const char *name)
         assert(impossible);
     }
     gen_array_pointer(bt->parent, T_NONE, prefix, name);
-    /* DIRTY HACK: restore parent pointer */
-    t->parent = saved_bt;
 }

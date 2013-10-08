@@ -480,7 +480,7 @@ functions(p) ::= .					{ p = 0; }
 functions(p) ::= functions(fs) function(f).		{ p = link_expr(fs, f); }
 
 function(p) ::= FUNCTION(l) basetype(t) declarator(d) block(b). {
-	p = expr(D_FUNCDEF, l, decl_add_base_type(d, t), 0, b);
+	p = expr(D_FUNCDEF, l, decl_add_base_type(d, t), b);
 }
 
 // Literal (C) code

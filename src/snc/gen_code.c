@@ -221,23 +221,15 @@ static void gen_user_var(Program *p)
 		}
 		gen_code("};\n");
 	}
+	/* function declarations are always global and static */
 	foreach (vp, p->prog->extra.e_prog->first)
 	{
 		if (vp->decl && vp->type->tag == T_FUNCTION)
 		{
-			Expr *param_decl;
-
 			gen_line_marker(vp->decl);
 			gen_code("static ");
-			gen_type(vp->type->val.function.return_type, "", vp->name);
-			gen_code("(SS_ID " NM_SS ", SEQ_VARS *const " NM_VARS_ARG);
-			foreach (param_decl, vp->type->val.function.param_decls)
-			{
-				Var *vp = param_decl->extra.e_decl;
-				gen_code(", ");
-				gen_var_decl(vp);
-			}
-			gen_code(");\n");
+			gen_var_decl(vp);
+			gen_code(";\n");
 		}
 	}
 	gen_code("\n");

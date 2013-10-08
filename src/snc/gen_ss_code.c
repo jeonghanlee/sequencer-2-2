@@ -908,20 +908,12 @@ static void gen_prog_exit_body(Expr *prog)
 
 static void gen_funcdef(Expr *fp)
 {
-	Expr *param_decl;
 	Var *vp = fp->funcdef_decl->extra.e_decl;
 
 	assert(fp->type == D_FUNCDEF);
 	gen_line_marker(vp->decl);
 	gen_code("static ");
-	gen_type(vp->type->val.function.return_type, "", vp->name);
-	gen_code("(SS_ID " NM_SS ", SEQ_VARS *const " NM_VARS_ARG);
-	foreach (param_decl,  fp->funcdef_params)
-	{
-		vp = param_decl->extra.e_decl;
-		gen_code(", ");
-		gen_var_decl(vp);
-	}
-	gen_code(")\n");
+	gen_var_decl(vp);
+	gen_code("\n");
 	gen_block(fp->funcdef_block, C_FUNC, 0);
 }

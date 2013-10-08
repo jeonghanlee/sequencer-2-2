@@ -271,7 +271,7 @@ enum expr_type			/* description [child expressions...] */
 	D_ASSIGN,		/* assign statement [subscr,pvs] */
 	D_DECL,			/* variable declaration [init] */
 	D_ENTEX,		/* entry or exit statement [block] */
-	D_FUNCDEF,		/* function definition [decl,params,block] */
+	D_FUNCDEF,		/* function definition [decl,block] */
 	D_MONITOR,		/* monitor statement [subscr] */
 	D_OPTION,		/* option definition [] */
 	D_PROG,			/* whole program [param,defns,entry,statesets,exit,funcdefs,ccode] */
@@ -334,8 +334,7 @@ STATIC_ASSERT(NUM_EXPR_TYPES <= 8*sizeof(TypeMask));
 #define func_expr	children[0]
 #define func_args	children[1]
 #define funcdef_decl	children[0]
-#define funcdef_params	children[1]
-#define funcdef_block	children[2]
+#define funcdef_block	children[1]
 #define if_cond		children[0]
 #define if_then		children[1]
 #define if_else		children[2]
@@ -376,6 +375,8 @@ STATIC_ASSERT(NUM_EXPR_TYPES <= 8*sizeof(TypeMask));
 #define while_cond	children[0]
 #define while_stmt	children[1]
 
+#define funcdef_params	funcdef_decl->extra.e_decl->type->val.function.param_decls
+
 #ifndef expr_type_GLOBAL
 extern
 #endif
@@ -390,7 +391,7 @@ expr_type_info[]
 	{ "D_ASSIGN",	2 },
 	{ "D_DECL",	1 },
 	{ "D_ENTEX",	1 },
-	{ "D_FUNCDEF",	3 },
+	{ "D_FUNCDEF",	2 },
 	{ "D_MONITOR",	1 },
 	{ "D_OPTION",	0 },
 	{ "D_PROG",	7 },
