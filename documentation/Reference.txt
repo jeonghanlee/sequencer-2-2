@@ -217,6 +217,7 @@ Variable Declarations
    declarator: `declarator` `subscript`
    declarator: `declarator` "(" `param_decls` ")"
    declarator: "*" `declarator`
+   declarator: "const" `declarator`
    variable: `identifier`
    init_expr: "{" `init_exprs` "}"
    init_expr: "(" `type_expr` ")" "{" `init_exprs` "}"
@@ -235,17 +236,67 @@ well as initializers.
 
 Function declarations and initializers with type casts.
 
-The still remain some limitations:
+As in C, some combinations of type operators are not allowed, for
+instance because they are redundant (like declaring a function or array
+`const`_). This is not specified in the SNL grammar. There are some
+checks that warn about obviously wrong combinations, but as with type
+checking, most of the work is off-loaded to the C compiler.
+
+The also remain some limitations:
 
 * arrays must have a defined size: the expression inside the subscript
   brackets is not optional as in C; it must also be an integer literal,
   not a constant expression as in C.
 * you cannot declare new types or type synonyms
-* no type qualifiers ("const", "volatile")
-* no storage specifiers ("static", "extern", "auto", register")
-* only certain base types are allowed, see below
+* the "volatile" type qualifier is not supported
+* neither are storage specifiers ("static", "extern", "auto", register")
+* only certain base types are allowed, see :ref:`below <Types>`)
 
 Some of these restrictions may be lifted in future versions.
+
+const
+~~~~~
+
+.. versionadded:: 2.2
+
+As in C, declarations may involve the "const" keyword to make parts of
+the thing declared constant i.e. immutable. The SNL syntax treats
+"const" as a prefix type operator, exactly like the pointer "*"
+operator. 
+
+.. note::
+
+   This correctly specifies a large subset of the C syntax, but there
+   are some limitations. For instance, in C you can write ::
+
+      const int x;   /* attention: invalid in SNL */
+
+   as an alternative notation for ::
+
+      int const x;
+
+   This is not allowed in SNL to keep the parser simple and orthogonal.
+
+Otherwise, "const" behaves like in C. For instance, ::
+
+   char const *p;
+
+declares a mutable pointer to constant char (possibly more than one),
+while ::
+
+   char *const p;
+
+declares a constant pointer to one or more mutable chars, and ::
+
+   char *const *p;
+
+a constant pointer to constant chars.
+
+As in C, declarations (and similarly `Type Expressions`_) should be read
+inside out, starting with the identifier and working outwards,
+respecting the precedences (postfix binds stronger than prefix). This
+works for "const" exactly as for array subscripts, pointers, and
+parameter lists.
 
 
 .. _foreign entities:
@@ -320,10 +371,6 @@ SNL programs (except by escaping to C).
    Add some type ("enumeration"?) to make it easier and more robust to
    interact with process variables of type ``DBF_ENUM`` or ``DBF_MENU``.
 
-.. todo::
-
-   Allow "const" for non-channel variables.
-
 .. productionlist::
    prim_type: "char"
    prim_type: "short"
@@ -363,13 +410,15 @@ Type Expressions
 .. productionlist::
    type_expr: `basetype`
    type_expr: `basetype` `abs_decl`
-   abs_decl: "*"
    abs_decl: "(" `abs_decl` ")"
-   abs_decl: "*" `abs_decl`
-   abs_decl: `abs_decl` "(" `param_decls` ")"
+   abs_decl: `subscript`
    abs_decl: `abs_decl` `subscript`
    abs_decl: "(" `param_decls` ")"
-   abs_decl: `subscript`
+   abs_decl: `abs_decl` "(" `param_decls` ")"
+   abs_decl: "*"
+   abs_decl: "*" `abs_decl`
+   abs_decl: "const"
+   abs_decl: "const" `abs_decl`
    param_decls: `param_decl`
    param_decls: `param_decls` "," `param_decl`
    param_decl: `basetype` `declarator`
@@ -378,6 +427,9 @@ Type Expressions
 Type expressions closely follow declaration syntax just as in C. They
 are used for parameter declarations as well as type casts and the
 special sizeof operator (see `Prefix Operators`_).
+
+Using "const" in type expressions is subject to the same restrictions as
+in declarations (see `Variable Declarations`_).
 
 Strings
 ~~~~~~~
@@ -915,21 +967,26 @@ number of block definitions and afterwards any number of statements.
 Block definitions are: declarations and embedded C code.
 
 Function Definitions
-^^^^^^^^^^^^^^^^^^^^
+--------------------
 
 .. versionadded:: 2.2
 
 .. productionlist::
-   function: "function" `basetype` `declarator` `block`
+   function: `basetype` `declarator` `block`
    functions: 
    functions: `functions` `function`
 
-Function definitions are very much like those in C, except that they
-must be introduced with the keyword "function". They also have slightly
-differing semantics. The most important difference is that functions
-declared in SNL get passed certain implicit parameters. This makes it
-possible to call all the built-in functions as if the code were a normal
-action block.
+Function definitions are very much like those in C.
+
+The most important difference is that functions declared in SNL get
+passed certain implicit parameters. This makes it possible to call
+built-in functions as if the code were a normal action block.
+
+Another difference from C is that SNL functions automatically scope over
+the whole program, no matter where they are declared. It is neither
+necessary, nor is it allowed, to repeat the function declaration
+(without the defining code block, commonly referred to as a "function
+prototype") at the top of the program.
 
 
 Statements and Expressions
