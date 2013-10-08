@@ -15,18 +15,18 @@ ss simple {
     }
 }
 
-function void *f1(void)
+void *f1(void)
 {
     return 0;
 }
 
-function void *f2(void *x, double **d)
+void *f2(void *x, double **d)
 {
     void *(*f)(void) = (void *(*)(void))x;
     return f();
 }
 
-function void pvSetX(int val)
+void pvSetX(int val)
 {
     pvPut(x,val);
     printf("x=%d, val=%d\n", x, val);
