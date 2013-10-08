@@ -64,6 +64,33 @@ Expr *decl_add_base_type(Expr *ds, Type basetype)
                 }
                 t->parent->val.function.return_type = t;
                 break;
+            case T_CONST:
+                switch (t->tag) {
+                case T_NONE:
+                    error_at_expr(d, "cannot declare constant foreign entity\n");
+                    break;
+                case T_EVFLAG:
+                    error_at_expr(d, "cannot declare constant event flag\n");
+                    break;
+                case T_VOID:
+                    error_at_expr(d, "cannot declare constant void\n");
+                    break;
+                case T_ARRAY:
+                    error_at_expr(d, "cannot declare constant array\n");
+                    break;
+                case T_FUNCTION:
+                    warning_at_expr(d, "declaring constant function is redundant\n");
+                    break;
+                case T_CONST:
+                    warning_at_expr(d, "declaring constant constant is redundant\n");
+                    break;
+                case T_PRIM:
+                case T_FOREIGN:
+                case T_POINTER:
+                    break;
+                }
+                t->parent->val.constant.value_type = t;
+                break;
             default:
                 assert(impossible);
             }
@@ -163,6 +190,19 @@ Expr *decl_prefix_pointer(Expr *d)
     return d;
 }
 
+Expr *decl_prefix_const(Expr *d)
+{
+    Type *t = new(Type);
+
+#ifdef DEBUG
+    report("decl_prefix_const\n");
+#endif
+    assert(d->type == D_DECL);          /* pre-condition */
+    t->tag = T_CONST;
+    t->parent = d->extra.e_decl->type;
+    d->extra.e_decl->type = t;
+    return d;
+}
 
 Type mk_prim_type(enum prim_type_tag tag)
 {
@@ -248,6 +288,7 @@ static unsigned type_assignable_array(Type *t, int depth)
     case T_FUNCTION:
     case T_EVFLAG:
     case T_VOID:
+    case T_CONST:
         return FALSE;
     case T_ARRAY:
         return type_assignable_array(t->val.array.elem_type, depth + 1);
@@ -274,6 +315,16 @@ static void gen_array_pointer(Type *t, enum type_tag last_tag, const char *prefi
         if (paren)
             gen_code("(");
         gen_code("*");
+        gen_array_pointer(t->parent, t->tag, prefix, name);
+        if (paren)
+            gen_code(")");
+        break;
+    case T_CONST:
+        if (paren)
+            gen_code("(");
+        else
+            gen_code(" ");
+        gen_code("const");
         gen_array_pointer(t->parent, t->tag, prefix, name);
         if (paren)
             gen_code(")");

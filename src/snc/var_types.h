@@ -18,6 +18,7 @@ enum type_tag {
     T_POINTER,
     T_ARRAY,
     T_FUNCTION,
+    T_CONST,
 };
 
 enum foreign_type_tag {
@@ -33,6 +34,10 @@ struct array_type {
 };
 
 struct pointer_type {
+    struct type *value_type;
+};
+
+struct constant_type {
     struct type *value_type;
 };
 
@@ -56,6 +61,7 @@ struct type {
         struct pointer_type     pointer;
         struct array_type       array;
         struct function_type    function;
+        struct constant_type    constant;
     } val;
     struct type *parent;
 };

@@ -194,6 +194,7 @@ declarator(p) ::= declarator(x)
 		LPAREN param_decls(ps) RPAREN.	[POST]	{ p = decl_postfix_function(x, ps); }
 declarator(p) ::= LPAREN declarator(x) RPAREN.	[PRE]	{ p = x; }
 declarator(p) ::= ASTERISK declarator(x).	[PRE]	{ p = decl_prefix_pointer(x); }
+declarator(p) ::= CONST declarator(x).		[PRE]	{ p = decl_prefix_const(x); }
 
 param_decls(p) ::= param_decl(x).			{ p = x; }
 param_decls(p) ::= param_decls(xs) COMMA param_decl(x).	{ p = link_expr(xs, x); }
@@ -257,6 +258,8 @@ type_expr(p) ::= basetype(t) abs_decl(d).	{ p = decl_add_base_type(d, t); }
 abs_decl(p) ::= LPAREN abs_decl(x) RPAREN.	{ p = x; }
 abs_decl(p) ::= ASTERISK. [PRE]			{ p = decl_prefix_pointer(abs_decl_create()); }
 abs_decl(p) ::= ASTERISK abs_decl(d). [PRE]	{ p = decl_prefix_pointer(d); }
+abs_decl(p) ::= CONST. [PRE]			{ p = decl_prefix_const(abs_decl_create()); }
+abs_decl(p) ::= CONST abs_decl(d). [PRE]	{ p = decl_prefix_const(d); }
 abs_decl(p) ::= subscript(s). [POST]		{ p = decl_postfix_array(abs_decl_create(), s.str); }
 abs_decl(p) ::= abs_decl(d) subscript(s). [POST]{ p = decl_postfix_array(d, s.str); }
 abs_decl(p) ::= LPAREN param_decls(ps) RPAREN. [POST]

@@ -234,6 +234,7 @@ snl:
 	"break"		{ KEYWORD(BREAK,	"break"); }
 	"char"		{ TYPEWORD(CHAR,	"char"); }
 	"connect"	{ KEYWORD(CONNECT,	"connect"); }
+	"const"		{ TYPEWORD(CONST,	"const"); }
 	"continue"	{ KEYWORD(CONTINUE,	"continue"); }
 	"double"	{ TYPEWORD(DOUBLE,	"double"); }
 	"else"		{ KEYWORD(ELSE,		"else"); }
