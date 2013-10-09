@@ -28,7 +28,7 @@ entry {
 
 ss read_named {
     int named;
-    connect named to "pvGet1";
+    assign named to "pvGet1";
     int expected;
     int n = 0;
 
@@ -110,7 +110,7 @@ ss read_anon {
 
 ss read_named_sync {
     int named;
-    connect named to "pvGet1";
+    assign named to "pvGet1";
     int expected;
     int n = 0;
 
@@ -184,7 +184,7 @@ ss read_anon_sync {
 
 ss write {
     int out = 0;
-    connect out to "pvGet1";
+    assign out to "pvGet1";
 
     state run {
         when (efTest(ef_read_named) && efTest(ef_read_anon) &&
