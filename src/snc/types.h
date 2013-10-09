@@ -274,7 +274,7 @@ enum expr_type			/* description [child expressions...] */
 	D_FUNCDEF,		/* function definition [decl,block] */
 	D_MONITOR,		/* monitor statement [subscr] */
 	D_OPTION,		/* option definition [] */
-	D_PROG,			/* whole program [param,defns,entry,statesets,exit,funcdefs,ccode] */
+	D_PROG,			/* whole program [param,defns,entry,statesets,exit,xdefns] */
 	D_SS,			/* state set statement [defns,states] */
 	D_STATE,		/* state statement [defns,entry,whens,exit] */
 	D_SYNC,			/* sync statement [subscr,evflag] */
@@ -348,8 +348,7 @@ STATIC_ASSERT(NUM_EXPR_TYPES <= 8*sizeof(TypeMask));
 #define prog_entry	children[2]
 #define prog_statesets	children[3]
 #define prog_exit	children[4]
-#define prog_funcdefs	children[5]
-#define prog_ccode	children[6]
+#define prog_xdefns	children[5]
 #define return_expr	children[0]
 #define select_left	children[0]
 #define select_right	children[1]
@@ -394,7 +393,7 @@ expr_type_info[]
 	{ "D_FUNCDEF",	2 },
 	{ "D_MONITOR",	1 },
 	{ "D_OPTION",	0 },
-	{ "D_PROG",	7 },
+	{ "D_PROG",	6 },
 	{ "D_SS",	2 },
 	{ "D_STATE",	4 },
 	{ "D_SYNC",	2 },

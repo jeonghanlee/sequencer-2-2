@@ -138,8 +138,14 @@ void gen_ss_code(Expr *prog, Options options)
 	if (prog->prog_exit)
 		gen_prog_entex_func(prog, "exit", NM_EXIT, gen_prog_exit_body);
 
+	gen_code("\n/****** Global function definitions ******/\n");
+
 	/* Generate function definitions */
-	foreach(fp, prog->prog_funcdefs)
+	foreach(fp, prog->prog_defns)
+	{
+		gen_funcdef(fp);
+	}
+	foreach(fp, prog->prog_xdefns)
 	{
 		gen_funcdef(fp);
 	}
@@ -908,12 +914,15 @@ static void gen_prog_exit_body(Expr *prog)
 
 static void gen_funcdef(Expr *fp)
 {
-	Var *vp = fp->funcdef_decl->extra.e_decl;
+	if (fp->type == D_FUNCDEF)
+	{
+		Var *vp = fp->funcdef_decl->extra.e_decl;
 
-	assert(fp->type == D_FUNCDEF);
-	gen_line_marker(vp->decl);
-	gen_code("static ");
-	gen_var_decl(vp);
-	gen_code("\n");
-	gen_block(fp->funcdef_block, C_FUNC, 0);
+		gen_code("\n");
+		gen_line_marker(vp->decl);
+		gen_code("static ");
+		gen_var_decl(vp);
+		gen_code("\n");
+		gen_block(fp->funcdef_block, C_FUNC, 0);
+	}
 }

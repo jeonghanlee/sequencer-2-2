@@ -22,9 +22,10 @@ in the file LICENSE that is included with this distribution.
 #include "gen_code.h"
 
 static void gen_main(char *prog_name);
-static void gen_user_var(Program *p);
-static void gen_global_c_code(Expr *global_c_list);
+static void gen_user_var(Expr *prog, uint opt_reent);
+static void gen_extra_c_code(Expr *extra_defns);
 static void gen_init_reg(char *prog_name);
+static void gen_func_decls(Expr *prog);
 
 static int assert_var_declared(Expr *ep, Expr *scope, void *parg)
 {
@@ -73,7 +74,7 @@ void generate_code(Program *p, const char *header_name)
 	else
 	{
 		/* Generate global, state set, and state variable declarations */
-		gen_user_var(p);
+		gen_user_var(p->prog, p->options.reent);
 	}
 
 	/* The usual C header file humdrum */
@@ -97,17 +98,20 @@ void generate_code(Program *p, const char *header_name)
 	if (!p->options.reent)
 	{
 		/* Generate global, state set, and state variable declarations */
-		gen_user_var(p);
+		gen_user_var(p->prog, p->options.reent);
 	}
+
+	/* Generate code for function definitions */
+	gen_func_decls(p->prog);
+
+	/* Output extra C code */
+	gen_extra_c_code(p->prog->prog_xdefns);
 
 	/* Generate code for each state set */
 	gen_ss_code(p->prog, p->options);
 
 	/* Generate tables */
 	gen_tables(p);
-
-	/* Output global C code */
-	gen_global_c_code(p->prog->prog_ccode);
 
 	/* Generate main function */
 	if (p->options.main) gen_main(p->name);
@@ -128,6 +132,26 @@ void gen_var_decl(Var *vp)
 	gen_type(vp->type, "", vp->name);
 }
 
+static void gen_func_decls(Expr *prog)
+{
+	Var	*vp;
+
+	assert(prog->type == D_PROG);
+	gen_code("\n/* Function declarations */\n");
+
+	/* function declarations are always global and static */
+	foreach (vp, var_list_from_scope(prog)->first)
+	{
+		if (vp->decl && vp->type->tag == T_FUNCTION)
+		{
+			gen_line_marker(vp->decl);
+			gen_code("static ");
+			gen_var_decl(vp);
+			gen_code(";\n");
+		}
+	}
+}
+
 /* Generate the UserVar struct containing all program variables with
    'infinite' (global) lifetime. These are: variables declared at the
    top-level, inside a state set, and inside a state. Note that state
@@ -135,12 +159,11 @@ void gen_var_decl(Var *vp)
    where they are declared, but still have global lifetime. To avoid
    name collisions, generate a nested struct for each state set, and
    for each state in a state set. */
-static void gen_user_var(Program *p)
+static void gen_user_var(Expr *prog, uint opt_reent)
 {
-	int	opt_reent = p->options.reent;
 	Var	*vp;
 	Expr	*sp, *ssp;
-	int	num_globals = 0;
+	uint	num_globals = 0;
 	uint	num_decls = 0;
 
 	gen_code("\n/* Variable declarations */\n");
@@ -150,7 +173,7 @@ static void gen_user_var(Program *p)
 		gen_code("struct %s {\n", NM_VARS);
 	}
 	/* Convert internal type to `C' type */
-	foreach (vp, p->prog->extra.e_prog->first)
+	foreach (vp, var_list_from_scope(prog)->first)
 	{
 		if (vp->decl && vp->type->tag != T_NONE && vp->type->tag != T_EVFLAG &&
 			vp->type->tag != T_FUNCTION)
@@ -168,7 +191,7 @@ static void gen_user_var(Program *p)
 	{
 		indent(1); gen_code("char _seq_dummy;\n");
 	}
-	foreach (ssp, p->prog->prog_statesets)
+	foreach (ssp, prog->prog_statesets)
 	{
 		int level = opt_reent;
 		int ss_empty = !ssp->extra.e_ss->var_list->first;
@@ -221,17 +244,6 @@ static void gen_user_var(Program *p)
 		}
 		gen_code("};\n");
 	}
-	/* function declarations are always global and static */
-	foreach (vp, p->prog->extra.e_prog->first)
-	{
-		if (vp->decl && vp->type->tag == T_FUNCTION)
-		{
-			gen_line_marker(vp->decl);
-			gen_code("static ");
-			gen_var_decl(vp);
-			gen_code(";\n");
-		}
-	}
 	gen_code("\n");
 }
 
@@ -259,19 +271,21 @@ void gen_defn_c_code(Expr *scope, int level)
 	}
 }
 
-/* Generate global C code following state sets */
-static void gen_global_c_code(Expr *global_c_list)
+/* Generate extra C code following state sets */
+static void gen_extra_c_code(Expr *extra_defns)
 {
 	Expr	*ep;
 
-	if (global_c_list != 0)
+	if (extra_defns != 0)
 	{
-		gen_code("\n/* Global C code */\n");
-		foreach (ep, global_c_list)
+		gen_code("\n/* Extra escaped C code */\n");
+		foreach (ep, extra_defns)
 		{
-			assert(ep->type == T_TEXT);
-			gen_line_marker(ep);
-			gen_code("%s\n", ep->value);
+			if (ep->type == T_TEXT)
+			{
+				gen_line_marker(ep);
+				gen_code("%s\n", ep->value);
+			}
 		}
 	}
 }

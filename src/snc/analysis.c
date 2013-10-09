@@ -25,7 +25,6 @@ in the file LICENSE that is included with this distribution.
 
 static const int impossible = 0;
 
-static void analyse_funcdefs(Expr *prog);
 static void analyse_definitions(Program *p);
 static void analyse_option(Options *options, Expr *defn);
 static void analyse_state_option(StateOptions *options, Expr *defn);
@@ -78,7 +77,6 @@ Program *analyse_program(Expr *prog, Options options)
 	report("created symbol table, channel list, and syncq list\n");
 #endif
 
-	analyse_funcdefs(p->prog);
 	analyse_definitions(p);
 	p->num_ss = connect_states(p->sym_table, prog);
 	connect_variables(p->sym_table, prog);
@@ -89,79 +87,118 @@ Program *analyse_program(Expr *prog, Options options)
 	return p;
 }
 
-static void analyse_funcdefs(Expr *prog)
+static void analyse_funcdef(Expr *defn)
 {
-	Expr *f;
+	Expr *d = defn->funcdef_decl;
+	Var *var = d->extra.e_decl;
+	struct function_type *fun_type;
+	Expr *p;
+	Token t;
 
-	assert(prog->type == D_PROG);
-	foreach(f, prog->prog_funcdefs)
+	assert(defn->type == D_FUNCDEF);
+	fun_type = &var->type->val.function;
+	if (var->type->tag != T_FUNCTION)
 	{
-		Expr *d = f->funcdef_decl;
-		Var *var = d->extra.e_decl;
-		struct function_type *fun_type = &var->type->val.function;
-		Expr *p;
-		Token t;
+		error_at_expr(d, "not a function type\n");
+		return;
+	}
 
-		assert(f->type == D_FUNCDEF);
-		if (var->type->tag != T_FUNCTION)
+	p = fun_type->param_decls;
+	assert(p);			/* invariant enforced by syntax */
+	if (p->extra.e_decl->type->tag == T_VOID)
+	{
+		/* no other params should be there */
+		if (p->next)
 		{
-			error_at_expr(d, "not a function type\n");
-			continue;
+			error_at_expr(p->next, "void must be the only parameter\n");
 		}
+		if (p->extra.e_decl->name)
+		{
+			error_at_expr(p, "void parameter should not have a name\n");
+		}
+		/* void means empty parameter list */
+		fun_type->param_decls = 0;
+	}
+	foreach(p, fun_type->param_decls)
+	{
+		/* check parameter has a name */
+		if (!p->extra.e_decl->name)
+		{
+			error_at_expr(p, "function parameter must have a name\n");
+		}
+	}
+	/* prepend "SEQ_VARS *const _seq_vars" to parameter list */
+	t.str = NM_VARS_ARG;
+	t.line = d->line_num;
+	t.file = d->src_file;
+	p = decl_add_base_type(
+		decl_create(t),
+		/* HACK! act as if "SEQ_VARS *const" were an identifier */
+		mk_foreign_type(F_TYPENAME, "SEQ_VARS *const")
+	);
+	fun_type->param_decls = link_expr(p, fun_type->param_decls);
+	/* prepend "SS_ID _seq_ss" to parameter list*/
+	t.str = NM_SS;
+	t.line = d->line_num;
+	t.file = d->src_file;
+	p = decl_add_base_type(
+		decl_create(t),
+		mk_foreign_type(F_TYPENAME, "SS_ID")
+	);
+	fun_type->param_decls = link_expr(p, fun_type->param_decls);
+}
 
-		p = fun_type->param_decls;
-		assert(p);			/* invariant enforced by syntax */
-		if (p->extra.e_decl->type->tag == T_VOID)
+static void analyse_defns(Expr *defn_list, Expr *scope, Program *p)
+{
+	Expr *defn;
+
+	assert(is_scope(scope));				/* precondition */
+	foreach (defn, defn_list)
+	{
+		switch (defn->type)
 		{
-			/* no other params should be there */
-			if (p->next)
+		case D_OPTION:
+			if (scope->type == D_PROG)
 			{
-				error_at_expr(p->next, "void must be the only parameter\n");
+				analyse_option(&p->options, defn);
 			}
-			if (p->extra.e_decl->name)
+			else if (scope->type == D_STATE)
 			{
-				error_at_expr(p, "void parameter should not have a name\n");
+				analyse_state_option(&scope->extra.e_state->options, defn);
 			}
-			/* void means empty parameter list */
-			fun_type->param_decls = 0;
+			break;
+		case D_DECL:
+			analyse_declaration(p->sym_table, scope, defn);
+			break;
+		case D_FUNCDEF:
+			analyse_funcdef(defn);
+			analyse_declaration(p->sym_table, scope, defn->funcdef_decl);
+			break;
+		case D_ASSIGN:
+			analyse_assign(p->sym_table, p->chan_list, scope, defn);
+			break;
+		case D_MONITOR:
+			analyse_monitor(p->sym_table, scope, defn);
+			break;
+		case D_SYNC:
+			analyse_sync(p->sym_table, scope, defn);
+			break;
+		case D_SYNCQ:
+			analyse_syncq(p->sym_table, p->syncq_list, scope, defn);
+			break;
+		case T_TEXT:
+			break;
+		default:
+			assert(impossible);
 		}
-		foreach(p, fun_type->param_decls)
-		{
-			/* check parameter has a name */
-			if (!p->extra.e_decl->name)
-			{
-				error_at_expr(p, "function parameter must have a name\n");
-			}
-		}
-		/* prepend "SEQ_VARS *const _seq_vars" to parameter list */
-		t.str = NM_VARS_ARG;
-		t.line = d->line_num;
-		t.file = d->src_file;
-		p = decl_add_base_type(
-			decl_create(t),
-			/* HACK! act as if "SEQ_VARS *const" were an identifier */
-			mk_foreign_type(F_TYPENAME, "SEQ_VARS *const")
-		);
-		fun_type->param_decls = link_expr(p, fun_type->param_decls);
-		/* prepend "SS_ID _seq_ss" to parameter list*/
-		t.str = NM_SS;
-		t.line = d->line_num;
-		t.file = d->src_file;
-		p = decl_add_base_type(
-			decl_create(t),
-			mk_foreign_type(F_TYPENAME, "SS_ID")
-		);
-		fun_type->param_decls = link_expr(p, fun_type->param_decls);
-		prog->prog_defns = link_expr(prog->prog_defns, d);
 	}
 }
 
-static int analyse_defn(Expr *scope, Expr *parent_scope, void *parg)
+static int analyse_scope(Expr *scope, Expr *parent_scope, void *parg)
 {
 	Program	*p = (Program *)parg;
 	Expr *defn_list;
 	VarList **pvar_list;
-	Expr *defn;
 
 	assert(scope);	/* precondition */
 
@@ -186,41 +223,12 @@ static int analyse_defn(Expr *scope, Expr *parent_scope, void *parg)
 		(*pvar_list)->parent_scope = parent_scope;
 	}
 
-	foreach (defn, defn_list)
+	analyse_defns(defn_list, scope, p);
+	if (scope->type == D_PROG)
 	{
-		switch (defn->type)
-		{
-		case D_OPTION:
-			if (scope->type == D_PROG)
-			{
-				analyse_option(&p->options, defn);
-			}
-			else if (scope->type == D_STATE)
-			{
-				analyse_state_option(&scope->extra.e_state->options, defn);
-			}
-			break;
-		case D_DECL:
-			analyse_declaration(p->sym_table, scope, defn);
-			break;
-		case D_ASSIGN:
-			analyse_assign(p->sym_table, p->chan_list, scope, defn);
-			break;
-		case D_MONITOR:
-			analyse_monitor(p->sym_table, scope, defn);
-			break;
-		case D_SYNC:
-			analyse_sync(p->sym_table, scope, defn);
-			break;
-		case D_SYNCQ:
-			analyse_syncq(p->sym_table, p->syncq_list, scope, defn);
-			break;
-		case T_TEXT:
-			break;
-		default:
-			assert(impossible);
-		}
+		analyse_defns(scope->prog_xdefns, scope, p);
 	}
+
 	return TRUE; /* always descend into children */
 }
 
@@ -276,7 +284,7 @@ static void analyse_definitions(Program *p)
 	report("**begin** analyse definitions\n");
 #endif
 
-	traverse_expr_tree(p->prog, scope_mask, ~has_sub_scope_mask, 0, analyse_defn, p);
+	traverse_expr_tree(p->prog, scope_mask, ~has_sub_scope_mask, 0, analyse_scope, p);
 
 #ifdef DEBUG
 	report("**end** analyse definitions\n");

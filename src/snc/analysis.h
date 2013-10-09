@@ -39,7 +39,7 @@ void traverse_expr_tree(
 );
 
 VarList **pvar_list_from_scope(Expr *scope);
-#define var_list_from_scope(scope) *pvar_list_from_scope(scope)
+#define var_list_from_scope(scope) (*pvar_list_from_scope(scope))
 Expr *defn_list_from_scope(Expr *scope);
 
 Program *analyse_program(Expr *ep, Options options);

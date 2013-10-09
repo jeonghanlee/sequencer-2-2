@@ -88,14 +88,13 @@ in the file LICENSE that is included with this distribution.
 program ::=
 	PROGRAM NAME(n)
 	program_param(pp)
-	global_defns(ds)
+	initial_defns(ds)
 	entry(en)
 	state_sets(ss)
 	exit(ex)
-        functions(fs)
-	c_codes(cc).
+        final_defns(fs).
 {
-	*presult =  expr(D_PROG, n, pp, ds, en, ss, ex, fs, cc);
+	*presult =  expr(D_PROG, n, pp, ds, en, ss, ex, fs);
 }
 
 program_param(p) ::= LPAREN string(x) RPAREN.	{ p = x; }
@@ -103,18 +102,27 @@ program_param(p) ::= .				{ p = 0; }
 
 // Definitions
 
-global_defns(p) ::= global_defns(xs) global_defn(x). {
+initial_defns(p) ::= initial_defns(xs) initial_defn(x). {
 	p = link_expr(xs, x);
 }
-global_defns(p) ::= .				{ p = 0; }
+initial_defns(p) ::= .				{ p = 0; }
 
-global_defn(p) ::= assign(x).			{ p = x; }
-global_defn(p) ::= monitor(x).			{ p = x; }
-global_defn(p) ::= sync(x).			{ p = x; }
-global_defn(p) ::= syncq(x).			{ p = x; }
-global_defn(p) ::= declaration(x).		{ p = x; }
-global_defn(p) ::= option(x).			{ p = x; }
-global_defn(p) ::= c_code(x).			{ p = x; }
+initial_defn(p) ::= assign(x).			{ p = x; }
+initial_defn(p) ::= monitor(x).			{ p = x; }
+initial_defn(p) ::= sync(x).			{ p = x; }
+initial_defn(p) ::= syncq(x).			{ p = x; }
+initial_defn(p) ::= declaration(x).		{ p = x; }
+initial_defn(p) ::= option(x).			{ p = x; }
+initial_defn(p) ::= c_code(x).			{ p = x; }
+initial_defn(p) ::= funcdef(x).			{ p = x; }
+
+final_defns(p) ::= final_defns(xs) final_defn(x). {
+	p = link_expr(xs, x);
+}
+final_defns(p) ::= .				{ p = 0; }
+
+final_defn(p) ::= c_code(x).			{ p = x; }
+final_defn(p) ::= funcdef(x).			{ p = x; }
 
 assign(p) ::= connect variable(v) to string(t) SEMICOLON. {
 	p = expr(D_ASSIGN, v, 0, t);
@@ -474,18 +482,12 @@ string(p) ::= STRCON(t).			{ p = expr(E_STRING, t); }
 
 member(p) ::= NAME(t).				{ p = expr(E_MEMBER, t); }
 
-// Functions
+// Function Definitions
 
-functions(p) ::= .					{ p = 0; }
-functions(p) ::= functions(fs) function(f).		{ p = link_expr(fs, f); }
-
-function(p) ::= basetype(t) declarator(d) block(b). {
+funcdef(p) ::= basetype(t) declarator(d) block(b). {
 	p = expr(D_FUNCDEF, token_from_expr(d), decl_add_base_type(d, t), b);
 }
 
 // Literal (C) code
-
-c_codes(p) ::= c_codes(xs) c_code(x).		{ p = link_expr(xs, x); }
-c_codes(p) ::= .				{ p = 0; }
 
 c_code(p) ::= CCODE(t). 			{ p = expr(T_TEXT, t); }
