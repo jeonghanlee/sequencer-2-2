@@ -126,17 +126,16 @@ static void analyse_funcdef(Expr *defn)
 			error_at_expr(p, "function parameter must have a name\n");
 		}
 	}
-	/* prepend "SEQ_VARS *const _seq_vars" to parameter list */
+	/* prepend "SEQ_VARS *const " NM_VAR to parameter list */
 	t.str = NM_VAR;
 	t.line = d->line_num;
 	t.file = d->src_file;
 	p = decl_add_base_type(
-		decl_create(t),
-		/* HACK! act as if "SEQ_VARS *const" were an identifier */
-		mk_foreign_type(F_TYPENAME, "SEQ_VARS *const")
+		decl_prefix_pointer(decl_prefix_const(decl_create(t))),
+		mk_foreign_type(F_TYPENAME, "SEQ_VARS")
 	);
 	fun_type->param_decls = link_expr(p, fun_type->param_decls);
-	/* prepend "SS_ID _seq_ss" to parameter list*/
+	/* prepend "SS_ID " NM_SS to parameter list */
 	t.str = NM_SS;
 	t.line = d->line_num;
 	t.file = d->src_file;
