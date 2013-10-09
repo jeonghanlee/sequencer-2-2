@@ -41,8 +41,6 @@ extern "C" {
 
 #define NOEVFLAG		0	/* argument to pvSync to remove sync */
 
-#define DEFAULT_QUEUE_SIZE	100	/* default queue size (elements) */
-
 #define DEFAULT_TIMEOUT		10.0	/* default timeout for SYNC operations */
 
 /* I/O completion type (extra argument passed to seq_pvGet() and seq_pvPut()) */
@@ -53,17 +51,15 @@ enum compType {
 };
 
 typedef	struct state_set *const SS_ID;	/* state set id, opaque */
-typedef struct UserVar SEQ_VARS;	/* defined by program, opaque */
-typedef char string[MAX_STRING_SIZE];	/* the string typedef */
-
-typedef SEQ_VARS USER_VAR;              /* for compatibility */
+typedef struct _seq_vars SEQ_VARS;	/* struct defined in generated code */
+typedef char string[MAX_STRING_SIZE];	/* representation of SNL string type */
 
 /* these typedefs make the code more self documenting */
 typedef unsigned EV_ID;			/* identifier for an event */
 typedef unsigned VAR_ID;		/* identifier for a pv */
 typedef int seqBool;
 
-typedef struct seqProgram seqProgram;   /* program object, opaque */
+typedef struct seqProgram seqProgram;	/* struct defined in generated code */
 
 /*
  * Function declarations for interface between state program & sequencer.
@@ -82,8 +78,6 @@ epicsShareFunc pvStat seq_pvGetMultiple(SS_ID, VAR_ID,
 	unsigned, enum compType);
 epicsShareFunc seqBool seq_pvGetQ(SS_ID, VAR_ID);
 epicsShareFunc void seq_pvFlushQ(SS_ID, VAR_ID);
-/* retain seq_pvFreeQ for compatibility */
-#define seq_pvFreeQ seq_pvFlushQ
 epicsShareFunc pvStat seq_pvPut(SS_ID, VAR_ID, enum compType, double tmo);
 epicsShareFunc pvStat seq_pvPutMultiple(SS_ID, VAR_ID,
 	unsigned, enum compType);
@@ -109,11 +103,7 @@ epicsShareFunc seqBool seq_pvConnected(SS_ID, VAR_ID);
 
 #define seq_pvIndex(ssId, varId)	varId
 #define seq_ssId(ssId)			_seq_ss
-#define seq_pVar(ssId)			_seq_vars
-
-/* for backwards compatibility */
-#define ssId				_seq_ss
-#define pVar				_seq_vars
+#define seq_pVar(ssId)			_seq_var
 
 /* global operations */
 epicsShareFunc void seq_pvFlush(SS_ID);
@@ -134,6 +124,15 @@ epicsShareFunc void seqcar(int level);
 epicsShareFunc void seqQueueShow(epicsThreadId);
 epicsShareFunc void seqStop(epicsThreadId);
 epicsShareFunc epicsThreadId seq(seqProgram *, const char *, unsigned);
+
+/* backwards compatibility macros */
+/* DEPRECATED don't use in new code */
+#define ssId			_seq_ss
+#define pVar			_seq_var
+#define USER_VAR		SEQ_VARS
+#define UserVar			_seq_vars
+#define seq_pvFreeQ		seq_pvFlushQ
+#define DEFAULT_QUEUE_SIZE	100	/* number of elements */
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -152,7 +152,7 @@ static void gen_func_decls(Expr *prog)
 	}
 }
 
-/* Generate the UserVar struct containing all program variables with
+/* Generate the struct containing all program variables with
    'infinite' (global) lifetime. These are: variables declared at the
    top-level, inside a state set, and inside a state. Note that state
    set and state local variables are _visible_ only inside the block
