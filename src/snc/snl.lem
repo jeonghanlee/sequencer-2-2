@@ -201,6 +201,7 @@ declarator(p) ::= LPAREN declarator(x) RPAREN.	[PRE]	{ p = x; }
 declarator(p) ::= ASTERISK declarator(x).	[PRE]	{ p = decl_prefix_pointer(x); }
 declarator(p) ::= CONST declarator(x).		[PRE]	{ p = decl_prefix_const(x); }
 
+param_decls(p) ::= .					{ p = 0; }
 param_decls(p) ::= param_decl(x).			{ p = x; }
 param_decls(p) ::= param_decls(xs) COMMA param_decl(x).	{ p = link_expr(xs, x); }
 

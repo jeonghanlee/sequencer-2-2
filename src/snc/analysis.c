@@ -104,8 +104,7 @@ static void analyse_funcdef(Expr *defn)
 	}
 
 	p = fun_type->param_decls;
-	assert(p);			/* invariant enforced by syntax */
-	if (p->extra.e_decl->type->tag == T_VOID)
+	if (p && p->extra.e_decl->type->tag == T_VOID)
 	{
 		/* no other params should be there */
 		if (p->next)
