@@ -196,7 +196,7 @@ static void gen_state_func(
 {
 	gen_code("\n/* %s function for state \"%s\" in state set \"%s\" */\n",
 		title, state_name, ss_name);
-	gen_code("static %s %s_%s_%d_%s(SS_ID " NM_SS ", SEQ_VARS *const " NM_VARS_ARG "%s)\n",
+	gen_code("static %s %s_%s_%d_%s(SS_ID " NM_SS ", SEQ_VARS *const " NM_VAR "%s)\n",
 		rettype, prefix, ss_name, ss_num, state_name, extra_args);
 	gen_body(xp, context);
 }
@@ -303,7 +303,7 @@ static void gen_event_body(Expr *xp, int context)
 
 static void gen_var_access(Var *vp)
 {
-	const char *pre = global_options.reent ? NM_VARS_ARG "->" : "";
+	const char *pre = global_options.reent ? NM_VAR "->" : "";
 
 	assert(vp);
 	assert(vp->scope);
@@ -460,7 +460,7 @@ static void gen_expr(
 		if (ep->func_expr->type == E_VAR && ep->func_expr->extra.e_var->type->tag == T_FUNCTION)
 		{
 			/* direct call and not a foreign function => add implicit parameters */
-			gen_code(NM_SS ", " NM_VARS_ARG);
+			gen_code(NM_SS ", " NM_VAR);
 			if (ep->func_args)
 				gen_code(", ");
 		}
@@ -874,7 +874,7 @@ static void gen_prog_func(
 {
 	assert(prog->type == D_PROG);
 	gen_code("\n/* Program %s func */\n", doc);
-	gen_code("static void %s(PROG_ID "NM_PROG", SEQ_VARS *const "NM_VARS_ARG")\n{\n",
+	gen_code("static void %s(PROG_ID "NM_PROG", SEQ_VARS *const "NM_VAR")\n{\n",
 		name);
 	gen_body(prog);
 	gen_code("}\n");
@@ -889,7 +889,7 @@ static void gen_prog_entex_func(
 {
 	assert(prog->type == D_PROG);
 	gen_code("\n/* Program %s func */\n", doc);
-	gen_code("static void %s(SS_ID " NM_SS ", SEQ_VARS *const " NM_VARS_ARG ")\n",
+	gen_code("static void %s(SS_ID " NM_SS ", SEQ_VARS *const " NM_VAR ")\n",
 		name);
 	gen_body(prog);
 }

@@ -127,7 +127,7 @@ static void analyse_funcdef(Expr *defn)
 		}
 	}
 	/* prepend "SEQ_VARS *const _seq_vars" to parameter list */
-	t.str = NM_VARS_ARG;
+	t.str = NM_VAR;
 	t.line = d->line_num;
 	t.file = d->src_file;
 	p = decl_add_base_type(
