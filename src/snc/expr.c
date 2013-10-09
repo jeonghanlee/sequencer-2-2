@@ -99,7 +99,7 @@ Expr *link_expr(
 	if (ep1 == 0)
 		return ep2;
 	if (ep2 == 0)
-		return 0;
+		return ep1;
 	ep1->last->next = ep2;
 	ep1->last = ep2->last;
 	ep2->last = 0;
