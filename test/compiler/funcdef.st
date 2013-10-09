@@ -9,13 +9,18 @@ ss simple {
     state simple {
         when () {
             void *p = f1();
-            p = f2(p,0);
+            p = f2(p,(double **)f1a);
             pvSetX(1.0);
         } exit
     }
 }
 
 void *f1(void)
+{
+    return 0;
+}
+
+void *f1a()
 {
     return 0;
 }
