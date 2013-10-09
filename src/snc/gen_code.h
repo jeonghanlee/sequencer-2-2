@@ -20,13 +20,13 @@ void gen_defn_c_code(Expr *scope, int level);
 void gen_var_decl(Var *vp);
 void indent(int level);
 
+/* names and name prefixes for generated structs */
 #define NM_VARS		"_seq_vars"
-#define NM_VAR	"_seq_var"
-#define NM_INITVAR	"_seq_initvar_"
 #define NM_CHANS	"_seq_chans"
 #define NM_STATES	"_seq_states"
 #define NM_STATESETS	"_seq_statesets"
 
+/* names and name prefixes for generated functions */
 #define NM_ENTRY	"_seq_entry"
 #define NM_EXIT		"_seq_exit"
 #define NM_INIT		"_seq_init"
@@ -34,10 +34,15 @@ void indent(int level);
 #define NM_EVENT	"_seq_event"
 #define NM_MASK		"_seq_mask"
 
+/* names of generated function arguments */
+#define NM_VAR		"_seq_var"
 #define NM_SS		"_seq_ss"
-#define NM_PROG		"_seq_prog"	/* program */
+#define NM_PROG		"_seq_prog"
 #define NM_TRN		"_seq_trn"
 #define NM_PTRN		"_seq_ptrn"
 #define NM_PNST		"_seq_pnst"
+
+/* prefix for generated inititialization variable names */
+#define NM_INITVAR	"_seq_initvar_"
 
 #endif	/*INCLgencodeh*/
