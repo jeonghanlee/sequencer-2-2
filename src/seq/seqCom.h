@@ -41,7 +41,7 @@ extern "C" {
 
 #define NOEVFLAG		0	/* argument to pvSync to remove sync */
 
-#define DEFAULT_QUEUE_SIZE	2	/* default queue size (elements) */
+#define DEFAULT_QUEUE_SIZE	100	/* default queue size (elements) */
 
 #define DEFAULT_TIMEOUT		10.0	/* default timeout for SYNC operations */
 
