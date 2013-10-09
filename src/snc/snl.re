@@ -218,6 +218,7 @@ snl:
 				goto string_const;
 			}
 	"/*"		{ goto comment; }
+	"//" .*		{ goto snl; }
 	"%{"		{
 				s->tok = cursor;
 				in_c_code = 1;
