@@ -1,6 +1,15 @@
 Known Problems
 ==============
 
+.. _Known_Problems_2.1.14:
+
+Known Problems in Release 2.1.14
+--------------------------------
+
+Janez Golob <janez.golob@cosylab.com> reported a case where calling
+pvAssign and pvMonitor in succession leads to spurious failure messages.
+
+
 .. _Known_Problems_2.1.13:
 
 Known Problems in Release 2.1.13
