@@ -115,6 +115,7 @@ initial_defn(p) ::= declaration(x).		{ p = x; }
 initial_defn(p) ::= option(x).			{ p = x; }
 initial_defn(p) ::= c_code(x).			{ p = x; }
 initial_defn(p) ::= funcdef(x).			{ p = x; }
+initial_defn(p) ::= structdef(x).		{ p = x; }
 
 final_defns(p) ::= final_defns(xs) final_defn(x). {
 	p = link_expr(xs, x);
@@ -123,6 +124,7 @@ final_defns(p) ::= .				{ p = 0; }
 
 final_defn(p) ::= c_code(x).			{ p = x; }
 final_defn(p) ::= funcdef(x).			{ p = x; }
+final_defn(p) ::= structdef(x).			{ p = x; }
 
 assign(p) ::= ASSIGN variable(v) to string(t) SEMICOLON. {
 	p = expr(D_ASSIGN, v, 0, t);
@@ -485,6 +487,18 @@ member(p) ::= NAME(t).				{ p = expr(E_MEMBER, t); }
 funcdef(p) ::= basetype(t) declarator(d) block(b). {
 	p = expr(D_FUNCDEF, token_from_expr(d), decl_add_base_type(d, t), b);
 }
+
+// Struct Definitions
+
+structdef(p) ::= STRUCT NAME(t) members(ds) SEMICOLON.		{ p = expr(D_STRUCTDEF, t, ds); }
+
+members(p) ::= LBRACE member_decls(xs) RBRACE.			{ p = xs; }
+
+member_decls(p) ::= member_decl(x).				{ p = x; }
+member_decls(p) ::= member_decls(xs) member_decl(x).		{ p = link_expr(xs, x); }
+
+member_decl(p) ::= basetype(t) declarator(d) SEMICOLON.		{ p = decl_add_base_type(d, t); }
+member_decl(p) ::= c_code(x).					{ p = x; }
 
 // Literal (C) code
 

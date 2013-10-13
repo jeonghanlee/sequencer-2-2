@@ -19,6 +19,7 @@ enum type_tag {
     T_ARRAY,
     T_FUNCTION,
     T_CONST,
+    T_STRUCT,   /* struct type defined in SNL code */
 };
 
 enum foreign_type_tag {
@@ -51,6 +52,11 @@ struct foreign_type {
     char *name;
 };
 
+struct structure_type {
+    struct expression *member_decls;
+    const char *name;
+};
+
 typedef struct type Type;
 
 struct type {
@@ -62,6 +68,7 @@ struct type {
         struct array_type       array;
         struct function_type    function;
         struct constant_type    constant;
+        struct structure_type   structure;
     } val;
     struct type *parent;
 };
@@ -97,6 +104,28 @@ const char *foreign_type_prefix[]
     "struct ",
     "union ",
     "",
+}
+#endif
+;
+
+void dump_type(Type *t, int l);
+
+#ifndef var_types_GLOBAL
+extern
+#endif
+const char *type_tag_names[]
+#ifdef var_types_GLOBAL
+= {
+    "T_NONE",
+    "T_EVFLAG",
+    "T_VOID",
+    "T_PRIM",
+    "T_FOREIGN",
+    "T_POINTER",
+    "T_ARRAY",
+    "T_FUNCTION",
+    "T_CONST",
+    "T_STRUCT",
 }
 #endif
 ;

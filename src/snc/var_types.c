@@ -10,8 +10,9 @@ in the file LICENSE that is included with this distribution.
 #include <stdio.h>
 #include <string.h>
 
-#include "main.h"
 #define var_types_GLOBAL
+#include "main.h"
+#include "gen_code.h"   /* implicit parameter names */
 #include "expr.h"
 #undef var_types_GLOBAL
 
@@ -87,6 +88,7 @@ Expr *decl_add_base_type(Expr *ds, Type basetype)
                 case T_PRIM:
                 case T_FOREIGN:
                 case T_POINTER:
+                case T_STRUCT:
                     break;
                 }
                 t->parent->val.constant.value_type = t;
@@ -289,6 +291,7 @@ static unsigned type_assignable_array(Type *t, int depth)
     case T_EVFLAG:
     case T_VOID:
     case T_CONST:
+    case T_STRUCT:  /* for now, at least */
         return FALSE;
     case T_ARRAY:
         return type_assignable_array(t->val.array.elem_type, depth + 1);
@@ -368,8 +371,49 @@ void gen_type(Type *t, const char *prefix, const char *name)
     case T_FOREIGN:
         gen_code("%s%s", foreign_type_prefix[bt->val.foreign.tag], bt->val.foreign.name);
         break;
+    case T_STRUCT:
+        gen_code("struct %s", bt->val.structure.name);
+        break;
     default:
         assert(impossible);
     }
     gen_array_pointer(bt->parent, T_NONE, prefix, name);
+}
+
+static void ind(int level)
+{
+    while (level--)
+        report("  ");
+}
+
+void dump_type(Type *t, int l)
+{
+    ind(l); report("dump_type(): tag=%s\n", type_tag_names[t->tag]);
+    switch (t->tag) {
+    case T_NONE:
+    case T_EVFLAG:
+    case T_VOID:
+    case T_PRIM:
+        break;
+    case T_FOREIGN:
+        ind(l+1); report("foreign.tag=%s, name=%s\n",
+            foreign_type_prefix[t->val.foreign.tag], t->val.foreign.name);
+        break;
+    case T_POINTER:
+        dump_type(t->val.pointer.value_type, l+1);
+        break;
+    case T_ARRAY:
+        ind(l+1); report("array.num_elems=%d", t->val.array.num_elems);
+        dump_type(t->val.array.elem_type, l+1);
+        break;
+    case T_FUNCTION:
+        dump_type(t->val.function.return_type, l+1);
+        break;
+    case T_CONST:
+        dump_type(t->val.constant.value_type, l+1);
+        break;
+    case T_STRUCT:
+        ind(l+1); report("struct.name=%s\n", t->val.structure.name);
+        break;
+    }
 }

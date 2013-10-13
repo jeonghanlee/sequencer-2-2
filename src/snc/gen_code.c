@@ -246,6 +246,8 @@ void gen_defn_c_code(Expr *scope, int level)
 
 static void gen_global_defn(Expr *ep)
 {
+	Expr *member;
+
 	switch(ep->type)
 	{
 	case T_TEXT:
@@ -254,6 +256,28 @@ static void gen_global_defn(Expr *ep)
 		break;
 	case D_FUNCDEF:
 		gen_funcdef(ep);
+		break;
+	case D_STRUCTDEF:
+		gen_code("\nstruct %s {\n", ep->value);
+		foreach (member, ep->structdef_members)
+		{
+			gen_line_marker(member);
+			indent(1);
+			switch (member->type)
+			{
+			case D_DECL:
+				gen_var_decl(member->extra.e_decl);
+				gen_code(";\n");
+				break;
+			case T_TEXT:
+				gen_code("%s\n", member->value);
+				break;
+			default:
+				assert_at_expr(impossible, member, "member->type==%s\n",
+					expr_type_name(member));
+			}
+		}
+		gen_code("};\n");
 		break;
 	case D_DECL:
 		/* this case is handled in gen_user_var */

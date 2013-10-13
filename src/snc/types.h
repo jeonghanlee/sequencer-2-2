@@ -277,6 +277,7 @@ enum expr_type			/* description [child expressions...] */
 	D_PROG,			/* whole program [param,defns,entry,statesets,exit,xdefns] */
 	D_SS,			/* state set statement [defns,states] */
 	D_STATE,		/* state statement [defns,entry,whens,exit] */
+	D_STRUCTDEF,		/* struct definition [members] */
 	D_SYNC,			/* sync statement [subscr,evflag] */
 	D_SYNCQ,		/* syncq statement [subscr,evflag,maxqsize] */
 	D_WHEN,			/* when statement [cond,block] */
@@ -359,6 +360,7 @@ STATIC_ASSERT(NUM_EXPR_TYPES <= 8*sizeof(TypeMask));
 #define state_whens	children[2]
 #define state_exit	children[3]
 #define stmt_expr	children[0]
+#define structdef_members	children[0]
 #define subscr_operand	children[0]
 #define subscr_index	children[1]
 #define sync_subscr	children[0]
@@ -396,6 +398,7 @@ expr_type_info[]
 	{ "D_PROG",	6 },
 	{ "D_SS",	2 },
 	{ "D_STATE",	4 },
+	{ "D_STRUCTDEF",1 },
 	{ "D_SYNC",	2 },
 	{ "D_SYNCQ",	3 },
 	{ "D_WHEN",	2 },
@@ -424,6 +427,17 @@ expr_type_info[]
 	{ "S_WHILE",	2 },
 	{ "T_TEXT",	0 },
 }
+#endif
+;
+
+/* The following is a unique dummy pointer to distinguish struct
+   names from other stuff in the symbol table */
+#ifndef sym_type_GLOBAL
+extern
+#endif
+void *structdefs
+#ifdef sym_type_GLOBAL
+= &structdefs;
 #endif
 ;
 

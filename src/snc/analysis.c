@@ -15,7 +15,9 @@ in the file LICENSE that is included with this distribution.
 #include <limits.h>
 #include <assert.h>
 
+#define sym_type_GLOBAL
 #include "types.h"
+#undef sym_type_GLOBAL
 #include "sym_table.h"
 #include "main.h"
 #include "expr.h"
@@ -85,6 +87,27 @@ Program *analyse_program(Expr *prog, Options options)
 		check_states_reachable_from_first(ss);
 	p->num_event_flags = assign_ef_bits(p->prog);
 	return p;
+}
+
+static Type *new_structure_type(const char *name, Expr *members)
+{
+	Type *r = new(Type);
+
+	r->tag = T_STRUCT;
+	r->val.structure.member_decls = members;
+	r->val.structure.name = name;
+	r->parent = 0;
+	return r;
+}
+
+static void analyse_structdef(SymTable st, Expr *defn)
+{
+	assert(defn->type == D_STRUCTDEF);
+	if (!sym_table_insert(st, defn->value, structdefs, 
+		new_structure_type(defn->value, defn->structdef_members)))
+	{
+		warning_at_expr(defn, "ignoring duplicate struct declaration\n");
+	}
 }
 
 static void analyse_funcdef(Expr *defn)
@@ -171,6 +194,9 @@ static void analyse_defns(Expr *defn_list, Expr *scope, Program *p)
 		case D_FUNCDEF:
 			analyse_funcdef(defn);
 			analyse_declaration(p->sym_table, scope, defn->funcdef_decl);
+			break;
+		case D_STRUCTDEF:
+			analyse_structdef(p->sym_table, defn);
 			break;
 		case D_ASSIGN:
 			analyse_assign(p->sym_table, p->chan_list, scope, defn);
@@ -352,6 +378,68 @@ static void analyse_state_option(StateOptions *options, Expr *defn)
 	}
 }
 
+/* Traverse a type and replace foreign struct types with SNL struct
+   type if one exists with the same name */
+static void fixup_struct_refs(SymTable st, Type *t)
+{
+	Expr *d;
+	Type *r;
+
+	switch (t->tag)
+	{
+	case T_NONE:
+	case T_EVFLAG:
+	case T_VOID:
+	case T_PRIM:
+		break;
+	case T_FOREIGN:
+		switch (t->val.foreign.tag)
+		{
+		case F_ENUM:
+			break;
+		case F_STRUCT:
+			r = sym_table_lookup(st, t->val.foreign.name, structdefs);
+			if (r)
+			{
+				assert(r->tag == T_STRUCT);
+				t->tag = r->tag;
+				t->val.structure.name = r->val.structure.name;
+				t->val.structure.member_decls = r->val.structure.member_decls;
+				/* NOTE: do *not* change parent! */
+			}
+			break;
+		case F_UNION:
+		case F_TYPENAME:
+			break;
+		}
+		break;
+	case T_POINTER:
+		fixup_struct_refs(st, t->val.pointer.value_type);
+		break;
+	case T_ARRAY:
+		fixup_struct_refs(st, t->val.array.elem_type);
+		break;
+	case T_FUNCTION:
+		fixup_struct_refs(st, t->val.function.return_type);
+		foreach (d, t->val.function.param_decls)
+		{
+			if (d->type == D_DECL)
+				fixup_struct_refs(st, d->extra.e_decl->type);
+		}
+		break;
+	case T_CONST:
+		fixup_struct_refs(st, t->val.constant.value_type);
+		break;
+	case T_STRUCT:
+		foreach (d, t->val.structure.member_decls)
+		{
+			if (d->type == D_DECL)
+				fixup_struct_refs(st, d->extra.e_decl->type);
+		}
+		break;
+	}
+}
+
 static void analyse_declaration(SymTable st, Expr *scope, Expr *defn)
 {
 	Var *vp;
@@ -382,6 +470,15 @@ static void analyse_declaration(SymTable st, Expr *scope, Expr *defn)
 			vp->type->tag == T_NONE ? "foreign variables"
 			: "event flags");
 	}
+#ifdef DEBUG
+	report("before fixup:\n");
+	dump_type(vp->type, 0);
+#endif
+	fixup_struct_refs(st, vp->type);
+#ifdef DEBUG
+	report("after fixup:\n");
+	dump_type(vp->type, 0);
+#endif
 
 	var_list = var_list_from_scope(scope);
 
