@@ -21,11 +21,13 @@ in the file LICENSE that is included with this distribution.
 #include "main.h"
 #include "gen_code.h"
 
+static const int impossible = 0;
+
 static void gen_main(char *prog_name);
 static void gen_user_var(Expr *prog, uint opt_reent);
-static void gen_extra_c_code(Expr *extra_defns);
 static void gen_init_reg(char *prog_name);
 static void gen_func_decls(Expr *prog);
+static void gen_global_defn(Expr *defn);
 
 static int assert_var_declared(Expr *ep, Expr *scope, void *parg)
 {
@@ -43,6 +45,8 @@ static int assert_var_declared(Expr *ep, Expr *scope, void *parg)
 /* Generate C code from parse tree. */
 void generate_code(Program *p)
 {
+	Expr *defn;
+
 	/* assume there have been no errors, so all vars are declared */
 	traverse_expr_tree(p->prog, bit(E_VAR), 0, 0, assert_var_declared, 0);
 
@@ -62,25 +66,27 @@ void generate_code(Program *p)
 	gen_code("\n");
 	gen_code("#include \"seq_snc.h\"\n");
 
-	/* Generate literal C code intermixed with global definitions */
-	gen_defn_c_code(p->prog, 0);
+	/* Initial definitions *except* global variable declarations,
+	   in the order in which they appear in the program.
+	   Note: this includes escaped C code. */
+	foreach (defn, p->prog->prog_defns) gen_global_defn(defn);
 
-	/* Generate global, state set, and state variable declarations */
+	/* Variable declarations */
 	gen_user_var(p->prog, p->options.reent);
 
-	/* Generate code for function definitions */
+	/* Function declarations */
 	gen_func_decls(p->prog);
 
-	/* Output extra C code */
-	gen_extra_c_code(p->prog->prog_xdefns);
-
-	/* Generate code for each state set */
+	/* State and state set functions */
 	gen_ss_code(p->prog, p->options);
 
-	/* Generate tables */
+	/* Channel, state set, and program tables */
 	gen_tables(p);
 
-	/* Generate main function */
+	/* Extra definitions */
+	foreach (defn, p->prog->prog_xdefns) gen_global_defn(defn);
+
+	/* Main function */
 	if (p->options.main) gen_main(p->name);
 
 	/* Sequencer registration */
@@ -238,22 +244,29 @@ void gen_defn_c_code(Expr *scope, int level)
 	}
 }
 
-/* Generate extra C code following state sets */
-static void gen_extra_c_code(Expr *extra_defns)
+static void gen_global_defn(Expr *ep)
 {
-	Expr	*ep;
-
-	if (extra_defns != 0)
+	switch(ep->type)
 	{
-		gen_code("\n/* Extra escaped C code */\n");
-		foreach (ep, extra_defns)
-		{
-			if (ep->type == T_TEXT)
-			{
-				gen_line_marker(ep);
-				gen_code("%s\n", ep->value);
-			}
-		}
+	case T_TEXT:
+		gen_line_marker(ep);
+		gen_code("%s\n", ep->value);
+		break;
+	case D_FUNCDEF:
+		gen_funcdef(ep);
+		break;
+	case D_DECL:
+		/* this case is handled in gen_user_var */
+		/* TODO: rename gen_user_var */
+	case D_ASSIGN:
+	case D_MONITOR:
+	case D_OPTION:
+	case D_SYNC:
+	case D_SYNCQ:
+		/* these have no direct correspondence to a C declaration */
+		break;
+	default:
+		assert_at_expr(impossible, ep, "ep->type==%s\n", expr_type_name(ep));
 	}
 }
 

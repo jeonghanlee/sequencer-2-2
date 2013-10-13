@@ -62,7 +62,6 @@ static void gen_prog_entex_func(
 static void gen_prog_init_body(Expr *prog);
 static void gen_prog_entry_body(Expr *prog);
 static void gen_prog_exit_body(Expr *prog);
-static void gen_funcdef(Expr *fp);
 
 /*
  * Expression context. Certain nodes of the syntax tree are
@@ -89,7 +88,7 @@ static Options global_options;
 /* Generate state set C code from analysed syntax tree */
 void gen_ss_code(Expr *prog, Options options)
 {
-	Expr	*sp, *ssp, *fp;
+	Expr	*sp, *ssp;
 	uint	ss_num = 0;
 
 	/* HACK: intialise global variable as implicit parameter */
@@ -137,18 +136,6 @@ void gen_ss_code(Expr *prog, Options options)
 	/* Generate program exit func */
 	if (prog->prog_exit)
 		gen_prog_entex_func(prog, "exit", NM_EXIT, gen_prog_exit_body);
-
-	gen_code("\n/****** Global function definitions ******/\n");
-
-	/* Generate function definitions */
-	foreach(fp, prog->prog_defns)
-	{
-		gen_funcdef(fp);
-	}
-	foreach(fp, prog->prog_xdefns)
-	{
-		gen_funcdef(fp);
-	}
 }
 
 /* Generate a local C variable declaration for each variable declared
@@ -915,7 +902,7 @@ static void gen_prog_exit_body(Expr *prog)
 	gen_entex_body(prog->prog_exit, C_SS);
 }
 
-static void gen_funcdef(Expr *fp)
+void gen_funcdef(Expr *fp)
 {
 	if (fp->type == D_FUNCDEF)
 	{
