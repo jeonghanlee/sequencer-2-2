@@ -807,14 +807,17 @@ static void gen_var_init(Var *vp, int context, int level)
 	if (vp->init)
 	{
 		gen_line_marker(vp->init);
-		indent(level); gen_code("{ static ");
+		indent(level); gen_code("{\n");
+		indent(level); gen_code("static ");
 		gen_type(vp->type, NM_INITVAR, vp->name);
 		gen_code(" = ");
 		gen_expr(context, vp->init, level);
-		gen_code("; memcpy(&");
+		gen_code(";\n");
+		indent(level); gen_code("memcpy(&");
 		gen_var_access(vp);
-		gen_code(", &" NM_INITVAR "%s, sizeof(" NM_INITVAR "%s)); }\n",
+		gen_code(", &" NM_INITVAR "%s, sizeof(" NM_INITVAR "%s));\n",
 			vp->name, vp->name);
+		indent(level); gen_code("}\n");
 	}
 }
 
