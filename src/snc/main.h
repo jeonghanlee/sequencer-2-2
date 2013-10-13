@@ -17,9 +17,6 @@ in the file LICENSE that is included with this distribution.
 void gen_code(const char *format, ...)
 __attribute__((format(printf,1,2)));
 
-void set_gen_c(void);
-void set_gen_h(void);
-
 /* append '# <line_num> "<src_file>"\n' to output (if not disabled by cmd-line option) */
 void gen_line_marker_prim(int line_num, const char *src_file);
 

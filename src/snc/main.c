@@ -26,11 +26,9 @@ in the file LICENSE that is included with this distribution.
 static Options options = DEFAULT_OPTIONS;
 
 static char *input_name;	/* input file name */
-static char *c_output_name;	/* c output file name */
-static char *h_output_name;	/* h output file name */
+static char *output_name;	/* c output file name */
 
-static FILE *c_out, *h_out;	/* output file handles */
-static FILE *out = NULL;	/* current output file handle */
+static FILE *out = NULL;	/* output file handle */
 
 static int err_cnt;
 
@@ -56,16 +54,10 @@ int main(int argc, char *argv[])
 		perror(input_name);
 		return EXIT_FAILURE;
 	}
-	c_out = fopen(c_output_name, "w");
-	if (c_out == NULL)
+	out = fopen(output_name, "w");
+	if (out == NULL)
 	{
-		perror(c_output_name);
-		return EXIT_FAILURE;
-	}
-	h_out = fopen(h_output_name, "w");
-	if (h_out == NULL)
-	{
-		perror(h_output_name);
+		perror(output_name);
 		return EXIT_FAILURE;
 	}
 
@@ -78,12 +70,12 @@ int main(int argc, char *argv[])
         prg = analyse_program(exp, options);
 
 	if (err_cnt == 0)
-		generate_code(prg, h_output_name);
+		generate_code(prg);
 
 	return err_cnt ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
-/* Initialize options, input_name, c_output_name, and h_output_name from arguments. */
+/* Initialize options, input_name, and output_name from arguments. */
 static void parse_args(int argc, char *argv[])
 {
 	int i;
@@ -109,7 +101,7 @@ static void parse_args(int argc, char *argv[])
 			else
 			{
 				i++;
-				c_output_name = argv[i];
+				output_name = argv[i];
 				continue;
 			}
 		}
@@ -134,11 +126,10 @@ static void parse_args(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	if (!c_output_name)	/* no -o option given */
+	if (!output_name)	/* no -o option given */
 	{
-		c_output_name = replace_extension(input_name, ".c");
+		output_name = replace_extension(input_name, ".c");
 	}
-	h_output_name = replace_extension(c_output_name, ".h");
 }
 
 static char *replace_extension(const char *in, const char *ext)
@@ -220,16 +211,6 @@ static void print_usage(void)
 }
 
 /* Code generation support */
-
-void set_gen_c(void)
-{
-	out = c_out;
-}
-
-void set_gen_h(void)
-{
-	out = h_out;
-}
 
 void gen_line_marker_prim(int line_num, const char *src_file)
 {
