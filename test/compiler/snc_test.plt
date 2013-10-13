@@ -29,6 +29,7 @@ my $error = {
   efGlobal => 3,
   efNoInit => 1,
   efPointer => 1,
+  funcdefShadowGlobal => 1,
   foreignGlobal => 3,
   foreignNoInit => 1,
   misplacedExit => 1,
