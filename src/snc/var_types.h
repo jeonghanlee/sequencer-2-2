@@ -93,6 +93,7 @@ Type mk_ef_type();
 Type mk_void_type();
 Type mk_no_type();
 
+void dump_type(Type *t, int l);
 
 #ifndef var_types_GLOBAL
 extern
@@ -107,8 +108,6 @@ const char *foreign_type_prefix[]
 }
 #endif
 ;
-
-void dump_type(Type *t, int l);
 
 #ifndef var_types_GLOBAL
 extern

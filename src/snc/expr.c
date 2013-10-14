@@ -44,6 +44,7 @@ Expr *expr(
 	ep->last = ep;
 	ep->type = type;
 	ep->value = tok.str;
+	ep->token = tok.type;
 	ep->line_num = tok.line;
 	ep->src_file = tok.file;
 	ep->children = newArray(Expr *, num_children);
@@ -125,6 +126,7 @@ uint strtoui(
 Token token_from_expr(Expr *e)
 {
 	Token t;
+	t.type = e->token;
 	t.str = e->value;
 	t.line = e->line_num;
 	t.file = e->src_file;

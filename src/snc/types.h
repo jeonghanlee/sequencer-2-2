@@ -85,6 +85,7 @@ struct state_options			/* run-time state options */
 
 struct token				/* for the lexer and parser */
 {
+	int		type;
 	char		*str;
 	const char	*file;
 	int		line;
@@ -115,7 +116,8 @@ struct expression			/* generic syntax node */
 	Expr		*last;		/* list node: last expression */
 	Expr		**children;	/* array of children [left,right,...] */
 	TypeMask	type;		/* expression type (E_XXX) */
-	char		*value;		/* operator or value string */
+	char		*value;		/* token string */
+	int		token;		/* token symbol */
 	int		line_num;	/* originating line number */
 	const char	*src_file;	/* originating source file */
 	union				/* extra data, depends on type */
@@ -131,7 +133,7 @@ struct expression			/* generic syntax node */
 		VarList	*e_cmpnd;	/* block local declarations */
 		FuncSym	*e_builtin;	/* builtin function */
 		ConstSym *e_const;	/* builtin constant */
-		VarList *e_funcdef;	/* parameter declarations */
+		VarList *e_funcdef;	/* parameters */
 	}	extra;
 };
 
@@ -239,7 +241,8 @@ struct program
 
 /* Expression types that are scopes. By definition, a scope is an expression
    that allows variable declarations as (immediate) subexpressions. */
-#define scope_mask		( bit(D_PROG) | bit(D_FUNCDEF) | bit(D_SS) | bit(D_STATE) | bit(S_CMPND) )
+#define scope_mask		( bit(D_PROG)    | bit(D_FUNCDEF) \
+				| bit(D_SS)      | bit(D_STATE)   | bit(S_CMPND) )
 /* Whether an expression is a scope */
 #define is_scope(e)		((bit((e)->type) & scope_mask) != 0)
 
@@ -284,7 +287,7 @@ enum expr_type			/* description [child expressions...] */
 
 	E_BINOP,		/* binary operator [left,right] */
 	E_BUILTIN,		/* builtin function [] */
-	E_CAST,			/* type cast [operand] */
+	E_CAST,			/* type cast [type,operand] */
 	E_CONST,		/* numeric (inkl. character) constant [] */
 	E_FUNC,			/* function call [expr,args] */
 	E_INIT,			/* array or struct initializer [elems] */

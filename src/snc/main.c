@@ -207,6 +207,7 @@ static void print_usage(void)
 	report("  +r           - make reentrant at run-time\n");
 	report("  +s           - safe mode (implies +r, overrides -r)\n");
 	report("  -w           - suppress compiler warnings\n");
+	report("  +W           - enable extra compiler warnings\n");
 	report("example:\n snc +a -c vacuum.st\n");
 }
 

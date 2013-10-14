@@ -112,36 +112,21 @@ static void analyse_structdef(SymTable st, Expr *defn)
 
 static void analyse_funcdef(Expr *defn)
 {
-	Expr *d = defn->funcdef_decl;
-	Var *var = d->extra.e_decl;
-	struct function_type *fun_type;
+	Expr *decl;
+	Var *var;
 	Expr *p;
-	Token t;
 
 	assert(defn->type == D_FUNCDEF);
-	fun_type = &var->type->val.function;
+	decl = defn->funcdef_decl;
+	assert(decl->type == D_DECL);
+	var = decl->extra.e_decl;
 	if (var->type->tag != T_FUNCTION)
 	{
-		error_at_expr(d, "not a function type\n");
+		error_at_expr(decl, "not a function type\n");
 		return;
 	}
 
-	p = fun_type->param_decls;
-	if (p && p->extra.e_decl->type->tag == T_VOID)
-	{
-		/* no other params should be there */
-		if (p->next)
-		{
-			error_at_expr(p->next, "void must be the only parameter\n");
-		}
-		if (p->extra.e_decl->name)
-		{
-			error_at_expr(p, "void parameter should not have a name\n");
-		}
-		/* void means empty parameter list */
-		fun_type->param_decls = 0;
-	}
-	foreach(p, fun_type->param_decls)
+	foreach(p, var->type->val.function.param_decls)
 	{
 		/* check parameter has a name */
 		if (!p->extra.e_decl->name)
@@ -149,24 +134,6 @@ static void analyse_funcdef(Expr *defn)
 			error_at_expr(p, "function parameter must have a name\n");
 		}
 	}
-	/* prepend "SEQ_VARS *const " NM_VAR to parameter list */
-	t.str = NM_VAR;
-	t.line = d->line_num;
-	t.file = d->src_file;
-	p = decl_add_base_type(
-		decl_prefix_pointer(decl_prefix_const(decl_create(t))),
-		mk_foreign_type(F_TYPENAME, "SEQ_VARS")
-	);
-	fun_type->param_decls = link_expr(p, fun_type->param_decls);
-	/* prepend "SS_ID " NM_SS to parameter list */
-	t.str = NM_SS;
-	t.line = d->line_num;
-	t.file = d->src_file;
-	p = decl_add_base_type(
-		decl_create(t),
-		mk_foreign_type(F_TYPENAME, "SS_ID")
-	);
-	fun_type->param_decls = link_expr(p, fun_type->param_decls);
 }
 
 static void analyse_defns(Expr *defn_list, Expr *scope, Program *p)
@@ -462,13 +429,20 @@ static void analyse_declaration(SymTable st, Expr *scope, Expr *defn)
 			"foreign declarations are deprecated\n");
 		seen_foreign = TRUE;
 	}
-	if (scope->type != D_PROG && 
-		(vp->type->tag == T_NONE || vp->type->tag == T_EVFLAG))
+	if (scope->type != D_PROG)
 	{
-		error_at_expr(defn,
-			"%s can only be declared at the top-level\n",
-			vp->type->tag == T_NONE ? "foreign variables"
-			: "event flags");
+		const char *things = 0;
+
+		switch (vp->type->tag)
+		{
+		case T_NONE: things = "foreign objects"; break;
+		case T_EVFLAG: things = "event flags"; break;
+		case T_FUNCTION: things = "functions"; break;
+		default: break;
+		}
+		if (things)
+			error_at_expr(defn,
+				"%s can only be declared at the top-level\n", things);
 	}
 #ifdef DEBUG
 	report("before fixup:\n");
@@ -487,14 +461,20 @@ static void analyse_declaration(SymTable st, Expr *scope, Expr *defn)
 	if (!sym_table_insert(st, vp->name, var_list, vp))
 	{
 		Var *vp2 = (Var *)sym_table_lookup(st, vp->name, var_list);
-		if (vp2->decl)
-			error_at_expr(defn,
-			 "variable '%s' already declared at %s:%d\n",
-			 vp->name, vp2->decl->src_file, vp2->decl->line_num);
-		else
-			error_at_expr(defn,
-			 "variable '%s' already (implicitly) declared\n",
-			 vp->name);
+
+		/* Note: functions can be declared more than once */
+		/* We let the C compiler check that they are consistent */
+		if (vp2->type->tag != T_FUNCTION)
+		{
+			if (vp2->decl)
+				error_at_expr(defn,
+				 "variable '%s' already declared at %s:%d\n",
+				 vp->name, vp2->decl->src_file, vp2->decl->line_num);
+			else
+				error_at_expr(defn,
+				 "variable '%s' already (implicitly) declared\n",
+				 vp->name);
+		}
 	}
 	else
 	{

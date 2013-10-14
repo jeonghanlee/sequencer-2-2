@@ -12,6 +12,7 @@ in the file LICENSE that is included with this distribution.
 
 #define var_types_GLOBAL
 #include "main.h"
+#include "snl.h"
 #include "gen_code.h"   /* implicit parameter names */
 #include "expr.h"
 #undef var_types_GLOBAL
@@ -135,7 +136,7 @@ Expr *decl_create(Token id)
 
 Expr *abs_decl_create(void)
 {
-    Token t = {0,0,0};
+    Token t = {0,0,0,0};
     return decl_create(t);
 }
 
@@ -161,6 +162,49 @@ Expr *decl_postfix_array(Expr *d, char *s)
     return d;
 }
 
+static Expr *add_implicit_parameters(Expr *fun_decl, Expr *param_decls)
+{
+    Expr *p1, *p2;
+    Token t;
+
+    /* "SS_ID " NM_SS */
+    t.type = TOK_NAME;
+    t.str = NM_SS;
+    t.line = fun_decl->line_num;
+    t.file = fun_decl->src_file;
+    p1 = decl_add_base_type(
+        decl_create(t),
+        mk_foreign_type(F_TYPENAME, "SS_ID")
+    );
+    /* "SEQ_VARS *const " NM_VAR */
+    t.type = TOK_NAME;
+    t.str = NM_VAR;
+    t.line = fun_decl->line_num;
+    t.file = fun_decl->src_file;
+    p2 = decl_add_base_type(
+        decl_prefix_pointer(decl_prefix_const(decl_create(t))),
+        mk_foreign_type(F_TYPENAME, "SEQ_VARS")
+    );
+    return link_expr(p1, link_expr(p2, param_decls));
+}
+
+static Expr *remove_void_parameter(Expr *param_decls)
+{
+    if (param_decls && param_decls->extra.e_decl->type->tag == T_VOID) {
+        /* no other params should be there */
+        if (param_decls->next) {
+            error_at_expr(param_decls->next, "void must be the only parameter\n");
+        }
+        if (param_decls->extra.e_decl->name) {
+            error_at_expr(param_decls, "void parameter should not have a name\n");
+        }
+        /* void means empty parameter list */
+        return 0;
+    } else {
+        return param_decls;
+    }
+}
+
 Expr *decl_postfix_function(Expr *decl, Expr *param_decls)
 {
     Type *t = new(Type);
@@ -172,7 +216,9 @@ Expr *decl_postfix_function(Expr *decl, Expr *param_decls)
 #endif
 
     t->tag = T_FUNCTION;
-    t->val.function.param_decls = param_decls;
+    t->val.function.param_decls = add_implicit_parameters(decl,
+        remove_void_parameter(param_decls)
+    );
     t->parent = decl->extra.e_decl->type;
     decl->extra.e_decl->type = t;
     return decl;
@@ -308,36 +354,74 @@ unsigned type_assignable(Type *t)
     return type_assignable_array(t, 0);
 }
 
-static void gen_array_pointer(Type *t, enum type_tag last_tag, const char *prefix, const char *name)
+enum assoc {
+    L,
+    R,
+};
+
+static void gen_pre(Type *t, enum assoc prev_assoc, int letter)
 {
-    int paren = last_tag == T_ARRAY || last_tag == T_FUNCTION;
+    const char *sep = letter ? " " : "";
+    switch (t->tag) {
+    case T_NONE:
+        assert(impossible);
+        break;
+    case T_POINTER:
+        gen_pre(t->val.pointer.value_type, L, TRUE);
+        gen_code("*");
+        break;
+    case T_CONST:
+        gen_pre(t->val.constant.value_type, L, TRUE);
+        gen_code("const%s", sep);
+        break;
+    case T_ARRAY:
+        gen_pre(t->val.array.elem_type, R, letter || prev_assoc == L);
+        if (prev_assoc == L)
+            gen_code("(");
+        break;
+    case T_FUNCTION:
+        gen_pre(t->val.function.return_type, R, letter || prev_assoc == L);
+        if (prev_assoc == L)
+            gen_code("(");
+        break;
+    case T_EVFLAG:
+        gen_code("evflag%s", sep);
+        break;
+    case T_VOID:
+        gen_code("void%s", sep);
+        break;
+    case T_PRIM:
+        gen_code("%s%s", prim_type_name[t->val.prim], sep);
+        break;
+    case T_FOREIGN:
+        gen_code("%s%s%s", foreign_type_prefix[t->val.foreign.tag], t->val.foreign.name, sep);
+        break;
+    case T_STRUCT:
+        gen_code("struct %s%s", t->val.structure.name, sep);
+        break;
+    }
+}
+
+static void gen_post(Type *t, enum assoc prev_assoc)
+{
     Expr *pd;
 
     switch (t->tag) {
     case T_POINTER:
-        if (paren)
-            gen_code("(");
-        gen_code("*");
-        gen_array_pointer(t->parent, t->tag, prefix, name);
-        if (paren)
-            gen_code(")");
+        gen_post(t->val.pointer.value_type, L);
         break;
     case T_CONST:
-        if (paren)
-            gen_code("(");
-        else
-            gen_code(" ");
-        gen_code("const");
-        gen_array_pointer(t->parent, t->tag, prefix, name);
-        if (paren)
-            gen_code(")");
+        gen_post(t->val.constant.value_type, L);
         break;
     case T_ARRAY:
-        gen_array_pointer(t->parent, t->tag, prefix, name);
+        if (prev_assoc == L)
+            gen_code(")");
         gen_code("[%d]", t->val.array.num_elems);
+        gen_post(t->val.array.elem_type, R);
         break;
     case T_FUNCTION:
-        gen_array_pointer(t->parent, t->tag, prefix, name);
+        if (prev_assoc == L)
+            gen_code(")");
         gen_code("(");
         foreach (pd, t->val.function.param_decls) {
             Var *var = pd->extra.e_decl;
@@ -346,38 +430,19 @@ static void gen_array_pointer(Type *t, enum type_tag last_tag, const char *prefi
                 gen_code (", ");
         }
         gen_code(")");
+        gen_post(t->val.function.return_type, R);
         break;
     default:
-        if (name)
-            gen_code(" %s%s", prefix, name);
         break;
     }
 }
 
 void gen_type(Type *t, const char *prefix, const char *name)
 {
-    Type *bt = base_type(t);
-
-    switch (bt->tag) {
-    case T_EVFLAG:
-        gen_code("evflag");
-        break;
-    case T_VOID:
-        gen_code("void");
-        break;
-    case T_PRIM:
-        gen_code("%s", prim_type_name[bt->val.prim]);
-        break;
-    case T_FOREIGN:
-        gen_code("%s%s", foreign_type_prefix[bt->val.foreign.tag], bt->val.foreign.name);
-        break;
-    case T_STRUCT:
-        gen_code("struct %s", bt->val.structure.name);
-        break;
-    default:
-        assert(impossible);
-    }
-    gen_array_pointer(bt->parent, T_NONE, prefix, name);
+    gen_pre(t, R, name != NULL);
+    if (name)
+        gen_code("%s%s", prefix, name);
+    gen_post(t, R);
 }
 
 static void ind(int level)

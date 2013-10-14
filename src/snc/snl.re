@@ -17,7 +17,7 @@ in the file LICENSE that is included with this distribution.
 #include "main.h"
 #include "parser.h"
 
-#define	EOI		0
+#define	TOK_EOI		0
 
 typedef unsigned char uchar;
 
@@ -33,7 +33,7 @@ typedef unsigned char uchar;
 #define	RET(i,r) {\
 	s->cur = cursor;\
 	t->str = r;\
-	return i;\
+	return TOK_ ## i;\
 }
 
 #define OPERATOR		RET
@@ -478,6 +478,7 @@ Expr *parse_program(FILE *in, const char *src_file)
 	do
 	{
 		tt = scan(&s, &tv);
+                tv.type = tt;
 #ifdef	DEBUG
 		report_at(tv.file, tv.line, "%2d\t$%s$\n", tt, tv.str);
 #endif

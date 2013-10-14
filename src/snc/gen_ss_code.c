@@ -20,6 +20,7 @@ in the file LICENSE that is included with this distribution.
 #include "main.h"
 #include "builtin.h"
 #include "gen_ss_code.h"
+#include "type_check.h"
 
 static const int impossible = 0;
 
@@ -444,9 +445,9 @@ static void gen_expr(
 		}
 		gen_expr(context, ep->func_expr, 0);
 		gen_code("(");
-		if (ep->func_expr->type == E_VAR && ep->func_expr->extra.e_var->type->tag == T_FUNCTION)
+		if (type_is_function(ep->func_expr))
 		{
-			/* direct call and not a foreign function => add implicit parameters */
+			/* add arguments for implicit parameters */
 			gen_code(NM_SS ", " NM_VAR);
 			if (ep->func_args)
 				gen_code(", ");

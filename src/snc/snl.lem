@@ -21,6 +21,8 @@ in the file LICENSE that is included with this distribution.
 
 %name snlParser
 
+%token_prefix TOK_
+
 %parse_failure {
 	report("parser giving up\n");
 	exit(1);
