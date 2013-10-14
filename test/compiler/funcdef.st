@@ -5,6 +5,21 @@ option +r;
 int x;
 assign x;
 
+void *f1(void)
+{
+    pvPut(x);
+    return 0;
+}
+
+void *f1a()
+{
+    return 0;
+}
+
+/* forward declarations */
+void *f2(void *x, double **d);
+void pvSetX(int val);
+
 ss simple {
     state simple {
         when () {
@@ -13,16 +28,6 @@ ss simple {
             pvSetX(1.0);
         } exit
     }
-}
-
-void *f1(void)
-{
-    return 0;
-}
-
-void *f1a()
-{
-    return 0;
 }
 
 void *f2(void *x, double **d)
