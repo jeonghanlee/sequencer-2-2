@@ -8,21 +8,6 @@ program type_exprTest
 
 option +r;
 
-#if 0
-    void f(
-        void *p,
-        void **pp,
-        void (*pf1)(void),
-        void (*pf2)(int x,int),
-        void (*pf3)(int*),
-        void (*pf4)(int**),
-        void (*pf5)(double**,int),
-        void (*pf6)(double**,int(**)[2]),
-        double **pd,
-        double **ppd
-    );
-#endif
-
 entry {
     long n = 0;
     void *p = (void *)n;
