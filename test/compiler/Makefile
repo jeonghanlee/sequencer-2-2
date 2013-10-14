@@ -23,6 +23,7 @@ TESTSCRIPTS_HOST += snc_test.t
 TESTPROD_HOST += type_expr
 TESTPROD_HOST += funcdef
 TESTPROD_HOST += cppComment
+TESTPROD_HOST += structdef
 
 PROD_LIBS += seq pv
 PROD_LIBS += $(EPICS_BASE_IOC_LIBS)
