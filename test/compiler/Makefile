@@ -10,6 +10,8 @@ SNCFLAGS_vxWorks += -nil-
 
 SNC = $(INSTALL_HOST_BIN)/snc$(HOSTEXE)
 
+# test programs that should give a specified number of
+# warnings and/or errors are listed in snc_test.plt
 TESTSCRIPTS_HOST += snc_test.t
 
 # uncomment these tests if building for 32 bit systems
@@ -20,10 +22,18 @@ TESTSCRIPTS_HOST += snc_test.t
 #TESTSCRIPTS_HOST += build64_test.t
 #TESTSCRIPTS_CROSS += build64_test.t
 
-TESTPROD_HOST += type_expr
-TESTPROD_HOST += funcdef
+# test programs that should build w/o warnings or errors,
+# not even from the C compiler
 TESTPROD_HOST += cppComment
+TESTPROD_HOST += exOpt_DuplOpt
+TESTPROD_HOST += funcdef
+TESTPROD_HOST += include_windows_h
+TESTPROD_HOST += member
 TESTPROD_HOST += structdef
+TESTPROD_HOST += subscript
+TESTPROD_HOST += sync_not_monitored
+TESTPROD_HOST += syncq_not_monitored
+TESTPROD_HOST += type_expr
 
 PROD_LIBS += seq pv
 PROD_LIBS += $(EPICS_BASE_IOC_LIBS)
