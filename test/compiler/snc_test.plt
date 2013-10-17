@@ -41,16 +41,19 @@ foreach my $prog (@progs) {
     plan tests => 3;
     my $output = `make -s -B $prog.c 2>&1`;
     my $exitcode = $? >> 8;
+    $output =~ s/^make.*$//m;
+    my $failed;
     SKIP: {
       skip "errors are expected", 1 if $tests->{$prog}->{errors} > 0;
-      is($exitcode, 0, "good exitcode") or snc_diag($output);
+      is($exitcode, 0, "good exitcode") or $failed=1;
     }
     my $nw = 0;
     $nw++ while ($output =~ /warning/g);
-    is($nw, $tests->{$prog}->{warnings}, "number of warnings") or snc_diag($output);
+    is($nw, $tests->{$prog}->{warnings}, "number of warnings") or $failed=1;
       
     my $ne = 0;
     $ne++ while ($output =~ /error/g);
-    is($ne, $tests->{$prog}->{errors}, "number of errors") or snc_diag($output);
+    is($ne, $tests->{$prog}->{errors}, "number of errors") or $failed=1;
+    snc_diag($output) if $failed;
   }
 }
