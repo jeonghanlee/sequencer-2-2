@@ -16,9 +16,15 @@ seq_sync_timeout in src/seq/seq_if.c.
 Known Problems in Release 2.1.14
 --------------------------------
 
-Janez Golob <janez.golob@cosylab.com> reported a case where calling
-pvAssign and pvMonitor in succession leads to spurious failure messages.
+Janez Golob <janez.golob@cosylab.com> reported a problem where a
+pvAssign led to spurious pvVarMonitorOff() failure message. From that
+moment on, the affected channels do not receive any monitor updates,
+even if the program explicitly calls pvMonitor for them (which is
+normally not needed).
 
+A related (but distinct) problem was discovered that might cause similar
+problems if pvMonitor or pvStopMonitor is called at the same time a CA
+connection or disconnection event arrives.
 
 .. _Known_Problems_2.1.13:
 
