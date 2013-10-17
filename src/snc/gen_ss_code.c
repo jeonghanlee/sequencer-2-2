@@ -160,10 +160,10 @@ static void gen_local_var_decls(Expr *scope, int context, int level)
 		gen_var_decl(vp);
 
 		/* optional initialisation */
-		if (vp->init)
+		if (vp->decl->decl_init)
 		{
 			gen_code(" = ");
-			gen_expr(context, vp->init, level);
+			gen_expr(context, vp->decl->decl_init, level);
 		}
 		gen_code(";\n");
 	}
@@ -792,14 +792,16 @@ static void gen_pv_func(
 
 static void gen_var_init(Var *vp, int context, int level)
 {
-	if (vp->init)
+	assert(vp);
+	assert(vp->decl);
+	if (vp->decl->decl_init)
 	{
-		gen_line_marker(vp->init);
+		gen_line_marker(vp->decl->decl_init);
 		indent(level); gen_code("{\n");
 		indent(level); gen_code("static ");
 		gen_type(vp->type, NM_INITVAR, vp->name);
 		gen_code(" = ");
-		gen_expr(context, vp->init, level);
+		gen_expr(context, vp->decl->decl_init, level);
 		gen_code(";\n");
 		indent(level); gen_code("memcpy(&");
 		gen_var_access(vp);
@@ -819,14 +821,11 @@ static void gen_user_var_init(Expr *prog, int level)
 	/* global variables */
 	foreach(vp, prog->extra.e_prog->first)
 	{
-		if (vp->init)
+		if (vp->decl && vp->decl->decl_init)
 		{
-			if (vp->type->tag == T_NONE)
-				error_at_expr(vp->init,
-					"foreign variable '%s' cannot be initialized\n",
-					vp->name);
-			else if (vp->type->tag == T_EVFLAG)
-				error_at_expr(vp->init,
+			assert(vp->type->tag != T_NONE);	/* syntax */
+			if (vp->type->tag == T_EVFLAG)
+				error_at_expr(vp->decl->decl_init,
 					"event flag '%s' cannot be initialized\n",
 					vp->name);
 			else

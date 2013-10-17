@@ -10,180 +10,36 @@ in the file LICENSE that is included with this distribution.
 #include <stdio.h>
 #include <string.h>
 
-#define var_types_GLOBAL
 #include "main.h"
 #include "snl.h"
 #include "gen_code.h"   /* implicit parameter names */
 #include "expr.h"
+#define var_types_GLOBAL
+#include "var_types.h"
 #undef var_types_GLOBAL
 
 /* #define DEBUG */
 
 static const int impossible = FALSE;
 
-/* Add a common base type to all types in a multi-variable declaration */
-Expr *decl_add_base_type(Expr *ds, Type basetype)
-{
-    Expr *d;
-
-    foreach(d, ds) {
-        Var *var;
-        Type *t = new(Type), *bt = t;
-
-        assert(d->type == D_DECL);      /* pre-condition */
-        var = d->extra.e_decl;
-        assert(var);
-        /* structure copy */
-        *t = basetype;
-        t->parent = var->type;
-        /* now roll back the stack of type expressions */
-        while(t->parent) {
-            switch (t->parent->tag) {
-            case T_ARRAY:
-                if (basetype.tag == T_NONE) {
-                    error_at_expr(d, "cannot declare array of foreign variables\n");
-                }
-                if (basetype.tag == T_EVFLAG) {
-                    error_at_expr(d, "cannot declare array of event flags\n");
-                }
-                t->parent->val.array.elem_type = t;
-                break;
-            case T_POINTER:
-                if (basetype.tag == T_NONE) {
-                    error_at_expr(d, "cannot declare pointer to foreign variable\n");
-                }
-                if (basetype.tag == T_EVFLAG) {
-                    error_at_expr(d, "cannot declare pointer to event flag\n");
-                }
-                t->parent->val.pointer.value_type = t;
-                break;
-            case T_FUNCTION:
-                if (basetype.tag == T_NONE) {
-                    error_at_expr(d, "cannot declare function returning foreign variable\n");
-                }
-                if (basetype.tag == T_EVFLAG) {
-                    error_at_expr(d, "cannot declare function returning event flag\n");
-                }
-                t->parent->val.function.return_type = t;
-                break;
-            case T_CONST:
-                switch (t->tag) {
-                case T_NONE:
-                    error_at_expr(d, "cannot declare constant foreign entity\n");
-                    break;
-                case T_EVFLAG:
-                    error_at_expr(d, "cannot declare constant event flag\n");
-                    break;
-                case T_VOID:
-                    error_at_expr(d, "cannot declare constant void\n");
-                    break;
-                case T_ARRAY:
-                    error_at_expr(d, "cannot declare constant array\n");
-                    break;
-                case T_FUNCTION:
-                    warning_at_expr(d, "declaring constant function is redundant\n");
-                    break;
-                case T_CONST:
-                    warning_at_expr(d, "declaring constant constant is redundant\n");
-                    break;
-                case T_PRIM:
-                case T_FOREIGN:
-                case T_POINTER:
-                case T_STRUCT:
-                    break;
-                }
-                t->parent->val.constant.value_type = t;
-                break;
-            default:
-                assert(impossible);
-            }
-            t = t->parent;
-        }
-        assert(!t->parent);
-        t->parent = bt;
-        var->type = t;
-        if (basetype.tag == T_EVFLAG)
-            var->chan.evflag = new(EvFlag);
-    }
-    return ds;
-}
-
-Expr *decl_add_init(Expr *d, Expr *init)
-{
-    assert(d->type == D_DECL);          /* pre-condition */
-#ifdef DEBUG
-    report("decl_add_init: var=%s, init=%p\n", d->extra.e_decl->name, init);
-#endif
-    d->extra.e_decl->init = init;
-    d->decl_init = init;
-    return d;
-}
-
-Expr *decl_create(Token id)
-{
-    Expr *d = expr(D_DECL, id, 0);
-    Var *var = new(Var);
-
-#ifdef DEBUG
-    report("decl_create: name(%s)\n", id.str);
-#endif
-    assert(d->type == D_DECL);          /* expr() post-condition */
-    var->name = id.str;
-    d->extra.e_decl = var;
-    var->decl = d;
-    return d;
-}
-
-Expr *abs_decl_create(void)
-{
-    Token t = {0,0,0,0};
-    return decl_create(t);
-}
-
-Expr *decl_postfix_array(Expr *d, char *s)
-{
-    Type *t = new(Type);
-    uint num_elems;
-
-    assert(d->type == D_DECL);          /* pre-condition */
-    if (!strtoui(s, UINT_MAX, &num_elems) || num_elems == 0) {
-        error_at_expr(d, "invalid array size (must be >= 1)\n");
-        num_elems = 1;
-    }
-
-#ifdef DEBUG
-    report("decl_postfix_array %u\n", num_elems);
-#endif
-
-    t->tag = T_ARRAY;
-    t->val.array.num_elems = num_elems;
-    t->parent = d->extra.e_decl->type;
-    d->extra.e_decl->type = t;
-    return d;
-}
-
 static Expr *add_implicit_parameters(Expr *fun_decl, Expr *param_decls)
 {
     Expr *p1, *p2;
     Token t;
 
-    /* "SS_ID " NM_SS */
+    /* 1st implicit parameter: "SS_ID " NM_SS */
     t.type = TOK_NAME;
     t.str = NM_SS;
     t.line = fun_decl->line_num;
     t.file = fun_decl->src_file;
-    p1 = decl_add_base_type(
-        decl_create(t),
-        mk_foreign_type(F_TYPENAME, "SS_ID")
-    );
-    /* "SEQ_VARS *const " NM_VAR */
+    p1 = mk_decl(expr(E_VAR, t), mk_foreign_type(F_TYPENAME, "SS_ID"));
+    /* 2nd implicit parameter: "SEQ_VARS *const " NM_VAR */
     t.type = TOK_NAME;
     t.str = NM_VAR;
     t.line = fun_decl->line_num;
     t.file = fun_decl->src_file;
-    p2 = decl_add_base_type(
-        decl_prefix_pointer(decl_prefix_const(decl_create(t))),
-        mk_foreign_type(F_TYPENAME, "SEQ_VARS")
+    p2 = mk_decl(expr(E_VAR, t),
+        mk_pointer_type(mk_const_type(mk_foreign_type(F_TYPENAME, "SEQ_VARS")))
     );
     return link_expr(p1, link_expr(p2, param_decls));
 }
@@ -205,104 +61,229 @@ static Expr *remove_void_parameter(Expr *param_decls)
     }
 }
 
-Expr *decl_postfix_function(Expr *decl, Expr *param_decls)
+static Expr *new_decl(Token k, Type *type)
 {
-    Type *t = new(Type);
-
-    assert(decl->type == D_DECL);          /* pre-condition */
-
+    Var *var = new(Var);
+    Expr *decl = expr(D_DECL, k, 0);
 #ifdef DEBUG
-    report("decl_postfix_function\n");
+    report("new_decl: %s\n", k.str);
 #endif
-
-    t->tag = T_FUNCTION;
-    t->val.function.param_decls = add_implicit_parameters(decl,
-        remove_void_parameter(param_decls)
-    );
-    t->parent = decl->extra.e_decl->type;
-    decl->extra.e_decl->type = t;
+    var->name = decl->value;
+    var->type = type;
+    var->decl = decl;
+    decl->extra.e_decl = var;
     return decl;
 }
 
-Expr *decl_prefix_pointer(Expr *d)
+/*
+ * build a declaration (a syntax node with type D_DECL)
+ * from declarator node 'd' and child type 't'
+ */
+Expr *mk_decl(Expr *d, Type *t)
+{
+    uint num_elems = 0;
+    Expr *r;
+
+    if (!d) {
+        /* abstract declarator */
+        Token k = {0,0,0,0};
+        return new_decl(k, t);
+    }
+    switch (d->type) {
+    case E_BINOP:
+        /* initializer */
+        assert(d->token == TOK_EQUAL);
+        r = mk_decl(d->binop_left, t);
+        assert(r->type == D_DECL);      /* post condition */
+        r->decl_init = d->binop_right;
+        return r;
+    case E_VAR:
+        return new_decl(token_from_expr(d), t);
+    case E_PRE:
+        switch (d->token) {
+        case TOK_ASTERISK:
+            switch (t->tag)
+            {
+            case T_NONE:
+                assert_at_expr(impossible, d, "pointer to foreign entity\n");
+                break;
+            case T_EVFLAG:
+                error_at_expr(d, "pointer to event flag\n");
+                break;
+            default:
+                break;
+            }
+            return mk_decl(d->pre_operand, mk_pointer_type(t));
+        case TOK_CONST:
+            switch (t->tag) {
+            case T_NONE:
+                assert_at_expr(impossible, d, "constant foreign entity\n");
+                break;
+            case T_EVFLAG:
+                error_at_expr(d, "constant event flag\n");
+                break;
+            case T_ARRAY:
+                error_at_expr(d, "constant array\n");
+                break;
+            case T_FUNCTION:
+                warning_at_expr(d, "discarding redundant const from function type\n");
+                return mk_decl(d->pre_operand, t);
+#if 0
+            case T_CONST:
+                warning_at_expr(d, "discarding repeated const\n");
+                break;
+#endif
+            case T_VOID:
+            case T_PRIM:
+            case T_FOREIGN:
+            case T_POINTER:
+            case T_STRUCT:
+                break;
+            }
+            if (t->is_const) {
+                warning_at_expr(d, "discarding repeated const\n");
+                return mk_decl(d->pre_operand, t);
+            } else {
+                return mk_decl(d->pre_operand, mk_const_type(t));
+            }
+        default:
+            assert(impossible);
+        }
+        break;
+    case E_SUBSCR:
+        switch (t->tag) {
+        case T_NONE:
+            assert_at_expr(impossible, d, "array of foreign entities\n");
+            break;
+        case T_EVFLAG:
+            error_at_expr(d, "array of event flags\n");
+            break;
+        case T_VOID:
+            error_at_expr(d, "array of void\n");
+            break;
+        default:
+            break;
+        }
+        assert(d->subscr_index->type == E_CONST);
+        if (!strtoui(d->subscr_index->value, UINT_MAX, &num_elems) || num_elems == 0) {
+            error_at_expr(d, "invalid array size (must be >= 1)\n");
+            num_elems = 1;
+        }
+        return mk_decl(d->subscr_operand, mk_array_type(t, num_elems));
+    case E_FUNC:
+        switch (t->tag) {
+        case T_NONE:
+            assert_at_expr(impossible, d, "function returning foreign entity\n");
+            break;
+        case T_EVFLAG:
+            error_at_expr(d, "function returning event flag\n");
+            break;
+        default:
+            break;
+        }
+        return mk_decl(d->func_expr, mk_function_type(t,
+            add_implicit_parameters(d, remove_void_parameter(d->func_args))));
+    default:
+        assert(impossible);
+    }
+    return 0;   /* pacify compiler */
+}
+
+/* multi-variable declaration */
+Expr *mk_decls(Expr *ds, Type *t)
+{
+    Expr *d, *r = 0;
+
+    foreach(d, ds) {
+        r = link_expr(r, mk_decl(d, t));
+    }
+    return r;
+}
+
+Type *mk_prim_type(enum prim_type_tag tag)
 {
     Type *t = new(Type);
-
-#ifdef DEBUG
-    report("decl_prefix_pointer\n");
-#endif
-    assert(d->type == D_DECL);          /* pre-condition */
-    t->tag = T_POINTER;
-    t->parent = d->extra.e_decl->type;
-    d->extra.e_decl->type = t;
-    return d;
+    t->tag = T_PRIM;
+    t->val.prim = tag;
+    return t;
 }
 
-Expr *decl_prefix_const(Expr *d)
+Type *mk_foreign_type(enum foreign_type_tag tag, char *name)
 {
     Type *t = new(Type);
+    t->tag = T_FOREIGN;
+    t->val.foreign.tag = tag;
+    t->val.foreign.name = name;
+    return t;
+}
 
-#ifdef DEBUG
-    report("decl_prefix_const\n");
+Type *mk_ef_type()
+{
+    Type *t = new(Type);
+    t->tag = T_EVFLAG;
+    return t;
+}
+
+Type *mk_void_type()
+{
+    Type *t = new(Type);
+    t->tag = T_VOID;
+    return t;
+}
+
+Type *mk_no_type()
+{
+    Type *t = new(Type);
+    t->tag = T_NONE;
+    return t;
+}
+
+Type *mk_pointer_type(Type *t)
+{
+    Type *r = new(Type);
+    r->tag = T_POINTER;
+    r->val.pointer.value_type = t;
+    return r;
+}
+
+Type *mk_array_type(Type *t, unsigned n)
+{
+    Type *r = new(Type);
+    r->tag = T_ARRAY;
+    r->val.array.elem_type = t;
+    r->val.array.num_elems = n;
+    return r;
+}
+
+Type *mk_const_type(Type *t)
+{
+#if 0
+    Type *r = new(Type);
+    r->tag = T_CONST;
+    r->val.constant.value_type = t;
+    return r;
 #endif
-    assert(d->type == D_DECL);          /* pre-condition */
-    t->tag = T_CONST;
-    t->parent = d->extra.e_decl->type;
-    d->extra.e_decl->type = t;
-    return d;
-}
-
-Type mk_prim_type(enum prim_type_tag tag)
-{
-    Type t;
-
-    memset(&t, 0, sizeof(Type));
-
-    t.tag = T_PRIM;
-    t.val.prim = tag;
+    t->is_const = TRUE;
     return t;
 }
 
-Type mk_foreign_type(enum foreign_type_tag tag, char *name)
+Type *mk_function_type(Type *t, Expr *ps)
 {
-    Type t;
-
-    memset(&t, 0, sizeof(Type));
-
-    t.tag = T_FOREIGN;
-    t.val.foreign.tag = tag;
-    t.val.foreign.name = name;
-    return t;
+    Type *r = new(Type);
+    r->tag = T_FUNCTION;
+    r->val.function.return_type = t;
+    r->val.function.param_decls = ps;
+    return r;
 }
 
-Type mk_ef_type()
+Type *mk_structure_type(const char *name, Expr *members)
 {
-    Type t;
+    Type *r = new(Type);
 
-    memset(&t, 0, sizeof(Type));
-
-    t.tag = T_EVFLAG;
-    return t;
-}
-
-Type mk_void_type()
-{
-    Type t;
-
-    memset(&t, 0, sizeof(Type));
-
-    t.tag = T_VOID;
-    return t;
-}
-
-Type mk_no_type()
-{
-    Type t;
-
-    memset(&t, 0, sizeof(Type));
-
-    t.tag = T_NONE;
-    return t;
+    r->tag = T_STRUCT;
+    r->val.structure.member_decls = members;
+    r->val.structure.name = name;
+    return r;
 }
 
 unsigned type_array_length1(Type *t)
@@ -329,6 +310,8 @@ static unsigned type_assignable_array(Type *t, int depth)
 {
     if (depth > 2)
         return FALSE;
+    if (t->is_const)
+        return FALSE;
     switch (t->tag) {
     case T_NONE:
     case T_FOREIGN:
@@ -336,7 +319,9 @@ static unsigned type_assignable_array(Type *t, int depth)
     case T_FUNCTION:
     case T_EVFLAG:
     case T_VOID:
+#if 0
     case T_CONST:
+#endif
     case T_STRUCT:  /* for now, at least */
         return FALSE;
     case T_ARRAY:
@@ -362,6 +347,13 @@ enum assoc {
 static void gen_pre(Type *t, enum assoc prev_assoc, int letter)
 {
     const char *sep = letter ? " " : "";
+    if (t->is_const) {
+        t->is_const = FALSE;
+        gen_pre(t, L, TRUE);
+        t->is_const = TRUE;
+        gen_code("const%s", sep);
+        return;
+    }
     switch (t->tag) {
     case T_NONE:
         assert(impossible);
@@ -370,10 +362,12 @@ static void gen_pre(Type *t, enum assoc prev_assoc, int letter)
         gen_pre(t->val.pointer.value_type, L, TRUE);
         gen_code("*");
         break;
+#if 0
     case T_CONST:
         gen_pre(t->val.constant.value_type, L, TRUE);
         gen_code("const%s", sep);
         break;
+#endif
     case T_ARRAY:
         gen_pre(t->val.array.elem_type, R, letter || prev_assoc == L);
         if (prev_assoc == L)
@@ -406,13 +400,21 @@ static void gen_post(Type *t, enum assoc prev_assoc)
 {
     Expr *pd;
 
+    if (t->is_const) {
+        t->is_const = FALSE;
+        gen_post(t, L);
+        t->is_const = TRUE;
+        return;
+    }
     switch (t->tag) {
     case T_POINTER:
         gen_post(t->val.pointer.value_type, L);
         break;
+#if 0
     case T_CONST:
         gen_post(t->val.constant.value_type, L);
         break;
+#endif
     case T_ARRAY:
         if (prev_assoc == L)
             gen_code(")");
@@ -474,11 +476,36 @@ void dump_type(Type *t, int l)
     case T_FUNCTION:
         dump_type(t->val.function.return_type, l+1);
         break;
+#if 0
     case T_CONST:
         dump_type(t->val.constant.value_type, l+1);
         break;
+#endif
     case T_STRUCT:
         ind(l+1); report("struct.name=%s\n", t->val.structure.name);
         break;
     }
+}
+
+Type *base_type(Type *t)
+{
+    switch (t->tag) {
+    case T_NONE:
+    case T_EVFLAG:
+    case T_VOID:
+    case T_PRIM:
+    case T_FOREIGN:
+    case T_STRUCT:
+#if 0
+    case T_CONST:
+#endif
+        return t;
+    case T_POINTER:
+        return base_type(t->val.pointer.value_type);
+    case T_ARRAY:
+        return base_type(t->val.array.elem_type);
+    case T_FUNCTION:
+        return base_type(t->val.function.return_type);
+    }
+    return 0;   /* pacify compiler */
 }

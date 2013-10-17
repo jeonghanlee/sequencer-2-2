@@ -27,6 +27,7 @@ in the file LICENSE that is included with this distribution.
 #include "sym_table.h"
 #include "gen_code.h"
 #include "expr.h"
+#include "var_types.h"
 #include "gen_tables.h"
 
 typedef struct event_mask_args {

@@ -15,7 +15,6 @@ in the file LICENSE that is included with this distribution.
 #include <epicsVersion.h>
 
 #include "seq_static_assert.h"
-#include "var_types.h"
 
 #ifndef	TRUE
 #define	TRUE 1
@@ -42,6 +41,7 @@ typedef struct sync_queue_list	SyncQList;
 typedef struct var_list		VarList;
 typedef struct func_symbol	FuncSym;
 typedef struct const_symbol	ConstSym;
+typedef struct type		Type;		/* struct defined in var_types.h */
 
 typedef unsigned long long	TypeMask;
 typedef unsigned int		uint;
@@ -147,7 +147,6 @@ struct variable				/* variable definition */
 {
 	Var	*next;			/* link to next variable in list */
 	char	*name;			/* variable name */
-	Expr	*init;			/* initial value or NULL */
 	Expr	*decl;			/* declaration of this variable
 					   (or NULL if not declared) */
 	Expr	*scope;			/* scope of this variable */

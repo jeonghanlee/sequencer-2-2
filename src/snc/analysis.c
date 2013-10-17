@@ -23,6 +23,7 @@ in the file LICENSE that is included with this distribution.
 #include "expr.h"
 #include "builtin.h"
 #include "gen_code.h"
+#include "var_types.h"
 #include "analysis.h"
 
 static const int impossible = 0;
@@ -89,22 +90,11 @@ Program *analyse_program(Expr *prog, Options options)
 	return p;
 }
 
-static Type *new_structure_type(const char *name, Expr *members)
-{
-	Type *r = new(Type);
-
-	r->tag = T_STRUCT;
-	r->val.structure.member_decls = members;
-	r->val.structure.name = name;
-	r->parent = 0;
-	return r;
-}
-
 static void analyse_structdef(SymTable st, Expr *defn)
 {
 	assert(defn->type == D_STRUCTDEF);
 	if (!sym_table_insert(st, defn->value, structdefs, 
-		new_structure_type(defn->value, defn->structdef_members)))
+		mk_structure_type(defn->value, defn->structdef_members)))
 	{
 		warning_at_expr(defn, "ignoring duplicate struct declaration\n");
 	}
@@ -352,6 +342,10 @@ static void fixup_struct_refs(SymTable st, Type *t)
 	Expr *d;
 	Type *r;
 
+#ifdef DEBUG
+	report("fixup_struct_refs():\n");
+	dump_type(t, 1);
+#endif
 	switch (t->tag)
 	{
 	case T_NONE:
@@ -394,14 +388,21 @@ static void fixup_struct_refs(SymTable st, Type *t)
 				fixup_struct_refs(st, d->extra.e_decl->type);
 		}
 		break;
+#if 0
 	case T_CONST:
 		fixup_struct_refs(st, t->val.constant.value_type);
 		break;
+#endif
 	case T_STRUCT:
 		foreach (d, t->val.structure.member_decls)
 		{
 			if (d->type == D_DECL)
+			{
+#ifdef DEBUG
+				report("struct member %s.%s:\n", t->val.structure.name, d->extra.e_decl->name);
+#endif
 				fixup_struct_refs(st, d->extra.e_decl->type);
+			}
 		}
 		break;
 	}
@@ -444,13 +445,17 @@ static void analyse_declaration(SymTable st, Expr *scope, Expr *defn)
 			error_at_expr(defn,
 				"%s can only be declared at the top-level\n", things);
 	}
+	if (vp->type->tag == T_EVFLAG)
+	{
+		vp->chan.evflag = new(EvFlag);
+	}
 #ifdef DEBUG
-	report("before fixup:\n");
+	report("name=%s, before fixup:\n", vp->name);
 	dump_type(vp->type, 0);
 #endif
 	fixup_struct_refs(st, vp->type);
 #ifdef DEBUG
-	report("after fixup:\n");
+	report("name=%s, after fixup:\n", vp->name);
 	dump_type(vp->type, 0);
 #endif
 
@@ -1284,7 +1289,6 @@ static int connect_variable(Expr *ep, Expr *scope, void *parg)
 		vp->name = ep->value;
                 vp->type = new(Type);
 		vp->type->tag = T_NONE;	/* undeclared type */
-		vp->init = 0;
 		/* add this variable to the top-level scope, NOT the current scope */
 		while (var_list->parent_scope) {
 			scope = var_list->parent_scope;
@@ -1581,6 +1585,7 @@ static uint assign_ef_bits(Expr *scope)
 	{
 		if (vp->type->tag == T_EVFLAG)
 		{
+			assert(vp->chan.evflag);
 			vp->chan.evflag->index = ++num_event_flags;
 		}
 	}

@@ -8,6 +8,7 @@ in the file LICENSE that is included with this distribution.
 #define INCLvar_typesh
 
 #include "seq_prim_types.h"
+#include "types.h"
 
 enum type_tag {
     T_NONE,     /* undeclared (or declared as foreign) variable */
@@ -18,8 +19,10 @@ enum type_tag {
     T_POINTER,
     T_ARRAY,
     T_FUNCTION,
+#if 0
     T_CONST,
-    T_STRUCT,   /* struct type defined in SNL code */
+#endif
+    T_STRUCT,   /* struct defined in SNL code */
 };
 
 enum foreign_type_tag {
@@ -29,52 +32,42 @@ enum foreign_type_tag {
     F_TYPENAME,
 };
 
-struct array_type {
-    unsigned num_elems;
-    struct type *elem_type;
-};
-
-struct pointer_type {
-    struct type *value_type;
-};
-
-struct constant_type {
-    struct type *value_type;
-};
-
-struct function_type {
-    struct expression *param_decls;
-    struct type *return_type;
-};
-
-struct foreign_type {
-    enum foreign_type_tag tag;
-    char *name;
-};
-
-struct structure_type {
-    struct expression *member_decls;
-    const char *name;
-};
-
 typedef struct type Type;
 
 struct type {
     enum type_tag tag;
+    unsigned is_const:1;
     union {
-        enum prim_type_tag      prim;
-        struct foreign_type     foreign;
-        struct pointer_type     pointer;
-        struct array_type       array;
-        struct function_type    function;
-        struct constant_type    constant;
-        struct structure_type   structure;
+        enum prim_type_tag prim;
+        struct {
+            enum foreign_type_tag tag;
+            char *name;
+        } foreign;
+        struct {
+            Type *value_type;
+        } pointer;
+        struct {
+            unsigned num_elems;
+            Type *elem_type;
+        } array;
+        struct {
+            Type *return_type;
+            Expr *param_decls;
+        } function;
+#if 0
+        struct {
+            Type *value_type;
+        } constant;
+#endif
+        struct {
+            const char *name;
+            Expr *member_decls;
+        } structure;
     } val;
-    struct type *parent;
 };
 
 /* base type for any combination of pointers and arrays */
-#define base_type(t) (t->parent)
+Type *base_type(Type *t);
 
 /* array length in 1st and 2nd dimension */
 unsigned type_array_length1(Type *t);
@@ -87,11 +80,19 @@ unsigned type_assignable(Type *t);
 void gen_type(Type *t, const char *prefix, const char *name);
 
 /* creating types */
-Type mk_prim_type(enum prim_type_tag tag);
-Type mk_foreign_type(enum foreign_type_tag tag, char *name);
-Type mk_ef_type();
-Type mk_void_type();
-Type mk_no_type();
+Type *mk_prim_type(enum prim_type_tag tag);
+Type *mk_foreign_type(enum foreign_type_tag tag, char *name);
+Type *mk_ef_type();
+Type *mk_void_type();
+Type *mk_no_type();
+Type *mk_pointer_type(Type *t);
+Type *mk_array_type(Type *t, unsigned n);
+Type *mk_const_type(Type *t);
+Type *mk_function_type(Type *t, Expr *ps);
+Type *mk_structure_type(const char *name, Expr *members);
+
+Expr *mk_decl(Expr *d, Type *t);
+Expr *mk_decls(Expr *ds, Type *t);
 
 void dump_type(Type *t, int l);
 
@@ -123,7 +124,9 @@ const char *type_tag_names[]
     "T_POINTER",
     "T_ARRAY",
     "T_FUNCTION",
+#if 0
     "T_CONST",
+#endif
     "T_STRUCT",
 }
 #endif

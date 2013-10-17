@@ -40,14 +40,4 @@ uint strtoui(
 
 Token token_from_expr(Expr *e);
 
-/* defined in var_types.c */
-Expr *decl_add_base_type(Expr *ds, Type t);
-Expr *decl_add_init(Expr *d, Expr *init);
-Expr *abs_decl_create(void);
-Expr *decl_create(Token name);
-Expr *decl_postfix_array(Expr *d, char *s);
-Expr *decl_postfix_function(Expr *d, Expr *args);
-Expr *decl_prefix_pointer(Expr *d);
-Expr *decl_prefix_const(Expr *d);
-
 #endif	/*INCLparseh*/

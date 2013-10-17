@@ -19,6 +19,7 @@ in the file LICENSE that is included with this distribution.
 #include "gen_ss_code.h"
 #include "gen_tables.h"
 #include "main.h"
+#include "var_types.h"
 #include "gen_code.h"
 
 static const int impossible = 0;

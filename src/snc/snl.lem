@@ -13,6 +13,7 @@ in the file LICENSE that is included with this distribution.
 #include <assert.h>
 
 #include "expr.h"
+#include "var_types.h"
 #include "main.h"
 #include "parser.h"
 }
@@ -188,36 +189,37 @@ subscript(p) ::= LBRACKET INTCON(n) RBRACKET.	{ p = n; }
 // Declarations
 
 declaration(p) ::= basetype(t) init_declarators(ds) SEMICOLON.
-							{ p = decl_add_base_type(ds, t); }
+							{ p = mk_decls(ds, t); }
 
 init_declarators(p) ::= init_declarator(x).		{ p = x; }
 init_declarators(p) ::= init_declarators(xs) COMMA init_declarator(x).
 							{ p = link_expr(xs, x); }
 
 init_declarator(p) ::= declarator(x).			{ p = x; }
-init_declarator(p) ::= declarator(x) EQUAL init_expr(i).{ p = decl_add_init(x, i); }
+init_declarator(p) ::= declarator(x) EQUAL(t) init_expr(i).
+							{ p = expr(E_BINOP, t, x, i); }
 
-declarator(p) ::= variable(n).				{ p = decl_create(n); }
-declarator(p) ::= declarator(x) subscript(s).	[POST]	{ p = decl_postfix_array(x, s.str); }
+declarator(p) ::= variable(n).				{ p = expr(E_VAR, n); }
+declarator(p) ::= declarator(x) subscript(s).	[POST]	{ p = expr(E_SUBSCR, s, x, expr(E_CONST, s)); }
 declarator(p) ::= declarator(x)
-		LPAREN param_decls(ps) RPAREN.	[POST]	{ p = decl_postfix_function(x, ps); }
+	LPAREN(t) param_decls(ps) RPAREN.	[POST]	{ p = expr(E_FUNC, t, x, ps); }
 declarator(p) ::= LPAREN declarator(x) RPAREN.	[PRE]	{ p = x; }
-declarator(p) ::= ASTERISK declarator(x).	[PRE]	{ p = decl_prefix_pointer(x); }
-declarator(p) ::= CONST declarator(x).		[PRE]	{ p = decl_prefix_const(x); }
+declarator(p) ::= ASTERISK(t) declarator(x).	[PRE]	{ p = expr(E_PRE, t, x); }
+declarator(p) ::= CONST(t) declarator(x).	[PRE]	{ p = expr(E_PRE, t, x); }
 
 param_decls(p) ::= .					{ p = 0; }
 param_decls(p) ::= param_decl(x).			{ p = x; }
 param_decls(p) ::= param_decls(xs) COMMA param_decl(x).	{ p = link_expr(xs, x); }
 
 // allow parameter declaration with or without identifier
-param_decl(p) ::= basetype(t) declarator(d).		{ p = decl_add_base_type(d, t); }
+param_decl(p) ::= basetype(t) declarator(d).		{ p = mk_decl(d, t); }
 param_decl(p) ::= type_expr(x).				{ p = x; }
 
 // deprecated
-declaration(p) ::= FOREIGN variables(ds) SEMICOLON.	{ p = decl_add_base_type(ds, mk_no_type()); }
+declaration(p) ::= FOREIGN variables(ds) SEMICOLON.	{ p = mk_decls(ds, mk_no_type()); }
 
-variables(p) ::= variable(x).				{ p = decl_create(x); }
-variables(p) ::= variables(xs) COMMA variable(x).	{ p = link_expr(xs, decl_create(x)); }
+variables(p) ::= variable(x).				{ p = expr(E_VAR, x); }
+variables(p) ::= variables(xs) COMMA variable(x).	{ p = link_expr(xs, expr(E_VAR, x)); }
 
 // Initializer
 // Note: comma operator not allowed in 'expr'.
@@ -252,7 +254,7 @@ prim_type(p) ::= FLOAT.				{ p = P_FLOAT; }
 prim_type(p) ::= DOUBLE.			{ p = P_DOUBLE; }
 prim_type(p) ::= STRING.			{ p = P_STRING; }
 
-%type basetype {Type}
+%type basetype {Type*}
 basetype(p) ::= prim_type(x).			{ p = mk_prim_type(x); }
 basetype(p) ::= EVFLAG.				{ p = mk_ef_type(); }
 basetype(p) ::= VOID.				{ p = mk_void_type(); }
@@ -261,21 +263,21 @@ basetype(p) ::= STRUCT NAME(x).			{ p = mk_foreign_type(F_STRUCT, x.str); }
 basetype(p) ::= UNION NAME(x).			{ p = mk_foreign_type(F_UNION, x.str); }
 basetype(p) ::= TYPENAME NAME(x).		{ p = mk_foreign_type(F_TYPENAME, x.str); }
 
-type_expr(p) ::= basetype(t).			{ p = decl_add_base_type(abs_decl_create(), t); }
-type_expr(p) ::= basetype(t) abs_decl(d).	{ p = decl_add_base_type(d, t); }
+type_expr(p) ::= basetype(t).			{ p = mk_decl(0, t); }
+type_expr(p) ::= basetype(t) abs_decl(d).	{ p = mk_decl(d, t); }
 
 // abstract_declarator
 abs_decl(p) ::= LPAREN abs_decl(x) RPAREN.	{ p = x; }
-abs_decl(p) ::= ASTERISK. [PRE]			{ p = decl_prefix_pointer(abs_decl_create()); }
-abs_decl(p) ::= ASTERISK abs_decl(d). [PRE]	{ p = decl_prefix_pointer(d); }
-abs_decl(p) ::= CONST. [PRE]			{ p = decl_prefix_const(abs_decl_create()); }
-abs_decl(p) ::= CONST abs_decl(d). [PRE]	{ p = decl_prefix_const(d); }
-abs_decl(p) ::= subscript(s). [POST]		{ p = decl_postfix_array(abs_decl_create(), s.str); }
-abs_decl(p) ::= abs_decl(d) subscript(s). [POST]{ p = decl_postfix_array(d, s.str); }
-abs_decl(p) ::= LPAREN param_decls(ps) RPAREN. [POST]
-						{ p = decl_postfix_function(abs_decl_create(), ps); }
-abs_decl(p) ::= abs_decl(d) LPAREN param_decls(ps) RPAREN. [POST]
-						{ p = decl_postfix_function(d, ps); }
+abs_decl(p) ::= ASTERISK(t). [PRE]		{ p = expr(E_PRE, t, 0); }
+abs_decl(p) ::= ASTERISK(t) abs_decl(d). [PRE]	{ p = expr(E_PRE, t, d); }
+abs_decl(p) ::= CONST(t). [PRE]			{ p = expr(E_PRE, t, 0); }
+abs_decl(p) ::= CONST(t) abs_decl(d). [PRE]	{ p = expr(E_PRE, t, d); }
+abs_decl(p) ::= subscript(s). [POST]		{ p = expr(E_SUBSCR, s, 0, expr(E_CONST, s)); }
+abs_decl(p) ::= abs_decl(d) subscript(s). [POST]{ p = expr(E_SUBSCR, s, d, expr(E_CONST, s)); }
+abs_decl(p) ::= LPAREN(t) param_decls(ps) RPAREN. [POST]
+						{ p = expr(E_FUNC, t, 0, ps); }
+abs_decl(p) ::= abs_decl(d) LPAREN(t) param_decls(ps) RPAREN. [POST]
+						{ p = expr(E_FUNC, t, d, ps); }
 
 // not supported: empty brackets, empty parameter list
 // abs_decl ::= LBRACKET RBRACKET.
@@ -487,7 +489,7 @@ member(p) ::= NAME(t).				{ p = expr(E_MEMBER, t); }
 // Function Definitions
 
 funcdef(p) ::= basetype(t) declarator(d) block(b). {
-	p = expr(D_FUNCDEF, token_from_expr(d), decl_add_base_type(d, t), b);
+	p = expr(D_FUNCDEF, token_from_expr(d), mk_decl(d, t), b);
 }
 
 // Struct Definitions
@@ -499,7 +501,7 @@ members(p) ::= LBRACE member_decls(xs) RBRACE.			{ p = xs; }
 member_decls(p) ::= member_decl(x).				{ p = x; }
 member_decls(p) ::= member_decls(xs) member_decl(x).		{ p = link_expr(xs, x); }
 
-member_decl(p) ::= basetype(t) declarator(d) SEMICOLON.		{ p = decl_add_base_type(d, t); }
+member_decl(p) ::= basetype(t) declarator(d) SEMICOLON.		{ p = mk_decl(d, t); }
 member_decl(p) ::= c_code(x).					{ p = x; }
 
 // Literal (C) code

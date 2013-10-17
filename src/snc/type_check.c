@@ -16,9 +16,9 @@ in the file LICENSE that is included with this distribution.
 static const int impossible = FALSE;
 
 /* some type constants */
-static Type num_type_s = { T_PRIM, {P_INT}, 0 };
-static Type str_type_s = { T_PRIM, {P_STRING}, 0 };
-static Type no_type_s = { T_NONE, {0}, 0 };
+static Type num_type_s = { T_PRIM, 0, {P_INT} };
+static Type str_type_s = { T_PRIM, 0, {P_STRING} };
+static Type no_type_s = { T_NONE, 0, {0} };
 static Type *num_type = &num_type_s;
 static Type *str_type = &str_type_s;
 static Type *no_type = &no_type_s;
