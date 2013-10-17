@@ -25,6 +25,7 @@ my $tests = {
   syncq_no_size           => { warnings => 1, errors => 0  },
   syncq_not_assigned      => { warnings => 0, errors => 1  },
   syncq_size_out_of_range => { warnings => 0, errors => 1  },
+  type_not_allowed        => { warnings => 2, errors => 9  },
 };
 
 my @progs = sort(keys(%$tests));
