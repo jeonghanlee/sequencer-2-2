@@ -85,7 +85,7 @@ struct seqChan
 	enum prim_type_tag varType;	/* variable (base) type */
 	unsigned	count;		/* element count for arrays */
 	unsigned	eventNum;	/* event number for this channel */
-	EV_ID		efId;		/* event flag id if synced */
+	EF_ID		efId;		/* event flag id if synced */
 	seqBool		monitored;	/* whether channel should be monitored */
 	unsigned	queueSize;	/* syncQ queue size (0=not queued) */
 	unsigned	queueIndex;	/* syncQ queue index */
@@ -129,6 +129,8 @@ struct seqProgram
 	SEQ_SS_FUNC	*exitFunc;	/* exit function */
 	unsigned	numQueues;	/* number of syncQ queues */
 };
+
+epicsShareFunc void seq_efInit(PROG_ID sp, EF_ID ev_flag, unsigned val);
 
 /* called by generated main and registrar routines */
 epicsShareFunc void seqRegisterSequencerProgram(seqProgram *p);

@@ -197,7 +197,7 @@ static void ss_read_all_buffer(PROG *sp, SSCB *ss)
  * NOTE: calling code must take sp->lock, as we traverse
  * the list of channels synced to this event flag.
  */
-void ss_read_buffer_selective(PROG *sp, SSCB *ss, EV_ID ev_flag)
+void ss_read_buffer_selective(PROG *sp, SSCB *ss, EF_ID ev_flag)
 {
 	CHAN *ch = sp->syncedChans[ev_flag];
 	while (ch)

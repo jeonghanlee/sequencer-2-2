@@ -769,7 +769,7 @@ epicsShareFunc pvStat seq_pvStopMonitor(SS_ID ss, CH_ID chId, unsigned length)
  * Synchronize pv with an event flag.
  * ev_flag == 0 means unSync.
  */
-epicsShareFunc void seq_pvSync(SS_ID ss, CH_ID chId, unsigned length, EV_ID new_ev_flag)
+epicsShareFunc void seq_pvSync(SS_ID ss, CH_ID chId, unsigned length, EF_ID new_ev_flag)
 {
 	PROG	*sp = ss->prog;
 	unsigned i;
@@ -780,7 +780,7 @@ epicsShareFunc void seq_pvSync(SS_ID ss, CH_ID chId, unsigned length, EV_ID new_
 	for (i=0; i<length; i++)
 	{
 		CHAN	*this_ch = sp->chan + chId + i;
-		EV_ID	old_ev_flag = this_ch->syncedTo;
+		EF_ID	old_ev_flag = this_ch->syncedTo;
 
 		if (old_ev_flag != new_ev_flag)
 		{
@@ -937,13 +937,12 @@ epicsShareFunc epicsTimeStamp seq_pvTimeStamp(SS_ID ss, CH_ID chId)
  * Set an event flag, then wake up each state
  * set that might be waiting on that event flag.
  */
-epicsShareFunc void seq_efSet(SS_ID ss, EV_ID ev_flag)
+epicsShareFunc void seq_efSet(SS_ID ss, EF_ID ev_flag)
 {
 	PROG	*sp = ss->prog;
 
-	DEBUG("efSet: sp=%p, ss=%p, ev_flag=%d\n", sp, ss,
-		ev_flag);
-	assert(ev_flag > 0 && ev_flag <= ss->prog->numEvFlags);
+	DEBUG("efSet: sp=%p, ev_flag=%d\n", sp, ev_flag);
+	assert(ev_flag > 0 && ev_flag <= sp->numEvFlags);
 
 	epicsMutexMustLock(sp->lock);
 
@@ -957,9 +956,24 @@ epicsShareFunc void seq_efSet(SS_ID ss, EV_ID ev_flag)
 }
 
 /*
+ * Initialize an event flag.
+ */
+epicsShareFunc void seq_efInit(PROG_ID sp, EF_ID ev_flag, unsigned val)
+{
+	assert(ev_flag > 0 && ev_flag <= sp->numEvFlags);
+
+	epicsMutexMustLock(sp->lock);
+	if (val)
+		bitSet(sp->evFlags, ev_flag);
+	else
+		bitClear(sp->evFlags, ev_flag);
+	epicsMutexUnlock(sp->lock);
+}
+
+/*
  * Return whether event flag is set.
  */
-epicsShareFunc boolean seq_efTest(SS_ID ss, EV_ID ev_flag)
+epicsShareFunc boolean seq_efTest(SS_ID ss, EF_ID ev_flag)
 /* event flag */
 {
 	PROG	*sp = ss->prog;
@@ -983,7 +997,7 @@ epicsShareFunc boolean seq_efTest(SS_ID ss, EV_ID ev_flag)
 /*
  * Clear event flag.
  */
-epicsShareFunc boolean seq_efClear(SS_ID ss, EV_ID ev_flag)
+epicsShareFunc boolean seq_efClear(SS_ID ss, EF_ID ev_flag)
 {
 	PROG	*sp = ss->prog;
 	boolean	isSet;
@@ -1006,7 +1020,7 @@ epicsShareFunc boolean seq_efClear(SS_ID ss, EV_ID ev_flag)
  * Atomically test event flag against outstanding events, then clear it
  * and return whether it was set.
  */
-epicsShareFunc boolean seq_efTestAndClear(SS_ID ss, EV_ID ev_flag)
+epicsShareFunc boolean seq_efTestAndClear(SS_ID ss, EF_ID ev_flag)
 {
 	PROG	*sp = ss->prog;
 	boolean	isSet;
@@ -1063,7 +1077,7 @@ epicsShareFunc boolean seq_pvGetQ(SS_ID ss, CH_ID chId)
 	PROG	*sp = ss->prog;
 	CHAN	*ch = sp->chan + chId;
 	void	*var = valPtr(ch,ss);
-	EV_ID	ev_flag = ch->syncedTo;
+	EF_ID	ev_flag = ch->syncedTo;
 	PVMETA	*meta = metaPtr(ch,ss);
 	boolean	was_empty;
 	struct getq_cp_arg arg = {ch, var, meta};
@@ -1100,7 +1114,7 @@ epicsShareFunc void seq_pvFlushQ(SS_ID ss, CH_ID chId)
 {
 	PROG	*sp = ss->prog;
 	CHAN	*ch = sp->chan + chId;
-	EV_ID	ev_flag = ch->syncedTo;
+	EF_ID	ev_flag = ch->syncedTo;
 	QUEUE	queue = ch->queue;
 
 	DEBUG("pvFlushQ: pv name=%s, count=%d\n",

@@ -55,7 +55,7 @@ typedef struct _seq_vars SEQ_VARS;	/* struct defined in generated code */
 typedef char string[MAX_STRING_SIZE];	/* representation of SNL string type */
 
 /* these typedefs make the code more self documenting */
-typedef unsigned EV_ID;			/* identifier for an event */
+typedef unsigned EF_ID;			/* identifier for an event */
 typedef unsigned CH_ID;		/* identifier for a pv */
 typedef int seqBool;
 
@@ -68,10 +68,10 @@ typedef struct seqProgram seqProgram;	/* struct defined in generated code */
  */
 
 /* event flag operations */
-epicsShareFunc void seq_efSet(SS_ID, EV_ID);
-epicsShareFunc seqBool seq_efTest(SS_ID, EV_ID);
-epicsShareFunc seqBool seq_efClear(SS_ID, EV_ID);
-epicsShareFunc seqBool seq_efTestAndClear(SS_ID, EV_ID);
+epicsShareFunc void seq_efSet(SS_ID, EF_ID);
+epicsShareFunc seqBool seq_efTest(SS_ID, EF_ID);
+epicsShareFunc seqBool seq_efClear(SS_ID, EF_ID);
+epicsShareFunc seqBool seq_efTestAndClear(SS_ID, EF_ID);
 /* pv operations */
 epicsShareFunc pvStat seq_pvGet(SS_ID, CH_ID, enum compType, double tmo);
 epicsShareFunc pvStat seq_pvGetMultiple(SS_ID, CH_ID,
@@ -89,7 +89,7 @@ epicsShareFunc void seq_pvGetCancel(SS_ID, CH_ID, unsigned);
 epicsShareFunc void seq_pvPutCancel(SS_ID, CH_ID, unsigned);
 epicsShareFunc pvStat seq_pvAssign(SS_ID, CH_ID, const char *);
 epicsShareFunc pvStat seq_pvMonitor(SS_ID, CH_ID, unsigned);
-epicsShareFunc void seq_pvSync(SS_ID, CH_ID, unsigned, EV_ID);
+epicsShareFunc void seq_pvSync(SS_ID, CH_ID, unsigned, EF_ID);
 epicsShareFunc pvStat seq_pvStopMonitor(SS_ID, CH_ID, unsigned);
 /* pv info */
 epicsShareFunc char *seq_pvName(SS_ID, CH_ID);
@@ -132,6 +132,7 @@ epicsShareFunc epicsThreadId seq(seqProgram *, const char *, unsigned);
 #define USER_VAR		SEQ_VARS
 #define UserVar			_seq_vars
 #define VAR_ID			CH_ID
+#define EV_ID			EF_ID
 #define seq_pvFreeQ		seq_pvFlushQ
 #define DEFAULT_QUEUE_SIZE	100	/* number of elements */
 

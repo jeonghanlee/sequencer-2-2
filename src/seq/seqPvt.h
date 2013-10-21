@@ -94,7 +94,7 @@ struct channel
 
 	/* dynamic channel data (assigned at runtime) */
 	DBCHAN		*dbch;		/* channel assigned to a named db pv */
-	EV_ID		syncedTo;	/* event flag id if synced */
+	EF_ID		syncedTo;	/* event flag id if synced */
 	CHAN		*nextSynced;	/* next channel synced to same flag */
 	QUEUE		queue;		/* queue if queued */
 	boolean		monitored;	/* whether channel is monitored */
@@ -218,7 +218,7 @@ struct pvreq
 void sequencer(void *arg);
 void ss_write_buffer(CHAN *ch, void *val, PVMETA *meta, boolean dirtify);
 void ss_read_buffer(SSCB *ss, CHAN *ch, boolean dirty_only);
-void ss_read_buffer_selective(PROG *sp, SSCB *ss, EV_ID ev_flag);
+void ss_read_buffer_selective(PROG *sp, SSCB *ss, EF_ID ev_flag);
 void ss_wakeup(PROG *sp, unsigned eventNum);
 
 /* seq_mac.c */
