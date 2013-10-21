@@ -727,7 +727,7 @@ static void gen_pv_func(
 	if (ap->type == E_SUBSCR)
 	{
 		/* e.g. pvPut(xyz[i+2]); => seq_pvPut(ssId, 3 + (i+2)); */
-		gen_code(" + (VAR_ID)(");
+		gen_code(" + (CH_ID)(");
 		/* generate the subscript expression */
 		gen_expr(context, subscr, 0);
 		gen_code(")");
