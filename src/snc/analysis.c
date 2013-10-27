@@ -15,9 +15,7 @@ in the file LICENSE that is included with this distribution.
 #include <limits.h>
 #include <assert.h>
 
-#define sym_type_GLOBAL
 #include "types.h"
-#undef sym_type_GLOBAL
 #include "sym_table.h"
 #include "main.h"
 #include "expr.h"
@@ -27,6 +25,10 @@ in the file LICENSE that is included with this distribution.
 #include "analysis.h"
 
 static const int impossible = 0;
+
+/* unique dummy pointer to distinguish struct
+   names from other stuff in the symbol table */
+void *structdefs = &structdefs;
 
 static void analyse_definitions(Program *p);
 static void analyse_option(Options *options, Expr *defn);
@@ -92,7 +94,7 @@ Program *analyse_program(Expr *prog, Options options)
 
 static void analyse_structdef(SymTable st, Expr *defn)
 {
-	assert(defn->type == D_STRUCTDEF);
+	assert(defn->tag == D_STRUCTDEF);
 	if (!sym_table_insert(st, defn->value, structdefs, 
 		mk_structure_type(defn->value, defn->structdef_members)))
 	{
@@ -106,9 +108,9 @@ static void analyse_funcdef(Expr *defn)
 	Var *var;
 	Expr *p;
 
-	assert(defn->type == D_FUNCDEF);
+	assert(defn->tag == D_FUNCDEF);
 	decl = defn->funcdef_decl;
-	assert(decl->type == D_DECL);
+	assert(decl->tag == D_DECL);
 	var = decl->extra.e_decl;
 	if (var->type->tag != T_FUNCTION)
 	{
@@ -133,14 +135,14 @@ static void analyse_defns(Expr *defn_list, Expr *scope, Program *p)
 	assert(is_scope(scope));				/* precondition */
 	foreach (defn, defn_list)
 	{
-		switch (defn->type)
+		switch (defn->tag)
 		{
 		case D_OPTION:
-			if (scope->type == D_PROG)
+			if (scope->tag == D_PROG)
 			{
 				analyse_option(&p->options, defn);
 			}
-			else if (scope->type == D_STATE)
+			else if (scope->tag == D_STATE)
 			{
 				analyse_state_option(&scope->extra.e_state->options, defn);
 			}
@@ -185,7 +187,7 @@ static int analyse_scope(Expr *scope, Expr *parent_scope, void *parg)
 
 #ifdef DEBUG
 	report("analyse_defn: scope=(%s:%s)\n",
-		expr_type_name(scope), scope->value);
+		expr_name(scope), scope->value);
 #endif
 
 	assert(is_scope(scope));				/* precondition */
@@ -205,7 +207,7 @@ static int analyse_scope(Expr *scope, Expr *parent_scope, void *parg)
 	}
 
 	analyse_defns(defn_list, scope, p);
-	if (scope->type == D_PROG)
+	if (scope->tag == D_PROG)
 	{
 		analyse_defns(scope->prog_xdefns, scope, p);
 	}
@@ -218,7 +220,7 @@ VarList **pvar_list_from_scope(Expr *scope)
 	assert(scope);			/* precondition */
 	assert(is_scope(scope));	/* precondition */
 
-	switch(scope->type)
+	switch(scope->tag)
 	{
 	case D_PROG:
 		return &scope->extra.e_prog;
@@ -242,7 +244,7 @@ Expr *defn_list_from_scope(Expr *scope)
 	assert(scope);			/* precondition */
 	assert(is_scope(scope));	/* precondition */
 
-	switch(scope->type)
+	switch(scope->tag)
 	{
 	case D_PROG:
 		return scope->prog_defns;
@@ -280,7 +282,7 @@ static void analyse_option(Options *options, Expr *defn)
 
 	assert(options);		/* precondition */
 	assert(defn);			/* precondition */
-	assert(defn->type == D_OPTION);	/* precondition */
+	assert(defn->tag == D_OPTION);	/* precondition */
 
 	optname = defn->value;
 	optval = defn->extra.e_option;
@@ -317,7 +319,7 @@ static void analyse_state_option(StateOptions *options, Expr *defn)
 
 	assert(options);		/* precondition */
 	assert(defn);			/* precondition */
-	assert(defn->type == D_OPTION);	/* precondition */
+	assert(defn->tag == D_OPTION);	/* precondition */
 
 	optname = defn->value;
 	optval = defn->extra.e_option;
@@ -384,7 +386,7 @@ static void fixup_struct_refs(SymTable st, Type *t)
 		fixup_struct_refs(st, t->val.function.return_type);
 		foreach (d, t->val.function.param_decls)
 		{
-			if (d->type == D_DECL)
+			if (d->tag == D_DECL)
 				fixup_struct_refs(st, d->extra.e_decl->type);
 		}
 		break;
@@ -396,7 +398,7 @@ static void fixup_struct_refs(SymTable st, Type *t)
 	case T_STRUCT:
 		foreach (d, t->val.structure.member_decls)
 		{
-			if (d->type == D_DECL)
+			if (d->tag == D_DECL)
 			{
 #ifdef DEBUG
 				report("struct member %s.%s:\n", t->val.structure.name, d->extra.e_decl->name);
@@ -416,7 +418,7 @@ static void analyse_declaration(SymTable st, Expr *scope, Expr *defn)
 
 	assert(scope);			/* precondition */
 	assert(defn);			/* precondition */
-	assert(defn->type == D_DECL);	/* precondition */
+	assert(defn->tag == D_DECL);	/* precondition */
 
 	vp = defn->extra.e_decl;
 
@@ -430,7 +432,7 @@ static void analyse_declaration(SymTable st, Expr *scope, Expr *defn)
 			"foreign declarations are deprecated\n");
 		seen_foreign = TRUE;
 	}
-	if (scope->type != D_PROG)
+	if (scope->tag != D_PROG)
 	{
 		const char *things = 0;
 
@@ -495,7 +497,7 @@ static void analyse_assign(SymTable st, ChanList *chan_list, Expr *scope, Expr *
 	assert(chan_list);		/* precondition */
 	assert(scope);			/* precondition */
 	assert(defn);			/* precondition */
-	assert(defn->type == D_ASSIGN);	/* precondition */
+	assert(defn->tag == D_ASSIGN);	/* precondition */
 
 	name = defn->value;
 	vp = find_var(st, name, scope);
@@ -526,7 +528,7 @@ static void analyse_assign(SymTable st, ChanList *chan_list, Expr *scope, Expr *
 	{
 		assign_single(chan_list, defn, vp, 0);
 	}
-	else if (defn->assign_pvs->type == E_INIT)
+	else if (defn->assign_pvs->tag == E_INIT)
 	{
 		assign_multi(chan_list, defn, vp, defn->assign_pvs->init_elems);
 	}
@@ -619,7 +621,7 @@ static void assign_subscript(
 	assert(defn);				/* precondition */
 	assert(vp);				/* precondition */
 	assert(subscr);				/* precondition */
-	assert(subscr->type == E_CONST);	/* syntax */
+	assert(subscr->tag == E_CONST);	/* syntax */
 	assert(pv_name);			/* precondition */
 
 #ifdef DEBUG
@@ -739,7 +741,7 @@ static void monitor_elem(Expr *defn, Var *vp, Expr *subscr)
 	assert(defn);
 	assert(vp);
 	assert(subscr);
-	assert(subscr->type == E_CONST);		/* syntax */
+	assert(subscr->tag == E_CONST);		/* syntax */
 
 #ifdef DEBUG
 	report("monitor %s[%s];\n", vp->name, subscr->value);
@@ -797,7 +799,7 @@ static void analyse_monitor(SymTable st, Expr *scope, Expr *defn)
 
 	assert(scope);
 	assert(defn);
-	assert(defn->type == D_MONITOR);
+	assert(defn->tag == D_MONITOR);
 
 	var_name = defn->value;
 	assert(var_name);
@@ -875,7 +877,7 @@ static void sync_elem(Expr *defn, Var *vp, Expr *subscr, Var *evp)
 	assert(defn);					/* syntax */
 	assert(vp);					/* call */
 	assert(subscr);					/* call */
-	assert(subscr->type == E_CONST);		/* syntax */
+	assert(subscr->tag == E_CONST);		/* syntax */
 	assert(evp);					/* syntax */
 
 	assert(vp->sync != M_SINGLE);			/* call */
@@ -926,7 +928,7 @@ static void analyse_sync(SymTable st, Expr *scope, Expr *defn)
 
 	assert(scope);
 	assert(defn);
-	assert(defn->type == D_SYNC);
+	assert(defn->tag == D_SYNC);
 
 	var_name = defn->value;
 	assert(var_name);
@@ -1020,7 +1022,7 @@ static void syncq_elem(Expr *defn, Var *vp, Expr *subscr, SyncQ *qp)
 	assert(defn);					/* syntax */
 	assert(vp);					/* call */
 	assert(subscr);					/* call */
-	assert(subscr->type == E_CONST);		/* syntax */
+	assert(subscr->tag == E_CONST);		/* syntax */
 	assert(qp);					/* call */
 
 	assert(vp->syncq != M_SINGLE);			/* call */
@@ -1069,7 +1071,7 @@ static void analyse_syncq(SymTable st, SyncQList *syncq_list, Expr *scope, Expr 
 
 	assert(scope);
 	assert(defn);
-	assert(defn->type == D_SYNCQ);
+	assert(defn->tag == D_SYNCQ);
 
 	var_name = defn->value;
 	assert(var_name);
@@ -1211,7 +1213,7 @@ Var *find_var(SymTable st, char *name, Expr *scope)
 
 #ifdef DEBUG
 	report("searching %s in %s:%s, ", name, scope->value,
-		expr_type_name(scope));
+		expr_name(scope));
 #endif
 	vp = (Var *)sym_table_lookup(st, name, var_list);
 	if (vp)
@@ -1242,7 +1244,7 @@ static int connect_variable(Expr *ep, Expr *scope, void *parg)
 	Var		*vp;
 
 	assert(ep);
-	assert(ep->type == E_VAR);
+	assert(ep->tag == E_VAR);
 	assert(scope);
 
 #ifdef DEBUG
@@ -1255,7 +1257,7 @@ static int connect_variable(Expr *ep, Expr *scope, void *parg)
 	if (vp)
 	{
 		report_at_expr(ep, "var %s found in scope (%s:%s)\n", ep->value,
-			expr_type_name(vp->scope),
+			expr_name(vp->scope),
 			vp->scope->value);
 	}
 	else
@@ -1270,14 +1272,14 @@ static int connect_variable(Expr *ep, Expr *scope, void *parg)
 		csym = lookup_builtin_const(st, ep->value);
 		if (csym)
 		{
-			ep->type = E_CONST;
+			ep->tag = E_CONST;
 			ep->extra.e_const = csym;
 			return FALSE;
 		}
 		fsym = lookup_builtin_func(st, ep->value);
 		if (fsym)
 		{
-			ep->type = E_BUILTIN;
+			ep->tag = E_BUILTIN;
 			ep->extra.e_builtin = fsym;
 			return FALSE;
 		}
@@ -1329,12 +1331,12 @@ void traverse_expr_tree(
 		return;
 
 #ifdef DEBUG
-	report("traverse_expr_tree(type=%s,value=%s)\n",
-		expr_type_name(ep), ep->value);
+	report("traverse_expr_tree(tag=%s,value=%s)\n",
+		expr_name(ep), ep->value);
 #endif
 
 	/* Call the function? */
-	if (call_mask & bit(ep->type))
+	if (call_mask & bit(ep->tag))
 	{
 		descend = iteratee(ep, scope, parg);
 	}
@@ -1347,17 +1349,17 @@ void traverse_expr_tree(
 	{
 #ifdef DEBUG
 	report("traverse_expr_tree: new scope=(%s,%s)\n",
-		expr_type_name(ep), ep->value);
+		expr_name(ep), ep->value);
 #endif
 		scope = ep;
 	}
 
 	/* Descend into children */
-	for (i = 0; i < expr_type_info[ep->type].num_children; i++)
+	for (i = 0; i < expr_info[ep->tag].num_children; i++)
 	{
 		foreach (cep, ep->children[i])
 		{
-			if (!(bit(cep->type) & stop_mask))
+			if (!(bit(cep->tag) & stop_mask))
 			{
 				traverse_expr_tree(cep, call_mask, stop_mask,
 					scope, iteratee, parg);
@@ -1452,25 +1454,25 @@ static int iter_connect_state_change_stmts(Expr *ep, Expr *scope, void *parg)
 
 	assert(pcsc_arg);
 	assert(ep);
-	if (ep->type == D_SS)
+	if (ep->tag == D_SS)
 	{
 		pcsc_arg->ssp = ep;
 		return TRUE;
 	}
-	else if (ep->type == D_ENTEX)
+	else if (ep->tag == D_ENTEX)
 	{
 		/* to flag erroneous state change statements, see below */
 		pcsc_arg->in_when = FALSE;
 		return TRUE;
 	}
-	else if (ep->type == D_WHEN)
+	else if (ep->tag == D_WHEN)
 	{
 		pcsc_arg->in_when = TRUE;
 		return TRUE;
 	}
 	else
 	{
-		assert(ep->type == S_CHANGE);
+		assert(ep->tag == S_CHANGE);
 		if (!pcsc_arg->ssp || !pcsc_arg->in_when)
 		{
 			error_at_expr(ep, "state change statement not allowed here\n");
@@ -1511,27 +1513,28 @@ static int iter_mark_states_reachable(Expr *ep, Expr *scope, void *parg)
 {
 	Expr *target_state = 0;
 
-	assert(ep->type == S_CHANGE || ep->type == D_WHEN);
-	switch (ep->type ) {
+	switch (ep->tag ) {
 	case S_CHANGE:
 		target_state = ep->extra.e_change;
 		break;
 	case D_WHEN:
 		target_state = ep->extra.e_when->next_state;
 		break;
+	default:
+		assert(impossible);
 	}
 	if (target_state && !target_state->extra.e_state->is_target)
 	{
 		target_state->extra.e_state->is_target = 1;
 		mark_states_reachable_from(target_state);
 	}
-	return (ep->type == D_WHEN);
+	return (ep->tag == D_WHEN);
 }
 
 static void mark_states_reachable_from(Expr *sp)
 {
 	assert(sp);
-	assert(sp->type == D_STATE);
+	assert(sp->tag == D_STATE);
 
 	traverse_expr_tree(
 		sp,				/* start expression */
@@ -1548,11 +1551,11 @@ static void check_states_reachable_from_first(Expr *ssp)
 	Expr *sp;
 
 	assert(ssp);
-	assert(ssp->type == D_SS);
+	assert(ssp->tag == D_SS);
 
 	sp = ssp->ss_states;
 	assert(sp);
-	assert(sp->type == D_STATE);
+	assert(sp->tag == D_STATE);
 	assert(sp->extra.e_state->index == 0);
 
 	sp->extra.e_state->is_target = 1;

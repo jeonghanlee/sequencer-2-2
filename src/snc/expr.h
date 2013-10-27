@@ -17,8 +17,8 @@ in the file LICENSE that is included with this distribution.
 
 /* defined in expr.c */
 Expr *expr(
-	uint	type,
-	Token	tok,
+	enum expr_tag	tag,
+	Token		tok,
 	...
 );
 

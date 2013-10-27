@@ -110,17 +110,67 @@ struct state_set			/* extra data for state set clauses */
 	VarList		*var_list;	/* list of 'local' variables */
 };
 
+/* Expression types */
+enum expr_tag			/* description [child expressions...] */
+{
+	D_ASSIGN,		/* assign statement [subscr,pvs] */
+	D_DECL,			/* variable declaration [init] */
+	D_ENTEX,		/* entry or exit statement [block] */
+	D_FUNCDEF,		/* function definition [decl,block] */
+	D_MONITOR,		/* monitor statement [subscr] */
+	D_OPTION,		/* option definition [] */
+	D_PROG,			/* whole program [param,defns,entry,statesets,exit,xdefns] */
+	D_SS,			/* state set statement [defns,states] */
+	D_STATE,		/* state statement [defns,entry,whens,exit] */
+	D_STRUCTDEF,		/* struct definition [members] */
+	D_SYNC,			/* sync statement [subscr,evflag] */
+	D_SYNCQ,		/* syncq statement [subscr,evflag,maxqsize] */
+	D_WHEN,			/* when statement [cond,block] */
+
+	E_BINOP,		/* binary operator [left,right] */
+	E_BUILTIN,		/* builtin function [] */
+	E_CAST,			/* type cast [type,operand] */
+	E_CONST,		/* numeric (inkl. character) constant [] */
+	E_FUNC,			/* function call [expr,args] */
+	E_INIT,			/* array or struct initializer [elems] */
+	E_MEMBER,		/* struct or union member [] */
+	E_PAREN,		/* parenthesis around an expression [expr] */
+	E_POST,			/* unary postfix operator [operand] */
+	E_PRE,			/* unary prefix operator [operand] */
+	E_SELECT,		/* member selection [left,right] */
+	E_STRING,		/* string constant [] */
+	E_SUBSCR,		/* subscripted expr [operand,index] */
+	E_TERNOP,		/* ternary operator [cond,then,else] */
+	E_VAR,			/* variable [] */
+
+	S_CHANGE,		/* state change statement [] */
+	S_CMPND,		/* compound statement [defns,stmts] */
+	S_FOR,			/* for statement [init,cond,iter,stmt] */
+	S_IF,			/* if statement [cond,then,else] */
+	S_JUMP,			/* break or continue stmt [] */
+	S_RETURN,		/* return stmt [expr] */
+	S_STMT,			/* simple statement, i.e. 'expr;'  [expr] */
+	S_WHILE,		/* while statement [cond,stmt] */
+
+	T_TEXT,			/* C code or other text to be inserted [] */
+
+	NUM_EXPR_TYPES
+};
+
+/* make sure we have no more expression types than bits */
+STATIC_ASSERT(NUM_EXPR_TYPES <= 8*sizeof(TypeMask));
+
 struct expression			/* generic syntax node */
 {
 	Expr		*next;		/* list node: next expression */
 	Expr		*last;		/* list node: last expression */
 	Expr		**children;	/* array of children [left,right,...] */
-	TypeMask	type;		/* expression type (E_XXX) */
+	enum expr_tag   tag;		/* expression tag (E_XXX) */
 	char		*value;		/* token string */
 	int		token;		/* token symbol */
 	int		line_num;	/* originating line number */
 	const char	*src_file;	/* originating source file */
-	union				/* extra data, depends on type */
+	union				/* extra data, depends on tag */
 	{
 		Var	*e_var;		/* variable reference */
 		Var	*e_decl;	/* variable declaration */
@@ -243,7 +293,7 @@ struct program
 #define scope_mask		( bit(D_PROG)    | bit(D_FUNCDEF) \
 				| bit(D_SS)      | bit(D_STATE)   | bit(S_CMPND) )
 /* Whether an expression is a scope */
-#define is_scope(e)		((bit((e)->type) & scope_mask) != 0)
+#define is_scope(e)		((bit((e)->tag) & scope_mask) != 0)
 
 /* Expression types that may have sub-scopes */
 #define has_sub_scope_mask	( bit(D_ENTEX)   | bit(D_FUNCDEF) | bit(D_PROG)   | bit(D_SS)\
@@ -257,7 +307,7 @@ struct program
 				| bit(E_SELECT)	 | bit(E_STRING)\
 				| bit(E_SUBSCR)  | bit(E_TERNOP)  | bit(E_VAR)    | bit(T_TEXT) )
 
-#define expr_type_name(e)	expr_type_info[(e)->type].name
+#define expr_name(e)		expr_info[(e)->tag].name
 
 /* for channel assign, monitor, sync, and syncq */
 enum multiplicity
@@ -266,56 +316,6 @@ enum multiplicity
 	M_SINGLE,		/* whole variable (array or scalar) */
 	M_MULTI			/* array, each element treated separately */
 };
-
-/* Expression types */
-enum expr_type			/* description [child expressions...] */
-{
-	D_ASSIGN,		/* assign statement [subscr,pvs] */
-	D_DECL,			/* variable declaration [init] */
-	D_ENTEX,		/* entry or exit statement [block] */
-	D_FUNCDEF,		/* function definition [decl,block] */
-	D_MONITOR,		/* monitor statement [subscr] */
-	D_OPTION,		/* option definition [] */
-	D_PROG,			/* whole program [param,defns,entry,statesets,exit,xdefns] */
-	D_SS,			/* state set statement [defns,states] */
-	D_STATE,		/* state statement [defns,entry,whens,exit] */
-	D_STRUCTDEF,		/* struct definition [members] */
-	D_SYNC,			/* sync statement [subscr,evflag] */
-	D_SYNCQ,		/* syncq statement [subscr,evflag,maxqsize] */
-	D_WHEN,			/* when statement [cond,block] */
-
-	E_BINOP,		/* binary operator [left,right] */
-	E_BUILTIN,		/* builtin function [] */
-	E_CAST,			/* type cast [type,operand] */
-	E_CONST,		/* numeric (inkl. character) constant [] */
-	E_FUNC,			/* function call [expr,args] */
-	E_INIT,			/* array or struct initializer [elems] */
-	E_MEMBER,		/* struct or union member [] */
-	E_PAREN,		/* parenthesis around an expression [expr] */
-	E_POST,			/* unary postfix operator [operand] */
-	E_PRE,			/* unary prefix operator [operand] */
-	E_SELECT,		/* member selection [left,right] */
-	E_STRING,		/* string constant [] */
-	E_SUBSCR,		/* subscripted expr [operand,index] */
-	E_TERNOP,		/* ternary operator [cond,then,else] */
-	E_VAR,			/* variable [] */
-
-	S_CHANGE,		/* state change statement [] */
-	S_CMPND,		/* compound statement [defns,stmts] */
-	S_FOR,			/* for statement [init,cond,iter,stmt] */
-	S_IF,			/* if statement [cond,then,else] */
-	S_JUMP,			/* break or continue stmt [] */
-	S_RETURN,		/* return stmt [expr] */
-	S_STMT,			/* simple statement, i.e. 'expr;'  [expr] */
-	S_WHILE,		/* while statement [cond,stmt] */
-
-	T_TEXT,			/* C code or other text to be inserted [] */
-
-	NUM_EXPR_TYPES
-};
-
-/* make sure we have no more expression types than bits */
-STATIC_ASSERT(NUM_EXPR_TYPES <= 8*sizeof(TypeMask));
 
 /* Accessors for child expressions. Would like to define structs for the
    various expression types with children, but then we could no longer
@@ -380,16 +380,16 @@ STATIC_ASSERT(NUM_EXPR_TYPES <= 8*sizeof(TypeMask));
 
 #define funcdef_params	funcdef_decl->extra.e_decl->type->val.function.param_decls
 
-#ifndef expr_type_GLOBAL
+#ifndef expr_info_GLOBAL
 extern
 #endif
-struct expr_type_info
+struct expr_info
 {
 	const char *name;
 	const uint num_children;
 }
-expr_type_info[]
-#ifdef expr_type_GLOBAL
+expr_info[]
+#ifdef expr_info_GLOBAL
 = {
 	{ "D_ASSIGN",	2 },
 	{ "D_DECL",	1 },
@@ -429,17 +429,6 @@ expr_type_info[]
 	{ "S_WHILE",	2 },
 	{ "T_TEXT",	0 },
 }
-#endif
-;
-
-/* The following is a unique dummy pointer to distinguish struct
-   names from other stuff in the symbol table */
-#ifndef sym_type_GLOBAL
-extern
-#endif
-void *structdefs
-#ifdef sym_type_GLOBAL
-= &structdefs;
 #endif
 ;
 

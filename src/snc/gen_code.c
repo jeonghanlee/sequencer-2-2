@@ -34,9 +34,9 @@ static int assert_var_declared(Expr *ep, Expr *scope, void *parg)
 {
 #ifdef DEBUG
 	report("assert_var_declared: '%s' in scope (%s:%s)\n",
-		ep->value, expr_type_name(scope), scope->value);
+		ep->value, expr_name(scope), scope->value);
 #endif
-	assert(ep->type == E_VAR);
+	assert(ep->tag == E_VAR);
 	assert(ep->extra.e_var != 0);
 	assert(ep->extra.e_var->decl != 0 ||
 		ep->extra.e_var->type->tag == T_NONE);
@@ -110,7 +110,7 @@ static void gen_func_decls(Expr *prog)
 {
 	Var	*vp;
 
-	assert(prog->type == D_PROG);
+	assert(prog->tag == D_PROG);
 	gen_code("\n/* Function declarations */\n");
 
 	/* function declarations are always global and static */
@@ -230,7 +230,7 @@ void gen_defn_c_code(Expr *scope, int level)
 
 	foreach (ep, defn_list)
 	{
-		if (ep->type == T_TEXT)
+		if (ep->tag == T_TEXT)
 		{
 			if (first)
 			{
@@ -249,7 +249,7 @@ static void gen_global_defn(Expr *ep)
 {
 	Expr *member;
 
-	switch(ep->type)
+	switch(ep->tag)
 	{
 	case T_TEXT:
 		gen_line_marker(ep);
@@ -264,7 +264,7 @@ static void gen_global_defn(Expr *ep)
 		{
 			gen_line_marker(member);
 			indent(1);
-			switch (member->type)
+			switch (member->tag)
 			{
 			case D_DECL:
 				gen_var_decl(member->extra.e_decl);
@@ -274,8 +274,8 @@ static void gen_global_defn(Expr *ep)
 				gen_code("%s\n", member->value);
 				break;
 			default:
-				assert_at_expr(impossible, member, "member->type==%s\n",
-					expr_type_name(member));
+				assert_at_expr(impossible, member, "member->tag==%s\n",
+					expr_name(member));
 			}
 		}
 		gen_code("};\n");
@@ -291,7 +291,7 @@ static void gen_global_defn(Expr *ep)
 		/* these have no direct correspondence to a C declaration */
 		break;
 	default:
-		assert_at_expr(impossible, ep, "ep->type==%s\n", expr_type_name(ep));
+		assert_at_expr(impossible, ep, "ep->tag==%s\n", expr_name(ep));
 	}
 }
 

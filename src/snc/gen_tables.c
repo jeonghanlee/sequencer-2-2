@@ -84,15 +84,15 @@ static void gen_channel_table(ChanList *chan_list, uint num_event_flags, int opt
 
 static void gen_var_name(Var *vp)
 {
-	if (vp->scope->type == D_PROG)
+	if (vp->scope->tag == D_PROG)
 	{
 		gen_code("%s", vp->name);
 	}
-	else if (vp->scope->type == D_SS)
+	else if (vp->scope->tag == D_SS)
 	{
 		gen_code("%s_%s.%s", NM_VARS, vp->scope->value, vp->name);
 	}
-	else if (vp->scope->type == D_STATE)
+	else if (vp->scope->tag == D_STATE)
 	{
 		gen_code("%s_%s.%s_%s.%s", NM_VARS,
 			vp->scope->extra.e_state->var_list->parent_scope->value,
@@ -379,7 +379,7 @@ static int iter_event_mask_scalar(Expr *ep, Expr *scope, void *parg)
 	uint		num_event_flags = em_args->num_event_flags;
 	seqMask		*event_words = em_args->event_words;
 
-	assert(ep->type == E_VAR);
+	assert(ep->tag == E_VAR);
 	vp = ep->extra.e_var;
 	assert(vp != 0);
 
@@ -422,18 +422,18 @@ static int iter_event_mask_array(Expr *ep, Expr *scope, void *parg)
 	Var		*vp=0;
 	Expr		*e_var=0, *e_ix=0;
 
-	assert(ep->type == E_SUBSCR || ep->type == E_VAR);
+	assert(ep->tag == E_SUBSCR || ep->tag == E_VAR);
 
-	if (ep->type == E_SUBSCR)
+	if (ep->tag == E_SUBSCR)
 	{
 		e_var = ep->subscr_operand;
 		e_ix = ep->subscr_index;
 		assert(e_var != 0);
 		assert(e_ix != 0);
-		if (e_var->type != E_VAR)
+		if (e_var->tag != E_VAR)
 			return TRUE;
 	}
-	if (ep->type == E_VAR)
+	if (ep->tag == E_VAR)
 	{
 		e_var = ep;
 		e_ix = 0;
@@ -469,7 +469,7 @@ static int iter_event_mask_array(Expr *ep, Expr *scope, void *parg)
 
 		assert(vp->assign == M_MULTI);
 		/* an array variable subscripted with a constant */
-		if (e_ix && e_ix->type == E_CONST)
+		if (e_ix && e_ix->tag == E_CONST)
 		{
 			uint ix;
 

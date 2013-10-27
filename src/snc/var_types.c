@@ -76,7 +76,7 @@ static Expr *new_decl(Token k, Type *type)
 }
 
 /*
- * build a declaration (a syntax node with type D_DECL)
+ * build a declaration (a syntax node with tag D_DECL)
  * from declarator node 'd' and child type 't'
  */
 Expr *mk_decl(Expr *d, Type *t)
@@ -89,12 +89,12 @@ Expr *mk_decl(Expr *d, Type *t)
         Token k = {0,0,0,0};
         return new_decl(k, t);
     }
-    switch (d->type) {
+    switch (d->tag) {
     case E_BINOP:
         /* initializer */
         assert(d->token == TOK_EQUAL);
         r = mk_decl(d->binop_left, t);
-        assert(r->type == D_DECL);      /* post condition */
+        assert(r->tag == D_DECL);      /* post condition */
         r->decl_init = d->binop_right;
         return r;
     case E_VAR:
@@ -164,7 +164,7 @@ Expr *mk_decl(Expr *d, Type *t)
         default:
             break;
         }
-        assert(d->subscr_index->type == E_CONST);
+        assert(d->subscr_index->tag == E_CONST);
         if (!strtoui(d->subscr_index->value, UINT_MAX, &num_elems) || num_elems == 0) {
             error_at_expr(d, "invalid array size (must be >= 1)\n");
             num_elems = 1;

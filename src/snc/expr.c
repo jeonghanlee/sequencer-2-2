@@ -18,9 +18,9 @@ in the file LICENSE that is included with this distribution.
 #include <errno.h>
 #include <limits.h>
 
-#define expr_type_GLOBAL
+#define expr_info_GLOBAL
 #include "types.h"
-#undef expr_type_GLOBAL
+#undef expr_info_GLOBAL
 #include "expr.h"
 #include "main.h"
 
@@ -28,8 +28,8 @@ static const StateOptions default_state_options = DEFAULT_STATE_OPTIONS;
 
 /* Expr is the generic syntax tree node */
 Expr *expr(
-	uint	type,
-	Token	tok,
+	enum expr_tag	tag,
+	Token		tok,
 	...			/* variable number of child arguments */
 )
 {
@@ -37,19 +37,19 @@ Expr *expr(
 	uint	i, num_children;
 	Expr	*ep;
 
-	num_children = expr_type_info[type].num_children;
+	num_children = expr_info[tag].num_children;
 
 	ep = new(Expr);
 	ep->next = 0;
 	ep->last = ep;
-	ep->type = type;
+	ep->tag = tag;
 	ep->value = tok.str;
 	ep->token = tok.type;
 	ep->line_num = tok.line;
 	ep->src_file = tok.file;
 	ep->children = newArray(Expr *, num_children);
 	/* allocate extra data */
-	switch (type)
+	switch (tag)
 	{
 	case D_SS:
 		ep->extra.e_ss = new(StateSet);
@@ -61,11 +61,13 @@ Expr *expr(
 	case D_WHEN:
 		ep->extra.e_when = new(When);
 		break;
+	default:
+		break;
 	}
 
 #ifdef	DEBUG
-	report_at_expr(ep, "expr: ep=%p, type=%s, value=\"%s\", file=%s, line=%d",
-		ep, expr_type_name(ep), tok.str, tok.file, tok.line);
+	report_at_expr(ep, "expr: ep=%p, tag=%s, value=\"%s\", file=%s, line=%d",
+		ep, expr_name(ep), tok.str, tok.file, tok.line);
 #endif	/*DEBUG*/
 	va_start(argp, tok);
 	for (i = 0; i < num_children; i++)

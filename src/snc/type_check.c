@@ -41,7 +41,7 @@ static Type *member_type(Expr *members, const char *name)
 {
     Expr *member;
     foreach(member, members) {
-        if (member->type == D_DECL && strcmp(member->value, name) == 0) {
+        if (member->tag == D_DECL && strcmp(member->value, name) == 0) {
             return member->extra.e_decl->type;
         }
     }
@@ -55,7 +55,7 @@ Type *type_of(Expr *e)
 {
     Type *t, *l, *r;
 
-    switch (e->type) {
+    switch (e->tag) {
     case E_BINOP:                       /* binary operator [left,right] */
         l = type_of(e->binop_left);
         r = type_of(e->binop_right);

@@ -193,7 +193,7 @@ static void gen_block(Expr *xp, int context, int level)
 {
 	Expr	*cxp;
 
-	assert(xp->type == S_CMPND);
+	assert(xp->tag == S_CMPND);
 	gen_code("{\n");
 	gen_local_var_decls(xp, context, level+1);
 	gen_defn_c_code(xp, level+1);
@@ -206,7 +206,7 @@ static void gen_block(Expr *xp, int context, int level)
 
 static void gen_entex_body(Expr *xp, int context)
 {
-	assert(xp->type == D_ENTEX);
+	assert(xp->tag == D_ENTEX);
 	gen_block(xp->entex_block, context, 0);
 }
 
@@ -228,7 +228,7 @@ static void gen_action_body(Expr *xp, int context)
 	/* For each transition ("when" statement) ... */
 	foreach (tp, xp)
 	{
-		assert(tp->type == D_WHEN);
+		assert(tp->tag == D_WHEN);
 		/* one case for each transition */
 		indent(level); gen_code("case %d: ", trans_num);
 		gen_block(tp->when_block, context, level+1);
@@ -256,7 +256,7 @@ static void gen_event_body(Expr *xp, int context)
 	{
 		Expr *next_sp;
 
-		assert(tp->type == D_WHEN);
+		assert(tp->tag == D_WHEN);
 		if (tp->when_cond)
 			gen_line_marker(tp->when_cond);
 		indent(level); gen_code("if (");
@@ -298,7 +298,7 @@ static void gen_var_access(Var *vp)
 
 #ifdef DEBUG
 	report("var_access: %s, scope=(%s,%s)\n",
-		vp->name, expr_type_name(vp->scope), vp->scope->value);
+		vp->name, expr_name(vp->scope), vp->scope->value);
 #endif
 	assert(is_scope(vp->scope));
 
@@ -310,15 +310,15 @@ static void gen_var_access(Var *vp)
 	{
 		gen_code("%s", vp->name);
 	}
-	else if (vp->scope->type == D_PROG)
+	else if (vp->scope->tag == D_PROG)
 	{
 		gen_code("%s%s", pre, vp->name);
 	}
-	else if (vp->scope->type == D_SS)
+	else if (vp->scope->tag == D_SS)
 	{
 		gen_code("%s%s_%s.%s", pre, NM_VARS, vp->scope->value, vp->name);
 	}
-	else if (vp->scope->type == D_STATE)
+	else if (vp->scope->tag == D_STATE)
 	{
 		gen_code("%s%s_%s.%s_%s.%s", pre, NM_VARS,
 			vp->scope->extra.e_state->var_list->parent_scope->value,
@@ -343,10 +343,10 @@ static void gen_expr(
 		return;
 
 #ifdef	DEBUG
-	report("gen_expr(%s,%s)\n", expr_type_name(ep), ep->value);
+	report("gen_expr(%s,%s)\n", expr_name(ep), ep->value);
 #endif
 
-	switch(ep->type)
+	switch(ep->tag)
 	{
 	/* Statements */
 	case S_CMPND:
@@ -365,13 +365,13 @@ static void gen_expr(
 		gen_expr(context, ep->if_cond, 0);
 		gen_code(")\n");
 		cep = ep->if_then;
-		gen_expr(context, cep, cep->type == S_CMPND ? level : level+1);
+		gen_expr(context, cep, cep->tag == S_CMPND ? level : level+1);
 		if (ep->if_else)
 		{
 			indent(level);
 			gen_code("else\n");
 			cep = ep->if_else;
-			gen_expr(context, cep, cep->type == S_CMPND ? level : level+1);
+			gen_expr(context, cep, cep->tag == S_CMPND ? level : level+1);
 		}
 		break;
 	case S_WHILE:
@@ -381,7 +381,7 @@ static void gen_expr(
 		gen_expr(context, ep->while_cond, 0);
 		gen_code(")\n");
 		cep = ep->while_stmt;
-		gen_expr(context, cep, cep->type == S_CMPND ? level : level+1);
+		gen_expr(context, cep, cep->tag == S_CMPND ? level : level+1);
 		break;
 	case S_FOR:
 		gen_line_marker(ep);
@@ -394,7 +394,7 @@ static void gen_expr(
 		gen_expr(context, ep->for_iter, 0);
 		gen_code(")\n");
 		cep = ep->for_stmt;
-		gen_expr(context, cep, cep->type == S_CMPND ? level : level+1);
+		gen_expr(context, cep, cep->tag == S_CMPND ? level : level+1);
 		break;
 	case S_JUMP:
 		indent(level);
@@ -438,7 +438,7 @@ static void gen_expr(
 		gen_code("\"%s\"", ep->value);
 		break;
 	case E_FUNC:
-		if (ep->func_expr->type == E_BUILTIN)
+		if (ep->func_expr->tag == E_BUILTIN)
 		{
 			gen_builtin_func(context, ep);
 			break;
@@ -519,7 +519,7 @@ static void gen_expr(
 		break;
 	default:
 		assert_at_expr(impossible, ep, "unhandled expression (%s:%s)\n",
-			expr_type_name(ep), ep->value);
+			expr_name(ep), ep->value);
 	}
 }
 
@@ -529,7 +529,7 @@ static void gen_builtin_func(int context, Expr *ep)
 	Expr *ap;	/* argument expr */
 	struct func_symbol *sym = ep->func_expr->extra.e_builtin;
 
-	assert(ep->func_expr->type == E_BUILTIN);
+	assert(ep->func_expr->tag == E_BUILTIN);
 	assert(sym);
 
 #ifdef	DEBUG
@@ -582,7 +582,7 @@ static void gen_ef_arg(
 	Var	*vp;
 
 	assert(ap);
-	if (ap->type != E_VAR)
+	if (ap->tag != E_VAR)
 	{
 		error_at_expr(ap,
 		  "argument %d to built-in function %s must be an event flag\n",
@@ -655,7 +655,7 @@ static void gen_pv_func(
 		return;
 	}
 
-	if (ap->type == E_VAR)
+	if (ap->tag == E_VAR)
 	{
 		vp = ap->extra.e_var;
 		assert(vp);
@@ -685,12 +685,12 @@ static void gen_pv_func(
 			}
 		}
 	}
-	else if (ap->type == E_SUBSCR)
+	else if (ap->tag == E_SUBSCR)
 	{
 		/* Form should be: <pv variable>[<expression>] */
 		Expr *operand = ap->subscr_operand;
 		subscr = ap->subscr_index;
-		if (operand->type == E_VAR)
+		if (operand->tag == E_VAR)
 		{
 			vp = operand->extra.e_var;
 		}
@@ -713,7 +713,7 @@ static void gen_pv_func(
 			"parameter 1 to '%s' was not assigned to a pv\n", func_name);
 		gen_code("?/*%s*/", vp->name);
 	}
-	else if (ap->type == E_SUBSCR && vp->assign != M_MULTI)
+	else if (ap->tag == E_SUBSCR && vp->assign != M_MULTI)
 	{
 		error_at_expr(ep,
 			"parameter 1 to '%s' is subscripted but the variable "
@@ -725,7 +725,7 @@ static void gen_pv_func(
 		gen_code("%d/*%s*/", vp->index, vp->name);
 	}
 
-	if (ap->type == E_SUBSCR)
+	if (ap->tag == E_SUBSCR)
 	{
 		/* e.g. pvPut(xyz[i+2]); => seq_pvPut(ssId, 3 + (i+2)); */
 		gen_code(" + (CH_ID)(");
@@ -738,7 +738,7 @@ static void gen_pv_func(
 	   length is always 1) */
 	if (add_length)
 	{
-		if (ap->type != E_SUBSCR)
+		if (ap->tag != E_SUBSCR)
 		{
 			gen_code(", %d", type_array_length1(vp->type));
 		}
@@ -756,7 +756,7 @@ static void gen_pv_func(
 		if (ef_args)
 		{
 			/* special case: constant NOEVFLAG */
-			if (ap->type == E_CONST)
+			if (ap->tag == E_CONST)
 			{
 				if (ap->extra.e_const && ap->extra.e_const->type == CT_EVFLAG)
 					gen_expr(context, ap, 0);
@@ -817,7 +817,7 @@ static void gen_user_var_init(Expr *prog, int level)
 	Var *vp;
 	Expr *ssp;
 
-	assert(prog->type == D_PROG);
+	assert(prog->tag == D_PROG);
 	/* global variables */
 	foreach(vp, prog->extra.e_prog->first)
 	{
@@ -837,7 +837,7 @@ static void gen_user_var_init(Expr *prog, int level)
 	{
 		Expr *sp;
 
-		assert(ssp->type == D_SS);
+		assert(ssp->tag == D_SS);
 		/* state set variables */
 		foreach(vp, ssp->extra.e_ss->var_list->first)
 		{
@@ -845,7 +845,7 @@ static void gen_user_var_init(Expr *prog, int level)
 		}
 		foreach (sp, ssp->ss_states)
 		{
-			assert(sp->type == D_STATE);
+			assert(sp->tag == D_STATE);
 			/* state variables */
 			foreach (vp, sp->extra.e_state->var_list->first)
 			{
@@ -862,7 +862,7 @@ static void gen_prog_func(
 	void (*gen_body)(Expr *prog)
 )
 {
-	assert(prog->type == D_PROG);
+	assert(prog->tag == D_PROG);
 	gen_code("\n/* Program %s func */\n", doc);
 	gen_code("static void %s(PROG_ID "NM_PROG", SEQ_VARS *const "NM_VAR")\n{\n",
 		name);
@@ -877,7 +877,7 @@ static void gen_prog_entex_func(
 	void (*gen_body)(Expr *)
 )
 {
-	assert(prog->type == D_PROG);
+	assert(prog->tag == D_PROG);
 	gen_code("\n/* Program %s func */\n", doc);
 	gen_code("static void %s(SS_ID " NM_SS ", SEQ_VARS *const " NM_VAR ")\n",
 		name);
@@ -886,25 +886,25 @@ static void gen_prog_entex_func(
 
 static void gen_prog_init_body(Expr *prog)
 {
-	assert(prog->type == D_PROG);
+	assert(prog->tag == D_PROG);
 	gen_user_var_init(prog, 1);
 }
 
 static void gen_prog_entry_body(Expr *prog)
 {
-	assert(prog->type == D_PROG);
+	assert(prog->tag == D_PROG);
 	gen_entex_body(prog->prog_entry, C_SS);
 }
 
 static void gen_prog_exit_body(Expr *prog)
 {
-	assert(prog->type == D_PROG);
+	assert(prog->tag == D_PROG);
 	gen_entex_body(prog->prog_exit, C_SS);
 }
 
 void gen_funcdef(Expr *fp)
 {
-	if (fp->type == D_FUNCDEF)
+	if (fp->tag == D_FUNCDEF)
 	{
 		Var *vp = fp->funcdef_decl->extra.e_decl;
 
