@@ -34,7 +34,7 @@ typedef struct program		Program;
 typedef struct channel		Chan;
 typedef struct event_flag	EvFlag;
 typedef struct sync_queue	SyncQ;
-typedef struct expression	Expr;
+typedef struct syntax_node	Node;
 typedef struct variable		Var;
 typedef struct chan_list	ChanList;
 typedef struct sync_queue_list	SyncQList;
@@ -85,7 +85,7 @@ struct state_options			/* run-time state options */
 
 struct token				/* for the lexer and parser */
 {
-	int		type;
+	int		symbol;
 	char		*str;
 	const char	*file;
 	int		line;
@@ -93,7 +93,7 @@ struct token				/* for the lexer and parser */
 
 struct when				/* extra data for when clauses */
 {
-	Expr		*next_state;	/* declaration of target state */
+	Node		*next_state;	/* declaration of target state */
 };
 
 struct state				/* extra data for state clauses */
@@ -111,7 +111,7 @@ struct state_set			/* extra data for state set clauses */
 };
 
 /* Expression types */
-enum expr_tag			/* description [child expressions...] */
+enum node_tag			/* description [child nodes...] */
 {
 	D_ASSIGN,		/* assign statement [subscr,pvs] */
 	D_DECL,			/* variable declaration [init] */
@@ -134,7 +134,7 @@ enum expr_tag			/* description [child expressions...] */
 	E_FUNC,			/* function call [expr,args] */
 	E_INIT,			/* array or struct initializer [elems] */
 	E_MEMBER,		/* struct or union member [] */
-	E_PAREN,		/* parenthesis around an expression [expr] */
+	E_PAREN,		/* parenthesized expression [expr] */
 	E_POST,			/* unary postfix operator [operand] */
 	E_PRE,			/* unary prefix operator [operand] */
 	E_SELECT,		/* member selection [left,right] */
@@ -157,19 +157,16 @@ enum expr_tag			/* description [child expressions...] */
 	NUM_EXPR_TYPES
 };
 
-/* make sure we have no more expression types than bits */
+/* make sure we have no more node types than bits */
 STATIC_ASSERT(NUM_EXPR_TYPES <= 8*sizeof(TypeMask));
 
-struct expression			/* generic syntax node */
+struct syntax_node			/* generic syntax node */
 {
-	Expr		*next;		/* list node: next expression */
-	Expr		*last;		/* list node: last expression */
-	Expr		**children;	/* array of children [left,right,...] */
-	enum expr_tag   tag;		/* expression tag (E_XXX) */
-	char		*value;		/* token string */
-	int		token;		/* token symbol */
-	int		line_num;	/* originating line number */
-	const char	*src_file;	/* originating source file */
+	Node		*next;		/* next in list */
+	Node		*last;		/* last in list */
+	Node		**children;	/* array of children [left,right,...] */
+	enum node_tag   tag;		/* what kind of node */
+        Token		token;
 	union				/* extra data, depends on tag */
 	{
 		Var	*e_var;		/* variable reference */
@@ -179,7 +176,7 @@ struct expression			/* generic syntax node */
 		StateSet *e_ss;		/* state set data */
 		State	*e_state;	/* state data */
 		When	*e_when;	/* transition data */
-		Expr	*e_change;	/* declaration of target state */
+		Node	*e_change;	/* declaration of target state */
 		VarList	*e_cmpnd;	/* block local declarations */
 		FuncSym	*e_builtin;	/* builtin function */
 		ConstSym *e_const;	/* builtin constant */
@@ -197,9 +194,9 @@ struct variable				/* variable definition */
 {
 	Var	*next;			/* link to next variable in list */
 	char	*name;			/* variable name */
-	Expr	*decl;			/* declaration of this variable
+	Node	*decl;			/* declaration of this variable
 					   (or NULL if not declared) */
-	Expr	*scope;			/* scope of this variable */
+	Node	*scope;			/* scope of this variable */
 	Type	*type;			/* type of this variable */
 	/* channel stuff */
 	uint	assign:2;		/* assigned: one of enum multiplicity */
@@ -257,13 +254,13 @@ struct sync_queue_list
 struct var_list
 {
 	Var	*first, *last;		/* first and last member of the list */
-	Expr	*parent_scope;		/* next surrounding scope */
+	Node	*parent_scope;		/* next surrounding scope */
 };
 
 struct program
 {
 	/* result of parsing phase */
-	Expr		*prog;		/* the whole syntax tree */
+	Node		*prog;		/* the whole syntax tree */
 
 	/* these point into children of the prog node, for convenience */
 	char		*name;		/* ptr to program name (string) */
@@ -286,20 +283,20 @@ struct program
 #define foreach(e,l)		for (e = l; e != 0; e = e->next)
 #define bit(bitn)		((TypeMask)(1ull)<<(bitn))
 
-/* Commonly used sets of expression types */
+/* Commonly used sets of syntax_node tags */
 
-/* Expression types that are scopes. By definition, a scope is an expression
-   that allows variable declarations as (immediate) subexpressions. */
+/* Expression types that are scopes. By definition, a scope is a node
+   that allows variable declarations as (immediate) subnodes. */
 #define scope_mask		( bit(D_PROG)    | bit(D_FUNCDEF) \
 				| bit(D_SS)      | bit(D_STATE)   | bit(S_CMPND) )
-/* Whether an expression is a scope */
+/* Whether a node is a scope */
 #define is_scope(e)		((bit((e)->tag) & scope_mask) != 0)
 
 /* Expression types that may have sub-scopes */
 #define has_sub_scope_mask	( bit(D_ENTEX)   | bit(D_FUNCDEF) | bit(D_PROG)   | bit(D_SS)\
 				| bit(D_STATE)   | bit(D_WHEN)    | bit(S_CMPND)  | bit(S_FOR)\
 				| bit(S_IF)      | bit(S_STMT)    | bit(S_WHILE) )
-/* Expression types that are actually expressions i.e. no definitions or statements.
+/* Node types that are expressions i.e. no definitions or statements.
    These are the ones that start with E_. */
 #define	expr_mask		( bit(E_BINOP)   | bit(E_CAST)    | bit(E_CONST)\
 				| bit(E_FUNC)    | bit(E_INIT)\
@@ -307,7 +304,7 @@ struct program
 				| bit(E_SELECT)	 | bit(E_STRING)\
 				| bit(E_SUBSCR)  | bit(E_TERNOP)  | bit(E_VAR)    | bit(T_TEXT) )
 
-#define expr_name(e)		expr_info[(e)->tag].name
+#define node_name(e)		node_info[(e)->tag].name
 
 /* for channel assign, monitor, sync, and syncq */
 enum multiplicity
@@ -317,8 +314,8 @@ enum multiplicity
 	M_MULTI			/* array, each element treated separately */
 };
 
-/* Accessors for child expressions. Would like to define structs for the
-   various expression types with children, but then we could no longer
+/* Accessors for child nodes. Would like to define structs for the
+   various node types with children, but then we could no longer
    uniformly iterate over all children... */
 #define assign_subscr	children[0]
 #define assign_pvs	children[1]
@@ -380,16 +377,16 @@ enum multiplicity
 
 #define funcdef_params	funcdef_decl->extra.e_decl->type->val.function.param_decls
 
-#ifndef expr_info_GLOBAL
+#ifndef node_info_GLOBAL
 extern
 #endif
-struct expr_info
+struct node_info
 {
 	const char *name;
 	const uint num_children;
 }
-expr_info[]
-#ifdef expr_info_GLOBAL
+node_info[]
+#ifdef node_info_GLOBAL
 = {
 	{ "D_ASSIGN",	2 },
 	{ "D_DECL",	1 },

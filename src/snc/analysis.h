@@ -15,10 +15,10 @@ in the file LICENSE that is included with this distribution.
 
 #include "types.h"
 
-/* Iteratee ("what gets iterated") for traverse_expr_tree */
-typedef int expr_iter(Expr *ep, Expr *scope, void *parg);
+/* Iteratee ("what gets iterated") for traverse_syntax_tree */
+typedef int node_iter(Node *ep, Node *scope, void *parg);
 
-/* Pre-order traversal of the expression tree. Call the supplied iteratee whenever
+/* Pre-order traversal of the syntax tree. Call the supplied iteratee whenever
  * call_mask has the (ep->type)'th bit set. The function is called with the current
  * ep, the current scope, and an additional user defined argument (argp). Afterwards,
  * if the iteratee returned a non-zero value, recurse into all child nodes except
@@ -26,22 +26,22 @@ typedef int expr_iter(Expr *ep, Expr *scope, void *parg);
  * The traversal starts at the first argument. The 4th argument is the current
  * scope; 0 may be supplied for it, in which case it will be set to a valid scope as
  * soon as the traversal encounters one.
- * NOTE: next pointer of the start expression is ignored,
+ * NOTE: next pointer of the start node is ignored,
  * this functions does NOT descend into sibling list elements. */
 
-void traverse_expr_tree(
-	Expr		*ep,		/* start expression */
+void traverse_syntax_tree(
+	Node		*ep,		/* start node */
 	TypeMask	call_mask,	/* when to call iteratee */
 	TypeMask	stop_mask,	/* when to stop descending */
-	Expr		*scope,		/* current scope, 0 at top-level */
-	expr_iter	*iteratee,	/* function to call */
+	Node		*scope,		/* current scope, 0 at top-level */
+	node_iter	*iteratee,	/* function to call */
 	void		*parg		/* argument to pass to function */
 );
 
-VarList **pvar_list_from_scope(Expr *scope);
+VarList **pvar_list_from_scope(Node *scope);
 #define var_list_from_scope(scope) (*pvar_list_from_scope(scope))
-Expr *defn_list_from_scope(Expr *scope);
+Node *defn_list_from_scope(Node *scope);
 
-Program *analyse_program(Expr *ep, Options options);
+Program *analyse_program(Node *ep, Options options);
 
 #endif	/*INCLanalysish*/

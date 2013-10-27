@@ -15,7 +15,7 @@ in the file LICENSE that is included with this distribution.
 
 #include "types.h"
 
-void gen_ss_code(Expr *prog, Options options);
-void gen_funcdef(Expr *fp);
+void gen_ss_code(Node *prog, Options options);
+void gen_funcdef(Node *fp);
 
 #endif	/*INCLgensscodeh*/

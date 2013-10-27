@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
 {
 	FILE	*in;
 	Program	*prg;
-        Expr    *exp;
+        Node    *exp;
 
 	/* Get command arguments */
 	parse_args(argc, argv);
@@ -274,23 +274,23 @@ void assert_at(int cond, const char *src_file, int line_num, const char *format,
 	}
 }
 
-void report_at_expr(Expr *ep, const char *format, ...)
+void report_at_node(Node *ep, const char *format, ...)
 {
 	va_list args;
 
-	report_loc(ep->src_file, ep->line_num);
+	report_loc(ep->token.file, ep->token.line);
 
 	va_start(args, format);
 	vfprintf(stderr, format, args);
 	va_end(args);
 }
 
-void warning_at_expr(Expr *ep, const char *format, ...)
+void warning_at_node(Node *ep, const char *format, ...)
 {
 	va_list args;
 
 	if (!options.warn) return;
-	report_loc(ep->src_file, ep->line_num);
+	report_loc(ep->token.file, ep->token.line);
 	fprintf(stderr, "warning: ");
 
 	va_start(args, format);
@@ -298,12 +298,12 @@ void warning_at_expr(Expr *ep, const char *format, ...)
 	va_end(args);
 }
 
-void extra_warning_at_expr(Expr *ep, const char *format, ...)
+void extra_warning_at_node(Node *ep, const char *format, ...)
 {
 	va_list args;
 
 	if (!options.xwarn) return;
-	report_loc(ep->src_file, ep->line_num);
+	report_loc(ep->token.file, ep->token.line);
 	fprintf(stderr, "warning: ");
 
 	va_start(args, format);
@@ -311,12 +311,12 @@ void extra_warning_at_expr(Expr *ep, const char *format, ...)
 	va_end(args);
 }
 
-void error_at_expr(Expr *ep, const char *format, ...)
+void error_at_node(Node *ep, const char *format, ...)
 {
 	va_list args;
 
 	err_cnt++;
-	report_loc(ep->src_file, ep->line_num);
+	report_loc(ep->token.file, ep->token.line);
 	fprintf(stderr, "error: ");
 
 	va_start(args, format);
@@ -324,14 +324,14 @@ void error_at_expr(Expr *ep, const char *format, ...)
 	va_end(args);
 }
 
-/* with location from this expression and report a bug in snc */
-void assert_at_expr(int cond, struct expression *ep, const char *format, ...)
+/* with location from this node and report a bug in snc */
+void assert_at_node(int cond, Node *ep, const char *format, ...)
 {
 	if (!cond)
 	{
 		va_list args;
 
-		report_loc(ep->src_file, ep->line_num);
+		report_loc(ep->token.file, ep->token.line);
 		fprintf(stderr, "snc bug (assertion failed): ");
 		va_start(args, format);
 		vfprintf(stderr, format, args);

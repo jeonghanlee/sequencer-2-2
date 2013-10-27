@@ -21,7 +21,7 @@ __attribute__((format(printf,1,2)));
 void gen_line_marker_prim(int line_num, const char *src_file);
 
 /* this gets the shorter name as it is the common way to call above */
-#define gen_line_marker(ep) gen_line_marker_prim((ep)->line_num, (ep)->src_file)
+#define gen_line_marker(ep) gen_line_marker_prim((ep)->token.line, (ep)->token.file)
 
 /* Error and warning message support */
 
@@ -40,25 +40,25 @@ __attribute__((format(printf,3,4)));
 void assert_at(int cond, const char *src_file, int line_num, const char *format, ...)
 __attribute__((format(printf,4,5)));
 
-/* with location from this expression */
-struct expression;
-void report_at_expr(struct expression *ep, const char *format, ...)
+/* with location from this node */
+struct syntax_node;
+void report_at_node(struct syntax_node *ep, const char *format, ...)
 __attribute__((format(printf,2,3)));
 
-/* with location from this expression but only if warnings are enabled */
-void warning_at_expr(struct expression *ep, const char *format, ...)
+/* with location from this node but only if warnings are enabled */
+void warning_at_node(struct syntax_node *ep, const char *format, ...)
 __attribute__((format(printf,2,3)));
 
-/* with location from this expression but only if extra warnings are enabled */
-void extra_warning_at_expr(struct expression *ep, const char *format, ...)
+/* with location from this node but only if extra warnings are enabled */
+void extra_warning_at_node(struct syntax_node *ep, const char *format, ...)
 __attribute__((format(printf,2,3)));
 
-/* with location from this expression and increase error count */
-void error_at_expr(struct expression *ep, const char *format, ...)
+/* with location from this node and increase error count */
+void error_at_node(struct syntax_node *ep, const char *format, ...)
 __attribute__((format(printf,2,3)));
 
-/* with location from this expression and report a bug in snc */
-void assert_at_expr(int cond, struct expression *ep, const char *format, ...)
+/* with location from this node and report a bug in snc */
+void assert_at_node(int cond, struct syntax_node *ep, const char *format, ...)
 __attribute__((format(printf,3,4)));
 
 /* message only */

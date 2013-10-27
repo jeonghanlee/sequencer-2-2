@@ -11,9 +11,9 @@ in the file LICENSE that is included with this distribution.
 #include "var_types.h"
 
 /* return a first approximation of the type of an expression */
-Type *type_of(Expr *e);
+Type *type_of(Node *e);
 
 /* return whether the given expression has type function or pointer to function */
-int type_is_function(Expr *e);
+int type_is_function(Node *e);
 
 #endif /*INCLtype_checkh */

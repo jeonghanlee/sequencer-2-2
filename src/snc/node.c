@@ -18,36 +18,32 @@ in the file LICENSE that is included with this distribution.
 #include <errno.h>
 #include <limits.h>
 
-#define expr_info_GLOBAL
+#define node_info_GLOBAL
 #include "types.h"
-#undef expr_info_GLOBAL
-#include "expr.h"
+#undef node_info_GLOBAL
+#include "node.h"
 #include "main.h"
 
 static const StateOptions default_state_options = DEFAULT_STATE_OPTIONS;
 
-/* Expr is the generic syntax tree node */
-Expr *expr(
-	enum expr_tag	tag,
+Node *node(
+	enum node_tag	tag,
 	Token		tok,
 	...			/* variable number of child arguments */
 )
 {
 	va_list	argp;
 	uint	i, num_children;
-	Expr	*ep;
+	Node	*ep;
 
-	num_children = expr_info[tag].num_children;
+	num_children = node_info[tag].num_children;
 
-	ep = new(Expr);
+	ep = new(Node);
 	ep->next = 0;
 	ep->last = ep;
 	ep->tag = tag;
-	ep->value = tok.str;
-	ep->token = tok.type;
-	ep->line_num = tok.line;
-	ep->src_file = tok.file;
-	ep->children = newArray(Expr *, num_children);
+        ep->token = tok;
+	ep->children = newArray(Node *, num_children);
 	/* allocate extra data */
 	switch (tag)
 	{
@@ -66,13 +62,13 @@ Expr *expr(
 	}
 
 #ifdef	DEBUG
-	report_at_expr(ep, "expr: ep=%p, tag=%s, value=\"%s\", file=%s, line=%d",
-		ep, expr_name(ep), tok.str, tok.file, tok.line);
+	report_at_node(ep, "node: ep=%p, tag=%s, value=\"%s\", file=%s, line=%d",
+		ep, node_name(ep), tok.str, tok.file, tok.line);
 #endif	/*DEBUG*/
 	va_start(argp, tok);
 	for (i = 0; i < num_children; i++)
 	{
-		ep->children[i] = va_arg(argp, Expr*);
+		ep->children[i] = va_arg(argp, Node*);
 #ifdef	DEBUG
 		report(", child[%d]=%p", i, ep->children[i]);
 #endif	/*DEBUG*/
@@ -85,18 +81,18 @@ Expr *expr(
 	return ep;
 }
 
-Expr *opt_defn(Token name, Token value)
+Node *opt_defn(Token name, Token value)
 {
-	Expr *opt = expr(D_OPTION, name);
+	Node *opt = node(D_OPTION, name);
 	opt->extra.e_option = (value.str[0] == '+');
 	return opt;
 }
 
 /* Link two expression structures and/or lists.  Returns ptr to combined list.
    Note: last ptrs are correct only for 1-st element of the resulting list */
-Expr *link_expr(
-	Expr	*ep1,	/* 1-st structure or list */
-	Expr	*ep2	/* 2-nd (append it to 1-st) */
+Node *link_node(
+	Node	*ep1,	/* 1-st structure or list */
+	Node	*ep2	/* 2-nd (append it to 1-st) */
 )
 {
 	if (ep1 == 0)
@@ -123,14 +119,4 @@ uint strtoui(
 		return FALSE;
 	*pnumber = result;
 	return TRUE;
-}
-
-Token token_from_expr(Expr *e)
-{
-	Token t;
-	t.type = e->token;
-	t.str = e->value;
-	t.line = e->line_num;
-	t.file = e->src_file;
-	return t;
 }

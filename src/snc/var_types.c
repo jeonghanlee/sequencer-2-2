@@ -13,7 +13,7 @@ in the file LICENSE that is included with this distribution.
 #include "main.h"
 #include "snl.h"
 #include "gen_code.h"   /* implicit parameter names */
-#include "expr.h"
+#include "node.h"
 #define var_types_GLOBAL
 #include "var_types.h"
 #undef var_types_GLOBAL
@@ -22,37 +22,37 @@ in the file LICENSE that is included with this distribution.
 
 static const int impossible = FALSE;
 
-static Expr *add_implicit_parameters(Expr *fun_decl, Expr *param_decls)
+static Node *add_implicit_parameters(Node *fun_decl, Node *param_decls)
 {
-    Expr *p1, *p2;
+    Node *p1, *p2;
     Token t;
 
     /* 1st implicit parameter: "SS_ID " NM_SS */
-    t.type = TOK_NAME;
+    t.symbol = TOK_NAME;
     t.str = NM_SS;
-    t.line = fun_decl->line_num;
-    t.file = fun_decl->src_file;
-    p1 = mk_decl(expr(E_VAR, t), mk_foreign_type(F_TYPENAME, "SS_ID"));
+    t.line = fun_decl->token.line;
+    t.file = fun_decl->token.file;
+    p1 = mk_decl(node(E_VAR, t), mk_foreign_type(F_TYPENAME, "SS_ID"));
     /* 2nd implicit parameter: "SEQ_VARS *const " NM_VAR */
-    t.type = TOK_NAME;
+    t.symbol = TOK_NAME;
     t.str = NM_VAR;
-    t.line = fun_decl->line_num;
-    t.file = fun_decl->src_file;
-    p2 = mk_decl(expr(E_VAR, t),
+    t.line = fun_decl->token.line;
+    t.file = fun_decl->token.file;
+    p2 = mk_decl(node(E_VAR, t),
         mk_pointer_type(mk_const_type(mk_foreign_type(F_TYPENAME, "SEQ_VARS")))
     );
-    return link_expr(p1, link_expr(p2, param_decls));
+    return link_node(p1, link_node(p2, param_decls));
 }
 
-static Expr *remove_void_parameter(Expr *param_decls)
+static Node *remove_void_parameter(Node *param_decls)
 {
     if (param_decls && param_decls->extra.e_decl->type->tag == T_VOID) {
         /* no other params should be there */
         if (param_decls->next) {
-            error_at_expr(param_decls->next, "void must be the only parameter\n");
+            error_at_node(param_decls->next, "void must be the only parameter\n");
         }
         if (param_decls->extra.e_decl->name) {
-            error_at_expr(param_decls, "void parameter should not have a name\n");
+            error_at_node(param_decls, "void parameter should not have a name\n");
         }
         /* void means empty parameter list */
         return 0;
@@ -61,14 +61,14 @@ static Expr *remove_void_parameter(Expr *param_decls)
     }
 }
 
-static Expr *new_decl(Token k, Type *type)
+static Node *new_decl(Token k, Type *type)
 {
     Var *var = new(Var);
-    Expr *decl = expr(D_DECL, k, 0);
+    Node *decl = node(D_DECL, k, 0);
 #ifdef DEBUG
     report("new_decl: %s\n", k.str);
 #endif
-    var->name = decl->value;
+    var->name = decl->token.str;
     var->type = type;
     var->decl = decl;
     decl->extra.e_decl = var;
@@ -79,10 +79,10 @@ static Expr *new_decl(Token k, Type *type)
  * build a declaration (a syntax node with tag D_DECL)
  * from declarator node 'd' and child type 't'
  */
-Expr *mk_decl(Expr *d, Type *t)
+Node *mk_decl(Node *d, Type *t)
 {
     uint num_elems = 0;
-    Expr *r;
+    Node *r;
 
     if (!d) {
         /* abstract declarator */
@@ -92,23 +92,23 @@ Expr *mk_decl(Expr *d, Type *t)
     switch (d->tag) {
     case E_BINOP:
         /* initializer */
-        assert(d->token == TOK_EQUAL);
+        assert(d->token.symbol == TOK_EQUAL);
         r = mk_decl(d->binop_left, t);
         assert(r->tag == D_DECL);      /* post condition */
         r->decl_init = d->binop_right;
         return r;
     case E_VAR:
-        return new_decl(token_from_expr(d), t);
+        return new_decl(d->token, t);
     case E_PRE:
-        switch (d->token) {
+        switch (d->token.symbol) {
         case TOK_ASTERISK:
             switch (t->tag)
             {
             case T_NONE:
-                assert_at_expr(impossible, d, "pointer to foreign entity\n");
+                assert_at_node(impossible, d, "pointer to foreign entity\n");
                 break;
             case T_EVFLAG:
-                error_at_expr(d, "pointer to event flag\n");
+                error_at_node(d, "pointer to event flag\n");
                 break;
             default:
                 break;
@@ -117,20 +117,20 @@ Expr *mk_decl(Expr *d, Type *t)
         case TOK_CONST:
             switch (t->tag) {
             case T_NONE:
-                assert_at_expr(impossible, d, "constant foreign entity\n");
+                assert_at_node(impossible, d, "constant foreign entity\n");
                 break;
             case T_EVFLAG:
-                error_at_expr(d, "constant event flag\n");
+                error_at_node(d, "constant event flag\n");
                 break;
             case T_ARRAY:
-                error_at_expr(d, "constant array\n");
+                error_at_node(d, "constant array\n");
                 break;
             case T_FUNCTION:
-                warning_at_expr(d, "discarding redundant const from function type\n");
+                warning_at_node(d, "discarding redundant const from function type\n");
                 return mk_decl(d->pre_operand, t);
 #if 0
             case T_CONST:
-                warning_at_expr(d, "discarding repeated const\n");
+                warning_at_node(d, "discarding repeated const\n");
                 break;
 #endif
             case T_VOID:
@@ -141,7 +141,7 @@ Expr *mk_decl(Expr *d, Type *t)
                 break;
             }
             if (t->is_const) {
-                warning_at_expr(d, "discarding repeated const\n");
+                warning_at_node(d, "discarding repeated const\n");
                 return mk_decl(d->pre_operand, t);
             } else {
                 return mk_decl(d->pre_operand, mk_const_type(t));
@@ -153,30 +153,30 @@ Expr *mk_decl(Expr *d, Type *t)
     case E_SUBSCR:
         switch (t->tag) {
         case T_NONE:
-            assert_at_expr(impossible, d, "array of foreign entities\n");
+            assert_at_node(impossible, d, "array of foreign entities\n");
             break;
         case T_EVFLAG:
-            error_at_expr(d, "array of event flags\n");
+            error_at_node(d, "array of event flags\n");
             break;
         case T_VOID:
-            error_at_expr(d, "array of void\n");
+            error_at_node(d, "array of void\n");
             break;
         default:
             break;
         }
         assert(d->subscr_index->tag == E_CONST);
-        if (!strtoui(d->subscr_index->value, UINT_MAX, &num_elems) || num_elems == 0) {
-            error_at_expr(d, "invalid array size (must be >= 1)\n");
+        if (!strtoui(d->subscr_index->token.str, UINT_MAX, &num_elems) || num_elems == 0) {
+            error_at_node(d, "invalid array size (must be >= 1)\n");
             num_elems = 1;
         }
         return mk_decl(d->subscr_operand, mk_array_type(t, num_elems));
     case E_FUNC:
         switch (t->tag) {
         case T_NONE:
-            assert_at_expr(impossible, d, "function returning foreign entity\n");
+            assert_at_node(impossible, d, "function returning foreign entity\n");
             break;
         case T_EVFLAG:
-            error_at_expr(d, "function returning event flag\n");
+            error_at_node(d, "function returning event flag\n");
             break;
         default:
             break;
@@ -190,12 +190,12 @@ Expr *mk_decl(Expr *d, Type *t)
 }
 
 /* multi-variable declaration */
-Expr *mk_decls(Expr *ds, Type *t)
+Node *mk_decls(Node *ds, Type *t)
 {
-    Expr *d, *r = 0;
+    Node *d, *r = 0;
 
     foreach(d, ds) {
-        r = link_expr(r, mk_decl(d, t));
+        r = link_node(r, mk_decl(d, t));
     }
     return r;
 }
@@ -267,7 +267,7 @@ Type *mk_const_type(Type *t)
     return t;
 }
 
-Type *mk_function_type(Type *t, Expr *ps)
+Type *mk_function_type(Type *t, Node *ps)
 {
     Type *r = new(Type);
     r->tag = T_FUNCTION;
@@ -276,7 +276,7 @@ Type *mk_function_type(Type *t, Expr *ps)
     return r;
 }
 
-Type *mk_structure_type(const char *name, Expr *members)
+Type *mk_structure_type(const char *name, Node *members)
 {
     Type *r = new(Type);
 
@@ -398,7 +398,7 @@ static void gen_pre(Type *t, enum assoc prev_assoc, int letter)
 
 static void gen_post(Type *t, enum assoc prev_assoc)
 {
-    Expr *pd;
+    Node *pd;
 
     if (t->is_const) {
         t->is_const = FALSE;

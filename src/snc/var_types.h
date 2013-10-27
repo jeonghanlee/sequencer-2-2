@@ -52,7 +52,7 @@ struct type {
         } array;
         struct {
             Type *return_type;
-            Expr *param_decls;
+            Node *param_decls;
         } function;
 #if 0
         struct {
@@ -61,7 +61,7 @@ struct type {
 #endif
         struct {
             const char *name;
-            Expr *member_decls;
+            Node *member_decls;
         } structure;
     } val;
 };
@@ -88,11 +88,11 @@ Type *mk_no_type();
 Type *mk_pointer_type(Type *t);
 Type *mk_array_type(Type *t, unsigned n);
 Type *mk_const_type(Type *t);
-Type *mk_function_type(Type *t, Expr *ps);
-Type *mk_structure_type(const char *name, Expr *members);
+Type *mk_function_type(Type *t, Node *ps);
+Type *mk_structure_type(const char *name, Node *members);
 
-Expr *mk_decl(Expr *d, Type *t);
-Expr *mk_decls(Expr *ds, Type *t);
+Node *mk_decl(Node *d, Type *t);
+Node *mk_decls(Node *ds, Type *t);
 
 void dump_type(Type *t, int l);
 

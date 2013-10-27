@@ -23,9 +23,9 @@ static Type *num_type = &num_type_s;
 static Type *str_type = &str_type_s;
 static Type *no_type = &no_type_s;
 
-static Type *type_error_at(Expr *e)
+static Type *type_error_at(Node *e)
 {
-    error_at_expr(e, "type error");
+    error_at_node(e, "type error");
     return no_type;
 }
 
@@ -37,11 +37,11 @@ static Type *new_pointer_type(Type *t)
     return r;
 }
 
-static Type *member_type(Expr *members, const char *name)
+static Type *member_type(Node *members, const char *name)
 {
-    Expr *member;
+    Node *member;
     foreach(member, members) {
-        if (member->tag == D_DECL && strcmp(member->value, name) == 0) {
+        if (member->tag == D_DECL && strcmp(member->token.str, name) == 0) {
             return member->extra.e_decl->type;
         }
     }
@@ -51,7 +51,7 @@ static Type *member_type(Expr *members, const char *name)
 /* Infer the type of an expression. A result of no_type means we can't say,
    either because of a type error, or because we don't have enough information,
    e.g. due to involvement of foreign types, functions, or variables. */
-Type *type_of(Expr *e)
+Type *type_of(Node *e)
 {
     Type *t, *l, *r;
 
@@ -59,7 +59,7 @@ Type *type_of(Expr *e)
     case E_BINOP:                       /* binary operator [left,right] */
         l = type_of(e->binop_left);
         r = type_of(e->binop_right);
-        switch (e->token) {
+        switch (e->token.symbol) {
         case TOK_SUB:
         case TOK_ADD:
             if (l->tag == T_POINTER) {
@@ -111,7 +111,7 @@ Type *type_of(Expr *e)
         return e->cast_type->extra.e_decl->type;
     case E_CONST:                       /* numeric (inkl. character) constant [] */
         return num_type;
-    case E_FUNC:                        /* function call [expr,args] */
+    case E_FUNC:                        /* function call [node,args] */
         t = type_of(e->func_expr);
         if (t->tag == T_FUNCTION) {
             return t->val.function.return_type;
@@ -125,13 +125,13 @@ Type *type_of(Expr *e)
         /* because we handle this one in E_SELECT */
         assert(impossible);
         return no_type;
-    case E_PAREN:                       /* parenthesis around an expression [expr] */
+    case E_PAREN:                       /* parenthesis around an expression [node] */
         return type_of(e->paren_expr);
     case E_POST:                        /* unary postfix operator [operand] */
         return type_of(e->post_operand);
     case E_PRE:                         /* unary prefix operator [operand] */
         t = type_of(e->pre_operand);
-        switch (e->token) {
+        switch (e->token.symbol) {
         case TOK_ADD:
         case TOK_SUB:
             return t;
@@ -158,7 +158,7 @@ Type *type_of(Expr *e)
         }
     case E_SELECT:                      /* member selection [left,right] */
         t = type_of(e->select_left);
-        switch (e->token) {
+        switch (e->token.symbol) {
         case TOK_POINTER:
 #ifdef DEBUG
             report("type_of(): op='->'\n");
@@ -172,7 +172,7 @@ Type *type_of(Expr *e)
             report("type_of(): op='.', t->tag=%s\n", type_tag_names[t->tag]);
 #endif
             if (t->tag == T_STRUCT)
-                return member_type(t->val.structure.member_decls, e->select_right->value);
+                return member_type(t->val.structure.member_decls, e->select_right->token.str);
             else
                 return no_type;
         default:
@@ -181,7 +181,7 @@ Type *type_of(Expr *e)
         }
     case E_STRING:                      /* string constant [] */
         return str_type;               /* just a first approximation, of course */
-    case E_SUBSCR:                      /* subscripted expr [operand,index] */
+    case E_SUBSCR:                      /* subscripted node [operand,index] */
         t = type_of(e->subscr_operand);
         switch (t->tag) {
         case T_ARRAY:
@@ -201,7 +201,7 @@ Type *type_of(Expr *e)
     }
 }
 
-int type_is_function(Expr *e)
+int type_is_function(Node *e)
 {
     Type *t = type_of(e);
 

@@ -14,13 +14,13 @@ in the file LICENSE that is included with this distribution.
 
 #include "types.h"
 
-Expr *parse_program(FILE *in, const char *src_file);
+Node *parse_program(FILE *in, const char *src_file);
 
 void snlParser(
 	void    *yyp,		/* the parser */
 	int     yymajor,	/* the major token code number */
 	Token   yyminor,	/* the value for the token */
-	Expr    **presult	/* extra argument */
+	Node    **presult	/* extra argument */
 );
 
 void *snlParserAlloc(void *(*mallocProc)(size_t));

@@ -15,21 +15,21 @@ in the file LICENSE that is included with this distribution.
 
 #include "types.h"
 
-/* defined in expr.c */
-Expr *expr(
-	enum expr_tag	tag,
+/* defined in node.c */
+Node *node(
+	enum node_tag	tag,
 	Token		tok,
 	...
 );
 
-Expr *opt_defn(
+Node *opt_defn(
 	Token	name,
 	Token	value
 );
 
-Expr *link_expr(
-	Expr	*ep1,
-	Expr	*ep2
+Node *link_node(
+	Node	*ep1,
+	Node	*ep2
 );
 
 uint strtoui(
@@ -37,7 +37,5 @@ uint strtoui(
 	uint limit,		/* result should be < limit */
 	uint *pnumber		/* location for result if successful */
 );
-
-Token token_from_expr(Expr *e);
 
 #endif	/*INCLparseh*/

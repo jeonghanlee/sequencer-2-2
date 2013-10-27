@@ -461,12 +461,12 @@ c_code_line:
 	DONE;		/* dead code, only here to make compiler warning go away */
 }
 
-Expr *parse_program(FILE *in, const char *src_file)
+Node *parse_program(FILE *in, const char *src_file)
 {
 	Scanner	s;
 	int	tt;		/* token type */
 	Token	tv;		/* token value */
-	Expr	*result;	/* result of parsing */
+	Node	*result;	/* result of parsing */
 	void	*parser;	/* the (lemon generated) parser */
 
 	memset(&s, 0, sizeof(s));
@@ -478,7 +478,7 @@ Expr *parse_program(FILE *in, const char *src_file)
 	do
 	{
 		tt = scan(&s, &tv);
-                tv.type = tt;
+                tv.symbol = tt;
 #ifdef	DEBUG
 		report_at(tv.file, tv.line, "%2d\t$%s$\n", tt, tv.str);
 #endif

@@ -26,7 +26,7 @@ in the file LICENSE that is included with this distribution.
 #include "main.h"
 #include "sym_table.h"
 #include "gen_code.h"
-#include "expr.h"
+#include "node.h"
 #include "var_types.h"
 #include "gen_tables.h"
 
@@ -37,16 +37,16 @@ typedef struct event_mask_args {
 
 static void gen_channel_table(ChanList *chan_list, uint num_event_flags, int opt_reent);
 static void gen_channel(Chan *cp, uint num_event_flags, int opt_reent);
-static void gen_state_table(Expr *ss_list, uint num_event_flags, uint num_channels);
-static void fill_state_struct(Expr *sp, char *ss_name, uint ss_num);
+static void gen_state_table(Node *ss_list, uint num_event_flags, uint num_channels);
+static void fill_state_struct(Node *sp, char *ss_name, uint ss_num);
 static void gen_prog_table(Program *p);
 static void encode_options(Options options);
 static void encode_state_options(StateOptions options);
-static void gen_ss_table(Expr *ss_list);
-static void gen_state_event_mask(Expr *sp, uint num_event_flags,
+static void gen_ss_table(Node *ss_list);
+static void gen_state_event_mask(Node *sp, uint num_event_flags,
 	seqMask *event_words, uint num_event_words);
-static int iter_event_mask_scalar(Expr *ep, Expr *scope, void *parg);
-static int iter_event_mask_array(Expr *ep, Expr *scope, void *parg);
+static int iter_event_mask_scalar(Node *ep, Node *scope, void *parg);
+static int iter_event_mask_array(Node *ep, Node *scope, void *parg);
 
 /* Generate all kinds of tables for a SNL program. */
 void gen_tables(Program *p)
@@ -90,13 +90,13 @@ static void gen_var_name(Var *vp)
 	}
 	else if (vp->scope->tag == D_SS)
 	{
-		gen_code("%s_%s.%s", NM_VARS, vp->scope->value, vp->name);
+		gen_code("%s_%s.%s", NM_VARS, vp->scope->token.str, vp->name);
 	}
 	else if (vp->scope->tag == D_STATE)
 	{
 		gen_code("%s_%s.%s_%s.%s", NM_VARS,
-			vp->scope->extra.e_state->var_list->parent_scope->value,
-			NM_VARS, vp->scope->value, vp->name);
+			vp->scope->extra.e_state->var_list->parent_scope->token.str,
+			NM_VARS, vp->scope->token.str, vp->name);
 	}
 }
 
@@ -182,10 +182,10 @@ static void gen_channel(Chan *cp, uint num_event_flags, int opt_reent)
 }
 
 /* Generate state event mask and table */
-static void gen_state_table(Expr *ss_list, uint num_event_flags, uint num_channels)
+static void gen_state_table(Node *ss_list, uint num_event_flags, uint num_channels)
 {
-	Expr	*ssp;
-	Expr	*sp;
+	Node	*ssp;
+	Node	*sp;
 	uint	n;
 	uint	num_event_words = NWORDS(num_event_flags + num_channels);
 	uint	ss_num = 0;
@@ -203,23 +203,23 @@ static void gen_state_table(Expr *ss_list, uint num_event_flags, uint num_channe
 	foreach (ssp, ss_list)
 	{
 		/* Generate event mask array */
-		gen_code("\n/* Event masks for state set \"%s\" */\n", ssp->value);
+		gen_code("\n/* Event masks for state set \"%s\" */\n", ssp->token.str);
 		foreach (sp, ssp->ss_states)
 		{
 			gen_state_event_mask(sp, num_event_flags, event_mask, num_event_words);
 			gen_code("static const seqMask " NM_MASK "_%s_%d_%s[] = {\n",
-				ssp->value, ss_num, sp->value);
+				ssp->token.str, ss_num, sp->token.str);
 			for (n = 0; n < num_event_words; n++)
 				gen_code("\t0x%08x,\n", event_mask[n]);
 			gen_code("};\n");
 		}
 
 		/* Generate table of state structures */
-		gen_code("\n/* State table for state set \"%s\" */\n", ssp->value);
-		gen_code("static seqState " NM_STATES "_%s[] = {\n", ssp->value);
+		gen_code("\n/* State table for state set \"%s\" */\n", ssp->token.str);
+		gen_code("static seqState " NM_STATES "_%s[] = {\n", ssp->token.str);
 		foreach (sp, ssp->ss_states)
 		{
-			fill_state_struct(sp, ssp->value, ss_num);
+			fill_state_struct(sp, ssp->token.str, ss_num);
 		}
 		gen_code("};\n");
 		ss_num++;
@@ -227,23 +227,23 @@ static void gen_state_table(Expr *ss_list, uint num_event_flags, uint num_channe
 }
 
 /* Generate a state struct */
-static void fill_state_struct(Expr *sp, char *ss_name, uint ss_num)
+static void fill_state_struct(Node *sp, char *ss_name, uint ss_num)
 {
 	gen_code("\t{\n");
-	gen_code("\t/* state name */        \"%s\",\n", sp->value);
-	gen_code("\t/* action function */   " NM_ACTION "_%s_%d_%s,\n", ss_name, ss_num, sp->value);
-	gen_code("\t/* event function */    " NM_EVENT "_%s_%d_%s,\n", ss_name, ss_num, sp->value);
+	gen_code("\t/* state name */        \"%s\",\n", sp->token.str);
+	gen_code("\t/* action function */   " NM_ACTION "_%s_%d_%s,\n", ss_name, ss_num, sp->token.str);
+	gen_code("\t/* event function */    " NM_EVENT "_%s_%d_%s,\n", ss_name, ss_num, sp->token.str);
 	gen_code("\t/* entry function */    ");
 	if (sp->state_entry)
-		gen_code(NM_ENTRY "_%s_%d_%s,\n", ss_name, ss_num, sp->value);
+		gen_code(NM_ENTRY "_%s_%d_%s,\n", ss_name, ss_num, sp->token.str);
 	else
 		gen_code("0,\n");
 	gen_code("\t/* exit function */     ");
 	if (sp->state_exit)
-		gen_code(NM_EXIT "_%s_%d_%s,\n", ss_name, ss_num, sp->value);
+		gen_code(NM_EXIT "_%s_%d_%s,\n", ss_name, ss_num, sp->token.str);
 	else
 		gen_code("0,\n");
-	gen_code("\t/* event mask array */  " NM_MASK "_%s_%d_%s,\n", ss_name, ss_num, sp->value);
+	gen_code("\t/* event mask array */  " NM_MASK "_%s_%d_%s,\n", ss_name, ss_num, sp->token.str);
 	gen_code("\t/* state options */     ");
 	encode_state_options(sp->extra.e_state->options);
 	gen_code("\n\t},\n");
@@ -263,9 +263,9 @@ static void encode_state_options(StateOptions options)
 } 
 
 /* Generate state set table, one entry for each state set */
-static void gen_ss_table(Expr *ss_list)
+static void gen_ss_table(Node *ss_list)
 {
-	Expr	*ssp;
+	Node	*ssp;
 	int	num_ss;
 
 	gen_code("\n/* State set table */\n");
@@ -277,8 +277,8 @@ static void gen_ss_table(Expr *ss_list)
 			gen_code("\n");
 		num_ss++;
 		gen_code("\t{\n");
-		gen_code("\t/* state set name */    \"%s\",\n", ssp->value);
-		gen_code("\t/* states */            " NM_STATES "_%s,\n", ssp->value);
+		gen_code("\t/* state set name */    \"%s\",\n", ssp->token.str);
+		gen_code("\t/* states */            " NM_STATES "_%s,\n", ssp->token.str);
 		gen_code("\t/* number of states */  %d\n", ssp->extra.e_ss->num_states);
 		gen_code("\t},\n");
 	}
@@ -334,11 +334,11 @@ static void encode_options(Options options)
    event flags. The bits from num_event_flags+1 to num_event_flags+num_channels
    are for process variables. Bit zero is not used for whatever mysterious reason
    I cannot tell. */
-static void gen_state_event_mask(Expr *sp, uint num_event_flags,
+static void gen_state_event_mask(Node *sp, uint num_event_flags,
 	seqMask *event_words, uint num_event_words)
 {
 	uint	n;
-	Expr	*tp;
+	Node	*tp;
 
 	for (n = 0; n < num_event_words; n++)
 		event_words[n] = 0;
@@ -353,15 +353,15 @@ static void gen_state_event_mask(Expr *sp, uint num_event_flags,
 		event_mask_args em_args = { event_words, num_event_flags };
 
 		/* look for scalar variables and event flags */
-		traverse_expr_tree(tp->when_cond, bit(E_VAR), 0, 0,
+		traverse_syntax_tree(tp->when_cond, bit(E_VAR), 0, 0,
 			iter_event_mask_scalar, &em_args);
 
 		/* look for arrays and subscripted array elements */
-		traverse_expr_tree(tp->when_cond, bit(E_VAR)|bit(E_SUBSCR), 0, 0,
+		traverse_syntax_tree(tp->when_cond, bit(E_VAR)|bit(E_SUBSCR), 0, 0,
 			iter_event_mask_array, &em_args);
 	}
 #ifdef DEBUG
-	report("event mask for state %s is", sp->value);
+	report("event mask for state %s is", sp->token.str);
 	for (n = 0; n < num_event_words; n++)
 		report(" 0x%lx", event_words[n]);
 	report("\n");
@@ -371,7 +371,7 @@ static void gen_state_event_mask(Expr *sp, uint num_event_flags,
 #define bitnum(var_ix, ch_ix, num_efs) ((var_ix)+(ch_ix)+(num_efs)+1)
 
 /* Iteratee for scalar variables (including event flags). */
-static int iter_event_mask_scalar(Expr *ep, Expr *scope, void *parg)
+static int iter_event_mask_scalar(Node *ep, Node *scope, void *parg)
 {
 	event_mask_args	*em_args = (event_mask_args *)parg;
 	Chan		*cp;
@@ -413,14 +413,14 @@ static int iter_event_mask_scalar(Expr *ep, Expr *scope, void *parg)
 }
 
 /* Iteratee for array variables. */
-static int iter_event_mask_array(Expr *ep, Expr *scope, void *parg)
+static int iter_event_mask_array(Node *ep, Node *scope, void *parg)
 {
 	event_mask_args	*em_args = (event_mask_args *)parg;
 	uint		num_event_flags = em_args->num_event_flags;
 	seqMask		*event_words = em_args->event_words;
 
 	Var		*vp=0;
-	Expr		*e_var=0, *e_ix=0;
+	Node		*e_var=0, *e_ix=0;
 
 	assert(ep->tag == E_SUBSCR || ep->tag == E_VAR);
 
@@ -473,11 +473,11 @@ static int iter_event_mask_array(Expr *ep, Expr *scope, void *parg)
 		{
 			uint ix;
 
-			if (!strtoui(e_ix->value, length1, &ix))
+			if (!strtoui(e_ix->token.str, length1, &ix))
 			{
-				error_at_expr(e_ix,
+				error_at_node(e_ix,
 					"subscript in '%s[%s]' out of range\n",
-					vp->name, e_ix->value);
+					vp->name, e_ix->token.str);
 				return FALSE;
 			}
 #ifdef DEBUG
