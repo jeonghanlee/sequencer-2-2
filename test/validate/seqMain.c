@@ -209,7 +209,6 @@ int main(int argc, char *argv[])
     if (argc>0) {
 	if (iocsh(*argv)) epicsExit(EXIT_FAILURE);
 	epicsThreadSleep(0.2);
-	loadedDb = 1;	/* Give it the benefit of the doubt... */
     }
     
     /* start an interactive shell if it was requested */
