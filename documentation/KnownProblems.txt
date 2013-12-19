@@ -1,6 +1,16 @@
 Known Problems
 ==============
 
+.. _Known_Problems_2.1.15:
+
+Known Problems in Release 2.1.15
+--------------------------------
+
+Building fails on Windows due to a missing epicsShareExtern specifier.
+
+The solution is to add epicsShareExtern to the declaration of the variable
+seq_sync_timeout in src/seq/seq_if.c.
+
 .. _Known_Problems_2.1.14:
 
 Known Problems in Release 2.1.14

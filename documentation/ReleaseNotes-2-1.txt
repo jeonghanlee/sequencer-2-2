@@ -1,6 +1,13 @@
 Release Notes for Version 2.1
 =============================
 
+.. _Release_Notes_2.1.16:
+
+Release 2.1.16
+--------------
+
+This release fixes a build problem on Windows, see :ref:`Known_Problems_2.1.15`.
+
 .. _Release_Notes_2.1.15:
 
 Release 2.1.15
