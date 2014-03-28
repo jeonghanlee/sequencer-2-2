@@ -382,11 +382,19 @@ pvStat seq_camonitor(CHAN *ch, boolean turn_on)
 	DBCHAN	*dbch = ch->dbch;
 	PROG	*sp = ch->prog;
 	pvStat	status;
+	boolean	done;
 
 	assert(ch);
 	assert(dbch);
-	if (turn_on == pvMonIsDefined(dbch->pvid))	/* no change */
+
+	epicsMutexMustLock(sp->lock);
+	done = turn_on == pvMonIsDefined(dbch->pvid);
+	dbch->gotMonitor = FALSE;
+	epicsMutexUnlock(sp->lock);
+
+	if (done)
 		return pvStatOK;
+
 	DEBUG("calling pvVarMonitor%s(%p)\n", turn_on ? "On" : "Off", ch);
 	if (turn_on)
 	{
@@ -399,7 +407,6 @@ pvStat seq_camonitor(CHAN *ch, boolean turn_on)
 	else
 	{
 		status = pvVarMonitorOff(&dbch->pvid);
-		dbch->gotMonitor = FALSE;
 		epicsMutexMustLock(sp->lock);
 		sp->gotMonitorCount -= 1;
 		epicsMutexUnlock(sp->lock);
