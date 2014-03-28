@@ -626,10 +626,13 @@ epicsShareFunc pvStat seq_pvAssign(SS_ID ss, VAR_ID varId, const char *pvName)
 			dbch->connected = FALSE;
 			sp->connectCount--;
 
-			if (ch->monitored)
-			{
-				seq_camonitor(ch, FALSE);
-			}
+			/* Must not call seq_camonitor(ch, FALSE), it would give an
+			error because channel is already dead. pvVarDestroy takes
+                        care that the monid inside the pvid gets invalidated. */
+
+			/* Note ch->monitored remains on because it is a configuration
+			value that belongs to the variable and newly created channels
+			for the same variable should inherit this configuration. */
 		}
 
 		if (status != pvStatOK)
