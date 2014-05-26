@@ -1,6 +1,39 @@
 Known Problems
 ==============
 
+.. _Known_Problems_2.1.16:
+
+Known Problems in Release 2.1.16
+--------------------------------
+
+* Reportedly, there are still situations when building on 64-Bit-Windows
+  fails, due to the same missing epicsShareExtern specifier. I recommend to
+  just disable building the tests, until I have a proper fix for this. To do
+  this, just comment-out the line ::
+
+    DIRS += test
+
+  in the top level Makefile.
+
+* Tim Mooney <mooney@aps.anl.gov> reported a problem when monitoring large
+  arrays. This could lead to assertion failures, causing CAS-client threads
+  to be suspended. He also analysed the problem, tracing it back to a code
+  snippet in src/pv/pvCa.cc, where a temporary copy of the value from CA is
+  made on the stack. This can cause a stack overflow on systems where the
+  stack size is statically limited, i.e. VxWorks and RTEMS.
+
+  A proper fix would need a large-scale re-structuring of the PV layer. This
+  is not something I am going to do in version 2.1, especially since the PV
+  layer is going to be removed (mostly) anyway in the next version.
+
+  The latest snapshot contains a quick and dirty fix. It lets you set ::
+
+    USE_MALLOC_FOR_TEMPORARY_COPY=YES
+
+  in configure/CONFIG_SITE, which will cause malloc/free to be used to
+  create the temorary copy. Note that this may cause unwanted side-effects
+  like memory fragmentation.
+
 .. _Known_Problems_2.1.15:
 
 Known Problems in Release 2.1.15
