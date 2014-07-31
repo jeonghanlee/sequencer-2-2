@@ -106,12 +106,12 @@ Program
 -------
 
 .. productionlist::
-   program: "program" `identifier` `program_param` `global_defns` `entry` `state_sets` `exit` `functions` `c_codes`
+   program: "program" `identifier` `program_param` `initial_defns` `entry` `state_sets` `exit` `final_defns`
 
 This is the overall structure of an SNL program. After the keyword
 "program" comes the name of the program, followed by an optional program
-parameter, global definitions, an optional entry block, the state sets, an
-optional exit block, function definitions, and finally some embedded C code.
+parameter, initial global definitions, an optional entry block, the state sets, an
+optional exit block, and then again global definitions.
 
 Program Name and Parameters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -138,17 +138,26 @@ parameters in the same form as if specified on invocation (see
    program.
 
 .. productionlist::
-   global_defns: `global_defns` `global_defn`
-   global_defns: 
-   global_defn: `assign`
-   global_defn: `monitor`
-   global_defn: `sync`
-   global_defn: `syncq`
-   global_defn: `declaration`
-   global_defn: `option`
-   global_defn: `c_code`
+   initial_defns: `initial_defns` `initial_defn`
+   initial_defns: 
+   initial_defn: `assign`
+   initial_defn: `monitor`
+   initial_defn: `sync`
+   initial_defn: `syncq`
+   initial_defn: `declaration`
+   initial_defn: `option`
+   initial_defn: `funcdef`
+   initial_defn: `c_code`
 
-Global (top-level) definitions, see `Definitions`_ for details.
+.. productionlist::
+   final_defns: `final_defns` `final_defn`
+   final_defns: 
+   final_defn: `c_code`
+   final_defn: `funcdef`
+
+Global (top-level) definitions, see `Definitions`_ for details. Note that
+in the final definition section only function definitions and literal code
+blocks are allowed.
 
 .. _GlobalEntryExit:
 
@@ -191,8 +200,6 @@ Final C Code Block
 ^^^^^^^^^^^^^^^^^^
 
 .. productionlist::
-   c_codes: `c_codes` `c_code`
-   c_codes: 
    c_code: `embedded_c_code`
 
 Any number of embedded C code blocks may appear after state sets and the
@@ -959,9 +966,7 @@ Function Definitions
 .. versionadded:: 2.2
 
 .. productionlist::
-   function: `basetype` `declarator` `block`
-   functions: 
-   functions: `functions` `function`
+   funcdef: `basetype` `declarator` `block`
 
 Function definitions are very much like those in C.
 
