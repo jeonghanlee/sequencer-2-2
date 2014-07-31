@@ -531,16 +531,14 @@ Process Variables
 The syntactic constructs in this section allow program variables to be
 connected to externally defined process variables.
 
-assign/connect
-~~~~~~~~~~~~~~
+assign
+~~~~~~
 
 .. productionlist::
-   assign: `connect` `variable` `to` `string` ";"
-   assign: `connect` `variable` `subscript` `to` `string` ";"
-   assign: `connect` `variable` `to` "{" `strings` "}" ";"
-   assign: `connect` `variable` ";"
-   connect: "assign"
-   connect: "connect"
+   assign: "assign" `variable` `to` `string` ";"
+   assign: "assign" `variable` `subscript` `to` `string` ";"
+   assign: "assign" `variable` `to` "{" `strings` "}" ";"
+   assign: "assign" `variable` ";"
    to: "to"
    to: 
    strings: `strings` "," `string`
@@ -608,18 +606,6 @@ connection is established. For anonymous PVs, the length of the array is
 used.
 
 Pointer types may not be assigned to process variables.
-
-.. versionadded:: 2.1
-
-You can use the keyword "connect" as a synonym
-for "assign". It is offered as an alternative because the traditional
-term "assign" is too easily confused with the assignment
-statement (``var = expression;``), even though these notions have
-nothing in common. However, for compatibility and the
-fact that most SNL programmers are used to it, I have refrained from
-making any disruptive change here. Thus, the documentation still talks
-about "assigned variables", the "assign clause" etc. This might change
-in a future (major) release.
 
 
 monitor
