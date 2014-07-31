@@ -223,15 +223,21 @@ Function Definitions
 
 Function definitions are very much like those in C.
 
-The most important difference is that functions declared in SNL get
-passed certain implicit parameters. This makes it possible to call
-built-in functions as if the code were a normal action block.
+The most important difference is that functions declared in SNL get passed
+certain implicit parameters. This makes it possible to call built-in
+functions as if the code were a normal action block. Note, however, that
+there is currently no way to *pass* channel ("assigned") variables to SNL
+functions in such a way that you can call built-in functions on them. The
+"assigned" status of such a variable is lost and it gets passes to the
+function as a normal C value. This means you can call built-in functions
+that expect such a variable only if the variable was declared at the
+top-level. Lifting this limitation is planned for a future release.
 
-Another difference from C is that SNL functions automatically scope over
-the whole program, no matter where they are declared. It is neither
-necessary, nor is it allowed, to repeat the function declaration
-(without the defining code block, commonly referred to as a "function
-prototype") at the top of the program.
+Another difference from C is that SNL functions automatically scope over the
+whole program, no matter where they are defined. It is not necessary (but
+allowed) to repeat the function declaration (without the defining code
+block, commonly referred to as a "function prototype") at the top of the
+program.
 
 
 Type Definitions
