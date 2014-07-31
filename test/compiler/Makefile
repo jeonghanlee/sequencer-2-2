@@ -29,7 +29,6 @@ TESTPROD_HOST += exOpt_DuplOpt
 TESTPROD_HOST += funcdef
 TESTPROD_HOST += include_windows_h
 TESTPROD_HOST += member
-TESTPROD_HOST += structdef
 TESTPROD_HOST += subscript
 TESTPROD_HOST += sync_not_monitored
 TESTPROD_HOST += syncq_not_monitored
