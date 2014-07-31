@@ -147,13 +147,15 @@ parameters in the same form as if specified on invocation (see
    initial_defn: `declaration`
    initial_defn: `option`
    initial_defn: `funcdef`
+   initial_defn: `structdef`
    initial_defn: `c_code`
 
 .. productionlist::
    final_defns: `final_defns` `final_defn`
    final_defns: 
-   final_defn: `c_code`
    final_defn: `funcdef`
+   final_defn: `structdef`
+   final_defn: `c_code`
 
 Global (top-level) definitions, see `Definitions`_ for details. Note that
 in the final definition section only function definitions and literal code
@@ -205,6 +207,7 @@ Final C Code Block
 Any number of embedded C code blocks may appear after state sets and the
 optional exit block. See `Escape to C Code`_.
 
+
 .. _Definitions:
 
 Definitions
@@ -229,6 +232,25 @@ the whole program, no matter where they are declared. It is neither
 necessary, nor is it allowed, to repeat the function declaration
 (without the defining code block, commonly referred to as a "function
 prototype") at the top of the program.
+
+
+Type Definitions
+^^^^^^^^^^^^^^^^
+
+.. versionadded:: 2.2
+
+.. productionlist::
+   structdef: "struct" `identifier` `members` ";"
+   members: "{" `member_decls` "}"
+   member_decls: `member_decl`
+   member_decls: `member_decls` `member_decl`
+   member_decl: `basetype` `declarator` ";"
+   member_decl: `c_code`
+
+Type definitions are currently limited to struct definitions and may appear
+only at the top level. They are translated to the equivalent struct
+definition in C. Differences to C are that bit fields are not supported, and
+that member types are limited to SNL types (built-in or user defined).
 
 
 Variable Declarations
@@ -384,9 +406,8 @@ or pointers or arrays etc.
 
 .. versionadded:: 2.2
 
-You can *use* enumerations, structs, unions and typedefs in declarations
-and type expressions. There is still no way to *define* such types in
-SNL programs (except by escaping to C).
+You can use enumerations, structs, unions and typedefs in declarations
+and type expressions.
 
 .. note::
 
