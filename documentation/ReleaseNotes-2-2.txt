@@ -20,40 +20,6 @@ constant, instead of its value. This makes the code a bit more readable and
 slightly simplifies code generation.
 
 
-Compiler Generates a Header File
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-By suggestion of Pierrick Hanlet <hanlet@fnal.gov>, the compiler
-now generates a header file. This header file can be included
-by C code that accompanies the SNL program, which opens up an alternative
-to embedding such C code into the SNL program in escaped code blocks.
-
-More specifically, what gets written to the header file is (in the order
-listed):
-
-- #includes of epicsTypes.h and seqCom.h
-- escaped code segments appearing before the first state set
-- definition of the ``_seq_var`` struct (re-entrant mode only)
-
-Note that the order here has changed relative to version 2.1.
-See below for a rationale. (The struct ``_seq_var`` was previously named
-UserVar, see section `Names of Generated Entities`_ below for details.)
-
-Since in non-reentrant mode there is no ``_seq_var`` struct (global SNL
-variables are mapped to top-level static C variables), including their
-definitions in another C file makes no sense: they would be copies,
-not aliases, of the variables in the SNL program.
-
-In all cases, the header file gets included by the generated C code.
-
-The rules in configure/RULES_BUILD have been adapted to account for the
-additional header file.
-
-There is currently no way to specify the name of the header file
-via command line option. It always gets the same name as the generated
-C file, with its filename extension replaced by ".h".
-
-
 Foreign Types and Type Casts
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
