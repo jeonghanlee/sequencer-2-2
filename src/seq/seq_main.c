@@ -17,7 +17,32 @@ in the file LICENSE that is included with this distribution.
 static boolean init_sprog(PROG *sp, seqProgram *seqProg);
 static boolean init_sscb(PROG *sp, SSCB *ss, seqSS *seqSS);
 static boolean init_chan(PROG *sp, CHAN *ch, seqChan *seqChan);
-static PVTYPE *find_type(const char *userType);
+
+/*
+ * types for DB put/get, element size based on user variable type.
+ * pvTypeTIME_* types for gets/monitors return status, severity, and time stamp
+ * in addition to the value.
+ */
+static PVTYPE pv_type_map[] =
+{
+	{ P_CHAR,	pvTypeCHAR,	pvTypeTIME_CHAR,	sizeof(char)		},
+	{ P_UCHAR,	pvTypeCHAR,	pvTypeTIME_CHAR,	sizeof(unsigned char)	},
+	{ P_SHORT,	pvTypeSHORT,	pvTypeTIME_SHORT,	sizeof(short)		},
+	{ P_USHORT,	pvTypeSHORT,	pvTypeTIME_SHORT,	sizeof(unsigned short)	},
+	{ P_INT,	pvTypeLONG,	pvTypeTIME_LONG,	sizeof(int)		},
+	{ P_UINT,	pvTypeLONG,	pvTypeTIME_LONG,	sizeof(unsigned int)	},
+	{ P_LONG,	pvTypeLONG,	pvTypeTIME_LONG,	sizeof(long)		},
+	{ P_ULONG,	pvTypeLONG,	pvTypeTIME_LONG,	sizeof(unsigned long)	},
+	{ P_INT8T,	pvTypeCHAR,	pvTypeTIME_CHAR,	sizeof(epicsInt8)	},
+	{ P_UINT8T,	pvTypeCHAR,	pvTypeTIME_CHAR,	sizeof(epicsUInt8)	},
+	{ P_INT16T,	pvTypeSHORT,	pvTypeTIME_SHORT,	sizeof(epicsInt16)	},
+	{ P_UINT16T,	pvTypeSHORT,	pvTypeTIME_SHORT,	sizeof(epicsUInt16)	},
+	{ P_INT32T,	pvTypeLONG,	pvTypeTIME_LONG,	sizeof(epicsInt32)	},
+	{ P_UINT32T,	pvTypeLONG,	pvTypeTIME_LONG,	sizeof(epicsUInt32)	},
+	{ P_FLOAT,	pvTypeFLOAT,	pvTypeTIME_FLOAT,	sizeof(float)		},
+	{ P_DOUBLE,	pvTypeDOUBLE,	pvTypeTIME_DOUBLE,	sizeof(double)		},
+	{ P_STRING,	pvTypeSTRING,	pvTypeTIME_STRING,	sizeof(string)		},
+};
 
 /*
  * seq: Run a state program.
@@ -354,20 +379,15 @@ static boolean init_chan(PROG *sp, CHAN *ch, seqChan *seqChan)
 	ch->eventNum = seqChan->eventNum;
 
 	/* Fill in request type info */
-	ch->type = find_type(seqChan->varType);
-	if (!ch->type->size)
-	{
-		errlogSevPrintf(errlogFatal, "init_chan: unknown type %s for assigned variable: %s\n",
-			seqChan->varType, seqChan->varName);
-		return FALSE;
-	}
+	ch->type = pv_type_map + seqChan->varType;
+	assert(seqChan->varType == ch->type->tag);
 
 	DEBUG("  varname=%s, count=%u\n"
 		"  syncedTo=%u, monitored=%u, eventNum=%u\n",
 		ch->varName, ch->count,
 		ch->syncedTo, ch->monitored, ch->eventNum);
-	DEBUG("  type=%p: typeStr=%s, putType=%d, getType=%d, size=%d\n",
-		ch->type, ch->type->typeStr,
+	DEBUG("  type=%p: tag=%s, putType=%d, getType=%d, size=%d\n",
+		ch->type, prim_type_tag_name[ch->type->tag],
 		ch->type->putType, ch->type->getType, ch->type->size);
 
 	if (seqChan->chName)	/* skip anonymous PVs */
@@ -441,53 +461,6 @@ static boolean init_chan(PROG *sp, CHAN *ch, seqChan *seqChan)
 		return FALSE;
 	}
 	return TRUE;
-}
-
-/*
- * find_type() -- returns types for DB put/get, element size based on user variable type.
- * Mapping is determined by the following pv_type_map[] array.
- * pvTypeTIME_* types for gets/monitors return status, severity, and time stamp
- * in addition to the value.
- */
-static PVTYPE pv_type_map[] =
-{
-	{ "char",		pvTypeCHAR,	pvTypeTIME_CHAR,	sizeof(char)		},
-	{ "short",		pvTypeSHORT,	pvTypeTIME_SHORT,	sizeof(short)		},
-	{ "int",		pvTypeLONG,	pvTypeTIME_LONG,	sizeof(int)		},
-	{ "long",		pvTypeLONG,	pvTypeTIME_LONG,	sizeof(long)		},
-	{ "unsigned char",	pvTypeCHAR,	pvTypeTIME_CHAR,	sizeof(unsigned char)	},
-	{ "unsigned short",	pvTypeSHORT,	pvTypeTIME_SHORT,	sizeof(unsigned short)	},
-	{ "unsigned int",	pvTypeLONG,	pvTypeTIME_LONG,	sizeof(unsigned int)	},
-	{ "unsigned long",	pvTypeLONG,	pvTypeTIME_LONG,	sizeof(unsigned long)	},
-	{ "float",		pvTypeFLOAT,	pvTypeTIME_FLOAT,	sizeof(float)		},
-	{ "double",		pvTypeDOUBLE,	pvTypeTIME_DOUBLE,	sizeof(double)		},
-	{ "string",		pvTypeSTRING,	pvTypeTIME_STRING,	sizeof(string)		},
-
-	{ "epicsInt8",		pvTypeCHAR,	pvTypeTIME_CHAR,	sizeof(epicsInt8)	},
-	{ "epicsUInt8",		pvTypeCHAR,	pvTypeTIME_CHAR,	sizeof(epicsUInt8)	},
-	{ "epicsInt16",		pvTypeSHORT,	pvTypeTIME_SHORT,	sizeof(epicsInt16)	},
-	{ "epicsUInt16",	pvTypeSHORT,	pvTypeTIME_SHORT,	sizeof(epicsUInt16)	},
-	{ "epicsInt32",		pvTypeLONG,	pvTypeTIME_LONG,	sizeof(epicsInt32)	},
-	{ "epicsUInt32",	pvTypeLONG,	pvTypeTIME_LONG,	sizeof(epicsUInt32)	},
-
-	{ NULL,			pvTypeERROR,	pvTypeERROR,		0			}
-};
-
-static PVTYPE *find_type(const char *userType)
-{
-	PVTYPE	*pt;
-
-	/* TODO: select pvType according to sizeof int/long/etc */
-	assert(sizeof(char)==1);
-	assert(sizeof(unsigned char)==1);
-	assert(sizeof(short)==2);
-	assert(sizeof(unsigned short)==2);
-	assert(sizeof(int)==4);
-	assert(sizeof(unsigned int)==4);
-	for (pt = pv_type_map; pt->typeStr; pt++)
-		if (strcmp(userType, pt->typeStr) == 0)
-			break;
-	return pt;
 }
 
 /* Free all allocated memory in a program structure */

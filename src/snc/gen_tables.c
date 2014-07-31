@@ -161,7 +161,7 @@ static void gen_channel(Chan *cp, uint num_event_flags, int opt_reent)
 	gen_code("\"%s%s\", ", vp->name, elem_str);
 	/* variable type */
 	assert(base_type(vp->type)->tag == T_PRIM);
-	gen_code("\"%s\", ", prim_type_name[base_type(vp->type)->val.prim]);
+	gen_code("%s, ", prim_type_tag_name[base_type(vp->type)->val.prim]);
 	/* count, for requests */
 	gen_code("%d, ", cp->count);
 	/* event number */

@@ -28,6 +28,7 @@ in the file LICENSE that is included with this distribution.
 #define INCLseqsnch
 
 #include "seqCom.h"
+#include "seq_prim_types.h"
 
 typedef epicsUInt32 seqMask;				/* for event masks and options */
 
@@ -81,7 +82,7 @@ struct seqChan
 	const char	*chName;	/* assigned channel name */
 	size_t		offset;		/* offset to value */
 	const char	*varName;	/* variable name, including subscripts*/
-	const char	*varType;	/* variable type, e.g. "int" */
+	enum prim_type_tag varType;	/* variable (base) type */
 	unsigned	count;		/* element count for arrays */
 	unsigned	eventNum;	/* event number for this channel */
 	EV_ID		efId;		/* event flag id if synced */

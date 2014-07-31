@@ -105,7 +105,7 @@ struct channel
 
 struct pv_type
 {
-	const char	*typeStr;
+	enum prim_type_tag tag;
 	pvType		putType;
 	pvType		getType;
 	size_t		size;

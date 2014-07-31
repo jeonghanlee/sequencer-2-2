@@ -170,7 +170,7 @@ epicsShareFunc void seqChanShow(epicsThreadId tid, const char *str)
 		}
 		printf("\n#%d of %d:\n", nch, sp->numChans);
 		printf("  Variable name: \"%s\"\n", ch->varName);
-		printf("    type = %s\n", ch->type->typeStr);
+		printf("    type = %s\n", prim_type_name[ch->type->tag]);
 		printf("    count = %u\n", ch->count);
 		printf("  Value =");
 		printValue(printf, valPtr(ch,ss), ch->count, ch->type->putType);
