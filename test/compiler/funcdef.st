@@ -16,8 +16,7 @@ void *f1a()
     return 0;
 }
 
-/* forward declarations */
-void *f2(void *x, double **d);
+/* forward declarations (not needed but allowed) */
 void pvSetX(int val);
 
 ss simple {
