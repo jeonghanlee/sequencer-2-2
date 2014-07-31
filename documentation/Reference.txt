@@ -419,6 +419,7 @@ Type Expressions
    abs_decl: "*" `abs_decl`
    abs_decl: "const"
    abs_decl: "const" `abs_decl`
+   param_decls: 
    param_decls: `param_decl`
    param_decls: `param_decls` "," `param_decl`
    param_decl: `basetype` `declarator`
