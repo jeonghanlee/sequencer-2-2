@@ -27,7 +27,6 @@ TESTSCRIPTS_HOST += snc_test.t
 TESTPROD_HOST += cppComment
 TESTPROD_HOST += exOpt_DuplOpt
 TESTPROD_HOST += funcdef
-TESTPROD_HOST += function_in_struct
 TESTPROD_HOST += include_windows_h
 TESTPROD_HOST += member
 TESTPROD_HOST += structdef
