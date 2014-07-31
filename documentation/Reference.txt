@@ -210,6 +210,27 @@ optional exit block. See `Escape to C Code`_.
 Definitions
 -----------
 
+Function Definitions
+^^^^^^^^^^^^^^^^^^^^
+
+.. versionadded:: 2.2
+
+.. productionlist::
+   funcdef: `basetype` `declarator` `block`
+
+Function definitions are very much like those in C.
+
+The most important difference is that functions declared in SNL get
+passed certain implicit parameters. This makes it possible to call
+built-in functions as if the code were a normal action block.
+
+Another difference from C is that SNL functions automatically scope over
+the whole program, no matter where they are declared. It is neither
+necessary, nor is it allowed, to repeat the function declaration
+(without the defining code block, commonly referred to as a "function
+prototype") at the top of the program.
+
+
 Variable Declarations
 ^^^^^^^^^^^^^^^^^^^^^
 
@@ -959,26 +980,6 @@ Blocks are enclosed in matching (curly) braces. They may contain any
 number of block definitions and afterwards any number of statements.
 
 Block definitions are: declarations and embedded C code.
-
-Function Definitions
---------------------
-
-.. versionadded:: 2.2
-
-.. productionlist::
-   funcdef: `basetype` `declarator` `block`
-
-Function definitions are very much like those in C.
-
-The most important difference is that functions declared in SNL get
-passed certain implicit parameters. This makes it possible to call
-built-in functions as if the code were a normal action block.
-
-Another difference from C is that SNL functions automatically scope over
-the whole program, no matter where they are declared. It is neither
-necessary, nor is it allowed, to repeat the function declaration
-(without the defining code block, commonly referred to as a "function
-prototype") at the top of the program.
 
 
 Statements and Expressions
