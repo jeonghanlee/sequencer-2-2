@@ -36,7 +36,8 @@ struct func_symbol
 {
     const char  *name;
     uint        type            :2; /* see enum func_type */
-    uint        add_length      :1; /* if multi-pv is supported, must pass array size */
+    uint        multi_pv        :1; /* whether multi-pv args are supported */
+    uint        add_length      :1; /* need to pass array size */
     uint        default_args    :2; /* number of optional parameters */
     uint        ef_action_only  :1; /* not allowed in when-conditions */
     uint        ef_args         :1; /* extra parameter must be an event flag */

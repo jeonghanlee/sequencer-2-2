@@ -43,7 +43,7 @@ static void gen_action_body(Node *xp, int context);
 static void gen_expr(int context, Node *ep, int level);
 static void gen_ef_func(int context, Node *ep, const char *func_name, uint ef_action_only);
 static void gen_pv_func(int context, Node *ep,
-	const char *func_name, uint add_length,
+	const char *func_name, uint multi_pv, uint add_length,
 	uint num_params, uint ef_args,
 	const char *default_values[]);
 static void gen_builtin_func(int context, Node *ep);
@@ -555,7 +555,7 @@ static void gen_builtin_func(int context, Node *ep)
 		gen_ef_func(context, ep, sym->name, sym->ef_action_only);
 		break;
 	case FT_PV:
-		gen_pv_func(context, ep, sym->name, sym->add_length,
+		gen_pv_func(context, ep, sym->name, sym->multi_pv, sym->add_length,
 			sym->default_args, sym->ef_args, sym->default_values);
 		break;
 	case FT_OTHER:
@@ -637,6 +637,7 @@ static void gen_pv_func(
 	int		context,
 	Node		*ep,		/* function call expression */
 	const char	*func_name,	/* function name */
+	uint		multi_pv,	/* whether multiple pv arrays are supported */
 	uint		add_length,	/* add array length after channel id */
 	uint		num_params,	/* number of params to add (if omitted) */
 	uint		ef_args,	/* extra args are event flags */
@@ -665,22 +666,24 @@ static void gen_pv_func(
 			{
 				error_at_node(ap,
 					"passing multi-PV array '%s' to function '%s' is not "
-					"(yet?) allowed\n",
+					"allowed\n",
 					vp->name, func_name);
+				report_at_node(ap, "Perhaps you meant to pass '%s[0]'?\n", vp->name);
 				return;
 			}
-			if (!global_options.newpv)
+			/* Note: multi_pv is off by default for functions
+			   that did not support that in version 2.1,
+			   passing +p allows the new (multi_pv) behaviour. */
+			assert(add_length);
+			if (!(multi_pv || global_options.newpv))
 			{
 				error_at_node(ap,
 					"passing multi-PV array '%s' to function '%s' is not "
 					"allowed in compatibility mode (option -p)\n",
 					vp->name, func_name);
 				report_at_node(ap, "Perhaps you meant to pass '%s[0]'?\n", vp->name);
-				if (add_length)
-				{
-					report_at_node(ap, "Use option +p to allow this but then "
-						"pv functions operate on all contained PVs\n");
-				}
+				report_at_node(ap, "Use option +p to allow this function "
+					"(and some others) to operate on all contained PVs\n");
 				return;
 			}
 		}
