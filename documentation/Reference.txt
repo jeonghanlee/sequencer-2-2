@@ -1668,11 +1668,6 @@ clause.
    Add an optional argument, so users can make pvAssign wait for the
    connection to be established (or some timeout).
 
-.. versionadded:: 2.2
-
-Program parameter expansion is done in the same way as
-when using the :token:`assign` clause.
-
 A better name for this function would be ``pvReassign``.
 
 .. note::
@@ -1698,6 +1693,11 @@ A better name for this function would be ``pvReassign``.
    currently do this with a single call (in contrast to doing it in an
    :token:`assign` clause. Instead, you must call ``pvAssign``
    for each array element individually.
+
+.. versionadded:: 2.2
+
+Program parameter expansion is done in the same way as when using the
+:token:`assign` clause.
 
 .. versionadded:: 2.2
 
