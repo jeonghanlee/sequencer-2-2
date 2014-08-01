@@ -57,6 +57,11 @@ Option         Description
 ============== ===============================================================
 Option         Description
 ============== ===============================================================
+.. option:: +p Enable multi-PV array mode. This means that some opf the
+               built-in functions can be called with multi-PV arrays and
+               operate on all contained PVs. See :ref:`BuiltinFunctions` for
+               details.
+.. option:: -p Disable multi-PV array mode.
 .. option:: +W Display extra warnings for undefined objects.
 .. option:: -W Suppress extra warnings. This is the default.
 ============== ===============================================================
