@@ -78,7 +78,7 @@ is treated similarly, except that it is stripped of leading and
 trailing whitespace and inserted in the output with the current
 indentation.
 
-See `Escape to C Code`_ for examples and rationale.
+See :ref:`Escape to C Code` for examples and rationale.
 
 Embedded C code fragments are causing two of the three conflicts in the
 grammar. The reason is that the parser cannot decide whether such a
@@ -208,7 +208,7 @@ Final C Code Block
    c_code: `embedded_c_code`
 
 Any number of embedded C code blocks may appear after state sets and the
-optional exit block. See `Escape to C Code`_.
+optional exit block. See :ref:`Escape to C Code`.
 
 
 .. _Definitions:
@@ -1850,7 +1850,7 @@ pvIndex
    unsigned pvIndex(assigned_var)
 
 Returns the index associated with a variable. See
-`Calling pvGet etc. from C`_ for how to use this function.
+:ref:`Calling PV Functions from C` for how to use this function.
 
 
 pvFlush
@@ -2314,25 +2314,8 @@ side-effect of acting as a synchronization point for all variables that
 are :token:`sync`\ed with the event flag: the state set local copies of
 these variable are updated from their globally visible copies.
 
-
-C Compatibility Features
-------------------------
-
-.. todo::
-
-   - extract this section into its own file/chapter
-
-   - update to version 2.2 (see release notes for many details)
-   
-   - reduce verbosity, e.g. move examples and motivations to the tutorial
-
-   - should I start to deprecate escape to C code? with the generated header
-     file, is there anything that cannot be done in a separate C file?
-     (%%#include comes to mind, but that could be replaced by a SNL
-     directive)
-
 Foreign Variables and Functions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-------------------------------
 
 You can use (reference, call) any exported C variable or function that
 is linked to your program. For instance, you may link a C library to
@@ -2353,196 +2336,3 @@ For historical reasons, :program:`snc` complains with a warning if you
 use a foreign variable or preprocessor macro in SNL code (but not for
 foreign function calls). This can be suppressed by adding a foreign
 declaration (see `Foreign Entities`_).
-
-
-Escape to C Code
-^^^^^^^^^^^^^^^^
-
-Because the SNL does not support the full C language, C code may be
-escaped in the program. The escaped code is not compiled by
-:program:`snc`, instead it is literally copied to the generated C code.
-There are two escape methods:
-
-#. Any code between ``%%`` and the next newline character is escaped.
-   Example::
-
-      %% for (i=0; i < NVAL; i++)
-
-#. Any code between ``%{`` and ``}%`` is escaped. Example::
-
-      %{
-      extern float smooth();
-      extern LOGICAL accelerator_mode;
-      }%
-
-   Note that text appearing on the same line after ``%{`` and
-   before ``}%`` also belongs to the literal code block.
-
-A variable or preprocessor macro declared in escaped C code is
-foreign to the SNL, just as if it were declared in C code extern to
-the SNL program and its use will give a warning if no foreign
-declaration preceeds it.
-
-
-Preprocessor Directives
-~~~~~~~~~~~~~~~~~~~~~~~
-
-A very common pitfall is the use of preprocessor directives, such as
-``#include``,  in multi-line literal C code blocks in conjunction
-with using the preprocessor on the unprocessed SNL code (which
-happens by the default with the standard build rules if the name of
-the source file has the ``.st`` extension).
-
-For instance with ::
-
-   %{
-   #include <abcLib.h>
-   /* ... */
-   }%
-
-the header file will be included *before* the SNL compiler parses
-the program, which is most probably not what you wanted to happen
-here. For instance,
-if the header contains macro definitions, these will not be in effect
-when the rest of the C code block gets compiled.
-
-You can defer interpretation of a preprocessor directive until after
-:program:`snc` has compiled the code to C, by ensuring that some extra
-non-blank characters appear in front of the ``#`` sign, so
-:program:`cpp` does not recognize the directive. For instance ::
-
-   %%#include <abcLib.h>
-
-or ::
-
-   %{#include <abcLib.h>}%
-
-
-Defining C Functions within the Program
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Escaped C code can appear in many places in the SNL program. But only
-code that appears at the top level, i.e. outside any SNL code block will
-be placed at the C top level. So, C *function definitions* must be
-placed there; this means either inside the definitions section
-(:token:`global_defns`) or at the end of the program. For example::
-
-   program example
-   ...
-   /* last SNL statement */
-   %{
-       static float smooth (pArray, numElem)
-       { ... }
-   }%
-
-It matters where the function is defined: if it appears at the end of
-the program, it can see all the variable and type definitions generated
-by the SNL compiler, so if your C function accesses a global SNL variable,
-you must place its definition at the end. However, this means that the
-generated code for the SNL program does not see the C function definition,
-so you might want to place a separate prototype for the function in the
-definitions section (i.e. before the state sets).
-
-Remember that you can *call* any C function from anywhere in the SNL program
-without escaping. You can also link the SNL program to C objects or
-libraries, so the only reason to put C function definitions inside the
-SNL program is if your function accesses global SNL variables.
-
-
-Calling pvGet etc. from C
-^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The built-in SNL functions such as :c:func:`pvGet` cannot be directly
-used in user-supplied functions. However, most of the built-in
-functions have a C language equivalent with the same name, except
-that the prefix ``seq_`` is added (e.g. ``pvGet`` becomes
-``seq_pvGet``). These C functions expect an additional first argument
-identifying the calling state set, which is available in action code
-under the name ``ssId``. If a process variable name is required, the
-index of that variable must be supplied. This index is obtained via
-the :c:func:`pvIndex` function (which must be called from SNL code,
-not C code, to work).
-
-If the program is compiled with the :option:`+r` option, user
-functions cannot directly access SNL variables, not even global ones.
-Instead, variables (or their address) should be passed to user
-functions as arguments. Alternatively, you can pass the ``pVar``
-variable of type ``USER_VAR*`` and access SNL variables as structure
-members of ``pVar``. See next section for details and an example.
-
-The prototypes for the C functions corresponding to the built-in SNL
-functions as well as additional supporting macros and type
-definitions can be found in the header file ``seqCom.h``. This header
-file is always included by the generated C code.
-
-
-.. _reentrant option:
-
-Variable Modification for Reentrant Option
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-If the reentrant option (:option:`+r`) is specified to :program:`snc`
-then all variables are made part of a structure. Suppose we have the
-following top-level declarations in the SNL program::
-
-   int sw1;
-   float v5;
-   short wf2[1024];
-
-The C file will contain the following declaration::
-
-   struct UserVar {
-       int sw1;
-       float v5;
-       short wf2[1024];
-   };
-
-The sequencer allocates the structure area at run time and passes a
-pointer to this structure into the program. This structure
-has the following type::
-
-   struct UserVar *pVar;
-
-Reference to variable ``sw1`` is made as ::
-
-   pVar->sw1
-
-This conversion is automatically performed by :program:`snc` for all SNL
-statements, but you will have to handle escaped C code yourself.
-
-.. note::
-
-   :ref:`safe mode` (enabled with the :option:`+s` option) implies
-   reentrant mode. In safe mode, each state set has its own copy of the
-   ``UserVar`` struct. You can operate on its members in any way you like,
-   including taking the address of variables and passing them to C
-   functions.
-
-Here is a stupid example of a C function that does a pvGet, increments the
-variable, and then does a pvPut::
-
-   program userfunc
-
-   option +r;
-
-   %{
-   static void incr(SS_ID ssId, int *pv, VAR_ID v)
-   {
-       seq_pvGet(ssId, v, SYNC);
-       *pv += 1;
-       seq_pvPut(ssId, v, SYNC);
-   }
-   }%
-
-   int i;
-   assign i to "counter";
-
-   foreign ssId;
-
-   ss myss {
-       state doit {
-           when (delay(1)) {
-               incr(ssId, &i, pvIndex(i));
-           } state doit
-       }
-   }

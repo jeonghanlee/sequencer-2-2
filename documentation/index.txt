@@ -22,6 +22,7 @@ Welcome to the home page of the **EPICS Sequencer** project.
    Tutorial
    Compiling
    Using
+   EscapeToC
    Reference
    Examples
    ReleaseNotes-2-2

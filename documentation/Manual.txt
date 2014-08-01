@@ -9,6 +9,7 @@ Users' Guide
    Tutorial
    Compiling
    Using
+   EscapeToC
    Reference
    Examples
    ReleaseNotes-2-2
