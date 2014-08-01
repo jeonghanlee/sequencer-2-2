@@ -1389,14 +1389,6 @@ Puts (or writes) the value of an SNL variable to the underlying process
 variable. Returns the status from the PV layer (e.g. ``pvStatOK`` for
 success).
 
-If the variable is an array and associated with multiple PVs, then only
-the first element of the array interacts with its underlying PV.
-
-.. todo:: It would be much nicer to have *all* the
-   elements of the array written to their respective PVs in this case.
-   Would this break compatibility too much?
-   Need to find out what to do.
-
 By default, :c:func:`pvPut` is un-confirmed "fire and forget";
 completion must be inferred by other means. The optional ``SYNC``
 argument causes it to block on completion with a hard-coded timeout
@@ -1436,6 +1428,11 @@ or, if the variable is monitored, until they wait for an event in a :token:`tran
 clause.
 Note that for anonymous PVs completion is always immediate, so the ``ASYNC`` option
 is not very useful.
+
+.. versionadded:: 2.2
+
+Calling this function with a multi-PV array is no longer allowed and results
+in a compile-time error.
 
 .. versionadded:: 2.2
 
@@ -1492,11 +1489,6 @@ Gets (or reads) the value of an SNL variable from the underlying process
 variable. Returns the status from the PV layer (e.g.
 ``pvStatOK`` for success). 
 
-If the variable is an array and associated with multiple PVs, then only
-the first element of the array interacts with its underlying PV.
-
-.. todo:: Same as for pvPut, i.e. should work like 'foreach element do pvGet'.
-
 By default, the state set will block until the
 read operation is complete with a hard-coded timeout of 10s. The
 asynchronous (:option:`+a`) compile option can be used to prevent this, in
@@ -1513,6 +1505,11 @@ monitored, then the state set local copy of the variable will not be updated
 until a call to pvGetComplete is made and returns ``TRUE`` or, if the
 variable is monitored, until the state set waits for events in a :token:`transition`
 clause. Note that anonymous PVs behave exactly in the same way.
+
+.. versionadded:: 2.2
+
+Calling this function with a multi-PV array is no longer allowed and results
+in a compile-time error.
 
 .. versionadded:: 2.2
 
@@ -1606,6 +1603,11 @@ order imposed by the C language (and thus by SNL); similar remarks apply
 whenever you want to use an expression inside a :token:`transition` clause
 that potentially has a side-effect.
 
+.. versionadded:: 2.2
+
+Calling this function with a multi-PV array is no longer allowed and results
+in a compile-time error.
+
 
 pvFreeQ
 ^^^^^^^
@@ -1631,6 +1633,11 @@ pvFlushQ
 .. versionadded:: 2.1
 
 Flush the queue associated with this variable, so it is empty afterwards.
+
+.. versionadded:: 2.2
+
+Calling this function with a multi-PV array is no longer allowed and results
+in a compile-time error.
 
 
 pvAssign
@@ -1692,6 +1699,11 @@ A better name for this function would be ``pvReassign``.
    :token:`assign` clause. Instead, you must call ``pvAssign``
    for each array element individually.
 
+.. versionadded:: 2.2
+
+Calling this function with a multi-PV array is no longer allowed and results
+in a compile-time error.
+
 
 pvMonitor
 ^^^^^^^^^
@@ -1703,13 +1715,13 @@ Initiates a monitor on the underlying process variable.
 
 See :token:`monitor` clause.
 
-.. note:: If you want to monitor all elements of an array that have been
-   assigned to separate PVs, you cannot currently do this with a single
-   call (in contrast to doing it in a :token:`monitor` clause). Instead,
-   you must call :c:func:`pvMonitor` for each array element individually.
-   This might change in a future release.
+.. versionadded:: 2.2
 
-.. todo:: Implement multiple monitor for arrays.
+If :option:`-p` is in effect, calling this function with a multi-PV array is
+no longer allowed and results in a compile-time error.
+
+If :option:`+p` is in effect, calling this function with a multi-PV array is
+allowed and operates on all contained PVs.
 
 
 pvStopMonitor
@@ -1718,15 +1730,15 @@ pvStopMonitor
 .. c:function::
    pvStat pvStopMonitor(assigned_var)
 
-.. note:: If you want to stop monitoring all elements of an array that have been
-   assigned to separate PVs, you cannot currently do this with a single
-   call. Instead,
-   you must call :c:func:`pvStopMonitor` for each array element individually.
-   This might change in a future release.
-
-.. todo:: Implement multiple stop monitor for arrays.
-
 Terminates a monitor on the underlying process variable.
+
+.. versionadded:: 2.2
+
+If :option:`-p` is in effect, calling this function with a multi-PV array is
+no longer allowed and results in a compile-time error.
+
+If :option:`+p` is in effect, calling this function with a multi-PV array is
+allowed and operates on all contained PVs.
 
 
 pvSync
@@ -1738,15 +1750,16 @@ pvSync
 Synchronizes a variable with an event flag, or removes such a
 synchronization if ``event_flag`` is `NOEVFLAG`_.
 
-.. note:: If you want to sync all elements of an array that have been
-   assigned to separate PVs, you cannot currently do this with a single
-   call. Instead,
-   you must call :c:func:`pvSync` for each array element individually.
-   This might change in a future release.
-
-.. todo:: Implement multiple sync for arrays.
-
 See :token:`sync` clause.
+
+.. versionadded:: 2.2
+
+If :option:`-p` is in effect, calling this function with a multi-PV array is
+no longer allowed and results in a compile-time error.
+
+If :option:`+p` is in effect, calling this function with a multi-PV array is
+allowed and operates on all contained PVs.
+
 
 
 pvCount
@@ -1758,6 +1771,11 @@ pvCount
 Returns the element count associated with the process variable. This value
 is independent of the array size (if the variable is an array), it can be
 smaller or larger.
+
+.. versionadded:: 2.2
+
+Calling this function with a multi-PV array is no longer allowed and results
+in a compile-time error.
 
 
 pvStatus
@@ -1775,6 +1793,11 @@ The status, severity, and message returned by :c:func:`pvStatus`,
 PV's properties (if a pvPut or pvGet operation completed, or the variable is
 monitored), or else indicate a failure to initiate one of these operations.
 
+.. versionadded:: 2.2
+
+Calling this function with a multi-PV array is no longer allowed and results
+in a compile-time error.
+
 
 pvSeverity
 ^^^^^^^^^^
@@ -1785,6 +1808,11 @@ pvSeverity
 Returns the current alarm severity (e.g. pvSevrMAJOR) of the underlying PV
 or indicates failure of a previous PV operation.
 
+.. versionadded:: 2.2
+
+Calling this function with a multi-PV array is no longer allowed and results
+in a compile-time error.
+
 
 pvMessage
 ^^^^^^^^^
@@ -1794,6 +1822,11 @@ pvMessage
 
 Returns the current error message of the variable, or "" (the empty string)
 if none is available.
+
+.. versionadded:: 2.2
+
+Calling this function with a multi-PV array is no longer allowed and results
+in a compile-time error.
 
 
 pvTimeStamp
@@ -1823,6 +1856,11 @@ Example::
    variable declarations. OTOH, this will be fixed as soon as I allow
    'struct <name>', 'enum <name>' etc in declarations, which is planned anyway.
 
+.. versionadded:: 2.2
+
+Calling this function with a multi-PV array is no longer allowed and results
+in a compile-time error.
+
 
 pvAssigned
 ^^^^^^^^^^
@@ -1833,6 +1871,11 @@ pvAssigned
 Returns whether the SNL variable is currently assigned to a process variable.
 Note that this function returns ``FALSE`` for anonymous PVs.
 
+.. versionadded:: 2.2
+
+Calling this function with a multi-PV array is no longer allowed and results
+in a compile-time error.
+
 
 pvConnected
 ^^^^^^^^^^^
@@ -1842,6 +1885,15 @@ pvConnected
 
 Returns whether the underlying process variable is currently connected.
 
+.. versionadded:: 2.2
+
+Calling this function with a multi-PV array is no longer allowed and results
+in a compile-time error.
+
+.. todo::
+
+   Multi-PV arguments should be allowed and treated as in pvPut/GetComplete,
+   i.e. with two optional extra args.
 
 pvIndex
 ^^^^^^^
@@ -1851,6 +1903,11 @@ pvIndex
 
 Returns the index associated with a variable. See
 :ref:`Calling PV Functions from C` for how to use this function.
+
+.. versionadded:: 2.2
+
+Calling this function with a multi-PV array is no longer allowed and results
+in a compile-time error.
 
 
 pvFlush
