@@ -1833,28 +1833,15 @@ pvTimeStamp
 ^^^^^^^^^^^
 
 .. c:function::
-   epicsTimeStamp pvTimeStamp(assigned_var)
+   struct epicsTimeStamp pvTimeStamp(assigned_var)
 
 Returns the time stamp for the last :c:func:`pvGet` completion or monitor
-event for this variable. The SNL compiler does not recognize type epicsTimeStamp.
-Therefore, variable declarations for this type should be in escaped
-C code (see `Escape to C Code`_ and `Foreign Entities`_).
+event for this variable.
 
-Example::
+.. versionadded:: 2.2
 
-   %%epicsTimeStamp ts;
-   foreign ts;
-
-   int var;
-   assign var;
-
-   entry {
-       ts = pvTimeStamp(var);
-   }
-
-.. todo:: This is crude. Types like epicsTimeStamp etc should be allowed in
-   variable declarations. OTOH, this will be fixed as soon as I allow
-   'struct <name>', 'enum <name>' etc in declarations, which is planned anyway.
+You can declare variables of type ``struct epicsTimeStamp`` directly in SNL
+code.
 
 .. versionadded:: 2.2
 
