@@ -139,8 +139,11 @@ constant, instead of its value. This makes the code a bit more readable and
 slightly simplifies code generation.
 
 
+Built-in Functions
+^^^^^^^^^^^^^^^^^^
+
 New Delay Implementation
-^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 While it was always allowed to use arbitrary expressions for the
 argument to :c:func:`delay`, this never worked as one would expect if the
@@ -157,44 +160,75 @@ delay has not yet expired, the minimum time to wait for events is
 adjusted. This adjustment is now more precise, since we do not store
 the delay but rather the (future) time when the wakeup should happen.
 
+Program Parameter Subsitution for pvAssign
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Multiple pvSync for multiply assigned arrays
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+This function now does substitution of program parameters (formerly
+sometimes called "macros") inside the PV name, exactly as in the assign
+clause.
 
-Now, if you do pvSync(x,ef), where x is an array for which the elements
-are individually assigned to a separate PVs, then all the elements get
-synced with the event flag, just like if you use the sync clause.
+PV Functions and Multiply Assigned Arrays
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+A long time wart of the sequencer, inherited from the 2.0 version, was the
+behaviour of built-in pv functions when you pass an array in which elements
+are assigned to separate PVs. In most cases this behaved as if you had
+passed in just the first element of the array. This "feature" is
+inconsistent and error-prone, and runs contrary to the natural expectation
+that the command will affect *all* the variables in the array (for those pv
+functions for which that would make sense).
 
-Additional Arguments for pvGetComplete
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+However, existing programs might (perhaps without the author or maintainer
+being aware of it) rely on the current behaviour -- and silently breaking
+such programs seems like a bad idea. Instead, this is now a *compile time
+error*. The error message contains a hint how the user can fix their program
+("perhaps you meant to pass xxx[0]?") so that it retains its old behaviour.
+
+For some of the pv functions, operating on all contained PVs of a multi-PV
+array really is the most natural semantics. For those functions, you can
+enable this behaviour with the new compiler switch resp. program option
+:option:`+p` (the opposite switch :option:`-p` is the default). If
+:option:`+p` is in effect, then the following pv functions will operate on
+all contained PVs if called with a multi-PV array as argument:
+
+* :c:func:`pvGetComplete`
+* :c:func:`pvMonitor`
+* :c:func:`pvPutComplete`
+* :c:func:`pvStopMonitor`
+* :c:func:`pvSync`
+
+Additionally, this is the behaviour for the two new functions:
+
+* :c:func:`pvGetCancel`
+* :c:func:`pvPutCancel`
+
+For all other functions, calling them with a multi-PV array argument gives a
+compile time error, regardless of whether :option:`+p` or :option:`-p` is in
+effect. At the moment this includes
+
+* :c:func:`pvGet`
+* :c:func:`pvPut`
+
+even though for these two functions operating on all contained PVs would
+perhaps make sense. A future version may support that or perhaps add new
+functions for this purpose.
+
+pvGetComplete
+~~~~~~~~~~~~~
 
 The built-in function :c:func:`pvGetComplete` now accepts 2 more (optional)
-arguments, just like :c:func:`pvPutComplete`, in order to check for completion
-if the variable is an array with elements assigned to different PVs.
+arguments, just like :c:func:`pvPutComplete`, in order to check for
+completion if the argument is a multi-PV array and :option:`+p` is in
+effect.
 
-Warning: This change is incompatible!
+.. warning::
 
-Previously, ``pvGetComplete(x)``
-was equivalent to ``pvGetComplete(x[0])``, even for array variables with
-multiply assigned elements. That is, ``pvGetComplete(x)`` would check
-only for completion of the first array element, whereas now it checks
-completion for *all* elements.
-
-Patches:
-
-* enhanced pvGetComplete with extra optional args, like pvPutComplete
-  
-  This brings asynchronous pvGet to the same standard w.r.t. multi-PV
-  arrays as pvPut. Another slight improvement: in non-safe mode, if
-  a variable is not assigned to a PV, then return TRUE, so that
-  when testing in a condition it does not hang forever.
-
-* documented new features of pvGetComplete
-
+   This changes the prototype of the underlying C function
+   seq_pvGetComplete. Existing C code can be fixed by supplying two extra
+   dummy (zero) arguments.
 
 Timeout Arguments for pvGet and pvPut
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 For both :c:func:`pvGet` and :c:func:`pvPut` there is now the possibility to
 specify a timeout that differs from the default of 10 seconds. This is done
@@ -203,34 +237,21 @@ by giving an extra argument after the ``SYNC`` keyword, as in::
   pvGet(var,SYNC,1.0);
 
 As before, the default behaviour for ``pvGet(var)`` i.e. neither an explicit
-``SYNC`` nor ``ASYNC``, is synchronous, unless option :option:`-a` is in effect.
-In this case, or if ``SYNC`` is given with no extra argument, the standard
-default timeout of 10 seconds is assumed.
+``SYNC`` nor ``ASYNC``, is synchronous, unless option :option:`-a` is in
+effect. In this case, or if ``SYNC`` is given with no extra argument, the
+standard default timeout of 10 seconds is assumed.
 
-This means that the new feature is fully backwards compatible, i.e. existing
-programs behave as before.
+.. warning::
 
-* added extra optional timeout argument to pvGet and pvPut
-
-  This patch also gets rid of the ugly seq_sync_timeout hack.
-
-* documented extra timeout argument for pvGet and pvPut
-* adapted tests to use pvGet/Put timeouts
-
+   This changes the prototype of the underlying C functions seq_pvGet and
+   seq_pvPut. Existing C code can be fixed by supplying DEFAULT_TIMEOUT as
+   an extra argument.
 
 New Built-in Functions pvGetCancel and pvPutCancel
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 It is now possible to cancel and asynchronous get or put request by calling
 :c:func:`pvGetCancel` resp. :c:func:`pvPutCancel`.
-
-.. todo:: sometimes test fails, debug, add test for pvPutCancel
-
-Patches:
-
-* added pvGetCancel and pvPutCancel
-* documented pvPutCancel and pvGetCancel
-* added test for pvGetCancel
 
 
 Names of Generated Entities
