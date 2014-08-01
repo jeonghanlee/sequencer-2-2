@@ -267,19 +267,15 @@ Retained:
 - enum compType and its members DEFAULT, ASYNC, SYNC
 
 - constants NOEVFLAG and DEFAULT_QUEUE_SIZE
-  (but note that DEFAULT_QUEUE_SIZE is now 2 instead of 100)
 
-- typedefs string, EV_ID, VAR_ID, SS_ID,
-  seqBool, seqProgram
+- typedefs string, SS_ID, seqBool, seqProgram
 
 - all functions except seqRegisterSequencerProgram and seqRegisterSequencerCommands
   but including seq_pvIndex
 
 Added:
 
-- typedef struct _seq_var SEQ_VARS
-
-- builtin "functions" pVar and ssId (like pvIndex these are actually
+- builtin "functions" seq_pVar and seq_ssId (like pvIndex these are actually
   implemented as macros); they replace direct uses of generated
   identifiers, which have been renamed (see `Names of Generated Entities`_
   above).
@@ -288,9 +284,25 @@ Added:
 
 - the constant DEFAULT_TIMEOUT
 
-For compatibility I also added:
+Renamings:
 
-- typedef SEQ_VARS USER_VAR
+- EV_ID is now EF_ID
+
+- VAR_ID is now CH_ID
+
+For better backwards compatibility I also added some aliases::
+
+  typedef SEQ_VARS USER_VAR
+  #define ssId                  _seq_ss
+  #define pVar                  _seq_var
+  #define USER_VAR              SEQ_VARS
+  #define UserVar               _seq_vars
+  #define VAR_ID                CH_ID
+  #define EV_ID                 EF_ID
+  #define seq_pvFreeQ           seq_pvFlushQ
+  #define DEFAULT_QUEUE_SIZE    100
+
+These should not be used in new code.
 
 Removed:
 
@@ -331,51 +343,23 @@ Moved to seq_snc.h:
 
 - the constants TRUE and FALSE
 
-- typedefs for generated functions; note that these were renamed, too
+- typedefs for generated functions; note that these have been renamed, too
 
 - the functions seqRegisterSequencerProgram and seqRegisterSequencerCommands
 
-I hope these changes won't break too many programs that use escaped code
-and use these internals. If it turns out this is hurting people very
-much, I am willing to provide additional compatibility aliases.
+My justification for making these potentially breaking changes is that this
+is how it should have been done from the start. Mixing self-written with
+generated code is fraught with enough hazards as it is, and accidental name
+capture, though not very probable, would be very hard to diagnose for users.
+Exposing internal data structures where this is not strictly necessary is
+similarly ill-advised. A practical benefit is that from now on I have more
+freedom when introducing new features or refactoring the way snc generates
+code.
 
-My justification for making these potentially breaking changes is that
-this is how it should have been done from the start. Mixing self-written
-with generated code is fraught with enough hazards as it is, and
-accidental name capture, though not very probable, would be very hard to
-diagnose for users. Exposing internal data structures where this is not
-strictly necessary is similarly ill-advised.
-
-A practical benefit is that this gives me a lot more freedom when
-introducing new features or refactoring the way snc generates code.
-
-Related patches:
-
-* make names starting with _seq illegal identifiers in SNL
-* renamed some generated identifiers
-* renamed all generated identifiers to start with _seq
-* renamed function typedefs
-* seq_pvIndex is now a macro
-
-* added new builtin functions pVar and ssId
-
-  These are intended for calling C procedures from SNL,
-  when the C procedure takes SEQ_VARS* or SS_ID as argument.
-
-* pVar and ssId arguments to generated routines are now const pointers
-
-  This means that user code can mutate the variables and the (opaque)
-  contents of the state set control block, but are not allowed to
-  invalidate the pointers themselves.
-
-* moved non-API internals from seqCom.h to new seq_snc.h
-
-  Another one of the long overdue re-factorings. The new header file
-  seq_snc.h contains all the definitions that are shared between the
-  snc generated code and the run-time library. What remains in seqCom.h
-  is the public API for C code that wants to interact with an SNL program.
-
-* removed seqRegisterSequencer* from public API
+If it turns out this is hurting people very much, I am willing to
+compromise. For instance, adding more compatibility aliases can be done any
+time in case I forgot one. I may also put back some of the internal stuff if
+someone comes up with a convincing argument why they need to access it.
 
 
 Removed PV Library
@@ -411,7 +395,7 @@ no longer make variables. Instead there are a number of new targets you
 can specify:
 
 - html: build the docs in html format
-- docs: additionally build the manual in pdf fromat
+- docs: additionally build the manual in pdf format
 - upload etc: these are for my own benefit only, ignore them
 
 Related patches:
@@ -421,8 +405,6 @@ Related patches:
 
 Miscellaneous New Features
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-* pvAssign now does macro substitution, like assign syntax
 
 * reduce severity of timeouts and user errors from errlogFatal to errlogMajor
 
@@ -499,4 +481,5 @@ What to do about pvPutCompleteArray, see these patches:
 * examples: use array version of pvPutComplete
 * disabled examples/parallel because pvPutCompleteArray does not yet work
 
-See also pvPutMultiple and pvGetMultiple these are w/o implementation.
+See also pvPutMultiple and pvGetMultiple these are w/o implementation. See
+also the +-p switch.
