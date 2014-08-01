@@ -172,7 +172,6 @@ static pvStat wait_complete(
 
 /*
  * Get value from a channel.
- * TODO: add optional timeout argument.
  */
 epicsShareFunc pvStat seq_pvGet(SS_ID ss, CH_ID chId, enum compType compType, double tmo)
 {
