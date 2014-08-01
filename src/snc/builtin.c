@@ -74,7 +74,6 @@ static struct func_symbol func_symbols[] =
     {"pvConnectCount",  FT_OTHER,   FALSE,  0,  FALSE,  FALSE,  FALSE,  0},
     {"pvConnected",     FT_PV,      FALSE,  0,  FALSE,  FALSE,  FALSE,  0},
     {"pvCount",         FT_PV,      FALSE,  0,  FALSE,  FALSE,  FALSE,  0},
-    {"pvDisconnect",    FT_PV,      FALSE,  0,  FALSE,  FALSE,  FALSE,  0},
     {"pvFlush",         FT_OTHER,   FALSE,  0,  FALSE,  FALSE,  FALSE,  0},
     {"pvFlushQ",        FT_PV,      FALSE,  0,  FALSE,  FALSE,  FALSE,  0},
     {"pvFreeQ",         FT_PV,      FALSE,  0,  FALSE,  FALSE,  FALSE,  0},
