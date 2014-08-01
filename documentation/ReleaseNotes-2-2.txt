@@ -163,18 +163,6 @@ The (broken and ugly) sequencer device support was removed.
 Consequently, seqFindProgByName was be removed as it is no longer needed.
 
 
-Default Queue Size
-^^^^^^^^^^^^^^^^^^
-
-The default size of a queue is now 2, instead of 100. The old default
-value was impractical since from version 2.1 onward queues are preallocated.
-Note that queues overwrite the *last* entry in case the queue is full. This
-means a queue size of 1 doesn't make much sense. It also means that with
-a size of 2 you effectively get sample-and-hold behaviour: the *first*
-event will be stored in the queue and is available (via :c:func:`pvGetQ`)
-regardless of events that have happened later.
-
-
 Multiple pvSync for multiply assigned arrays
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
