@@ -6,6 +6,7 @@ use Test::More;
 
 my $tests = {
   cast                    => { warnings => 0, errors => 0  },
+  delay_in_action         => { warnings => 0, errors => 1  },
   efArray                 => { warnings => 0, errors => 1  },
   efGlobal                => { warnings => 0, errors => 3  },
   efNoInit                => { warnings => 0, errors => 1  },
