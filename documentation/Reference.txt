@@ -30,11 +30,14 @@ Comments
 
 .. productionlist::
    comment: "/*" <anything> "*/"
+   comment: "//" <anything until end of line>
 
 C-style comments may be placed anywhere in the program. They are
 treated as white space. As in C, comments cannot be nested.
 
-.. todo:: allow C++ style comments
+.. versionadded:: 2.2
+
+C++ style comments are allowed, too.
 
 Identifiers
 ^^^^^^^^^^^
