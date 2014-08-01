@@ -1351,15 +1351,9 @@ with an event queue with the :token:`syncq` clause. This is also
 statically checked by the compiler.
 
 Several of these functions are intended to be called only from
-:token:`transition` clauses or only from action code. It is safe to call
-them in another context, but the effect is probably not what you want.
-For instance, calling :c:func:`delay` in action code does *not*
-introduce a delay at this point. Later versions of :program:`snc` may
-output a warning or even stop with an error.
-
-.. todo:: What about changing this so that :c:func:`delay` in action code
-   *does* introduce a delay? In other words, compile 'delay(<expr>)' to
-   'epicsThreadSleep(<expr>)' if called in action code.
+:token:`transition` clauses or only from action code. If the compiler allows
+it, it is safe to call them in another context, but the effect is probably
+not what you want.
 
 
 delay
@@ -1375,6 +1369,12 @@ The :option:`-t` state option (see `State Option`_) controls whether the
 delay is measured from when the current state was entered from a different
 state (:option:`-t`) or from any state, including itself (:option:`+t`,
 the default).
+
+.. versionadded:: 2.2
+
+It is no longer allowed to call this function outside the condition of a
+:token:`transition` clause.
+
 
 pvPut
 ^^^^^
