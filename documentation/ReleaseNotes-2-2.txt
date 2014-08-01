@@ -17,6 +17,8 @@ as structs, enums, unions, and typedefs) in variable declarations, type
 casts, and the special "sizeof" built-in operator. Previously existing
 restrictions as to which type expressions are allowed have been lifted, so
 that (almost) everything you can say in C is now supported in SNL, too.
+Particularly, function types are now supported in declarations, casts, and
+expressions.
 
 There are two notable limitations:
 
@@ -109,11 +111,28 @@ Related patches:
   initialized single values.
 
 
+New Options
+^^^^^^^^^^^
+
+Two new program options resp. compiler switches have been added.
+
+* option:`+p` (off by default) changes the semantics of certain pv functions
+  when called with multi-PV arrays, see `PV Functions and Multiply Assigned
+  Arrays`_ below.
+
+* option:`+W` (off by default) enables extra warnings, such as for
+  undeclared foreign entities, which no longer give a warning be default.
+  The latter is a logical consequence of allowing indirect function calls:
+  since there is no longer any strict syntactic distinction between
+  functions and variables, we would have to report all foreign function
+  calls, too. Indeed this is what you get using :option:`+W`.
+
 Built-in Constants
 ^^^^^^^^^^^^^^^^^^
 
 All built-in constants are now known to *snc* and thus no longer give
-"undefined variable" warnings. They are also documented in the reference.
+"undefined variable" warnings, even with extra warnings enabled
+(:option:`+W`). They are also documented in the reference.
 
 The *snc*-generated C code for built-in constants now uses the name of the
 constant, instead of its value. This makes the code a bit more readable and
