@@ -139,30 +139,6 @@ adjusted. This adjustment is now more precise, since we do not store
 the delay but rather the (future) time when the wakeup should happen.
 
 
-Removed PV Library
-^^^^^^^^^^^^^^^^^^
-
-The PV library has been almost completely eliminated. What remains is a
-thin layer over CA, implemented in C, and offering only the
-functionality that is actually needed by the sequencer. The API is similar
-(but not identical) to the old C API; particularly, all the pvStat, pvSevr,
-and pvType definitions are as before.
-
-The documentation for the PV layer has been removed, too. The only remaining
-user relevant part of the interface is contained in pvAlarm.h, see
-`Built-in Constants`_ above.
-
-Also removed were the keck examples and the KTL related stuff in other example
-directories.
-
-
-Removed devSequencer
-^^^^^^^^^^^^^^^^^^^^
-
-The (broken and ugly) sequencer device support was removed.
-Consequently, seqFindProgByName was be removed as it is no longer needed.
-
-
 Multiple pvSync for multiply assigned arrays
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -381,6 +357,31 @@ Related patches:
   is the public API for C code that wants to interact with an SNL program.
 
 * removed seqRegisterSequencer* from public API
+
+
+Removed PV Library
+^^^^^^^^^^^^^^^^^^
+
+The PV library has been almost completely eliminated. What remains is a
+thin layer over CA, implemented in C, and offering only the
+functionality that is actually needed by the sequencer. The API is similar
+(but not identical) to the old C API; particularly, all the pvStat, pvSevr,
+and pvType definitions are as before.
+
+The documentation for the PV layer has been removed, too. The only remaining
+user relevant part of the interface is contained in pvAlarm.h, see
+`Built-in Constants`_ above.
+
+Also removed were the keck examples and the KTL related stuff in other example
+directories.
+
+
+Removed devSequencer
+^^^^^^^^^^^^^^^^^^^^
+
+The (broken and ugly) sequencer device support was removed.
+Consequently, seqFindProgByName was be removed as it is no longer needed.
+
 
 Extra Build Rules
 ^^^^^^^^^^^^^^^^^
