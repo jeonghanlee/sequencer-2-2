@@ -18,6 +18,8 @@ my $tests = {
   misplacedExit           => { warnings => 0, errors => 1  },
   namingConflict          => { warnings => 0, errors => 0  },
   nesting_depth           => { warnings => 0, errors => 0  },
+  opt_minus_p             => { warnings => 0, errors => 19 },
+  opt_plus_p              => { warnings => 0, errors => 15 },
   pvNotAssigned           => { warnings => 0, errors => 20 },
   reservedId              => { warnings => 0, errors => 2  },
   state_not_reachable     => { warnings => 3, errors => 0  },
