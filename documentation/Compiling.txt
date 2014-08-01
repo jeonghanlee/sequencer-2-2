@@ -41,13 +41,13 @@ Option         Description
 .. option:: -l Do not produce line markers.
 .. option:: +m Include main procedure (seqMain.c) for a stand-alone program.
 .. option:: -m Do not include seqMain.c. This is the default.
+.. option:: +r Make the generated code reentrant, thus allowing more than one
+               instance of the program to run on an IOC.
+.. option:: -r Generated code is not reentrant. This is the default.
 .. option:: +s :ref:`Safe mode`: variables are local to state set
                and must be communicated explicitly. Implies +r.
 .. option:: -s Traditional (non-safe) mode. This is the default for
                compatibility.
-.. option:: +r Make the generated code reentrant, thus allowing more than one
-               instance of the program to run on an IOC.
-.. option:: -r Generated code is not reentrant. This is the default.
 .. option:: +w Display warning messages. This is the default.
 .. option:: -w Suppress warnings.
 ============== ===============================================================
