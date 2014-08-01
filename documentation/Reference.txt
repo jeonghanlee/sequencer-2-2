@@ -2361,22 +2361,28 @@ these variable are updated from their globally visible copies.
 Foreign Variables and Functions
 -------------------------------
 
-You can use (reference, call) any exported C variable or function that
-is linked to your program. For instance, you may link a C library to
-the SNL program and simply call functions from it directly in SNL code.
-Note, however, that this is restricted to *SNL action statements*
-(:token:`statement`). It is advisable to take care that the C code
-generated from your SNL program contains (directly oir via ``#include``)
-a valid declaration for such entities, otherwise the C compiler will
-not be able to catch type errors (the SNL compiler does not do any
-type-checking by itself). For libraries, this is usually done
-by adding a line ::
+You can use (reference, call) any exported C variable or function that is
+linked to your program. For instance, you may link a C library to the SNL
+program and simply call functions from it directly in SNL code. We call such
+entities or objects "foreign".
+
+It is advisable to take care that the C code generated from your SNL program
+contains (directly or via ``#include``) a valid declaration for foreign
+entities, otherwise the C compiler will not be able to catch type errors
+(the SNL compiler does not do any type-checking by itself). For libraries,
+this is usually done by adding a line ::
 
    %%#include "api-of-your-library.h"
 
-This uses the one-line-escape syntax explained in the next section.
+(See also :ref:`Preprocessor Directives`.)
 
-For historical reasons, :program:`snc` complains with a warning if you
-use a foreign variable or preprocessor macro in SNL code (but not for
-foreign function calls). This can be suppressed by adding a foreign
-declaration (see `Foreign Entities`_).
+Note that when passing channel variables (i.e. ones assigned to one or more
+PVs using an :token:`assign` clause) to a C function, only the *value* is
+passed. The special assigned" status of the variable gets lost as soon as
+the function is entered (same as for functions defined in SNL).
+
+.. versionadded:: 2.2
+
+The SNL compiler no longer complains about "undeclared identifiers" when
+using foreign variables unless you supply the :option:`+W` (extra warnings)
+option.
