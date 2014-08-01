@@ -9,19 +9,8 @@ Release 2.2.0
 This is a new feature release. As with all dot-zero releases, be careful
 before using this in production systems.
 
-Built-in Constants
-^^^^^^^^^^^^^^^^^^
-
-All built-in constants are now known to *snc* and thus no longer give
-"undefined variable" warnings. They are also documented in the reference.
-
-The *snc*-generated C code for built-in constants now uses the name of the
-constant, instead of its value. This makes the code a bit more readable and
-slightly simplifies code generation.
-
-
-Foreign Types and Type Casts
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Foreign Types
+^^^^^^^^^^^^^
 
 It is now possible to use foreign types (i.e. types declared in C code, such
 as structs, enums, unions, and typedefs) in variable declarations, type
@@ -46,8 +35,8 @@ The words ``enum``, ``struct``, ``typename``, ``union``, and ``void`` are
 reserved words now and can no longer be used as identifiers.
 
 
-Functions Definitions
-^^^^^^^^^^^^^^^^^^^^^
+Function Definitions
+^^^^^^^^^^^^^^^^^^^^
 
 You can now define functions in SNL. The syntax is like in C and you *can*
 call the built-in PV functions inside them. This is made possible by passing
@@ -118,6 +107,17 @@ Related patches:
   We now leave off initializers from the UserVar struct and instead
   initialize the members one by one (using memcpy) from statically
   initialized single values.
+
+
+Built-in Constants
+^^^^^^^^^^^^^^^^^^
+
+All built-in constants are now known to *snc* and thus no longer give
+"undefined variable" warnings. They are also documented in the reference.
+
+The *snc*-generated C code for built-in constants now uses the name of the
+constant, instead of its value. This makes the code a bit more readable and
+slightly simplifies code generation.
 
 
 New Delay Implementation
