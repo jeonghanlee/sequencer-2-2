@@ -74,13 +74,9 @@ epicsShareFunc seqBool seq_efClear(SS_ID, EF_ID);
 epicsShareFunc seqBool seq_efTestAndClear(SS_ID, EF_ID);
 /* pv operations */
 epicsShareFunc pvStat seq_pvGet(SS_ID, CH_ID, enum compType, double tmo);
-epicsShareFunc pvStat seq_pvGetMultiple(SS_ID, CH_ID,
-	unsigned, enum compType);
 epicsShareFunc seqBool seq_pvGetQ(SS_ID, CH_ID);
 epicsShareFunc void seq_pvFlushQ(SS_ID, CH_ID);
 epicsShareFunc pvStat seq_pvPut(SS_ID, CH_ID, enum compType, double tmo);
-epicsShareFunc pvStat seq_pvPutMultiple(SS_ID, CH_ID,
-	unsigned, enum compType);
 epicsShareFunc seqBool seq_pvGetComplete(SS_ID, CH_ID,
 	unsigned, seqBool, seqBool*);
 epicsShareFunc seqBool seq_pvPutComplete(SS_ID, CH_ID,
