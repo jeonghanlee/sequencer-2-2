@@ -304,7 +304,7 @@ static void gen_var_access(Var *vp)
 
 	if (vp->type->tag == T_EVFLAG)
 	{
-		gen_code("%d/*%s*/", vp->chan.evflag->index, vp->name);
+		gen_code(NM_EF"_%s", vp->name);
 	}
 	else if (vp->type->tag == T_NONE || vp->type->tag == T_FUNCTION)
 	{

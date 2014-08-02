@@ -248,6 +248,7 @@ void gen_defn_c_code(Node *scope, int level)
 static void gen_global_defn(Node *ep)
 {
 	Node *member;
+	Var *vp;
 
 	switch(ep->tag)
 	{
@@ -281,8 +282,14 @@ static void gen_global_defn(Node *ep)
 		gen_code("};\n");
 		break;
 	case D_DECL:
-		/* this case is handled in gen_user_var */
-		/* TODO: rename gen_user_var */
+		/* we handle only event flags here, for everything else see gen_user_var */
+		vp = ep->extra.e_decl;
+		if (vp->type->tag == T_EVFLAG)
+		{
+			gen_line_marker(vp->decl);
+			gen_code("#define "NM_EF"_%s\t%d\n", vp->name, vp->chan.evflag->index);
+		}
+                break;
 	case D_ASSIGN:
 	case D_MONITOR:
 	case D_OPTION:

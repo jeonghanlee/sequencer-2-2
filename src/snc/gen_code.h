@@ -45,4 +45,7 @@ void indent(int level);
 /* prefix for generated inititialization variable names */
 #define NM_INITVAR	"_seq_initvar_"
 
+/* prefix for generated event flag constants */
+#define NM_EF		"_seq_ef"
+
 #endif	/*INCLgencodeh*/
