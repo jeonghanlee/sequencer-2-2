@@ -9,16 +9,19 @@ Release 2.2.0
 This is a new feature release. As with all dot-zero releases, be careful
 before using this in production systems.
 
+New Language Features
+^^^^^^^^^^^^^^^^^^^^^
+
 Foreign Types
-^^^^^^^^^^^^^
+~~~~~~~~~~~~~
 
 It is now possible to use foreign types (i.e. types declared in C code, such
 as structs, enums, unions, and typedefs) in variable declarations, type
 casts, and the special "sizeof" built-in operator. Previously existing
 restrictions as to which type expressions are allowed have been lifted, so
 that (almost) everything you can say in C is now supported in SNL, too.
-Particularly, function types are now supported in declarations, casts, and
-expressions.
+Particularly, function types are now supported in declarations and type
+expressions, as well as indirect calls in expressions.
 
 There are two notable limitations:
 
@@ -29,16 +32,35 @@ There are two notable limitations:
   grammar is no longer context free. (C compilers based on parser generators
   must use very dirty and brittle tricks to be able support this).
 
-* There is only very limited support for *defining* your own types (see
-  below) and you cannot mix type definition with type usage (for instance in
-  a variable declaration) as in C.
+* There is only limited support for *defining* your own types (see `Type
+  Definitions`_ below) and you cannot mix type definition with type usage
+  (for instance in a variable declaration) as in C.
 
 The words ``enum``, ``struct``, ``typename``, ``union``, and ``void`` are
 reserved words now and can no longer be used as identifiers.
 
+Other Foreign Entities
+~~~~~~~~~~~~~~~~~~~~~~
+
+A side effect of allowing indirect calls is that there is no longer any
+*syntactic* distinction between using functions and using variables. This
+means that issuing warnings just for the use of "undeclared" foreign
+*variables* is no longer possible. If they are still undeclared in the
+generated C code, the C compiler will warn you anyway. You can enable extra
+warnings (:option:`+W`, see `New Options`_ below) to get these warnings, but
+that will report foreign functions, too.
+
+Due to these changes, the so called "foreign entity declarations",
+introduced in version 2.1, have become obsolete and are therefore
+*deprecated*. With hindsight, introducing them was a bad idea.
+
+A related change is that struct or union members are no longer identified
+with variables in the SNL syntax; members are no longer considered to be
+foreign entities (but for compatibility you can still list them in a foreign
+declaration).
 
 Function Definitions
-^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~
 
 You can now define functions in SNL. The syntax is like in C and you *can*
 call the built-in PV functions inside them. This is made possible by passing
@@ -52,63 +74,28 @@ can call e.g. pvGet(x) in the body of an SNL function, but only if x is a
 global variable.
 
 My various attempts to lift this limitation were the main reason it took me
-so much longer than I had expected to make this release. The design space is
-large, the semantics need careful consideration to preserve consistency of
-the language, and the changes in the code base are far-reaching (for
-instance, it turned out that I had to add a limited form of type checking to
-the compiler). In order not to hold up the release of version 2.2 any
-longer, I decided to postpone this feature to a future release.
-
+so much longer than I had expected to make this release. In order not to
+hold up the release of version 2.2 any longer, I decided to postpone this
+feature to a future release.
 
 Type Definitions
-^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~
 
-You can now define you own struct types in SNL (other type formers like
+You can now define your own struct types in SNL (other type formers like
 union and enum are not yet supported). As usual the syntax is a (simplified:
 no bit fields) variant of the C syntax. This is currently not very useful,
 since there is no way to "assign" struct members to PVs. Lifting this
 limitation is closely related to allowing PV function arguments and
 therefore postponed, too.
 
+Removed Keyword "connect"
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Order of Definitions in the Generated C Code
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-In order to make it possible to ``%%#include`` type declarations or define
-them in escaped C code (so they appear in the generated C code but not in
-the code that SNL has to parse) *and* use them in (the type of) global
-variable declarations, the generated variable block is now placed *after*
-all other top-level definitions that appear in the program before the first
-state set; in particular before escaped C code. In previous versions, this
-was the other way around.
-
-Note that this means that escaped C code that appears before the first state
-set cannot access global variables declared in SNL, even if the reentrant
-option is not in effect. Such C code should now be placed after the last
-state set.
-
-Anyway, it is my hope that the possibility to write functions directly in
-SNL will make the escape-to-C route mostly obsolete.
-
-
-Related patches:
-
-* snc: add a name prefix for initialization helper vars
-  
-  This fixes a bug that crept in when implementing the new variable
-  initialization code for variables with global lifetime. The problem
-  was that the initialization variable shadowed the global variable
-  in non-reentrant mode, which made the initialization a no-op.
-
-* snc: swap order of gen_user_var and gen_defn_c_code
-
-* snc: refactored generation of initializers
-
-  With foreign types we can no longer generate default initializers
-  in a portable way, as was done previously (in reentrant mode).
-  We now leave off initializers from the UserVar struct and instead
-  initialize the members one by one (using memcpy) from statically
-  initialized single values.
+This alias for the "assign" keyword, also introduced in version 2.1, is no
+longer supported. I believe nobody actually uses it, and the next version
+will introduce a completely new syntax for that feature anyway. I can demote
+the removal to a deprecation warning if it turns out that this seriously
+hurts people.
 
 
 New Options
@@ -120,17 +107,15 @@ Two new program options resp. compiler switches have been added.
   when called with multi-PV arrays, see `PV Functions and Multiply Assigned
   Arrays`_ below.
 
-* option:`+W` (off by default) enables extra warnings, such as for
-  undeclared foreign entities, which no longer give a warning be default.
-  The latter is a logical consequence of allowing indirect function calls:
-  since there is no longer any strict syntactic distinction between
-  functions and variables, we would have to report all foreign function
-  calls, too. Indeed this is what you get using :option:`+W`.
+* option:`+W` (off by default) enables extra warnings, such as for (all!)
+  undeclared foreign entities.
+
 
 Built-in Constants
 ^^^^^^^^^^^^^^^^^^
 
-All built-in constants are now known to *snc* and thus no longer give
+All built-in constants are now known to *snc* and therefore no longer
+treated as foreign entities. Particularly, using them no longer gives
 "undefined variable" warnings, even with extra warnings enabled
 (:option:`+W`). They are also documented in the reference.
 
@@ -142,26 +127,56 @@ slightly simplifies code generation.
 Built-in Functions
 ^^^^^^^^^^^^^^^^^^
 
+Reported Severity of Failures
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The severity of timeouts and usage errors reported on the console has been
+demoted from ``errlogFatal`` to ``errlogMajor``. Reporting them as fatal has
+misled users in the past to think that their running program instances have
+become unstable now, which is definitely not the case for this sort of
+errors.
+
+pvMessage
+~~~~~~~~~
+
+The built-in function pvMessage now consistently returns a failure string
+describing the problem whenever anything with the passed channel variable
+went wrong. This particilarly applies to any failure status returned from
+the CA layer.
+
 New Delay Implementation
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-While it was always allowed to use arbitrary expressions for the
-argument to :c:func:`delay`, this never worked as one would expect if the
-expression depended on e.g. monitored variables. The reason is that
-previously the delay expression was evaluated once for all delays
-appearing in conditions inside a state when the state was entered.
-Later checks whether the delay has expired used the cached delay
-value.
+While it was always *allowed* to use arbitrary SNL expressions for the
+argument to :c:func:`delay`, even expressions that could change their value
+at any time (e.g. because they contain monitored variables), this did *not*
+work as one would expect. In fact, the delay expression would be evaluated
+just once for all delays appearing in conditions inside a state when the
+state was entered. Later checks whether the delay has expired used the
+cached delay value.
 
-Now, delay expressions are evaluated like all other parts of the
-state transition condition and seq_delay() takes a double argument
-instead of a delay id. As a (transparent) side effect, if the
-delay has not yet expired, the minimum time to wait for events is
-adjusted. This adjustment is now more precise, since we do not store
-the delay but rather the (future) time when the wakeup should happen.
+In the new (much simpler) implementation, delay expressions are evaluated
+like all other parts of the state transition condition. Delay IDs no longer
+exist and the code generator treats calls to delay like any other built-in
+function. The effect of delaying the state transition is now achieved
+(completely internal to the implementation of seq_delay) by adjusting the
+minimum time to wait for events (if the delay has not yet expired). The
+run-time system no longer stores the delay, but rather the (future) time
+when the wakeup should happen, leading to more accurate timing of delays.
 
-Program Parameter Subsitution for pvAssign
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Since calling delay outside of the condition of a state transition never had
+any useful effect, it is now disallowed.
+
+.. note::
+
+  The prototype of the underlying C function seq_delay() has changed to
+  support the new implementation. If there is code out there which calls
+  this function from the C side, I'd venture that it is broken anyway and
+  should be fixed.
+
+ 
+Program Parameter Substitution for pvAssign
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This function now does substitution of program parameters (formerly
 sometimes called "macros") inside the PV name, exactly as in the assign
@@ -173,10 +188,8 @@ PV Functions and Multiply Assigned Arrays
 A long time wart of the sequencer, inherited from the 2.0 version, was the
 behaviour of built-in pv functions when you pass an array in which elements
 are assigned to separate PVs. In most cases this behaved as if you had
-passed in just the first element of the array. This "feature" is
-inconsistent and error-prone, and runs contrary to the natural expectation
-that the command will affect *all* the variables in the array (for those pv
-functions for which that would make sense).
+passed in just the first element of the array, which is inconsistent and
+error-prone.
 
 However, existing programs might (perhaps without the author or maintainer
 being aware of it) rely on the current behaviour -- and silently breaking
@@ -185,11 +198,11 @@ error*. The error message contains a hint how the user can fix their program
 ("perhaps you meant to pass xxx[0]?") so that it retains its old behaviour.
 
 For some of the pv functions, operating on all contained PVs of a multi-PV
-array really is the most natural semantics. For those functions, you can
-enable this behaviour with the new compiler switch resp. program option
-:option:`+p` (the opposite switch :option:`-p` is the default). If
-:option:`+p` is in effect, then the following pv functions will operate on
-all contained PVs if called with a multi-PV array as argument:
+array really is the most natural semantics. You can enable this with the new
+compiler switch resp. program option :option:`+p` (the opposite switch
+:option:`-p` is the default). If :option:`+p` is in effect, then the
+following pv functions will operate on all contained PVs if called with a
+multi-PV array as argument:
 
 * :c:func:`pvGetComplete`
 * :c:func:`pvMonitor`
@@ -221,11 +234,11 @@ arguments, just like :c:func:`pvPutComplete`, in order to check for
 completion if the argument is a multi-PV array and :option:`+p` is in
 effect.
 
-.. warning::
+.. note::
 
-   This changes the prototype of the underlying C function
-   seq_pvGetComplete. Existing C code can be fixed by supplying two extra
-   dummy (zero) arguments.
+  This changes the prototype of the underlying C function
+  seq_pvGetComplete. Existing C code can be fixed by supplying two extra
+  dummy (zero) arguments.
 
 Timeout Arguments for pvGet and pvPut
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -241,11 +254,11 @@ As before, the default behaviour for ``pvGet(var)`` i.e. neither an explicit
 effect. In this case, or if ``SYNC`` is given with no extra argument, the
 standard default timeout of 10 seconds is assumed.
 
-.. warning::
+.. note::
 
-   This changes the prototype of the underlying C functions seq_pvGet and
-   seq_pvPut. Existing C code can be fixed by supplying DEFAULT_TIMEOUT as
-   an extra argument.
+  This changes the prototype of the underlying C functions seq_pvGet and
+  seq_pvPut. Existing C code can be fixed by supplying DEFAULT_TIMEOUT as
+  an extra argument, see `External API`_ below.
 
 New Built-in Functions pvGetCancel and pvPutCancel
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -253,22 +266,72 @@ New Built-in Functions pvGetCancel and pvPutCancel
 It is now possible to cancel and asynchronous get or put request by calling
 :c:func:`pvGetCancel` resp. :c:func:`pvPutCancel`.
 
+New Built-in Functions ssId and pVar
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Like pvIndex these are implemented as macros. They allow passing the
+similarly named implicit parameters to C functions directly from inside SNL
+code w/o having to escape the call. That is, you can now write such calls as
+::
+
+  my_c_fun(ssId(), pVar(), ...);
+
+instead of ::
+
+  %%my_c_fun(ssId, pVar, ...);
+
+Generated C Code
+^^^^^^^^^^^^^^^^
+
+Order of Definitions
+~~~~~~~~~~~~~~~~~~~~
+
+The first change here is that the generated variable block is now placed
+*after* all other top-level definitions that appear in the program before
+the first state set, in particular before escaped C code. In previous
+versions, this was the other way around. The second change is that for all
+other top-level definitions the order is retained exactly as in the SNL
+source file.
+
+This was done so that foreign type declarations can be used in global (SNL)
+variable declarations. This concerns types imported via ``%%#include``
+as well as types defined in escaped C code.
+
+Note that this means that escaped C code that appears before the first state
+set cannot access global variables declared in SNL, even if the reentrant
+option is not in effect. Such C code should now be placed after the last
+state set.
+
+Anyway, it is my hope that the possibility to write functions directly in
+SNL will make the escape-to-C route mostly obsolete.
+
 
 Names of Generated Entities
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 These now follow a strict naming convention:
 
   Generated names start with "_seq" or "_SEQ".
 
-In particular, ``struct UserVar`` became ``struct _seq_var`` (but see
-below for a compatibility typedef). The variables (actually function
-parameters) ``ssId`` and ``pVar`` have been renamed, too. Since these are
-often passed to foreign C procedures, I added similarly named built-in
-procedures (``ssId()`` resp. ``pVar``) that return these values.
+In particular, ``struct UserVar`` became ``struct _seq_var``, and the
+implicit parameters ``ssId`` and ``pVar`` are now ``_seq_ss`` and
+``_seq_var``, respectively. Because these three identifiers are often
+referenced in escaped C code, I have added compatibility aliases for them,
+so as not to break existing programs. See `External API`_ below for details.
 
 In order to prevent name clashes, words starting with "_seq" are no longer
 valid identifiers in SNL.
+
+I am aware that there may be cases where this change breaks existing
+programs which heavily rely on escape to C code. If this is the case, please
+shout! Adding more compatibility aliases can be done any time.
+
+Event Flags
+~~~~~~~~~~~
+
+The compiler now generates symbolic names for event flags (using #define),
+like in version 2.0, but with a "_seq_ef_" prefix to the name. Escaped C
+code can use these names when calling event flag functions.
 
 
 External API
@@ -281,7 +344,8 @@ from seqCom.h to the new header file seq_snc.h.
 
 In particular, the following changes have been made:
 
-Retained:
+Retained
+~~~~~~~~
 
 - includes of pvAlarm.h and seq_release.h
 
@@ -294,24 +358,25 @@ Retained:
 - all functions except seqRegisterSequencerProgram and seqRegisterSequencerCommands
   but including seq_pvIndex
 
-Added:
-
+Added
+~~~~~
 - builtin "functions" seq_pVar and seq_ssId (like pvIndex these are actually
-  implemented as macros); they replace direct uses of generated
-  identifiers, which have been renamed (see `Names of Generated Entities`_
-  above).
+  implemented as macros in seqCom.h)
 
-- new builtin functions pvGetCancel, pvPutCancel
+- builtin functions seq_pvGetCancel, seq_pvPutCancel
 
-- the constant DEFAULT_TIMEOUT
+- the constant DEFAULT_TIMEOUT (see `New Delay Implementation`_)
 
-Renamings:
+Renamed
+~~~~~~~
 
-- EV_ID is now EF_ID
+- EV_ID -> EF_ID
+- VAR_ID -> CH_ID
 
-- VAR_ID is now CH_ID
+Compatibility Aliases
+~~~~~~~~~~~~~~~~~~~~~
 
-For better backwards compatibility I also added some aliases::
+::
 
   typedef SEQ_VARS USER_VAR
   #define ssId                  _seq_ss
@@ -323,13 +388,17 @@ For better backwards compatibility I also added some aliases::
   #define seq_pvFreeQ           seq_pvFlushQ
   #define DEFAULT_QUEUE_SIZE    100
 
-These should not be used in new code.
+These names should not be used in new code.
 
-Removed:
+Removed
+~~~~~~~
 
 - DELAY_ID (obsolete, see `New Delay Implementation`_)
 
-Moved to seq_snc.h:
+- OPT_MAIN (-m is a compile time only switch)
+
+Moved to seq_snc.h
+~~~~~~~~~~~~~~~~~~
 
 - struct definitions for the static part of the generated program:
 
@@ -368,29 +437,30 @@ Moved to seq_snc.h:
 
 - the functions seqRegisterSequencerProgram and seqRegisterSequencerCommands
 
-My justification for making these potentially breaking changes is that this
-is how it should have been done from the start. Mixing self-written with
-generated code is fraught with enough hazards as it is, and accidental name
-capture, though not very probable, would be very hard to diagnose for users.
-Exposing internal data structures where this is not strictly necessary is
-similarly ill-advised. A practical benefit is that from now on I have more
-freedom when introducing new features or refactoring the way snc generates
-code.
+Other Changes
+~~~~~~~~~~~~~
 
-If it turns out this is hurting people very much, I am willing to
-compromise. For instance, adding more compatibility aliases can be done any
-time in case I forgot one. I may also put back some of the internal stuff if
-someone comes up with a convincing argument why they need to access it.
+- the (in EPICS base) deprecated epicsShareAPI markers have been removed
+
+Remarks
+~~~~~~~
+
+My justification for making these potentially breaking changes is that this
+is how it should have been done from the start. The things I have removed
+were never meant to be part of a public API. In the unlikely event that
+there are existing programs with a legitimate need to access these
+internals, they can always include seq_snc.h (at their own risk), or just
+refrain from upgrading to version 2.2.
 
 
 Removed PV Library
 ^^^^^^^^^^^^^^^^^^
 
-The PV library has been almost completely eliminated. What remains is a
-thin layer over CA, implemented in C, and offering only the
-functionality that is actually needed by the sequencer. The API is similar
-(but not identical) to the old C API; particularly, all the pvStat, pvSevr,
-and pvType definitions are as before.
+The PV library has been almost completely eliminated. What remains is a thin
+layer over CA, implemented in C, and offering only the functionality that is
+actually needed by the sequencer. The API is similar (but not identical) to
+the old C API; particularly, all the pvStat, pvSevr, and pvType definitions
+are as before.
 
 The documentation for the PV layer has been removed, too. The only remaining
 user relevant part of the interface is contained in pvAlarm.h, see
@@ -407,8 +477,11 @@ The (broken and ugly) sequencer device support was removed.
 Consequently, seqFindProgByName was be removed as it is no longer needed.
 
 
-Extra Build Rules
-^^^^^^^^^^^^^^^^^
+Build System
+^^^^^^^^^^^^
+
+Top-level Makefile
+~~~~~~~~~~~~~~~~~~
 
 The extra rules in the top level Makefile to produce documentation with
 or without generating a pdf file have been changed: 'pdf' and 'docs' are
@@ -419,88 +492,22 @@ can specify:
 - docs: additionally build the manual in pdf format
 - upload etc: these are for my own benefit only, ignore them
 
-Related patches:
+Generate st.d Files
+~~~~~~~~~~~~~~~~~~~
 
-* top level Makefile: pdf and docs no longer variables, restructured extra targets
-
-
-Miscellaneous New Features
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-* reduce severity of timeouts and user errors from errlogFatal to errlogMajor
-
-* Struct or union members are no longer identified with variables in the
-  SNL syntax. Member selection "operators" ('.' and '->') are no longer treated
-  as binary operators, but get their own internal representation.
-
-  This finally solves the recurring annoyance of snc issuing
-  "undefined variable" warnings for members.
-
-  Declaring members in a foreign declaration is still allowed but
-  is now obsolete.
+The extra build rules for the sequencer have been extended to generate
+dependencies for .st files, using the mkmf.pl tool from base. Note that .st
+files are passed through the C preprocessor and therefore may include C
+header files or in fact SNL code from another file.
 
 
-Various Fixes
-^^^^^^^^^^^^^
+Bug Fixes
+^^^^^^^^^
 
-* pv: report CA failure status via msg member of pvVar or pvSys
-* option -m is now treated correctly as compile time only
-* removed deprecated epicsShareAPI markers
-* seq: place program lock around wakeup commands in ca callback
+* Place program lock around wakeup commands in CA callback.
 
   This prevents a race condition resulting in a crash when the program
   shuts down and deletes mutexes etc before the callback has issued its
   final ss_wakeup call.
-* seq: fixed connect and monitor accounting in seq_disconnect and seq_camonitor
 
-
-Raw Dump of Changes in test
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-* added validation test for access to variables of foreign types
-* added compiler test for member access
-* added tests for foreign types, cast, and sizeof
-* renamed and rearranged some tests
-* added two compiler tests
-* fixed number of errors for misplacedExit
-* adapted userfunc to compiler changes, extended the test
-* adapted delay.st to better test new delay implementation
-* moved ctest.c to test/compiler
-* ensure that tests cover seq exit phase
-
-* test/compiler: renamed scripts that test the whole build
-* test/compiler: added a test for identifier starting with _seq
-
-
-Raw Dump of Changes in documentation
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-* updated release notes for 2.2.0
-* added 2.2.0 to Installation page
-* improved wording of frontpage blurb
-* fixed and updated Installation page
-* minor cleanups in reference
-* added a todo item for delay in action code
-* clarified syntax and semantics of option clause
-* added versionadded tag to state change command
-* superficial change to reference
-* removed foreign types from plans
-* removed some text that referred to the removed sequencer device support
-* distinguish program parameters from CPP macros
-* parameter expansion in pvAssign
-
-
-TODO Before Release
-^^^^^^^^^^^^^^^^^^^
-
-* Maybe re-introduce #defines for event flags
-
-* Update reference to document all the changes and new features
-
-What to do about pvPutCompleteArray, see these patches:
-
-* examples: use array version of pvPutComplete
-* disabled examples/parallel because pvPutCompleteArray does not yet work
-
-See also pvPutMultiple and pvGetMultiple these are w/o implementation. See
-also the +-p switch.
+* Fixed connect and monitor accounting in seq_disconnect and seq_camonitor.
