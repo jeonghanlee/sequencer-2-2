@@ -102,7 +102,7 @@ where ``<branch>`` is the branch name. There are currently three branches:
   documentation.
 
 * `branch-2-2`_ is where new features are developed that will appear in
-  version 2.2. Release 2.2.0 will soon go into beta testing phase.
+  version 2.2.
 
 See `Contribute`_ for a short description how to record and send
 patches.
