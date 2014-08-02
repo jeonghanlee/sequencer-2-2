@@ -25,7 +25,7 @@ in the file LICENSE that is included with this distribution.
 static const int impossible = 0;
 
 static void gen_main(char *prog_name);
-static void gen_user_var(Node *prog, uint opt_reent);
+static void gen_var_struct(Node *prog, uint opt_reent);
 static void gen_init_reg(char *prog_name);
 static void gen_func_decls(Node *prog);
 static void gen_global_defn(Node *defn);
@@ -73,7 +73,7 @@ void generate_code(Program *p)
 	foreach (defn, p->prog->prog_defns) gen_global_defn(defn);
 
 	/* Variable declarations */
-	gen_user_var(p->prog, p->options.reent);
+	gen_var_struct(p->prog, p->options.reent);
 
 	/* Function declarations */
 	gen_func_decls(p->prog);
@@ -133,7 +133,7 @@ static void gen_func_decls(Node *prog)
    where they are declared, but still have global lifetime. To avoid
    name collisions, generate a nested struct for each state set, and
    for each state in a state set. */
-static void gen_user_var(Node *prog, uint opt_reent)
+static void gen_var_struct(Node *prog, uint opt_reent)
 {
 	Var	*vp;
 	Node	*sp, *ssp;
@@ -282,7 +282,7 @@ static void gen_global_defn(Node *ep)
 		gen_code("};\n");
 		break;
 	case D_DECL:
-		/* we handle only event flags here, for everything else see gen_user_var */
+		/* we handle only event flags here, for everything else see gen_var_struct */
 		vp = ep->extra.e_decl;
 		if (vp->type->tag == T_EVFLAG)
 		{
