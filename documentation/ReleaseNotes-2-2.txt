@@ -314,15 +314,15 @@ Names of Generated Entities
 
 These now follow a strict naming convention:
 
-  Generated names start with "_seq" or "_SEQ".
+  Generated names start with ``seqg_``.
 
-In particular, ``struct UserVar`` became ``struct _seq_var``, and the
-implicit parameters ``ssId`` and ``pVar`` are now ``_seq_ss`` and
-``_seq_var``, respectively. Because these three identifiers are often
+In particular, ``struct UserVar`` became ``struct seqg_var``, and the
+implicit parameters ``ssId`` and ``pVar`` are now ``seqg_ss`` and
+``seqg_var``, respectively. Because these three identifiers are often
 referenced in escaped C code, I have added compatibility aliases for them,
 so as not to break existing programs. See `External API`_ below for details.
 
-In order to prevent name clashes, words starting with "_seq" are no longer
+In order to prevent name clashes, words starting with ``seqg_`` are no longer
 valid identifiers in SNL.
 
 I am aware that there may be cases where this change breaks existing
@@ -332,9 +332,8 @@ shout! Adding more compatibility aliases can be done any time.
 Event Flags
 ~~~~~~~~~~~
 
-The compiler now generates symbolic names for event flags (using #define),
-like in version 2.0, but with a "_seq_ef_" prefix to the name. Escaped C
-code can use these names when calling event flag functions.
+The compiler now generates symbolic names for event flags to make it easier for
+escaped C code to call event flag functions (seq_ef*).
 
 
 External API
@@ -382,10 +381,10 @@ Compatibility Aliases
 ::
 
   typedef SEQ_VARS USER_VAR
-  #define ssId                  _seq_ss
-  #define pVar                  _seq_var
+  #define ssId                  seqg_ss
+  #define pVar                  seqg_var
   #define USER_VAR              SEQ_VARS
-  #define UserVar               _seq_vars
+  #define UserVar               seqg_vars
   #define VAR_ID                CH_ID
   #define EV_ID                 EF_ID
   #define seq_pvFreeQ           seq_pvFlushQ
