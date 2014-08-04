@@ -104,7 +104,7 @@ hurts people.
 New Options
 ^^^^^^^^^^^
 
-Two new program options resp. compiler switches have been added.
+Two new options have been added:
 
 * option:`+p` (off by default) changes the semantics of certain pv functions
   when called with multi-PV arrays, see `PV Functions and Multiply Assigned
@@ -202,7 +202,7 @@ error*. The error message contains a hint how the user can fix their program
 
 For some of the pv functions, operating on all contained PVs of a multi-PV
 array really is the most natural semantics. You can enable this with the new
-compiler switch resp. program option :option:`+p` (the opposite switch
+option :option:`+p` (the opposite
 :option:`-p` is the default). If :option:`+p` is in effect, then the
 following pv functions will operate on all contained PVs if called with a
 multi-PV array as argument:
@@ -267,14 +267,14 @@ New Built-in Functions pvGetCancel and pvPutCancel
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 It is now possible to cancel and asynchronous get or put request by calling
-:c:func:`pvGetCancel` resp. :c:func:`pvPutCancel`.
+:c:func:`pvGetCancel` or :c:func:`pvPutCancel`, respectively.
 
 New Built-in Functions ssId and pVar
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Like pvIndex these are implemented as macros. They allow passing the
 similarly named implicit parameters to C functions directly from inside SNL
-code w/o having to escape the call. That is, you can now write such calls as
+code without having to escape the call. That is, you can now write such calls as
 ::
 
   my_c_fun(ssId(), pVar(), ...);
@@ -398,7 +398,7 @@ Removed
 
 - DELAY_ID (obsolete, see `New Delay Implementation`_)
 
-- OPT_MAIN (-m is a compile time only switch)
+- OPT_MAIN (-m is a compile time only option)
 
 Moved to seq_snc.h
 ~~~~~~~~~~~~~~~~~~

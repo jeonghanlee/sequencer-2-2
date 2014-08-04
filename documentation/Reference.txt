@@ -658,7 +658,7 @@ An array variable assigned wholesale to one process variable (using
 the first syntactic variant above) or an element of a
 two-dimensional variable assigned to an array process variable
 (using the second syntactic variant) will use either the length of
-the array (resp. sub-array) or the native count for the underlying
+the array or the native count for the underlying
 variable, whichever is smaller, when communicating with the
 underlying process variable. The native count is determined when a
 connection is established. For anonymous PVs, the length of the array is
