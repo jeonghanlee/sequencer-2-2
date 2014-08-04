@@ -216,6 +216,7 @@ in the latter two
 will not impact your ability to write SNL programs (but is still a bug and
 should be reported, see `Report Bugs`_).
 
+.. _Building the Manual:
 
 Building the Manual
 ^^^^^^^^^^^^^^^^^^^
