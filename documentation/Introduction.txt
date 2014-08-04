@@ -94,7 +94,14 @@ distribution.
 Note on Versions
 ----------------
 
-This text is supposed to describe version 2.1. Version 2.1 adds
+This manual describes version 2.2 of the sequencer. This version
+adds support for declaring variables of almost all types expressible in C.
+It also adds support for defining functions and struct types in SNL.
+The backend of the compiler was changed so that generated name follow
+a consistent naming convention. The interface between compiler and runtime
+system has been separated from the public API available to escaped C code.
+
+Version 2.1 added
 support for local definitions (including variable declarations) at all
 levels, a significantly improved compiler that employs new lexer and
 parser generators, lots of bug fixes, and a new *safe mode* to avoid
