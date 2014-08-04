@@ -51,7 +51,7 @@ enum compType {
 };
 
 typedef	struct state_set *const SS_ID;	/* state set id, opaque */
-typedef struct _seq_vars SEQ_VARS;	/* struct defined in generated code */
+typedef struct seqg_vars SEQ_VARS;	/* struct defined in generated code */
 typedef char string[MAX_STRING_SIZE];	/* representation of SNL string type */
 
 /* these typedefs make the code more self documenting */
@@ -98,8 +98,8 @@ epicsShareFunc seqBool seq_pvAssigned(SS_ID, CH_ID);
 epicsShareFunc seqBool seq_pvConnected(SS_ID, CH_ID);
 
 #define seq_pvIndex(ssId, chId)	chId
-#define seq_ssId(ssId)			_seq_ss
-#define seq_pVar(ssId)			_seq_var
+#define seq_ssId(ssId)			seqg_ss
+#define seq_pVar(ssId)			seqg_var
 
 /* global operations */
 epicsShareFunc void seq_pvFlush(SS_ID);
@@ -123,10 +123,10 @@ epicsShareFunc epicsThreadId seq(seqProgram *, const char *, unsigned);
 
 /* backwards compatibility macros */
 /* DEPRECATED don't use in new code */
-#define ssId			_seq_ss
-#define pVar			_seq_var
+#define ssId			seqg_ss
+#define pVar			seqg_var
 #define USER_VAR		SEQ_VARS
-#define UserVar			_seq_vars
+#define UserVar			seqg_vars
 #define VAR_ID			CH_ID
 #define EV_ID			EF_ID
 #define seq_pvFreeQ		seq_pvFlushQ

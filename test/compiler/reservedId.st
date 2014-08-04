@@ -6,6 +6,6 @@ in the file LICENSE that is included with this distribution.
 \*************************************************************************/
 program p
 
-int _seqx;
+int seqg_x;
 
 #include "simple.st"

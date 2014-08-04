@@ -21,31 +21,33 @@ void gen_var_decl(Var *vp);
 void indent(int level);
 
 /* names and name prefixes for generated structs */
-#define NM_VARS		"_seq_vars"
-#define NM_CHANS	"_seq_chans"
-#define NM_STATES	"_seq_states"
-#define NM_STATESETS	"_seq_statesets"
+#define NM_VARS		"seqg_vars"
+#define NM_CHANS	"seqg_chans"
+#define NM_STATES	"seqg_states"
+#define NM_STATESETS	"seqg_statesets"
 
 /* names and name prefixes for generated functions */
-#define NM_ENTRY	"_seq_entry"
-#define NM_EXIT		"_seq_exit"
-#define NM_INIT		"_seq_init"
-#define NM_ACTION	"_seq_action"
-#define NM_EVENT	"_seq_event"
-#define NM_MASK		"_seq_mask"
+#define NM_ENTRY	"seqg_entry"
+#define NM_EXIT		"seqg_exit"
+#define NM_INIT		"seqg_init"
+#define NM_ACTION	"seqg_action"
+#define NM_EVENT	"seqg_event"
+#define NM_MASK		"seqg_mask"
 
 /* names of generated function arguments */
-#define NM_VAR		"_seq_var"
-#define NM_SS		"_seq_ss"
-#define NM_PROG		"_seq_prog"
-#define NM_TRN		"_seq_trn"
-#define NM_PTRN		"_seq_ptrn"
-#define NM_PNST		"_seq_pnst"
+#define NM_VAR		"seqg_var"
+#define NM_SS		"seqg_ss"
+#define NM_PROG		"seqg_prog"
+#define NM_TRN		"seqg_trn"
+#define NM_PTRN		"seqg_ptrn"
+#define NM_PNST		"seqg_pnst"
 
 /* prefix for generated inititialization variable names */
-#define NM_INITVAR	"_seq_initvar_"
+#define NM_INITVAR	"seqg_initvar_"
+
+#define NM_DUMMY	"seqg_dummy"
 
 /* prefix for generated event flag constants */
-#define NM_EF		"_seq_ef"
+#define NM_EF		"seqg_ef"
 
 #endif	/*INCLgencodeh*/

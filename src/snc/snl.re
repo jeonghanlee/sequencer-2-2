@@ -276,7 +276,7 @@ snl:
 	"int32_t"	{ TYPEWORD(INT32T, 	"int32_t"); }
 	"uint32_t"	{ TYPEWORD(UINT32T,	"uint32_t"); }
 
-	"_seq" (LET|DEC)* {
+	"seqg_" (LET|DEC)* {
 		*cursor = 0;
 		scan_report(s, "identifier '%s'starts with reserved prefix\n", s->tok);
 		DONE;

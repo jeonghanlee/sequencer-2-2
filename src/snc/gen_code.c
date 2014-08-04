@@ -163,7 +163,7 @@ static void gen_var_struct(Node *prog, uint opt_reent)
 	}
 	if (opt_reent && !num_globals)
 	{
-		indent(1); gen_code("char _seq_dummy;\n");
+		indent(1); gen_code("char "NM_DUMMY";\n");
 	}
 	foreach (ssp, prog->prog_statesets)
 	{
