@@ -32,8 +32,6 @@ enum foreign_type_tag {
     F_TYPENAME,
 };
 
-typedef struct type Type;
-
 struct type {
     enum type_tag tag;
     unsigned is_const:1;
