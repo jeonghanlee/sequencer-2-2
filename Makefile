@@ -47,7 +47,7 @@ snapshot: upload_repo
 	$(RM) $(SNAPSHOT).tar.gz
 
 release: upload_docs upload_repo
-	darcs dist -d seq-$(SEQ_RELEASE) -t seq-$(SEQ_TAG)
+	darcs dist -d seq-$(SEQ_RELEASE) -t '^seq-$(SEQ_TAG)$$'
 	rsync seq-$(SEQ_RELEASE).tar.gz $(USER_AT_HOST):$(SEQ_PATH)/releases/
 	$(RM) seq-$(SEQ_RELEASE).tar.gz
 
