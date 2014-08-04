@@ -43,7 +43,7 @@ exit {
 %{
 static void extfun(SS_ID ssid)
 {
-    seq_efSet(ssid, _seq_ef_e);
+    seq_efSet(ssid, e);
 }
 }%
 

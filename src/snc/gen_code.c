@@ -287,7 +287,7 @@ static void gen_global_defn(Node *ep)
 		if (vp->type->tag == T_EVFLAG)
 		{
 			gen_line_marker(vp->decl);
-			gen_code("#define "NM_EF"_%s\t%d\n", vp->name, vp->chan.evflag->index);
+			gen_code("static const EF_ID %s = %d;\n", vp->name, vp->chan.evflag->index);
 		}
                 break;
 	case D_ASSIGN:

@@ -47,7 +47,4 @@ void indent(int level);
 
 #define NM_DUMMY	"seqg_dummy"
 
-/* prefix for generated event flag constants */
-#define NM_EF		"seqg_ef"
-
 #endif	/*INCLgencodeh*/

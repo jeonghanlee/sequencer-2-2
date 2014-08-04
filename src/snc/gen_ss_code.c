@@ -304,7 +304,7 @@ static void gen_var_access(Var *vp)
 
 	if (vp->type->tag == T_EVFLAG)
 	{
-		gen_code(NM_EF"_%s", vp->name);
+		gen_code("%s", vp->name);
 	}
 	else if (vp->type->tag == T_NONE || vp->type->tag == T_FUNCTION)
 	{
