@@ -9,6 +9,9 @@ Release 2.2.0
 This is a new feature release. As with all dot-zero releases, be careful
 before using this in production systems.
 
+As with recent 2.1 releases, EPICS base versions starting with
+3.14.8.2 up to 3.15 are supported and should work, see :doc:`Installation`.
+
 New Language Features
 ^^^^^^^^^^^^^^^^^^^^^
 
