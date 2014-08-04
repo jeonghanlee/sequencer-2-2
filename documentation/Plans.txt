@@ -12,12 +12,6 @@ list. Comments are welcome, as usual.
   brings any actual benefit, considering that sequencer and database
   typically run on the same IOC. It might be convenient, sometimes.
 
-* Add optional timeout argument for pvGet and pvPut to override the
-  hard-coded default of 10 seconds.
-
-* pvGetComplete should support additional arguments for arrays of multiple
-  PVs, just like pvPutComplete.
-
 * Raw ideas:
 
   - Allow parameterized state sets (like a function). Then allow to "jump"
@@ -63,11 +57,6 @@ list. Comments are welcome, as usual.
     can be easily specialized, and seamlessly fits into the existing syntax.
 
 * Convert everything under test to use epicsUnitTest. Add more regression tests.
-
-* Clarify the situation of a pvPut/pvGet to array variable that
-  has been connected to separate PVs. Currently this puts/gets the first element,
-  but wouldn't it be nice if it meant to put/get all (connected) elements?
-  Write to tech-talk and ask (since it breaks compatibility)?
 
 * Need to go over the introductory chapters in the docs, remove out-dated
   information.
