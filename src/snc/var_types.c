@@ -39,7 +39,7 @@ static Node *add_implicit_parameters(Node *fun_decl, Node *param_decls)
     t.line = fun_decl->token.line;
     t.file = fun_decl->token.file;
     p2 = mk_decl(node(E_VAR, t),
-        mk_pointer_type(mk_const_type(mk_foreign_type(F_TYPENAME, "SEQ_VARS")))
+        mk_const_type(mk_pointer_type(mk_foreign_type(F_TYPENAME, "SEQ_VARS")))
     );
     return link_node(p1, link_node(p2, param_decls));
 }
