@@ -37,7 +37,7 @@ ss pvGetCancel {
         entry {
             testOk1(pvGet(x[0],ASYNC) == pvStatOK);
             testOk1(pvGet(x[1],ASYNC) == pvStatOK);
-            pvGetCancel(x);
+            pvArrayGetCancel(x,2);
             x[0] = x[1] = 0;
             y[0] = y[1] = 1;
             testOk1(pvPut(y[0],SYNC) == pvStatOK);
@@ -49,7 +49,7 @@ ss pvGetCancel {
             testFail("pvGet completion timeout");
             testSkip(1,"further tests aborted");
         } exit
-        when (pvGetComplete(x)) {
+        when (pvArrayGetComplete(x,2)) {
             testOk1(x[0] == y[0]);
             testOk1(x[1] == y[1]);
         } state done
