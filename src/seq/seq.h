@@ -45,6 +45,7 @@ in the file LICENSE that is included with this distribution.
 #endif
 
 #include "cantProceed.h"
+#include "epicsMath.h"
 #include "epicsEvent.h"
 #include "epicsMutex.h"
 #include "epicsString.h"

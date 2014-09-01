@@ -279,8 +279,8 @@ static boolean init_sscb(PROG *sp, SSCB *ss, seqSS *seqSS)
 	ss->nextState = 0;
 	ss->prevState = 0;
 	ss->threadId = 0;
-	ss->timeEntered = INFINITY;
-	ss->wakeupTime = INFINITY;
+	ss->timeEntered = epicsINF;
+	ss->wakeupTime = epicsINF;
 	ss->prog = sp;
 
 	ss->syncSem = epicsEventCreate(epicsEventEmpty);
