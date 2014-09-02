@@ -541,7 +541,7 @@ static void gen_builtin_func(int context, Node *ep)
 	/* All builtin functions require ssId as 1st parameter */
 	assert_at_node(context != C_GLOBAL, ep,
 		"calling built-in function %s not allowed here\n", sym->name);
-	gen_code("seq_%s("NM_SS, sym->name);
+	gen_code("seq_%s("NM_SS, sym->c_name ? sym->c_name : sym->name);
 	if (context != C_COND && sym->cond_only)
 	{
 		error_at_node(ep,

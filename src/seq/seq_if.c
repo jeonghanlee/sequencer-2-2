@@ -173,7 +173,15 @@ static pvStat wait_complete(
 /*
  * Get value from a channel.
  */
-epicsShareFunc pvStat seq_pvGet(SS_ID ss, CH_ID chId, enum compType compType, double tmo)
+epicsShareFunc pvStat seq_pvGet(SS_ID ss, CH_ID chId, enum compType compType)
+{
+	return seq_pvGetTmo(ss, chId, compType, DEFAULT_TIMEOUT);
+}
+
+/*
+ * Get value from a channel, with timeout.
+ */
+epicsShareFunc pvStat seq_pvGetTmo(SS_ID ss, CH_ID chId, enum compType compType, double tmo)
 {
 	PROG		*sp = ss->prog;
 	CHAN		*ch = sp->chan + chId;
@@ -407,7 +415,15 @@ static void anonymous_put(SS_ID ss, CHAN *ch)
 /*
  * Put a variable's value to a PV.
  */
-epicsShareFunc pvStat seq_pvPut(SS_ID ss, CH_ID chId, enum compType compType, double tmo)
+epicsShareFunc pvStat seq_pvPut(SS_ID ss, CH_ID chId, enum compType compType)
+{
+	return seq_pvPutTmo(ss, chId, compType, DEFAULT_TIMEOUT);
+}
+
+/*
+ * Put a variable's value to a PV, with timeout.
+ */
+epicsShareFunc pvStat seq_pvPutTmo(SS_ID ss, CH_ID chId, enum compType compType, double tmo)
 {
 	PROG	*sp = ss->prog;
 	CHAN	*ch = sp->chan + chId;

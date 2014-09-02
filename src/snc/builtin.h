@@ -34,7 +34,8 @@ enum func_type
 
 struct func_symbol
 {
-    const char  *name;
+    const char  *name;              /* SNL name */
+    const char  *c_name;            /* C name, or 0 if same as SNL name */
     uint        type            :2; /* see enum func_type */
     uint        multi_pv        :1; /* whether multi-pv args are supported */
     uint        add_length      :1; /* need to pass array size */
