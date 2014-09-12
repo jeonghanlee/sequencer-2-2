@@ -58,11 +58,11 @@ const char *prim_type_name[]
 #endif
 ;
 
-#ifndef var_types_GLOBAL
+#ifndef prim_types_GLOBAL
 extern
 #endif
 const char *prim_type_tag_name[]
-#ifdef var_types_GLOBAL
+#ifdef prim_types_GLOBAL
 = {
     "P_CHAR",
     "P_UCHAR",
