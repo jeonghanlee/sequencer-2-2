@@ -15,6 +15,11 @@ Known Problems in Release 2.1.16
 
   in the top level Makefile.
 
+* On Windows 8.1 x64 with Visual Studio 2013, the lemon parser generator
+  crashes with an access violation. Freddie Akeroyd
+  <freddie.akeroyd@stfc.ac.uk> sent a fix for that, see release notes for
+  2.2.0.3.
+
 * Tim Mooney <mooney@aps.anl.gov> reported a problem when monitoring large
   arrays. This could lead to assertion failures, causing CAS-client threads
   to be suspended. He also analysed the problem, tracing it back to a code
