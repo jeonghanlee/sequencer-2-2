@@ -1,6 +1,32 @@
 Release Notes for Version 2.1
 =============================
 
+.. _Release_Notes_2.1.17:
+
+Release 2.1.17
+--------------
+
+* Some patches from the lemon parser generator upstream repo have been
+  applied. Among them is the fix for the lemon crash on Windows 8.1 x64 with
+  Visual Studio 2013, proposed by Freddie Akeroyd
+  <freddie.akeroyd@stfc.ac.uk>.
+
+* To avoid stack overflows when monitoring large arrays on systems with a
+  fixed stack size, you can now tell the sequencer to use malloc/free for
+  temporary copies of CA messages (instead of stack allocated memory) by
+  adding the line
+
+    USE_MALLOC_FOR_TEMPORARY_COPY=YES
+
+  to configure/CONFIG_SITE before building. Note that this may cause
+  unwanted side-effects (like memory fragmentation on older versions of
+  VxWorks). It would be better to avoid the extra copy, which is how things
+  are done in version 2.2.
+
+* Pulled a test from the 2.2 branch that tests (and demonstrates) how to use
+  CPP to get conditional compilation for SNL programs depending on the
+  sequencer release. See test/validate/version.st.
+
 .. _Release_Notes_2.1.16:
 
 Release 2.1.16
