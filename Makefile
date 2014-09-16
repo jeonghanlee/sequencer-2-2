@@ -12,9 +12,9 @@ test_DEPEND_DIRS = src
 DIRS += examples
 examples_DEPEND_DIRS = src
 
-BRANCH = branch-2-2
-DEFAULT_REPO = /opt/repositories/controls/darcs/epics/support/seq/$(BRANCH)
-SEQ_PATH = www/control/SoftDist/sequencer
+BRANCH = 2-2
+DEFAULT_REPO = rcsadm@repo.acc.bessy.de:/opt/repositories/controls/darcs/epics/support/seq/branch-$(BRANCH)
+SEQ_PATH = www/control/SoftDist/sequencer-$(BRANCH)
 USER_AT_HOST = wwwcsr@www-csr.bessy.de
 DATE = $(shell date -I)
 SNAPSHOT = seq-$(BRANCH)-snapshot-$(DATE)
@@ -40,12 +40,12 @@ upload_docs: docs
 
 upload_repo:
 	darcs push $(DEFAULT_REPO)
-	darcs push --repo=$(DEFAULT_REPO) -a $(USER_AT_HOST):$(SEQ_PATH)/repo/$(BRANCH)
+	darcs push --repo=$(DEFAULT_REPO) -a $(USER_AT_HOST):$(SEQ_PATH)/repo/branch-$(BRANCH)
 
 snapshot: upload_repo
 	darcs dist -d $(SNAPSHOT)
 	rsync $(SNAPSHOT).tar.gz $(USER_AT_HOST):$(SEQ_PATH)/releases/
-	ssh $(USER_AT_HOST) 'cd $(SEQ_PATH)/releases && ln -f -s $(SNAPSHOT).tar.gz seq-snapshot-latest.tar.gz'
+	ssh $(USER_AT_HOST) 'cd $(SEQ_PATH)/releases && ln -f -s $(SNAPSHOT).tar.gz seq-$(BRANCH)-snapshot-latest.tar.gz'
 	$(RM) $(SNAPSHOT).tar.gz
 
 release: upload_docs upload_repo
