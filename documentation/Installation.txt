@@ -35,11 +35,9 @@ a new release.
 
 Development snapshots are available under the name
 
-   seq-snapshot-<date>.tar.gz
+   seq-<version>-snapshot-<date>.tar.gz
 
-or
-
-   seq-snapshot-branch-x-y-<date>.tar.gz
+where <version> is the branch name without the 'branch-' prefix.
 
 In the releases directory there is always a symbolic link to the
 `latest snapshot`_.
@@ -111,7 +109,7 @@ patches.
 
 You can also follow development by using the `repository browser`_.
 
-.. _latest snapshot: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-snapshot-latest.tar.gz
+.. _latest snapshot: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2-2-snapshot-latest.tar.gz
 .. _2.2.0.2: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2.2.0.2.tar.gz
 .. _2.2.0: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2.2.0.tar.gz
 .. _2.1.17: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2.1.17.tar.gz
