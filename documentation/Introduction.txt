@@ -130,37 +130,40 @@ Center (SLAC).
 Versioning Policy
 ^^^^^^^^^^^^^^^^^
 
-Starting with 2.0.0, the third digit is the patch level and will
-be incremented each time a new version is released, no matter how
-minor the changes. The second digit is the minor version number and
-will be incremented each time functional changes are made. The
-first digit is the major version number and will be incremented
-only when major changes are made.
+Starting with release 2.0.0, the third digit is the patch level and will be
+incremented each time a new version is released, no matter how minor the
+changes (except if it is zero). The second digit is the minor release number
+and will be incremented each time functional changes are made. The first
+digit is the major release number and will be incremented only when major
+changes are made.
 
 Starting with version 2.1, the following refined rules apply:
 
-* Changes in the major (first) version number indicate disruptive
+* Changes in the major (first) number indicate disruptive
   changes that may break backward compatibility. When upgrading to a
   new major version, existing programs may need to be reviewed and
   possibly adapted to changes in syntax or semantics.
 
-* An increase of the minor (second) version number indicates the
+* An increase of the minor (second) release number indicates the
   availability of new features, while source code compatibility for
-  existing programs is preserved. However, such changes *may*
+  existing programs is preserved. However, such changes may
   involve major re-organizations of the implementation, und
   therefore introduce new bugs. Care should be taken when upgrading
-  to a new minor version, especially if the new patch-level number
+  to a new minor release, especially if the new patch-level number
   is zero: these should be used in production systems only after
   testing that everything still works as expected.
 
-* Changes in the patch-level (third) version number are strictly
+  Major and minor release number together are referred to as the sequencer's
+  *version*.
+
+* Changes in the patch-level (third) release number are strictly
   reserved for bug-fixes, including fixes and extensions to the
   documentation and the tests. No new features will appear, except
   where unavoidable to cleanly fix a bug. It should always be safe
   (and is recommended) to upgrade to the latest patch level release.
 
-
-.. ToDo List
-.. ---------
-
-.. .. todolist::
+* A patch-level release number of zero indicates a pre-release. Such
+  releases are still in the process of stabilizing and thus might receive
+  significant changes if it turns out that this would be better in the long
+  run. A fourth number may indicate progress toward the first stable
+  release, indicated by a patch-level release number of one.
