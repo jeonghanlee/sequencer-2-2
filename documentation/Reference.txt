@@ -1,5 +1,5 @@
-SNL Reference
-=============
+SNL Reference for Version 2.2
+=============================
 
 This chapter gives a detailed reference for the SNL syntax and semantics
 and for the built-in functions.
