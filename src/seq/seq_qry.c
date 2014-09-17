@@ -11,6 +11,7 @@ in the file LICENSE that is included with this distribution.
         Task query & debug routines for run-time sequencer
 \*************************************************************************/
 #include "seq.h"
+#include "seqStats.h"
 
 static int userInput(void);
 static void printValue(pr_fun *pr, void *val, unsigned count, int type);
@@ -216,6 +217,7 @@ epicsShareFunc void epicsShareAPI seqChanShow(epicsThreadId tid, const char *str
 		nch += dn;
 	}
 }
+
 /*
  * seqcar() - Sequencer Channel Access Report
  */
@@ -273,6 +275,20 @@ epicsShareFunc void epicsShareAPI seqcar(int level)
 	printf("Total programs=%d, channels=%d, connected=%d, disconnected=%d\n",
 		stats.nProgs, stats.nChans, stats.nConn,
 		stats.nChans - stats.nConn);
+}
+
+epicsShareFunc void seqGatherStats(
+	unsigned *num_programs,
+	unsigned *num_channels,
+	unsigned *num_connected
+)
+{
+	struct seqStats	stats = {0, 0, 0, 0};
+
+	seqTraverseProg(seqcarCollect, (void *) &stats);
+	*num_programs = stats.nProgs;
+	*num_channels = stats.nChans;
+	*num_connected = stats.nConn;
 }
 
 /*
