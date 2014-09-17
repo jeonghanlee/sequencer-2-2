@@ -1337,11 +1337,10 @@ an event flag) to cancel the sync.
 Built-in Functions
 ------------------
 
-The following special functions are built into the SNL. In most
-cases the state notation compiler performs some special
-interpretation of the parameters to these functions. Therefore,
-some are either not available through escaped C code or their use
-in escaped C code is subject to special rules.
+The following special functions are built into the language. In most cases
+the compiler performs some special interpretation of the arguments to these
+functions. Using their C equivalents in escaped C code is possible but
+subject to special rules.
 
 An argument specified as *assigned_var* refers to any SNL variable or
 array element that has been assigned to a (possibly anonymous) process
@@ -1352,8 +1351,8 @@ statically checked by the compiler.
 
 Several of these functions are intended to be called only from
 :token:`transition` clauses or only from action code. If the compiler allows
-it, it is safe to call them in another context, but the effect is probably
-not what you want.
+it, it is safe to call them in another context, but the effect might not be
+what you expect.
 
 
 delay
