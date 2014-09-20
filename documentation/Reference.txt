@@ -931,9 +931,9 @@ State Entry and Exit Blocks
 The syntax is the same as for `Global Entry and Exit Blocks`_.
 
 Entry blocks are executed when the state is entered, before any of the
-conditions for state transitions are evaluated.
+`condition`\s for state `transitions` are evaluated.
 
-Exit blocks are executed when the state is left, after the transition
+Exit blocks are executed when the state is left, after the `transition`
 block that determines the next state.
 
 .. note:: State options can be used to control whether entry/exit blocks
@@ -949,8 +949,9 @@ Transitions
 .. productionlist::
    transitions: `transitions` `transition`
    transitions: `transition`
-   transition: "when" "(" `opt_expr` ")" `block` "state" `identifier`
-   transition: "when" "(" `opt_expr` ")" `block` "exit"
+   transition: "when" "(" `condition` ")" `block` "state" `identifier`
+   transition: "when" "(" `condition` ")" `block` "exit"
+   condition: `opt_expr`
 
 A state transition starts with the keyword "when", followed by a condition
 (in parentheses), followed by a block, and finally the keyword "state" and
@@ -966,8 +967,8 @@ Conditions are evaluated
 
 #. when an event happens (see below).
 
-Evaluation proceeds in the order in which the transitions appear in the
-program. If one of the conditions evaluates to ``TRUE``, the corresponding
+Evaluation proceeds in the order in which the `transitions` appear in the
+program. If one of the `condition`\s evaluates to ``TRUE``, the corresponding
 action block is executed, any exit block of the state is executed, and the
 state changes to the specified new state. Otherwise, the state set waits
 until an event happens. 
@@ -1378,7 +1379,7 @@ the default).
 
 .. versionadded:: 2.2
 
-It is no longer allowed to call this function outside the condition of a
+It is no longer allowed to call this function outside the `condition` of a
 `transition` clause.
 
 
@@ -1400,7 +1401,7 @@ completion must be inferred by other means. The optional ``SYNC``
 argument causes it to block on completion with a hard-coded timeout
 of 10s. The optional ``ASYNC`` argument allows the program to
 continue but still check for completion via a subsequent call to
-`pvPutComplete` (typically in a `transition` clause).
+`pvPutComplete` (typically in a `condition`).
 
 Note that SNL allows only one pending `pvPut` per variable and state set
 to be active. As long as a ``pvPut(var,ASYNC)`` is pending completion,
@@ -1430,8 +1431,7 @@ to "") to communicate between state sets. This makes sense only with global
 variables as only those can be referenced in more than one state set. The
 behaviour for anonymous PVs exactly mirrors that of named PVs, including the fact
 that the new value will not be seen by other state sets until they issue a pvGet,
-or, if the variable is monitored, until they wait for an event in a `transition`
-clause.
+or, if the variable is monitored, until they wait for an event in a `condition`.
 Note that for anonymous PVs completion is always immediate, so the ``ASYNC`` option
 is not very useful.
 
@@ -1499,7 +1499,7 @@ By default, the state set will block until the
 read operation is complete with a hard-coded timeout of 10s. The
 asynchronous (`+a`) compile option can be used to prevent this, in
 which case completion can be checked via a subsequent call to
-`pvGetComplete` (typically in a `transition` clause).
+`pvGetComplete` (typically in a `condition`).
 
 The optional ``SYNC`` and ``ASYNC`` arguments override the compile option.
 ``SYNC`` blocks and so gives default behavior if `+a` was not
@@ -1585,14 +1585,14 @@ with a variable that is not associated with a queue (see the `syncq`
 clause and the built-in function `pvSync`).
 
 Note that since pvGetQ may have a *side-effect* you should be careful when
-combining a call to pvGetQ with other conditions in the same
+combining a call to pvGetQ with other `condition`\s in the same
 `transition` clause, e.g. ::
 
         when (pvGetQ(msg) && other_condition) {
            printf(msg);
         } state ...
 
-would remove the head from the queue every time the condition gets
+would remove the head from the queue every time the `condition` gets
 evaluated, regardless of whether ``other_condition`` is ``TRUE``. This is
 most probably not the desired effect, as you would lose an unknown number of
 messages. (Of course it *could* be exactly what you want, for instance if
@@ -2253,7 +2253,7 @@ atomically, the details of which are architecture and compiler dependent
 (i.e. plain ``int`` is typically atomic, whereas double is problematic on
 some, string and arrays on almost all architectures/compilers). Even for
 plain ``int`` variables, read-modify-write cycles (like ``v++``) cannot be
-guaranteed to have any consistent result. Furthermore, conditions that have
+guaranteed to have any consistent result. Furthermore, `condition`\s that have
 been met inside a `transition` clause cannot be relied upon to still hold
 inside the associated action block.
 
@@ -2290,7 +2290,7 @@ sets. State sets are effectively isolated against each other, and all
 communication between them must be explicit. They are also isolated against
 updates by callbacks from the PV layer except at those points where they
 don't do anything i.e. when they wait for events in a `transition` clause.
-In safe mode, variable values get updated right before the conditions are
+In safe mode, variable values get updated right before the `condition`\s are
 evaluated, or when explicitly calling synchronization functions like
 `pvGetComplete` or `pvGet` (the latter only if called in
 synchronous mode), as well as `efTest` and `efTestAndClear`.
@@ -2329,7 +2329,7 @@ the action statement ::
 makes the value of ``var`` available to other state sets. They will,
 however, not see the new value until they issue either a (synchronous)
 `pvGet`, or the variable is declared as monitored and state
-change conditions are evaluated.
+change `condition`\s are evaluated.
 
 The action ::
 
@@ -2342,7 +2342,7 @@ previously via `pvPut` by some other state set. Whereas ::
 
 has no immediate effect on the variable ``var``. Instead, ``var``
 will be updated only if the code calls `pvGetComplete`
-(and it returns ``TRUE``), or when state change conditions are
+(and it returns ``TRUE``), or when state change `condition`\s are
 evaluated the next time.
 
 .. note:: This behaviour is exactly the same as with external PVs.
