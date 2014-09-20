@@ -108,7 +108,7 @@ the variable never recovers from the situation.
 This problem is probably present in all releases of the 2.1 branch.
 
 The problem has been fixed in version 2.1.13, see
-:ref:`Release_Notes_2.1.13`.
+`Release_Notes_2.1.13`.
 
 .. _Known_Problems_2.1.10:
 

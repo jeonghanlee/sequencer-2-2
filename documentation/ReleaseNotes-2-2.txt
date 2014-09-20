@@ -10,7 +10,7 @@ This is a new feature release. As with all dot-zero releases, be careful
 before using this in production systems.
 
 As with recent 2.1 releases, EPICS base versions starting with
-3.14.8.2 up to 3.15 are supported and should work, see :doc:`Installation`.
+3.14.8.2 up to 3.15 are supported and should work, see `Installation`.
 
 New Language Features
 ^^^^^^^^^^^^^^^^^^^^^
@@ -48,7 +48,7 @@ A side effect of allowing indirect calls is that there is no longer any
 means that issuing warnings just for the use of undeclared foreign
 *variables* is no longer possible. If they are still undeclared in the
 generated C code, the C compiler will warn you anyway. You can enable extra
-warnings (:option:`+W`, see `New Option for Extra Warnings`_ below) to get
+warnings (`+W`, see `New Option for Extra Warnings`_ below) to get
 these warnings, but that will report foreign functions, too.
 
 Due to these changes, the so called "foreign entity declarations",
@@ -110,10 +110,10 @@ entity that appears in the program.
 Built-in Constants
 ^^^^^^^^^^^^^^^^^^
 
-All built-in constants are now known to *snc* and therefore no longer
+All built-in constants are now known to `snc` and therefore no longer
 treated as foreign entities. Particularly, using them no longer gives
 "undefined variable" warnings, even with extra warnings enabled
-(:option:`+W`). They are also documented in the reference.
+(`+W`). They are also documented in the reference.
 
 The *snc*-generated C code for built-in constants now uses the name of the
 constant, instead of its value. This makes the code a bit more readable and
@@ -146,7 +146,7 @@ errors.
 pvMessage
 ~~~~~~~~~
 
-The built-in function pvMessage now consistently returns a failure string
+The built-in function `pvMessage` now consistently returns a failure string
 describing the problem whenever anything with the passed channel variable
 went wrong. This particilarly applies to any failure status returned from
 the CA layer.
@@ -155,7 +155,7 @@ New Delay Implementation
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 While it was always *allowed* to use arbitrary SNL expressions for the
-argument to :c:func:`delay`, even expressions that could change their value
+argument to `delay`, even expressions that could change their value
 at any time (e.g. because they contain monitored variables), this did *not*
 work as one would expect. In fact, the delay expression would be evaluated
 just once for all delays appearing in conditions inside a state when the
@@ -217,42 +217,28 @@ array would make sense if one would be willing to overload them. I decided
 against that and instead provide a number of new functions named
 "pvArray..." for that:
 
-* :c:func:`pvArrayGetComplete`
-* :c:func:`pvArrayMonitor`
-* :c:func:`pvArrayPutComplete`
-* :c:func:`pvArrayStopMonitor`
-* :c:func:`pvArraySync`
+* `pvArrayGetComplete`
+* `pvArrayMonitor`
+* `pvArrayPutComplete`
+* `pvArrayStopMonitor`
+* `pvArraySync`
 
 I may add ``pvArrayGet`` and ``pvArrayPut`` in the future. Especially for
-the :ref:`SYNC<compType>` variant, such functions could be implemented more
+the `SYNC<compType>` variant, such functions could be implemented more
 efficiently than the semantically equivalent for loop over all elements of
 the array.
-
-pvGetComplete
-~~~~~~~~~~~~~
-
-The built-in function :c:func:`pvGetComplete` now accepts 2 more (optional)
-arguments, just like :c:func:`pvPutComplete`, in order to check for
-completion if the argument is a multi-PV array and :option:`+p` is in
-effect.
-
-.. note::
-
-  This changes the prototype of the underlying C function
-  seq_pvGetComplete. Existing C code can be fixed by supplying two extra
-  dummy (zero) arguments.
 
 Timeout Arguments for pvGet and pvPut
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-For both :c:func:`pvGet` and :c:func:`pvPut` there is now the possibility to
+For both `pvGet` and `pvPut` there is now the possibility to
 specify a timeout that differs from the default of 10 seconds. This is done
 by giving an extra argument after the ``SYNC`` keyword, as in::
 
   pvGet(var,SYNC,1.0);
 
 As before, the default behaviour for ``pvGet(var)`` i.e. neither an explicit
-``SYNC`` nor ``ASYNC``, is synchronous, unless option :option:`-a` is in
+``SYNC`` nor ``ASYNC``, is synchronous, unless option `-a` is in
 effect. In this case, or if ``SYNC`` is given with no extra argument, the
 standard default timeout of 10 seconds is assumed.
 
@@ -266,7 +252,7 @@ New Built-in Functions pvGetCancel and pvPutCancel
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 It is now possible to cancel and asynchronous get or put request by calling
-:c:func:`pvGetCancel` or :c:func:`pvPutCancel`, respectively.
+`pvGetCancel` or `pvPutCancel`, respectively.
 
 
 Generated C Code
@@ -480,7 +466,7 @@ can specify:
 - docs: additionally build the manual in pdf format
 - upload etc: these are for my own benefit only, ignore them
 
-See :ref:`Building the Manual` for details.
+See `Building the Manual` for details.
 
 Generate st.d Files
 ~~~~~~~~~~~~~~~~~~~

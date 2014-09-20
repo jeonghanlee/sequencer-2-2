@@ -18,4 +18,4 @@ Users' Guide
    KnownProblems
    Plans
 
-* :ref:`Index <genindex>`
+* `Index <genindex>`

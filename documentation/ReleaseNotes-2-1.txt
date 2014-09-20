@@ -32,14 +32,14 @@ Release 2.1.17
 Release 2.1.16
 --------------
 
-This release fixes a build problem on Windows, see :ref:`Known_Problems_2.1.15`.
+This release fixes a build problem on Windows, see `Known_Problems_2.1.15`.
 
 .. _Release_Notes_2.1.15:
 
 Release 2.1.15
 --------------
 
-This release fixes the two problems decribed in :ref:`Known_Problems_2.1.14`.
+This release fixes the two problems decribed in `Known_Problems_2.1.14`.
 
 .. _Release_Notes_2.1.14:
 
@@ -47,7 +47,7 @@ Release 2.1.14
 --------------
 
 One (major) bug in the sequencer runtime was fixed and two minor build problems.
-See :ref:`Known_Problems_2.1.13` for a description of these problems.
+See `Known_Problems_2.1.13` for a description of these problems.
 
 Some more details:
 
@@ -110,7 +110,7 @@ A number of improvements to the documentation have been made, too:
 Release 2.1.13
 --------------
 
-:ref:`Known_Problems_2.1.13`
+`Known_Problems_2.1.13`
 
 User relevant changes:
 
@@ -191,7 +191,7 @@ Documentation changes:
 Release 2.1.12
 --------------
 
-:ref:`Known_Problems_2.1.12`
+`Known_Problems_2.1.12`
 
 seq: initial wait for channel connect now uses exponential backoff
 
@@ -232,7 +232,7 @@ Release 2.1.11
 Release 2.1.10
 --------------
 
-:ref:`Known_Problems_2.1.10`
+`Known_Problems_2.1.10`
 
 snc:
 
@@ -275,14 +275,14 @@ This is the only change w.r.t. 2.1.8.
 Release 2.1.8
 -------------
 
-* Fixed the two bugs listed under :ref:`Known_Problems_2.1.7`.
+* Fixed the two bugs listed under `Known_Problems_2.1.7`.
 
 .. _Release_Notes_2.1.7:
 
 Release 2.1.7
 -------------
 
-:ref:`Known_Problems_2.1.7`
+`Known_Problems_2.1.7`
 
 Functional changes
 
@@ -345,7 +345,7 @@ Minor stuff
 Release 2.1.6
 -------------
 
-:ref:`Known_Problems_2.1.6`
+`Known_Problems_2.1.6`
 
 Bug fixes:
 
@@ -354,16 +354,16 @@ Bug fixes:
   This was a subtle concurrency bug discovered and analyzed by Lewis Muir:
   if pvPutComplete or pvGetComplete are used inside a when-clause, waking
   up the state set before signalling completion could result in a deadlock.
-  See :ref:`Known_Problems_2.1.5` for details.
+  See `Known_Problems_2.1.5` for details.
 
 * fixed 'lost events' bug (safe mode only), an even subtler bug which
-  happened only in safe mode. See :ref:`Known_Problems_2.1.5` for details.
+  happened only in safe mode. See `Known_Problems_2.1.5` for details.
   Thanks to Lewis Muir for providing a test case that makes this bug
   reproducible.
 
   The fix is to make efTest and efTestAndClear synchronization points
   for all variables sync'ed to the event flag. See the updated sections
-  in the reference (under :c:func:`efTest` and :c:func:`efTestAndClear`).
+  in the reference (under `efTest` and `efTestAndClear`).
 
 * fix pvPut/pvGet hanger on disconnect
 
@@ -447,7 +447,7 @@ Docs:
 Release 2.1.5
 -------------
 
-:ref:`Known_Problems_2.1.5`
+`Known_Problems_2.1.5`
 
 * fixed two bugs in pvAssign:
 
@@ -480,7 +480,7 @@ Release 2.1.5
 Release 2.1.4
 -------------
 
-:ref:`Known_Problems_2.1.4`
+`Known_Problems_2.1.4`
 
 * snc: fixed parser stack overflow
 
@@ -641,7 +641,7 @@ depending on architecture and C compiler, some numeric types like
 This version of the sequencer offers a clean and simple solution to the
 problem. However, this solution is not completely backwards compatible. You
 must therefore explicitly enable it with a command line option
-:option:`+s`, for :ref:`safe mode`. In safe mode, program semantics
+`+s`, for `safe mode`. In safe mode, program semantics
 deviates from the traditional one, in that state sets are completely
 isolated against each other and against updates from the CA layer.
 Assignment to a variable (even indirect, via pointers or C functions) never
@@ -649,7 +649,7 @@ directly affect the values as seen by other state sets. The new value must
 instead be published explicitly by calling pvPut on the variable.
 
 To facilitate internal communication between state sets, variables assigned
-to an empty string are treated as anonymous pseudo PVs, see :ref:`anonymous
+to an empty string are treated as anonymous pseudo PVs, see `anonymous
 pvs` for details. For anonymous PVs, pvPut directly writes to an internal
 buffer, bypassing the CA layer. Other state sets will see such an explicit
 update only if they themselves perform a pvGet on them, or else --if the
@@ -716,8 +716,8 @@ Instead, the standard fixed size integer types from int8_t up to uint32_t
 can be used in SNL code. For compatibility these are currently translated to
 the corresponding epicsInt8...epicsUInt32.
 
-The main procedure (:option:`+m`) is no longer hard-coded, so you can easily
-provide your own version. See :ref:`Building a Stand-alone Program`.
+The main procedure (`+m`) is no longer hard-coded, so you can easily
+provide your own version. See `Building a Stand-alone Program`.
 
 In the sequencer library interface, bitMask is now a synonym for epicsUInt32,
 not unsigned long.
@@ -756,7 +756,7 @@ The extensions are mostly conservative: existing SNL programs should
 compile and work just as with 2.0.12 (with one exception, see next
 paragraph). This is not easy to guarantee, however, as there are many
 corner cases where the manual is imprecise and the code was convoluted
-(and possibly erroneous), especially with regard to the :token:`syncq`
+(and possibly erroneous), especially with regard to the `syncq`
 feature.
 
 There is one (mis-)feature I have removed: 2.0.x  allowed more than one
@@ -784,24 +784,24 @@ benjamin.franksen@bessy.de).
 Local Definitions
 ~~~~~~~~~~~~~~~~~
 
-Here, "definitions" is to be understood as in the :ref:`SNL reference
-<Definitions>`, i.e. :token:`option`\s, :token:`variable declarations
-<declaration>`, :token:`assign`, :token:`monitor`, :token:`sync`, and
-:token:`syncq` constructs. These definitions have to appear (in any order)
+Here, "definitions" is to be understood as in the `SNL reference
+<Definitions>`, i.e. `option`\s, `variable declarations
+<declaration>`, `assign`, `monitor`, `sync`, and
+`syncq` constructs. These definitions have to appear (in any order)
 right after the opening brace and before any other content (code,
 states,transitions), similar as in C. However, not every definition is
 allowed everywhere:
 
-- :token:`option` definitions are restricted just as before, i.e. at the
+- `option` definitions are restricted just as before, i.e. at the
   top level (for program options) and inside a state (for state options)
-- :token:`assign`, :token:`monitor`, :token:`sync`, and :token:`syncq`
-  can appear inside a :token:`state_set` and
-  inside a :token:`state`, in addition to the  top level
+- `assign`, `monitor`, `sync`, and `syncq`
+  can appear inside a `state_set` and
+  inside a `state`, in addition to the  top level
 - foreign declarations (see below) and event flag declarations are
   restricted to the top-level
 - variable declarations can appear at the start of any block
-  (:token:`state_set`, :token:`state`, :token:`when`, :token:`entry`,
-  :token:`exit`, and compound statement :token:`block`\s);
+  (`state_set`, `state`, `when`, `entry`,
+  `exit`, and compound statement `block`\s);
   their scope is always limited (statically) to the smallest enclosing
   block
 

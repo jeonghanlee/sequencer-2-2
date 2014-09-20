@@ -37,4 +37,4 @@ Welcome to the home page of the **EPICS Sequencer** project.
    KnownProblems
    Plans
 
-.. :ref:`genindex`
+.. `genindex`

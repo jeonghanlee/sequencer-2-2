@@ -12,23 +12,23 @@ The Sequencer is `free software`_, licensed under the `EPICS Open License`_.
 
 For further information
 
-* take a look at the :ref:`Overview` to get a first impression of the
+* take a look at the `Overview` to get a first impression of the
   Sequencer's features.
 
 * This `talk about version 2.1 of the Sequencer`_ contains a short
   introduction to SNL, including a walk through a simple example program to
   illustrate the basic concepts.
 
-* A (slightly out-dated) :doc:`Tutorial` is also available,
+* A (slightly out-dated) `Tutorial` is also available,
 
-* as well as a detailed :doc:`Reference`,
+* as well as a detailed `Reference`,
 
-* and instructions for download and :doc:`Installation`.
+* and instructions for download and `Installation`.
 
-* All of these are part of the :doc:`Manual`.
+* All of these are part of the `Manual`.
 
 This page describes version 2.2 and the documentation, in particular the
-language reference, has been updated to reflect the :ref:`changes between 2.1 and
+language reference, has been updated to reflect the `changes between 2.1 and
 2.2 <Release_Notes_2.2.0>`. For older versions, please refer to `the old version of this page`_.
 
 .. _domain specific programming language: http://en.wikipedia.org/wiki/Domain-specific_programming_language

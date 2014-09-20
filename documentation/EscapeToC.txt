@@ -14,7 +14,7 @@ Escape to C Code
 
 Because the SNL does not support the full C language, C code may be
 escaped in the program. The escaped code is not compiled by
-:program:`snc`, instead it is literally copied to the generated C code.
+`snc`, instead it is literally copied to the generated C code.
 There are two escape methods:
 
 #. Any code between ``%%`` and the next newline character is escaped.
@@ -63,9 +63,9 @@ if the header contains macro definitions, these will not be in effect
 when the rest of the C code block gets compiled.
 
 You can defer interpretation of a preprocessor directive until after
-:program:`snc` has compiled the code to C, by ensuring that some extra
+`snc` has compiled the code to C, by ensuring that some extra
 non-blank characters appear in front of the ``#`` sign, so
-:program:`cpp` does not recognize the directive. For instance ::
+`cpp` does not recognize the directive. For instance ::
 
    %%#include <abcLib.h>
 
@@ -81,7 +81,7 @@ Escaped C code can appear in many places in the SNL program. But only
 code that appears at the top level, i.e. outside any SNL code block will
 be placed at the C top level. So, C *function definitions* must be
 placed there; this means either inside the definitions section
-(:token:`global_defns`) or at the end of the program. For example::
+(`global_defns`) or at the end of the program. For example::
 
    program example
    ...
@@ -109,7 +109,7 @@ SNL program is if your function accesses global SNL variables.
 Calling PV Functions from C
 ---------------------------
 
-The built-in SNL functions such as :c:func:`pvGet` cannot be directly
+The built-in SNL functions such as `pvGet` cannot be directly
 used in user-supplied functions. However, most of the built-in
 functions have a C language equivalent with the same name, except
 that the prefix ``seq_`` is added (e.g. ``pvGet`` becomes
@@ -117,10 +117,10 @@ that the prefix ``seq_`` is added (e.g. ``pvGet`` becomes
 identifying the calling state set, which is available in action code
 under the name ``ssId``. If a process variable name is required, the
 index of that variable must be supplied. This index is obtained via
-the :c:func:`pvIndex` function (which must be called from SNL code,
+the `pvIndex` function (which must be called from SNL code,
 not C code, to work).
 
-If the program is compiled with the :option:`+r` option, user
+If the program is compiled with the `+r` option, user
 functions cannot directly access SNL variables, not even global ones.
 Instead, variables (or their address) should be passed to user
 functions as arguments. Alternatively, you can pass the ``pVar``
@@ -138,7 +138,7 @@ file is always included by the generated C code.
 Variable Modification for Reentrant Option
 ------------------------------------------
 
-If the reentrant option (:option:`+r`) is specified to :program:`snc`
+If the reentrant option (`+r`) is specified to `snc`
 then all variables are made part of a structure. Suppose we have the
 following top-level declarations in the SNL program::
 
@@ -164,12 +164,12 @@ Reference to variable ``sw1`` is made as ::
 
    pVar->sw1
 
-This conversion is automatically performed by :program:`snc` for all SNL
+This conversion is automatically performed by `snc` for all SNL
 statements, but you will have to handle escaped C code yourself.
 
 .. note::
 
-   :ref:`safe mode` (enabled with the :option:`+s` option) implies
+   `safe mode` (enabled with the `+s` option) implies
    reentrant mode. In safe mode, each state set has its own copy of the
    ``UserVar`` struct. You can operate on its members in any way you like,
    including taking the address of variables and passing them to C

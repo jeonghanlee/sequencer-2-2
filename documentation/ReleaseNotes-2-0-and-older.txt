@@ -285,7 +285,7 @@ Replaced direct channel access calls with new PV API
    but also other message systems.
 
 Added optional generation of main program
-   The new :option:`+m` (main) option generates a C main program whose
+   The new `+m` (main) option generates a C main program whose
    single argument is a list of macro assignments.
 
    When this option is enabled, the main thread reads from standard
@@ -296,38 +296,38 @@ New Language Features
 ^^^^^^^^^^^^^^^^^^^^^
 
 Entry handler
-   A one-off :token:`entry` handler can be supplied (c.f. the
-   existing :token:`exit` handler). This is called once, at sequencer
+   A one-off `entry` handler can be supplied (c.f. the
+   existing `exit` handler). This is called once, at sequencer
    start-up, in the context of the first state set, before the
    remaining state set threads have been created. See
-   :ref:`GlobalEntryExit`.
+   `GlobalEntryExit`.
 
 Entry and exit actions
-   The :token:`entry` block of a state is executed each time the state is
-   entered; the :token:`exit` block is executed each time the state is left.
+   The `entry` block of a state is executed each time the state is
+   entered; the `exit` block is executed each time the state is left.
    Note that these blocks are associated with a state and are not the
    same as the one-off entry and exit handlers. See
-   :ref:`state entry and exit blocks`.
+   `state entry and exit blocks`.
 
 State options
-   :option:`-t`, :option:`-e` and :option:`-x` are now recognized
-   options within the scope of a state. :option:`-t` inhibits the
-   "timer reset" on re-entry to a state from itself; :option:`-e` (for
-   "entry") is used with the new :token:`entry` block, and forces the
-   :token:`entry` statements to be executed on all entries to a state, even
-   if from the same state; :option:`-x` (for "exit") is complementary
-   to :option:`-e`, but for the new :token:`exit` block. See
-   :ref:`StateOption`.
+   `-t`, `-e` and `-x` are now recognized
+   options within the scope of a state. `-t` inhibits the
+   "timer reset" on re-entry to a state from itself; `-e` (for
+   "entry") is used with the new `entry` block, and forces the
+   `entry` statements to be executed on all entries to a state, even
+   if from the same state; `-x` (for "exit") is complementary
+   to `-e`, but for the new `exit` block. See
+   `StateOption`.
 
 Queueable monitors
    Monitor messages can be queued and then dequeued at leisure. This
    means that monitor messages are not lost, even when posted rapidly
-   in succession. This feature is supported by new :token:`syncq`,
-   :c:func:`pvGetQ` and :c:func:`pvFreeQ` language elements, and a new
+   in succession. This feature is supported by new `syncq`,
+   `pvGetQ` and `pvFreeQ` language elements, and a new
    ``seqQueueShow`` routine. When SNL arrays are used, a single queue
    is shared by the process variables associated with the
    elements of the array, which can be useful for parallel control. See
-   :ref:`QueuingMonitors` and :token:`syncq`.
+   `QueuingMonitors` and `syncq`.
 
 .. _Device support:
 
@@ -335,50 +335,50 @@ Device support
    An device support module has been added. This allows EPICS records
    to reference sequencer internals. At present this is very basic
    and can only return state-set names. See
-   :ref:`Verifyingtheinstallation` for a well-hidden example (look for
+   `Verifyingtheinstallation` for a well-hidden example (look for
    ``caget ss0``).
 
 .. _Local variables:
 
 Local variables
    SNL does not support the declaration of local variables. However,
-   the C code generated for a :token:`when` clause is now placed within an
+   the C code generated for a `when` clause is now placed within an
    extra level of braces and the C escape mechanism can be used to
-   declare a local variable. See :ref:`variable scope`.
+   declare a local variable. See `variable scope`.
 
 More functions are safe in action code
-   In previous versions, some functions, e.g. :c:func:`pvPut`, have acquired
-   a resource lock and others, e.g. :c:func:`efTestAndClear`, have not. Those
+   In previous versions, some functions, e.g. `pvPut`, have acquired
+   a resource lock and others, e.g. `efTestAndClear`, have not. Those
    that didn't were intended for use in action code and those that did
-   not were intended for use in :token:`when` clauses. This was confusing
+   not were intended for use in `when` clauses. This was confusing
    and dangerous. All such functions now acquire a mutex (that can be
    taken recursively).
 
 Asynchronous puts
-   :c:func:`pvPut` can now put process variables asynchronously by using an
+   `pvPut` can now put process variables asynchronously by using an
    extra ``ASYNC`` argument. Completion can be tested using the new
-   :c:func:`pvPutComplete`. Arrays are supported (so :c:func:`pvPutComplete` can be
+   `pvPutComplete`. Arrays are supported (so `pvPutComplete` can be
    used to test whether a set of puts has completed). See also
-   :ref:`AsynchronousUseofpvPut`.
+   `AsynchronousUseofpvPut`.
 
 Synchronous/asynchronous override on gets and puts
-   :c:func:`pvGet` and :c:func:`pvPut` both accept an optional ``SYNC`` or
-   ``ASYNC`` argument that, for :c:func:`pvGet`, overrides the default as set
-   using the :option:`-a` option and, for :c:func:`pvPut`, overrides the
+   `pvGet` and `pvPut` both accept an optional ``SYNC`` or
+   ``ASYNC`` argument that, for `pvGet`, overrides the default as set
+   using the `-a` option and, for `pvPut`, overrides the
    default synchronous behavior.
 
 Sequencer deletion re-written
    Sequencer deletion has been completely re-written. You can no longer
    delete a sequencer by deleting one of its tasks. Instead you must
    use the new ``seqStop`` routine. See
-   :ref:`Stopping the State Program Tasks`.
+   `Stopping the State Program Tasks`.
 
 efClear can wake up state sets
    Clearing an event flag can now wake up state sets that reference
-   the event flag in :token:`when` tests.
+   the event flag in `when` tests.
 
 More C syntax is supported
-   The :token:`to` in :token:`assign`, :token:`sync` and :token:`syncq` statements is now
+   The `to` in `assign`, `sync` and `syncq` statements is now
    optional.
 
    Compound expressions such as ``i=1,j=2`` (often used in ``for``
