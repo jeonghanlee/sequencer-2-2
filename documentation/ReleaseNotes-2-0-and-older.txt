@@ -342,7 +342,7 @@ Device support
 
 Local variables
    SNL does not support the declaration of local variables. However,
-   the C code generated for a `when` clause is now placed within an
+   the C code generated for a `transition` clause is now placed within an
    extra level of braces and the C escape mechanism can be used to
    declare a local variable. See `variable scope`.
 
@@ -350,7 +350,7 @@ More functions are safe in action code
    In previous versions, some functions, e.g. `pvPut`, have acquired
    a resource lock and others, e.g. `efTestAndClear`, have not. Those
    that didn't were intended for use in action code and those that did
-   not were intended for use in `when` clauses. This was confusing
+   not were intended for use in `transition` clauses. This was confusing
    and dangerous. All such functions now acquire a mutex (that can be
    taken recursively).
 
@@ -375,7 +375,7 @@ Sequencer deletion re-written
 
 efClear can wake up state sets
    Clearing an event flag can now wake up state sets that reference
-   the event flag in `when` tests.
+   the event flag in `transition` tests.
 
 More C syntax is supported
    The `to` in `assign`, `sync` and `syncq` statements is now

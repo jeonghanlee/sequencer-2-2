@@ -192,4 +192,4 @@ command::
 
   epics> seqStop 0x88c1da8
 
-A program can also terminate itself, see `Transitions`.
+A program can also terminate itself, see `transitions`.

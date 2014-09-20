@@ -81,7 +81,7 @@ Escaped C code can appear in many places in the SNL program. But only
 code that appears at the top level, i.e. outside any SNL code block will
 be placed at the C top level. So, C *function definitions* must be
 placed there; this means either inside the definitions section
-(`global_defns`) or at the end of the program. For example::
+(`initial_defns`) or at the end of the program. For example::
 
    program example
    ...

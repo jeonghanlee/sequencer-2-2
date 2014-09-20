@@ -218,7 +218,7 @@ Next we add the following lines after the first state set::
   }
 
 The above example exhibits several concepts. First, note that the
-`when` clause in state ``init`` contains an empty event
+`transition` clause in state ``init`` contains an empty event
 expression. This means unconditional execution of the transition. The
 first state in each state set is always the initial state, so we give
 it the name ``init``. From this first state there is an immediate
@@ -467,7 +467,7 @@ Synchronizing State Sets with Event Flags
 
 State sets within a program may be synchronized through the use
 of event flags. Typically, one state set will set an event flag, and
-another state set will test that event flag within a `when`
+another state set will test that event flag within a `transition`
 clause. The `sync` statement may also be used to associate an
 event flag with a process variable that is being monitored. In that
 case, whenever a monitor is delivered, the corresponding event flag is
@@ -477,9 +477,9 @@ being tested is an array or when it can have multiple values and an
 action must occur for any change.
 
 This example shows a state set that forces a low limit always to be
-less than or equal to a high limit. The first `when` clause
+less than or equal to a high limit. The first `transition` clause
 fires when the low limit changes and someone has attempted to set it
-above the high limit. The second `when` clause fires when the
+above the high limit. The second `transition` clause fires when the
 opposite situation occurs.
 
 ::
@@ -521,7 +521,7 @@ element of that array.
 Queuing Monitors
 ----------------
 
-Neither testing the value of a monitored channel in a `when`
+Neither testing the value of a monitored channel in a `transition`
 clause nor associating the channel with an event flag and then testing
 the event flag can guarantee that the sequence is aware of all
 monitors posted on the channel. Often this doesn't matter, but
@@ -538,7 +538,7 @@ transitions to 1 and then back to 0. Note the use of `pvFlushQ`
 to clear the queue before sending the command. Note also that, if
 `pvGetQ` hadn't been used then the active flag's transitions
 from 0 to 1 and back to 0 might both have occurred before the
-`when` clause in the ``sent`` state fired::
+`transition` clause in the ``sent`` state fired::
 
   long command; assign command to "commandVar";
 
@@ -636,7 +636,7 @@ to manage a set of parallel commands.
 
 `pvPutComplete` also supports optional arguments to wake up
 the state set as each put completes. The following could be inserted
-before the first `when` clause in the ``active`` state above.
+before the first `transition` clause in the ``active`` state above.
 The ``TRUE`` argument causes `pvPutComplete` to return
 ``TRUE`` when any command completed (rather than only when all
 commands complete). The ``done`` argument is the address of a ``long``
@@ -669,7 +669,7 @@ the same as `pvChannelCount`)::
 These routines are described in `BuiltinFunctions`. If a variable
 disconnects or re-connects during execution of a program, the
 sequencer updates the connection status appropriately; this can be
-tested in a `when` clause, as in::
+tested in a `transition` clause, as in::
 
   when (pvConnectCount() < pvAssignCount()) {
   } state disconnected
@@ -728,26 +728,26 @@ What's Happening at Run Time
 
 At run time the sequencer blocks until something "interesting" occurs, where
 "interesting" means things like receiving a monitor from a PV used in a
-`when` clause, an event flag changing state, or a delay timer
-expiring. See section `Transitions` in the `Reference` for a
+`transition` clause, an event flag changing state, or a delay timer
+expiring. See section `transitions` in the `Reference` for a
 detailed list.
 
-The sequencer then scans the list of `when` statements for the
-current state and evaluates each expression in turn. If a `when`
-expression evaluates to non-zero the actions within that `when` block
+The sequencer then scans the list of `transition` statements for the
+current state and evaluates each expression in turn. If a `transition`
+expression evaluates to non-zero the actions within that `transition` block
 are executed and the sequencer enters the state specified by that
-`when` statement. The sequencer then blocks again waiting for
+`transition` statement. The sequencer then blocks again waiting for
 something "interesting" to happen.
 
 Note, however, that whenever a new state is entered, the corresponding
-`when` conditions for that state are evaluated once without first
+`transition` conditions for that state are evaluated once without first
 waiting for events.
 
 A Common Misconception
 ^^^^^^^^^^^^^^^^^^^^^^
 
 A common misconception among new SNL programmers is that the sequencer
-somehow blocks inside the `delay` function within `when`
+somehow blocks inside the `delay` function within `transition`
 statements. This interpretation of the `delay` function is
 incorrect but understandable given the name. The `delay` function
 does not block at all, it merely compares its argument with a timer that
@@ -755,7 +755,7 @@ is reset whenever the state is entered (from the same or another state),
 and then returns the result (a boolean value). Any blocking (in case the
 returned value is FALSE and no other condition fires) is done outside of
 the `delay` function by the run time system. You might want to
-think of the operation as `elapsed(s)` rather than `delay(s)`.
+think of the operation as ``elapsed(s)`` rather than ``delay(s)``.
 
 If your action statements have any sort of polling loops or calls to
 ``epicsThreadSleep`` you should reconsider your design. The presence

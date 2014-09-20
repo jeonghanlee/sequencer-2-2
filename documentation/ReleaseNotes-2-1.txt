@@ -800,7 +800,7 @@ allowed everywhere:
 - foreign declarations (see below) and event flag declarations are
   restricted to the top-level
 - variable declarations can appear at the start of any block
-  (`state_set`, `state`, `when`, `entry`,
+  (`state_set`, `state`, `transition`, `entry`,
   `exit`, and compound statement `block`\s);
   their scope is always limited (statically) to the smallest enclosing
   block

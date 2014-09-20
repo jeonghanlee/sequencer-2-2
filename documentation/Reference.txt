@@ -181,7 +181,7 @@ run in the context of the first state set thread.
 
 (Global entry and exit blocks should not be confused with
 `state entry and exit blocks`, which have the same syntax but are
-executed at each transition from/to a new state.)
+executed at each `transition` from/to a new state.)
 
 The entry or exit code is a regular SNL code block and thus can contain local
 variable declarations. Global entry code is always executed after initiating
@@ -860,7 +860,7 @@ State
 A state set contains one or more states. Each state is defined by the
 keyword "state", followed by the name of the state (and identifier),
 followed by an opening brace, optionally state local definitions, an
-optional entry block, a list of transitions, an optional exit block,
+optional entry block, a list of `transitions`, an optional exit block,
 and finally a closing brace.
 
 State names must be unique in the sate set to which they belong.
@@ -951,12 +951,8 @@ block that determines the next state.
 .. note:: State options can be used to control whether entry/exit blocks
    get executed even if the new state is the same as the current one.
 
-.. _Transitions:
-
 Transitions
 ~~~~~~~~~~~
-
-.. _when:
 
 .. productionlist::
    transitions: `transitions` `transition`
@@ -2235,7 +2231,7 @@ of all running programs. For instance ::
 .. c:function::
    void seqStop(epicsThreadId threadID)
 
-Initiate a clean program exit. Running state transitions are
+Initiate a clean program exit. Running state `transitions` are
 completed, then all state set threads exit, all channels are
 disconnected, and finally allocated resources are freed.
 

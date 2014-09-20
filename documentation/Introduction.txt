@@ -14,7 +14,7 @@ Overview
 In SNL you structure your program as a set of concurrently running finite
 state machines, called `state_sets`. State sets are declared by
 listing their `states`, which in turn define under which condition
-(`when`) the state set reaches another state and what the program
+(`when <transition>`) the state set reaches another state and what the program
 should do once the transition is triggered.
 
 SNL allows you to bind program variables to externally defined *process
