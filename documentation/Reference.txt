@@ -1237,6 +1237,7 @@ code and defined in the header files pvAlarm.h and seqCom.h.
 The pvStat and pvSevr constants are now known to the compiler, so you
 no longer have to declare them as ``foreign`` in the SNL code.
 
+.. _pvStat:
 
 pvStat
 ^^^^^^
@@ -1273,6 +1274,7 @@ pvStat
        pvStatWRITE_ACCESS = 21
    } pvStat;
 
+.. _pvSevr:
 
 pvSevr
 ^^^^^^
@@ -1292,9 +1294,10 @@ pvSevr
    } pvSevr;
 
 
+.. _compType:
+
 compType
 ^^^^^^^^
-
 ::
 
    enum compType {
@@ -1309,6 +1312,7 @@ compType
    :program:`snc`). The constant ``DEFAULT`` is for use in C code (to
    represent a missing optional argument).
 
+.. _seqBool:
 
 seqBool
 ^^^^^^^
@@ -1320,6 +1324,7 @@ seqBool
    #define TRUE   1
    #define FALSE  0
 
+.. _NOEVFLAG:
 
 NOEVFLAG
 ^^^^^^^^
