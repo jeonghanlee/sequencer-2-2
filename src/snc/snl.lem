@@ -342,19 +342,21 @@ exit(r) ::= .					{ r = 0; }
 transitions(r) ::= transitions(xs) transition(x).{ r = link_node(xs, x); }
 transitions(r) ::= transition(x).		{ r = x; }
 
-transition(r) ::= WHEN(t) LPAREN opt_expr(c) RPAREN block(b) STATE NAME(n). {
+transition(r) ::= WHEN(t) LPAREN condition(c) RPAREN block(b) STATE NAME(n). {
 	t.str = n.str;
 	r = node(D_WHEN, t, c, b);
 }
-transition(r) ::= WHEN(t) LPAREN opt_expr(c) RPAREN block(b) EXIT. {
+transition(r) ::= WHEN(t) LPAREN condition(c) RPAREN block(b) EXIT. {
 	t.str = 0;
 	r = node(D_WHEN, t, c, b);
 }
-transition(r) ::= WHEN(t) LPAREN opt_expr(c) RPAREN block(b) error. {
+transition(r) ::= WHEN(t) LPAREN condition(c) RPAREN block(b) error. {
 	t.str = 0;
 	r = node(D_WHEN, t, c, b);
 	report("expected 'state' or 'exit'\n");
 }
+
+condition(r) ::= opt_expr(x).			{ r = x; }
 
 block(r) ::= LBRACE(t) block_defns(ds) statements(xs) RBRACE. {
 	r = node(S_CMPND, t, ds, xs);
