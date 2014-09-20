@@ -30,10 +30,8 @@ There are two notable limitations:
 
 * Using C *type aliases* (defined in C with ``typedef``) is allowed, but you
   must prefix the type name with the new keyword ``typename`` (which I
-  borrowed from C++). Supporting typedefs directly would make the
-  implementation of the parse *much* more complex, because with typedefs the
-  grammar is no longer context free. (C compilers based on parser generators
-  must use very dirty and brittle tricks to be able support this).
+  borrowed from C++). Supporting foreign typedefs without any extra markup
+  as in C would require lots of extra effort which IMO is not justified.
 
 * There is only limited support for *defining* your own types (see `Type
   Definitions`_ below) and you cannot mix type definition with type usage
@@ -47,11 +45,11 @@ Other Foreign Entities
 
 A side effect of allowing indirect calls is that there is no longer any
 *syntactic* distinction between using functions and using variables. This
-means that issuing warnings just for the use of "undeclared" foreign
+means that issuing warnings just for the use of undeclared foreign
 *variables* is no longer possible. If they are still undeclared in the
 generated C code, the C compiler will warn you anyway. You can enable extra
-warnings (:option:`+W`, see `New Options`_ below) to get these warnings, but
-that will report foreign functions, too.
+warnings (:option:`+W`, see `New Option for Extra Warnings`_ below) to get
+these warnings, but that will report foreign functions, too.
 
 Due to these changes, the so called "foreign entity declarations",
 introduced in version 2.1, have become obsolete and are therefore
@@ -88,7 +86,7 @@ You can now define your own struct types in SNL (other type formers like
 union and enum are not yet supported). As usual the syntax is a (simplified:
 no bit fields) variant of the C syntax. This is currently not very useful,
 since there is no way to "assign" struct members to PVs. Lifting this
-limitation is closely related to allowing PV function arguments and
+limitation is closely related to passing channel arguments to functions and
 therefore postponed, too.
 
 Removed Keyword "connect"
@@ -101,17 +99,12 @@ the removal to a deprecation warning if it turns out that this seriously
 hurts people.
 
 
-New Options
-^^^^^^^^^^^
+New Option for Extra Warnings
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Two new options have been added:
-
-* option:`+p` (off by default) changes the semantics of certain pv functions
-  when called with multi-PV arrays, see `PV Functions and Multiply Assigned
-  Arrays`_ below.
-
-* option:`+W` (off by default) enables extra warnings, such as for (all!)
-  undeclared foreign entities.
+The new option:`+W` (off by default) enables extra warnings, that you
+normally don't want to see. Currently this warns you once for each foreign
+entity that appears in the program.
 
 
 Built-in Constants
@@ -125,6 +118,17 @@ treated as foreign entities. Particularly, using them no longer gives
 The *snc*-generated C code for built-in constants now uses the name of the
 constant, instead of its value. This makes the code a bit more readable and
 slightly simplifies code generation.
+
+The variables ``ssId`` and ``pVar`` are (somewhat irregularly) treated as
+built-in constants, too. This makes it possible to call C functions that
+take them as a parameter directly from inside SNL code without having to
+escape the call. That is, you can now write such calls as ::
+
+  my_c_fun(ssId, pVar, ...);
+
+instead of ::
+
+  %%my_c_fun(ssId, pVar, ...);
 
 
 Built-in Functions
@@ -185,14 +189,22 @@ This function now does substitution of program parameters (formerly
 sometimes called "macros") inside the PV name, exactly as in the assign
 clause.
 
+.. todo::
+
+  Should I revert that change? It could potentially break programs, even
+  though I doubt in practice anyone uses pvAssign to circumvent the
+  replacement because they use curly braces in PV names. Another issue is
+  that I'd very much like to move the sequencer to use the standard EPICS
+  macro replacement facility. Should I support $(...) alongside {...}?
+
 PV Functions and Multiply Assigned Arrays
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A long time wart of the sequencer, inherited from the 2.0 version, was the
 behaviour of built-in pv functions when you pass an array in which elements
-are assigned to separate PVs. In most cases this behaved as if you had
-passed in just the first element of the array, which is inconsistent and
-error-prone.
+are assigned to separate PVs. In most cases (except one, see below) this
+behaved as if you had passed in just the first element of the array, which
+is inconsistent and error-prone.
 
 However, existing programs might (perhaps without the author or maintainer
 being aware of it) rely on the current behaviour -- and silently breaking
@@ -201,33 +213,20 @@ error*. The error message contains a hint how the user can fix their program
 ("perhaps you meant to pass xxx[0]?") so that it retains its old behaviour.
 
 For some of the pv functions, operating on all contained PVs of a multi-PV
-array really is the most natural semantics. You can enable this with the new
-option :option:`+p` (the opposite
-:option:`-p` is the default). If :option:`+p` is in effect, then the
-following pv functions will operate on all contained PVs if called with a
-multi-PV array as argument:
+array would make sense if one would be willing to overload them. I decided
+against that and instead provide a number of new functions named
+"pvArray..." for that:
 
-* :c:func:`pvGetComplete`
-* :c:func:`pvMonitor`
-* :c:func:`pvPutComplete`
-* :c:func:`pvStopMonitor`
-* :c:func:`pvSync`
+* :c:func:`pvArrayGetComplete`
+* :c:func:`pvArrayMonitor`
+* :c:func:`pvArrayPutComplete`
+* :c:func:`pvArrayStopMonitor`
+* :c:func:`pvArraySync`
 
-Additionally, this is the behaviour for the two new functions:
-
-* :c:func:`pvGetCancel`
-* :c:func:`pvPutCancel`
-
-For all other functions, calling them with a multi-PV array argument gives a
-compile time error, regardless of whether :option:`+p` or :option:`-p` is in
-effect. At the moment this includes
-
-* :c:func:`pvGet`
-* :c:func:`pvPut`
-
-even though for these two functions operating on all contained PVs would
-perhaps make sense. A future version may support that or perhaps add new
-functions for this purpose.
+I may add ``pvArrayGet`` and ``pvArrayPut`` in the future. Especially for
+the :ref:`SYNC<compType>` variant, such functions could be implemented more
+efficiently than the semantically equivalent for loop over all elements of
+the array.
 
 pvGetComplete
 ~~~~~~~~~~~~~
@@ -269,19 +268,6 @@ New Built-in Functions pvGetCancel and pvPutCancel
 It is now possible to cancel and asynchronous get or put request by calling
 :c:func:`pvGetCancel` or :c:func:`pvPutCancel`, respectively.
 
-New Built-in Functions ssId and pVar
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Like pvIndex these are implemented as macros. They allow passing the
-similarly named implicit parameters to C functions directly from inside SNL
-code without having to escape the call. That is, you can now write such calls as
-::
-
-  my_c_fun(ssId(), pVar(), ...);
-
-instead of ::
-
-  %%my_c_fun(ssId, pVar, ...);
 
 Generated C Code
 ^^^^^^^^^^^^^^^^
