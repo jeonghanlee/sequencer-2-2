@@ -291,9 +291,9 @@ You can declare more than one variable in a single declaration (comma
 separated) and add pointer and array markers (subscripts) ad libitum as
 well as initializers.
 
-.. versionadded:: 2.2
+.. versionchanged:: 2.2
 
-Function declarations and initializers with type casts.
+   Function declarations and initializers with type casts.
 
 As in C, some combinations of type operators are not allowed, for
 instance because they are redundant (like declaring a function or array
@@ -363,25 +363,22 @@ parameter lists.
 Foreign Declarations
 ~~~~~~~~~~~~~~~~~~~~
 
-.. warning::
+.. versionadded:: 2.1
 
-   Foreign declarations are now deprecated. They might be removed in future
-   versions.
+.. deprecated:: 2.2
 
 .. productionlist::
    declaration: "foreign" `variables` ";"
    variables: `variable`
    variables: `variables` "," `variable`
 
-.. versionadded:: 2.1
-
 Foreign declarations are used to let the SNL compiler know about the
-existence of C variables or C preprocessor macros (without arguments)
+existence of C variables or C preprocessor macros (without parameters)
 that have been  defined outside the SNL program or in escaped C code. No
 warning will be issued if such a variable or macro is used in the
 program even if warnings are enabled.
 
-.. versionadded:: 2.2
+.. versionchanged:: 2.2
 
 It is no longer needed to declare struct or union members as foreign
 entities, since the parser no longer confuses them with variables. See
@@ -404,19 +401,22 @@ Basic Types
 .. productionlist::
    basetype: `prim_type`
    basetype: "evflag"
-   basetype: "void"
-   basetype: "enum" `identifier`
-   basetype: "struct" `identifier`
-   basetype: "union" `identifier`
-   basetype: "typename" `identifier`
 
 These are the allowed base types, of which you can declare variables,
 or pointers or arrays etc.
 
 .. versionadded:: 2.2
 
+.. productionlist::
+   basetype: "enum" `identifier`
+   basetype: "struct" `identifier`
+   basetype: "union" `identifier`
+   basetype: "typename" `identifier`
+   basetype: "void"
+
 You can use enumerations, structs, unions and typedefs in declarations
-and type expressions.
+and type expressions. The "void" type is also allowed, subject to the
+same restrictions as in C.
 
 .. note::
 
@@ -454,7 +454,7 @@ that does not exist in C. See subsection `Strings`_ below.
 
 .. versionadded:: 2.1
 
-Since the standard numeric types in C have implemenation defined size, fixed
+Since the standard numeric types in C have implementation defined size, fixed
 size integral types that correspond to the ones in the C99 standard have
 been added. However, int64_t and uint64_t are not supported because
 primitive types must correspond to the primitive EPICS types, and EPICS does
@@ -644,8 +644,8 @@ of the form ::
 
 (i.e. an identifier enclosed in curly braces) are expanded to the value of
 the program parameter *if* a corresponding parameter is defined (either
-inside the program or as extra argument on invocation); otherwise no
-expansion takes place.
+inside the program or as an extra argument on invocation, see `seq`);
+otherwise no expansion takes place.
 
 If the process variable name (after expansion) is an empty string, then no
 actual assignment to any process variable is performed, but the variable
@@ -967,7 +967,7 @@ then the name of the target state (which must be a state of the same state
 set).
 
 The condition must be a valid boolean expression (see `Expressions`_). If
-there is no condition given, it defaults to ``TRUE`` (1).
+there is no condition given, it defaults to `TRUE <seqBool>` (1).
 
 Conditions are evaluated
 
@@ -976,7 +976,7 @@ Conditions are evaluated
 #. when an event happens (see below).
 
 Evaluation proceeds in the order in which the `transitions` appear in the
-program. If one of the `condition`\s evaluates to ``TRUE``, the corresponding
+program. If one of the `condition`\s evaluates to `TRUE <seqBool>`, the corresponding
 action block is executed, any exit block of the state is executed, and the
 state changes to the specified new state. Otherwise, the state set waits
 until an event happens. 
@@ -1034,8 +1034,6 @@ Statements
    statements: 
    statement: "break" ";"
    statement: "continue" ";"
-   statement: "return" `opt_expr` ";"
-   statement: "state" `identifier` ";"
    statement: `c_code`
    statement: `block`
    statement: "if" "(" `comma_expr` ")" `statement`
@@ -1050,12 +1048,18 @@ the switch/case statement.
 
 .. versionadded:: 2.1
 
+.. productionlist::
+   statement: "state" `identifier` ";"
+
 The *state change statement* is not borrowed from C; it is only available
 in the action block of a state `transition` and has the effect
 of immediately jumping out of the action block, overriding the statically
 specified new state (given after the block) with its state argument.
 
 .. versionadded:: 2.2
+
+.. productionlist::
+   statement: "return" `opt_expr` ";"
 
 The return statement can be used only inside `Function Definitions`_.
 
@@ -1100,11 +1104,6 @@ These are all left associative.
    not an identifier. The extra rule allows calls to the standard
    library function ``exit``.
 
-.. versionadded:: 2.2
-
-.. productionlist::
-   expr: "sizeof" "(" `type_expr` ")"
-
 Prefix Operators
 ~~~~~~~~~~~~~~~~
 
@@ -1120,12 +1119,11 @@ Prefix Operators
 
 Prefix operators are right-associative.
 
-.. versionadded:: 2.2
-
-Type casts and sizeof operator:
+.. versionadded:: 2.2 Type casts and sizeof operator:
 
 .. productionlist::
    expr: "(" `type_expr` ")" `expr`
+   expr: "sizeof" "(" `type_expr` ")"
    expr: "sizeof" `expr`
 
 Binary Operators
@@ -1248,10 +1246,9 @@ code and defined in the header files pvAlarm.h and seqCom.h.
 The pvStat and pvSevr constants are now known to the compiler, so you
 no longer have to declare them as ``foreign`` in the SNL code.
 
-.. _pvStat:
+.. c:type:: pvStat
 
-pvStat
-^^^^^^
+An enumeration for status values.
 
 ::
 
@@ -1285,10 +1282,7 @@ pvStat
        pvStatWRITE_ACCESS = 21
    } pvStat;
 
-.. _pvSevr:
-
-pvSevr
-^^^^^^
+.. c:type:: pvSevr
 
 ::
 
@@ -1304,11 +1298,8 @@ pvSevr
        pvSevrINVALID = 3
    } pvSevr;
 
+.. c:type:: compType
 
-.. _compType:
-
-compType
-^^^^^^^^
 ::
 
    enum compType {
@@ -1319,14 +1310,11 @@ compType
 
 .. note::
 
-   Only ``SYNC`` and ``ASYNC`` are SNL built-in constants (i.e. known to
-   `snc`). The constant ``DEFAULT`` is for use in C code (to
-   represent a missing optional argument).
+   Only `SYNC <compType>` and `ASYNC <compType>` are SNL built-in constants
+   (i.e. known to `snc`). The constant `DEFAULT <compType>` is for use in C
+   code (to represent a missing optional argument).
 
-.. _seqBool:
-
-seqBool
-^^^^^^^
+.. c:type:: seqBool
 
 ::
 
@@ -1335,10 +1323,7 @@ seqBool
    #define TRUE   1
    #define FALSE  0
 
-.. _NOEVFLAG:
-
-NOEVFLAG
-^^^^^^^^
+.. c:macro:: NOEVFLAG
 
 ::
 
@@ -1358,12 +1343,18 @@ the compiler performs some special interpretation of the arguments to these
 functions. Using their C equivalents in escaped C code is possible but
 subject to special rules.
 
-An argument specified as *assigned_var* refers to any SNL variable or
+For documentation purposes only, we assign special pseudo-types to some of
+the parameters of built-in functions. Note that these are not valid SNL types.
+
+.. c:type:: channel
+
+A parameter with this type means the function expects an SNL variable or
 array element that has been assigned to a (possibly anonymous) process
-variable. The compiler statically checks this. Similarly, *queued_var*
-refers to a variable that has been assigned to a PV and also associated
-with an event queue with the `syncq` clause. This is also
-statically checked by the compiler.
+variable.
+
+A parameter with type ``channel[]`` means the function expects an array, of
+which the elements have been assigned to different (possibly anonymous)
+process variables.
 
 Several of these functions are intended to be called only from
 `transition` clauses or only from action code. If the compiler allows
@@ -1375,7 +1366,7 @@ delay
 ^^^^^
 
 .. c:function::
-   boolean delay(double delay_in_seconds)
+   seqBool delay(double delay_in_seconds)
 
 Returns whether the specified time has elapsed since entering the
 state. It should be used only within a `transition` expression.
@@ -1385,7 +1376,7 @@ delay is measured from when the current state was entered from a different
 state (`-t <state option -t>`) or from any state, including itself (`+t <state option +t>`,
 the default).
 
-.. versionadded:: 2.2
+.. versionchanged:: 2.2
 
 It is no longer allowed to call this function outside the `condition` of a
 `transition` clause.
@@ -1394,22 +1385,30 @@ It is no longer allowed to call this function outside the `condition` of a
 pvPut
 ^^^^^
 
+.. versionchanged: 2.2 optional timeout parameter
+
 .. c:function::
-   pvStat pvPut(assigned_var)
-   pvStat pvPut(assigned_var, SYNC)
-   pvStat pvPut(assigned_var, SYNC, timeout)
-   pvStat pvPut(assigned_var, ASYNC)
+   pvStat pvPut(channel ch, compType mode = DEFAULT, double timeout = 10.0)
 
-Puts (or writes) the value of an SNL variable to the underlying process
-variable. Returns the status from the PV layer (e.g. ``pvStatOK`` for
-success).
+Puts (or writes) the value of ``ch`` to the process variable it has been
+assigned to. Returns the status from the PV layer (e.g. `pvStatOK <pvStat>`
+for success).
 
-By default, `pvPut` is un-confirmed "fire and forget";
-completion must be inferred by other means. The optional ``SYNC``
-argument causes it to block on completion with a hard-coded timeout
-of 10s. The optional ``ASYNC`` argument allows the program to
-continue but still check for completion via a subsequent call to
-`pvPutComplete` (typically in a `condition`).
+By default, i.e. with no optional arguments, `pvPut` is un-confirmed "fire
+and forget"; completion must be inferred by other means. An optional second
+argument can change this default:
+
+* `SYNC <compType>` causes it to block the state set until completion. This
+  mode is called *synchronous*.
+
+* `ASYNC <compType>` allows the state set to continue but still check for
+  completion via a subsequent call to `pvPutComplete` (typically in a
+  `condition`). This mode is called *asnchronous*.
+
+A timeout value may be specified after the `SYNC <compType>` argument. This
+should be a positive floating point number, specifying the number of seconds
+before the request times out. This value overrides the default timeout of 10
+seconds.
 
 Note that SNL allows only one pending `pvPut` per variable and state set
 to be active. As long as a ``pvPut(var,ASYNC)`` is pending completion,
@@ -1440,157 +1439,182 @@ variables as only those can be referenced in more than one state set. The
 behaviour for anonymous PVs exactly mirrors that of named PVs, including the fact
 that the new value will not be seen by other state sets until they issue a pvGet,
 or, if the variable is monitored, until they wait for an event in a `condition`.
-Note that for anonymous PVs completion is always immediate, so the ``ASYNC`` option
+Note that for anonymous PVs completion is always immediate, so the `ASYNC <compType>` option
 is not very useful.
 
-.. versionadded:: 2.2
+.. versionchanged:: 2.2
 
 Calling this function with a multi-PV array is no longer allowed and results
 in a compile-time error.
-
-.. versionadded:: 2.2
-
-A timeout value may be specified after the ``SYNC`` argument. This should be
-a positive floating point number, specifying the number of seconds before
-the request times out. This value overrides the default timeout of 10 seconds.
 
 
 pvPutComplete
 ^^^^^^^^^^^^^
 
 .. c:function::
-   boolean pvPutComplete(assigned_var)
-   boolean pvPutComplete(assigned_var, boolean any)
-   boolean pvPutComplete(assigned_var, boolean any, boolean *pComplete)
+   seqBool pvPutComplete(channel ch)
 
-Returns whether the last asynchronous `pvPut` to this process
-variable has completed. This call is appropriate only if
-the `pvGet` 's optional ``ASYNC`` argument was used.
+Returns whether the last asynchronous `pvPut` to this process variable has
+completed.
 
-The first form is appropriate when the SNL variable is a scalar.
-However, it can also be an array (each of whose elements may be
-assigned to a different process variable). In this case, the
-single argument form returns whether *all* `pvPut` operations
-for elements of the array have completed (missing arguments are
-implicitly set to ``0``). If ``any`` is ``TRUE``, then
-the function returns whether *any* put has completed since the last
-call. If ``pComplete`` is non-NULL, it should be an array of
-at least the array length of the SNL variable and its elements indicate
-whether the corresponding `pvPut` has completed.
+.. versionchanged:: 2.2
+
+Calling this function with a multi-PV array is no longer allowed and results
+in a compile-time error. In previous versions this was the one built-in pv
+function that correctly worked on channel arrays. The corresponding C
+function still has the extra arguments for compatibility, but in SNL you
+should now use `pvArrayPutComplete`.
+
+pvArrayPutComplete
+^^^^^^^^^^^^^^^^^^
+
+.. versionadded:: 2.2
+
+.. c:function::
+   seqBool pvArrayPutComplete(channel ch[], unsigned num, seqBool any = FALSE, seqBool *pComplete = NULL)
+
+Like `pvPutComplete`, but returns whether all of the ``num`` first
+elements of the array have completed their last asynchronous `pvPut`. The
+``num`` argument should not be larger than the number of elements in
+the array.
+
+If the optional ``any`` argument is `TRUE <seqBool>`, then instead it
+returns whether *any* of these channels have completed.
+
+If the optional ``pComplete`` argument is not ``NULL``, it must point to an
+array of `seqBool`\s with at least  ``num`` elements; the will then
+write the individual results for the array elements into this array.
 
 
 pvPutCancel
 ^^^^^^^^^^^
 
-.. c:function::
-   void pvPutCancel(assigned_var)
+.. versionadded:: 2.2
 
-Cancel a pending (asynchronous) `pvPut`. If the variable is a
-multi-PV array, all pending asynchronous puts to elements of the array
-are cancelled.
+.. c:function::
+   void pvPutCancel(channel ch)
+
+Cancel a pending (asynchronous) `pvPut`.
+
+
+pvArrayPutCancel
+^^^^^^^^^^^^^^^^
+
+.. versionadded:: 2.2
+
+.. c:function::
+   void pvArrayPutCancel(channel ch[], unsigned num)
+
+Like `pvPutCancel` but all pending asynchronous `pvPut`\s to the first
+``num`` elements of the array are cancelled.
 
 
 pvGet
 ^^^^^
 
 .. c:function::
-   pvStat pvGet(assigned_var)
-   pvStat pvGet(assigned_var, SYNC)
-   pvStat pvGet(assigned_var, SYNC, timeout)
-   pvStat pvGet(assigned_var, ASYNC)
+   pvStat pvGet(channel ch, compType ct = DEFAULT, double timeout = 10.0)
 
-Gets (or reads) the value of an SNL variable from the underlying process
-variable. Returns the status from the PV layer (e.g.
-``pvStatOK`` for success). 
+Gets (or reads) the value of ``ch`` from the process variable it has been
+assigned to. Returns the status from the PV layer (e.g. `pvStatOK <pvStat>`
+for success).
 
-By default, the state set will block until the
-read operation is complete with a hard-coded timeout of 10s. The
-asynchronous (`+a`) compile option can be used to prevent this, in
-which case completion can be checked via a subsequent call to
+With no optional arguments, the completion type is determined by the value
+of a program option: if `-a` is in effect (the default), then the state set
+will block until the read operation is complete or until the default timeout
+of 10 seconds has expired; if `+a` is in effect, the the call completes
+immediately and completion can be checked with subsequent calls to
 `pvGetComplete` (typically in a `condition`).
 
-The optional ``SYNC`` and ``ASYNC`` arguments override the compile option.
-``SYNC`` blocks and so gives default behavior if `+a` was not
-specified; ``ASYNC`` doesn't block and so gives default behavior if
-`+a` was specified.
+An optional second argument overrides the program option: `SYNC <compType>`
+makes the call block and `ASYNC <compType>` makes the call return
+immediately, regardless of whether `-a` or `+a` is in effect.
 
-In `safe mode`, if ``ASYNC`` is specified and the variable is not
+In `safe mode`, if `ASYNC <compType>` is specified and the variable is not
 monitored, then the state set local copy of the variable will not be updated
-until a call to pvGetComplete is made and returns ``TRUE`` or, if the
+until a call to pvGetComplete is made and returns `TRUE <seqBool>` or, if the
 variable is monitored, until the state set waits for events in a `transition`
 clause. Note that anonymous PVs behave exactly in the same way.
 
-.. versionadded:: 2.2
+Like for `pvPut`, only one pending `pvGet` per channel and state set can be
+active.
+
+.. versionchanged:: 2.2
+
+A timeout value may be specified after the `SYNC <compType>` argument. This should be
+a positive floating point number, specifying the number of seconds before
+the request times out. This value overrides the default timeout of 10 seconds.
+
+.. versionchanged:: 2.2
 
 Calling this function with a multi-PV array is no longer allowed and results
 in a compile-time error.
-
-.. versionadded:: 2.2
-
-A timeout value may be specified after the ``SYNC`` argument. This should be
-a positive floating point number, specifying the number of seconds before
-the request times out. This value overrides the default timeout of 10 seconds.
 
 
 pvGetComplete
 ^^^^^^^^^^^^^
 
 .. c:function::
-   boolean pvGetComplete(assigned_var)
+   seqBool pvGetComplete(channel ch)
 
-Returns whether the last asynchronous `pvGet` to this process
-variable has completed. This call is appropriate only if
-the asynchronous (`+a`) compile option is specified or
-`pvGet` 's optional ``ASYNC`` argument was used.
+Returns whether the last asynchronous `pvGet` for ``ch`` has completed.
 
 In `safe mode`, the the state set local copy of the variable will be
 updated with the value from the PV layer as a side effect of this call
-(if TRUE is returned).
+(if `TRUE <seqBool>` is returned).
+
+.. versionchanged:: 2.2
+
+Calling this function with a multi-PV array is no longer allowed and results
+in a compile-time error. For use with multi-PV arrays there is now
+`pvArrayGetComplete`.
+
+
+pvArrayGetComplete
+^^^^^^^^^^^^^^^^^^
 
 .. versionadded:: 2.2
 
 .. c:function::
-   boolean pvGetComplete(assigned_var, boolean any)
-   boolean pvGetComplete(assigned_var, boolean any, boolean *pComplete)
+   seqBool pvArrayGetComplete(channel ch[], unsigned num, seqBool any = FALSE, seqBool *pComplete = NULL)
 
-The first form is appropriate when the SNL variable is a scalar.
-However, it can also be an array (each of whose elements may be
-assigned to a different process variable). In this case, the
-single argument form returns whether *all* `pvGet` operations
-for elements of the array have completed (missing arguments are
-implicitly set to ``0``). If ``any`` is ``TRUE``, then
-the function returns whether *any* get has completed since the last
-call. If ``pComplete`` is non-NULL, it should be an array of
-at least the array length of the SNL variable and its elements indicate
-whether the corresponding `pvGet` has completed.
+Like `pvGetComplete` but works on all channels of a multi-PV array. The
+optional arguments have the same meaning as for `pvArrayPutComplete`.
 
 
 pvGetCancel
 ^^^^^^^^^^^
 
 .. c:function::
-   void pvGetCancel(assigned_var)
+   void pvGetCancel(channel ch)
 
-Cancel a pending (asynchronous) `pvGet`. If the variable is a
-multi-PV array, all pending asynchronous gets to elements of the array
-are cancelled.
+Cancel a pending (asynchronous) `pvGet`.
+
+
+pvArrayGetCancel
+^^^^^^^^^^^^^^^^
+
+.. c:function::
+   void pvArrayGetCancel(channel ch[], unsigned num)
+
+Cancel pending (asynchronous) `pvGet` operations for the first ``num``
+elements of the array.
 
 
 pvGetQ
 ^^^^^^
 
 .. c:function::
-   boolean pvGetQ(queued_var)
+   seqBool pvGetQ(channel ch)
 
-If the queue associated with this variable is not empty, remove its first
-(oldest) value and update the variable with it. Returns whether there was
-an element in the queue (and the variable got updated). If an element gets
-removed, and the queue becomes empty as a result, then any event flag
-`sync`\ed to the variable will be cleared.
+The channel argument must have been associated with a queue using the
+`syncq` clause.
 
-It is an error to call pvGetQ
-with a variable that is not associated with a queue (see the `syncq`
-clause and the built-in function `pvSync`).
+If the queue is not empty, remove its first (oldest) value and update the
+variable with it. Returns whether there was an element in the queue (and the
+variable got updated). If an element gets removed, and the queue becomes
+empty as a result, then any event flag `sync`\ed to the variable will be
+cleared.
 
 Note that since pvGetQ may have a *side-effect* you should be careful when
 combining a call to pvGetQ with other `condition`\s in the same
@@ -1601,7 +1625,7 @@ combining a call to pvGetQ with other `condition`\s in the same
         } state ...
 
 would remove the head from the queue every time the `condition` gets
-evaluated, regardless of whether ``other_condition`` is ``TRUE``. This is
+evaluated, regardless of whether ``other_condition`` is `TRUE <seqBool>`. This is
 most probably not the desired effect, as you would lose an unknown number of
 messages. (Of course it *could* be exactly what you want, for instance if
 ``other_condition`` were something like ``!suppress_output``.) Whereas ::
@@ -1617,7 +1641,7 @@ order imposed by the C language (and thus by SNL); similar remarks apply
 whenever you want to use an expression inside a `transition` clause
 that potentially has a side-effect.
 
-.. versionadded:: 2.2
+.. versionchanged:: 2.2
 
 Calling this function with a multi-PV array is no longer allowed and results
 in a compile-time error.
@@ -1627,12 +1651,12 @@ pvFreeQ
 ^^^^^^^
 
 .. c:function::
-   void pvFreeQ(queued_var)
+   void pvFreeQ(queued_channel)
 
 Deletes all entries from a queued variable's queue and
 clears the associated event flag.
 
-.. versionadded:: 2.1
+.. versionchanged:: 2.1
 
 Queue elements are no longer dynamically allocated, so this
 is now an alias for pvFlushQ.
@@ -1642,13 +1666,13 @@ pvFlushQ
 ^^^^^^^^
 
 .. c:function::
-   void pvFlushQ(queued_var)
+   void pvFlushQ(queued_channel)
 
 .. versionadded:: 2.1
 
 Flush the queue associated with this variable, so it is empty afterwards.
 
-.. versionadded:: 2.2
+.. versionchanged:: 2.2
 
 Calling this function with a multi-PV array is no longer allowed and results
 in a compile-time error.
@@ -1658,19 +1682,17 @@ pvAssign
 ^^^^^^^^
 
 .. c:function::
-   pvStat pvAssign(assigned_var, process_variable_name)
+   pvStat pvAssign(channel ch, char *pv_name)
 
-Assigns or re-assigns the SNL variable ``var`` to ``process_variable_name``.
-If ``process_variable_name`` is an empty string then ``assigned_var`` is
-de-assigned (not associated with any process variable). In `safe mode`,
-it causes assignment to an anonymous PV.
-
-As usual, ``assigned_var`` can also be an array element.
+Assigns or re-assigns ``ch`` to a process variable wih name ``pv_name``. If
+``pv_name`` is an empty string or ``NULL``, then ``ch`` is de-assigned (not
+associated with any process variable); in `safe mode` it causes assignment
+to an anonymous PV.
 
 See also `assign` clause.
 
 Note that pvAsssign is *asynchronous*: it sends a request to search for and
-connect to the given ``process_variable_name``, but it does not wait for a
+connect to the given ``pv_name``, but it does not wait for a
 response, similar to ``pvGet(var,ASYNC)``. Calling pvAssign *does* have one
 immediate effect, namely de-assigning the variable from any PV it currently
 is assigned to. In order to make sure that it has connected to the new PV,
@@ -1713,7 +1735,7 @@ A better name for this function would be ``pvReassign``.
 Program parameter expansion is done in the same way as when using the
 `assign` clause.
 
-.. versionadded:: 2.2
+.. versionchanged:: 2.2
 
 Calling this function with a multi-PV array is no longer allowed and results
 in a compile-time error.
@@ -1723,70 +1745,60 @@ pvMonitor
 ^^^^^^^^^
 
 .. c:function::
-   pvStat pvMonitor(assigned_var)
+   pvStat pvMonitor(channel ch)
 
-Initiates a monitor on the underlying process variable.
+Initiates a monitor on the process variable that ``ch`` was assigned to.
 
 See `monitor` clause.
 
-.. versionadded:: 2.2
+.. versionchanged:: 2.2
 
-If `-p` is in effect, calling this function with a multi-PV array is
-no longer allowed and results in a compile-time error.
-
-If `+p` is in effect, calling this function with a multi-PV array is
-allowed and operates on all contained PVs.
+Calling this function with a multi-PV array is no longer allowed and results
+in a compile-time error.
 
 
 pvStopMonitor
 ^^^^^^^^^^^^^
 
 .. c:function::
-   pvStat pvStopMonitor(assigned_var)
+   pvStat pvStopMonitor(channel ch)
 
 Terminates a monitor on the underlying process variable.
 
-.. versionadded:: 2.2
+.. versionchanged:: 2.2
 
-If `-p` is in effect, calling this function with a multi-PV array is
-no longer allowed and results in a compile-time error.
-
-If `+p` is in effect, calling this function with a multi-PV array is
-allowed and operates on all contained PVs.
+Calling this function with a multi-PV array is no longer allowed and results
+in a compile-time error.
 
 
 pvSync
 ^^^^^^
 
 .. c:function::
-   void pvSync(assigned_var, event_flag)
+   void pvSync(channel ch, event_flag)
 
 Synchronizes a variable with an event flag, or removes such a
-synchronization if ``event_flag`` is `NOEVFLAG`_.
+synchronization if ``event_flag`` is `NOEVFLAG`.
 
 See `sync` clause.
 
-.. versionadded:: 2.2
+.. versionchanged:: 2.2
 
-If `-p` is in effect, calling this function with a multi-PV array is
-no longer allowed and results in a compile-time error.
-
-If `+p` is in effect, calling this function with a multi-PV array is
-allowed and operates on all contained PVs.
-
+Calling this function with a multi-PV array is no longer allowed and results
+in a compile-time error.
 
 
 pvCount
 ^^^^^^^
 
 .. c:function::
-   unsigned pvCount(assigned_var)
+   unsigned pvCount(channel ch)
 
 Returns the element count associated with the process variable. This value
 is independent of the array size (if the variable is an array), it can be
 smaller or larger.
 
-.. versionadded:: 2.2
+.. versionchanged:: 2.2
 
 Calling this function with a multi-PV array is no longer allowed and results
 in a compile-time error.
@@ -1796,7 +1808,7 @@ pvStatus
 ^^^^^^^^
 
 .. c:function::
-   pvStat pvStatus(assigned_var)
+   pvStat pvStatus(channel ch)
 
 Returns the current alarm status (e.g. ``pvStatHIHI``, see the header file
 pvAlarm.h) of the underlying PV
@@ -1804,10 +1816,10 @@ or indicates failure of a previous PV operation.
 
 The status, severity, and message returned by `pvStatus`,
 `pvSeverity`, and `pvMessage` reflect either the underlying
-PV's properties (if a pvPut or pvGet operation completed, or the variable is
-monitored), or else indicate a failure to initiate one of these operations.
+PV's properties (if a `pvPut` or `pvGet` operation completed, or the variable is
+`monitor`\ed), or else indicate a failure to initiate one of these operations.
 
-.. versionadded:: 2.2
+.. versionchanged:: 2.2
 
 Calling this function with a multi-PV array is no longer allowed and results
 in a compile-time error.
@@ -1817,12 +1829,12 @@ pvSeverity
 ^^^^^^^^^^
 
 .. c:function::
-   pvSevr pvSeverity(assigned_var)
+   pvSevr pvSeverity(channel ch)
 
 Returns the current alarm severity (e.g. pvSevrMAJOR) of the underlying PV
 or indicates failure of a previous PV operation.
 
-.. versionadded:: 2.2
+.. versionchanged:: 2.2
 
 Calling this function with a multi-PV array is no longer allowed and results
 in a compile-time error.
@@ -1832,12 +1844,12 @@ pvMessage
 ^^^^^^^^^
 
 .. c:function::
-   const char *pvMessage(assigned_var)
+   const char *pvMessage(channel ch)
 
 Returns the current error message of the variable, or "" (the empty string)
 if none is available.
 
-.. versionadded:: 2.2
+.. versionchanged:: 2.2
 
 Calling this function with a multi-PV array is no longer allowed and results
 in a compile-time error.
@@ -1847,7 +1859,7 @@ pvTimeStamp
 ^^^^^^^^^^^
 
 .. c:function::
-   struct epicsTimeStamp pvTimeStamp(assigned_var)
+   struct epicsTimeStamp pvTimeStamp(channel ch)
 
 Returns the time stamp for the last `pvGet` completion or monitor
 event for this variable.
@@ -1857,7 +1869,7 @@ event for this variable.
 You can declare variables of type ``struct epicsTimeStamp`` directly in SNL
 code.
 
-.. versionadded:: 2.2
+.. versionchanged:: 2.2
 
 Calling this function with a multi-PV array is no longer allowed and results
 in a compile-time error.
@@ -1867,12 +1879,12 @@ pvAssigned
 ^^^^^^^^^^
 
 .. c:function::
-   boolean pvAssigned(assigned_var)
+   seqBool pvAssigned(channel ch)
 
 Returns whether the SNL variable is currently assigned to a process variable.
 Note that this function returns ``FALSE`` for anonymous PVs.
 
-.. versionadded:: 2.2
+.. versionchanged:: 2.2
 
 Calling this function with a multi-PV array is no longer allowed and results
 in a compile-time error.
@@ -1882,7 +1894,7 @@ pvConnected
 ^^^^^^^^^^^
 
 .. c:function::
-   boolean pvConnected(assigned_var)
+   seqBool pvConnected(channel ch)
 
 Returns whether the underlying process variable is currently connected.
 
@@ -1893,14 +1905,13 @@ in a compile-time error.
 
 .. todo::
 
-   Multi-PV arguments should be allowed and treated as in pvPut/GetComplete,
-   i.e. with two optional extra args.
+   Add a variant for multi-PV arrays.
 
 pvIndex
 ^^^^^^^
 
 .. c:function::
-   unsigned pvIndex(assigned_var)
+   unsigned pvIndex(channel ch)
 
 Returns the index associated with a variable. See
 `Calling PV Functions from C` for how to use this function.
@@ -1948,7 +1959,7 @@ Returns the total number of SNL variables in this
 program that are assigned to underlying process variables.
 
 For instance, if all SNL variables are assigned then the following
-expression is ``TRUE``::
+expression is `TRUE <seqBool>`::
 
    pvAssignCount() == pvChannelCount()
 
@@ -1966,7 +1977,7 @@ Returns the total number of underlying process
 variables that are connected.
 
 For instance, if all assigned variables are connected then the following
-expression is ``TRUE``::
+expression is `TRUE <seqBool>`::
 
    pvConnectCount() == pvAssignCount()
 
@@ -1985,7 +1996,7 @@ efClear
 ^^^^^^^
 
 .. c:function::
-   boolean efClear(event_flag)
+   seqBool efClear(event_flag)
 
 Clears the event flag and causes evaluation of the `transition`
 clauses for all state sets that are pending on this event flag.
@@ -1995,7 +2006,7 @@ efTest
 ^^^^^^
 
 .. c:function::
-   boolean efTest(event_flag)
+   seqBool efTest(event_flag)
 
 Returns whether the event flag was set.
 
@@ -2011,7 +2022,7 @@ efTestAndClear
 ^^^^^^^^^^^^^^
 
 .. c:function::
-   boolean efTestAndClear(event_flag)
+   seqBool efTestAndClear(event_flag)
 
 Clears the event flag and returns whether the event
 flag was set. It is intended for use within a `transition` clause.
@@ -2350,12 +2361,12 @@ previously via `pvPut` by some other state set. Whereas ::
 
 has no immediate effect on the variable ``var``. Instead, ``var``
 will be updated only if the code calls `pvGetComplete`
-(and it returns ``TRUE``), or when state change `condition`\s are
+(and it returns `TRUE <seqBool>`), or when state change `condition`\s are
 evaluated the next time.
 
 .. note:: This behaviour is exactly the same as with external PVs.
 
-.. note:: Using ``SYNC`` or ``ASYNC`` with anonymous PVs is not very
+.. note:: Using `SYNC <compType>` or `ASYNC <compType>` with anonymous PVs is not very
    useful since all operations complete immediately.
 
 Event flags can be `sync`\ed to anonymous PVs and will behave
