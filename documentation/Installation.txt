@@ -47,7 +47,7 @@ Other releases can be downloaded by following the links here:
    ========== =========================== ============================
    Version    Release Notes               Known Problems
    ========== =========================== ============================
-   `2.2.0.2`_ :ref:`Release_Notes_2.2.0`  n/a
+   `2.2.0.3`_ :ref:`Release_Notes_2.2.0`  n/a
    `2.1.17`_  :ref:`Release_Notes_2.1.17` n/a
    `2.1.16`_  :ref:`Release_Notes_2.1.16` :ref:`Known_Problems_2.1.16`
    `2.1.15`_  :ref:`Release_Notes_2.1.15` :ref:`Known_Problems_2.1.15`
@@ -94,15 +94,17 @@ the `latest snapshot`_, or check out the `darcs`_ repository::
 
 where ``<branch>`` is the branch name. There are currently three branches:
 
-* `branch-2-0`_ is the previous version. This branch is now frozen and will
-  receive no more patches, nor will there be any new releases.
+* `branch-2-0`_ is an old version. This branch has been frozen since 2011
+  and will receive no more patches, nor will there be any new releases.
 
-* `branch-2-1`_ is the current "stable" version. Development is restricted
-  to bug fixes (including fixes for build problems) and improvement of the
-  documentation.
+* `branch-2-1`_ is the current "stable" version. No further development will
+  happen here, except bug fixes (including fixes for build problems).
 
-* `branch-2-2`_ is where new features are developed that will appear in
-  version 2.2.
+* `branch-2-2`_ is currently in beta testing phase, indicated by the zero
+  in the patch-level release number.
+
+* `branch-2-3`_ is where new features are developed that will appear in
+  version 2.3. There are no releases yet.
 
 See `Contribute`_ for a short description how to record and send
 patches.
@@ -110,8 +112,7 @@ patches.
 You can also follow development by using the `repository browser`_.
 
 .. _latest snapshot: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2-2-snapshot-latest.tar.gz
-.. _2.2.0.2: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2.2.0.2.tar.gz
-.. _2.2.0: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2.2.0.tar.gz
+.. _2.2.0.3: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2.2.0.3.tar.gz
 .. _2.1.17: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2.1.17.tar.gz
 .. _2.1.16: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2.1.16.tar.gz
 .. _2.1.15: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2.1.15.tar.gz
@@ -151,6 +152,7 @@ You can also follow development by using the `repository browser`_.
 .. _branch-2-0: http://www-csr.bessy.de/cgi-bin/darcsweb.cgi?r=seq%20branch-2-0;a=summary
 .. _branch-2-1: http://www-csr.bessy.de/cgi-bin/darcsweb.cgi?r=seq%20branch-2-1;a=summary
 .. _branch-2-2: http://www-csr.bessy.de/cgi-bin/darcsweb.cgi?r=seq%20branch-2-2;a=summary
+.. _branch-2-3: http://www-csr.bessy.de/cgi-bin/darcsweb.cgi?r=seq%20branch-2-3;a=summary
 .. _old: http://www-csr.bessy.de/control/SoftDist/sequencer/repo/old/
 .. _stable: http://www-csr.bessy.de/control/SoftDist/sequencer/repo/stable/
 .. _experimental: http://www-csr.bessy.de/control/SoftDist/sequencer/repo/experimental/
