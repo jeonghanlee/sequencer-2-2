@@ -27,9 +27,14 @@ For further information
 
 * All of these are part of the :doc:`Manual`.
 
+This page describes version 2.2 and the documentation, in particular the
+language reference, has been updated to reflect the :ref:`changes between 2.1 and
+2.2 <Release_Notes_2.2.0>`. For older versions, please refer to `the old version of this page`_.
+
 .. _domain specific programming language: http://en.wikipedia.org/wiki/Domain-specific_programming_language
 .. _EPICS: http://www.aps.anl.gov/epics/
 .. _base: http://www.aps.anl.gov/epics/base/index.php
 .. _talk about version 2.1 of the Sequencer: http://www-csr.bessy.de/control/SoftDist/sequencer/talks/epics-meeting-2011-PSI/sequencer-2-1-slides.pdf
 .. _free software: http://www.gnu.org/philosophy/free-sw.html
 .. _EPICS Open License: http://www.aps.anl.gov/epics/license/open.php
+.. _the old version of this page: http://www-csr.bessy.de/control/SoftDist/sequencer-2-1/index.html
