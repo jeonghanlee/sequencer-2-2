@@ -886,30 +886,42 @@ The syntax for a state option is the same as for global options
 
 The state options are:
 
-`+t`
+.. _state option +t:
+
++t
    Reset delay timers each time the state is entered, even if entered
    from the same state. This is the default.
 
-`-t`
+.. _state option -t:
+
+-t
    Don't reset delay timers when entering from the same state. In other
    words, the `delay` function will return whether the specified
    time has elapsed from the moment the current state was entered from a
    different state, rather than from when it was entered for the current
    iteration.
 
-`+e`
+.. _state option +e:
+
++e
    Execute `entry` blocks only if the previous state was
    not the same as the current state. This is the default.
 
-`-e`
+.. _state option -e:
+
+-e
    Execute `entry` blocks even if the previous state was the same
    as the current state.
 
-`+x`
+.. _state option +x:
+
++x
    Execute `exit` blocks only if the next state is not the same as
    the current state. This is the default.
 
-`-x`
+.. _state option -x:
+
+-x
    Execute `exit` blocks even if the next state is the same as
    the current state.
 
@@ -1372,9 +1384,9 @@ delay
 Returns whether the specified time has elapsed since entering the
 state. It should be used only within a `transition` expression.
 
-The `-t` state option (see `State Option`_) controls whether the
+The "t" `StateOption` controls whether the
 delay is measured from when the current state was entered from a different
-state (`-t`) or from any state, including itself (`+t`,
+state (`-t <state option -t>`) or from any state, including itself (`+t <state option +t>`,
 the default).
 
 .. versionadded:: 2.2

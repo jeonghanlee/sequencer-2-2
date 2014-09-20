@@ -310,13 +310,13 @@ Entry and exit actions
    `state entry and exit blocks`.
 
 State options
-   `-t`, `-e` and `-x` are now recognized
-   options within the scope of a state. `-t` inhibits the
-   "timer reset" on re-entry to a state from itself; `-e` (for
+   ``-t``, ``-e``, and ``-x`` are now recognized
+   options within the scope of a state. `-t <state option -t>` inhibits the
+   "timer reset" on re-entry to a state from itself; `-e <state option -e>` (for
    "entry") is used with the new `entry` block, and forces the
    `entry` statements to be executed on all entries to a state, even
-   if from the same state; `-x` (for "exit") is complementary
-   to `-e`, but for the new `exit` block. See
+   if from the same state; `-x <state option -x>` (for "exit") is complementary
+   to `-e <state option -e>`, but for the new `exit` block. See
    `StateOption`.
 
 Queueable monitors
