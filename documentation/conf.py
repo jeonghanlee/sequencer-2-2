@@ -20,6 +20,9 @@ import sys, os, re
 
 # -- General configuration -----------------------------------------------------
 
+# If your documentation needs a minimal Sphinx version, state it here.
+needs_sphinx = '1.3'
+
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = ['sphinx.ext.todo']
@@ -71,12 +74,9 @@ version = re.match('(^[^.]+\.[^.]+)', release).group(1)
 # Else, today_fmt is used as the format for a strftime call.
 #today_fmt = '%B %d, %Y'
 
-# List of documents that shouldn't be included in the build.
-unused_docs = ['Syntax', 'About']
-
-# List of directories, relative to source directory, that shouldn't be searched
-# for source files.
-exclude_trees = ['O.Common']
+# List of patterns, relative to source directory, that match files and
+# directories to ignore when looking for source files.
+exclude_patterns = ['O.Common', 'About.txt']
 
 # The reST default role (used for this markup: `text`) to use for all documents.
 default_role = 'any'
