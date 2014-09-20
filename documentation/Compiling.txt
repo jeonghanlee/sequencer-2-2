@@ -15,7 +15,7 @@ Compiler Options
 
 SNC options start by a plus or minus sign, followed by a single
 character. A plus sign turns the option on, and a minus turns the
-option off.
+option off, unless the option takes an argument (currently only `-o`).
 
 ============== ===============================================================
 Option         Description
