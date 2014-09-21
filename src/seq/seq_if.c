@@ -869,7 +869,10 @@ epicsShareFunc void seq_pvFlush(SS_ID ss)
 epicsShareFunc boolean seq_pvConnected(SS_ID ss, CH_ID chId)
 {
 	CHAN *ch = ss->prog->chan + chId;
-	return ch->dbch && ch->dbch->connected;
+	if (ss->prog->options & OPT_SAFE)
+		return !(ch->dbch) || ch->dbch->connected;
+	else
+		return ch->dbch && ch->dbch->connected;
 }
 
 /*
