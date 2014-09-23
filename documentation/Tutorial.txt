@@ -67,7 +67,7 @@ Variables
 ---------
 
 SNL programs interact with the outside world via variables that are bound
-to (or connected to) *process variables* (PVs) in EPICS. In our example,
+to (or connected to) `process variable`\s (PVs) in EPICS. In our example,
 there are two such variables:  ``voltage``, which represents a measured
 voltage, and ``light`` which controls a light switch. In an actual SNL
 program, these variables must be declared before they can be used::
@@ -224,11 +224,10 @@ following STD:
 
 .. image:: Figure2-2.png
 
-The final concept introduced in the last example is the
-`delay` function. This function returns a ``TRUE`` value after
-a specified time interval from when the state was entered. The
-parameter to `delay` specifies the number of seconds, and must
-be a floating point value (constant or expression).
+The final concept introduced in the last example is the `delay` function.
+This function returns a boolean that tells us whether the given time
+interval has elapsed. The interval is given in seconds (as a floating point
+value) and counts from the time the state was entered.
 
 At this point, you may wish to try an example with the two state sets.
 You can jump ahead and read parts of the Chapters `Compiling` and
@@ -246,8 +245,13 @@ declaration::
   float vout = 0.0;
   float delta = 0.2;
 
-More complicated initialization can also be done using an
-`entry` block instead of using a separate state::
+which, by the way, can also be written as ::
+
+  float vout = 0.0, delta = 0.2;
+
+More complicated initialization (e.g. involving non-constant expressions or
+side-effects) can be done using an `entry` block instead of using a separate
+state::
 
   ss generate_voltage {
     state ramp {
@@ -285,8 +289,8 @@ statements with the following::
   assign voltage to "{unit}:ai1";
   assign vout to "{unit}:ao1";
 
-The string within the curly brackets is the name of a program parameter
-and the whole thing (the name and the brackets) are replaced with the
+The string within the curly braces is the name of a program parameter
+and the whole thing (the name and the braces) are replaced with the
 value of the parameter. For example, if the parameter "unit" has value
 "DTL_6:CM_2", then the expanded PV name is "DTL_6:CM_2:ai1". See
 `run time parameters` for more on program parameters (and
