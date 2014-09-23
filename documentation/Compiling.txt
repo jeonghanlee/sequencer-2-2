@@ -154,7 +154,31 @@ or, if SNL sources are to be pre-processed::
    cc -c test.c -o test.o ...additional compiler options...
    cc test.o -o test ...additional linker options...
 
-.. image:: Figure3-1.png
+.. blockdiag::
+
+   blockdiag {
+      default_shape = circle
+      class start [shape = beginpoint, label = ""]
+      class stop [shape = endpoint, label = ""]
+
+      start1 [class = start]
+      stop1 [class = stop]
+      snc1 [label = "snc"]
+      cc1 [label = "cc"]
+      start1 -> snc1 [label = "test.stt"]
+      snc1 -> cc1 [label = "test.c"]
+      cc1 -> stop1 [label = "test.o"]
+
+      snc2 [label = "snc"]
+      cpp2 [label = "cpp"]
+      cc2 [label = "cc"]
+      start2 [class = start]
+      stop2 [class = stop]
+      start2 -> cpp2 [label = "test.st"]
+      cpp2 -> snc2 [label = "test.i"]
+      snc2 -> cc2 [label = "test.c"]
+      cc2 -> stop2 [label = "test.o"]
+   }
 
 Assuming that ``EPICS_BASE`` contains the path to your EPICS base
 installation, and ``SEQ`` to your sequencer installation, then the
