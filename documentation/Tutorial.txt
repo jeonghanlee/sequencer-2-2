@@ -46,11 +46,6 @@ The following is a graphical representation of the above state machine:
 
 .. image:: Figure2-1.png
 
-In this picture, states are represented by oval boxes, transitions by
-arrows. State transitions are annotated with a horizontal bar: the
-condition is noted above the line and the action to be taken when the
-transition happens below the line.
-
 Note that the output or action depends not only on the input or
 condition, but also on the current state. For instance, an input
 ``voltage`` of 4.2 volts does not alone determine the output (``light``),
