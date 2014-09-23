@@ -706,7 +706,7 @@ A variable can be mentioned in at most one sync clause, but an event
 flag may appear in more than one such clause. The variable may be an
 array, and as such may be associated with multiple process variables.
 
-.. versionadded:: 2.1
+.. versionchanged:: 2.1
 
 *  It is now allowed to sync an event flag to more than one variable.
 *  There is now a run-time equivalent to the sync clause, see the
@@ -743,7 +743,7 @@ involved PVs will add an entry to the queue.
 You can use "syncq" (all lower case) as keyword instead of "syncQ". The
 latter may be deprecated in a future version.
 
-.. versionadded:: 2.1
+.. versionchanged:: 2.1
 
 Not giving a queue size (thus relying on the default of 100 elements)
 is now *deprecated* and the compiler will issue a warning. The reason
@@ -753,7 +753,7 @@ associated with a single PV. (A default queue size of 1 would be much
 more useful, but for compatibility I kept it at 100 as in previous
 versions.)
 
-.. versionadded:: 2.1
+.. versionchanged:: 2.1
 
 A queued variable no longer needs to be associated with an event flag.
 The first form of the `syncq` clause is now merely an
@@ -1241,7 +1241,7 @@ Some of the built-in functions use (i.e. accept or return) values of
 certain enumeration types and constants. These are also available to C
 code and defined in the header files pvAlarm.h and seqCom.h.
 
-.. versionadded:: 2.1.6
+.. versionchanged:: 2.1.6
 
 The pvStat and pvSevr constants are now known to the compiler, so you
 no longer have to declare them as ``foreign`` in the SNL code.
@@ -1898,7 +1898,7 @@ pvConnected
 
 Returns whether the underlying process variable is currently connected.
 
-.. versionadded:: 2.2
+.. versionchanged:: 2.2
 
 Calling this function with a multi-PV array is no longer allowed and results
 in a compile-time error.
@@ -1916,7 +1916,7 @@ pvIndex
 Returns the index associated with a variable. See
 `Calling PV Functions from C` for how to use this function.
 
-.. versionadded:: 2.2
+.. versionchanged:: 2.2
 
 Calling this function with a multi-PV array is no longer allowed and results
 in a compile-time error.
@@ -2205,7 +2205,7 @@ PVs using an `assign` clause) to a C function, only the *value* is
 passed. The special assigned" status of the variable gets lost as soon as
 the function is entered (same as for functions defined in SNL).
 
-.. versionadded:: 2.2
+.. versionchanged:: 2.2
 
 The SNL compiler no longer complains about "undeclared identifiers" when
 using foreign variables unless you supply the `+W` (extra warnings)
