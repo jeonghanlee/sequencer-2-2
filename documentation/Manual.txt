@@ -17,5 +17,6 @@ Users' Guide
    ReleaseNotes-2-0-and-older
    KnownProblems
    Plans
+   Glossary
 
 * `Index <genindex>`

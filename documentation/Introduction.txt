@@ -167,17 +167,3 @@ Starting with version 2.1, the following refined rules apply:
   significant changes if it turns out that this would be better in the long
   run. A fourth number may indicate progress toward the first stable
   release, indicated by a patch-level release number of one.
-
-Glossary
-^^^^^^^^
-
-.. todo:: expand this
-
-.. glossary::
-
-  snc
-    The SNL compiler. See `Compiling`.
-
-  cpp
-    The C preprocessor. Normally not a stand-alone program but part of the C
-    compiler.

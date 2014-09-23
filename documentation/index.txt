@@ -36,5 +36,6 @@ Welcome to the home page of the **EPICS Sequencer** project.
    ReleaseNotes-2-0-and-older
    KnownProblems
    Plans
+   Glossary
 
 .. `genindex`
