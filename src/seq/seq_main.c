@@ -54,7 +54,7 @@ static PVTYPE pv_type_map[] =
  * Creates the initial state program thread and returns its thread id.
  * Most initialization is performed here.
  */
-epicsShareFunc epicsThreadId seq(
+epicsShareFunc epicsThreadId epicsShareAPI seq(
 	seqProgram *seqProg, const char *macroDef, unsigned stackSize)
 {
 	epicsThreadId	tid;

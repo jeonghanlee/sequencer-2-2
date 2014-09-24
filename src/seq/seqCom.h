@@ -116,12 +116,12 @@ epicsShareFunc unsigned seq_pvAssignCount(SS_ID);
 epicsShareFunc seqBool seq_optGet(SS_ID, const char *);
 
 /* shell commands */
-epicsShareFunc void seqShow(epicsThreadId);
-epicsShareFunc void seqChanShow(epicsThreadId, const char *);
-epicsShareFunc void seqcar(int level);
-epicsShareFunc void seqQueueShow(epicsThreadId);
-epicsShareFunc void seqStop(epicsThreadId);
-epicsShareFunc epicsThreadId seq(seqProgram *, const char *, unsigned);
+epicsShareFunc void epicsShareAPI seqShow(epicsThreadId);
+epicsShareFunc void epicsShareAPI seqChanShow(epicsThreadId, const char *);
+epicsShareFunc void epicsShareAPI seqcar(int level);
+epicsShareFunc void epicsShareAPI seqQueueShow(epicsThreadId);
+epicsShareFunc void epicsShareAPI seqStop(epicsThreadId);
+epicsShareFunc epicsThreadId epicsShareAPI seq(seqProgram *, const char *, unsigned);
 
 /* backwards compatibility macros */
 /* DEPRECATED don't use in new code */

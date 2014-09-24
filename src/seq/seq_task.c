@@ -394,7 +394,7 @@ exit:
 /*
  * Delete all state set threads and do general clean-up.
  */
-epicsShareFunc void seqStop(epicsThreadId tid)
+epicsShareFunc void epicsShareAPI seqStop(epicsThreadId tid)
 {
 	PROG	*sp;
 

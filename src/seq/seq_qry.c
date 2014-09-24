@@ -27,7 +27,7 @@ void print_channel_value(pr_fun *pr, CHAN *ch, void *val)
  * If a non-zero thread id is specified then print the information about
  * the state program, otherwise print a brief summary of all state programs
  */
-epicsShareFunc void seqShow(epicsThreadId tid)
+epicsShareFunc void epicsShareAPI seqShow(epicsThreadId tid)
 {
 	SSCB	*ss = seqQryFind(tid);
 	PROG	*sp;
@@ -114,7 +114,7 @@ epicsShareFunc void seqShow(epicsThreadId tid)
 /*
  * seqChanShow() - Show channel information for a state program.
  */
-epicsShareFunc void seqChanShow(epicsThreadId tid, const char *str)
+epicsShareFunc void epicsShareAPI seqChanShow(epicsThreadId tid, const char *str)
 {
 	SSCB	*ss = seqQryFind(tid);
 	PROG	*sp;
@@ -264,7 +264,7 @@ static int seqcarCollect(PROG *sp, void *param)
 	return FALSE;	/* continue traversal */
 }
 
-epicsShareFunc void seqcar(int level)
+epicsShareFunc void epicsShareAPI seqcar(int level)
 {
 	struct seqStats	stats = {0, 0, 0, 0};
 
@@ -278,7 +278,7 @@ epicsShareFunc void seqcar(int level)
 /*
  * seqQueueShow() - Show syncQ queue information for a state program.
  */
-epicsShareFunc void seqQueueShow(epicsThreadId tid)
+epicsShareFunc void epicsShareAPI seqQueueShow(epicsThreadId tid)
 {
 	SSCB	*ss = seqQryFind(tid);
 	PROG	*sp;
