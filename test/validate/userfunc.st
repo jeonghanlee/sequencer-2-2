@@ -19,7 +19,6 @@ static void null(void);
 
 int i = 0;
 assign i;
-monitor i;
 
 entry {
     seq_test_init(20);
@@ -27,7 +26,7 @@ entry {
 
 ss myss {
     state doit {
-        int i_saved;
+        int i_saved = 0;
         when (delay(0.1)) {
             if (i % 2)
                 incr(ssId(), &i, pvIndex(i));
@@ -39,7 +38,7 @@ ss myss {
             testOk1(i == 1);
             null();
         } state doit
-        when (i == 10) {
+        when (i_saved == 10) {
         } exit
     }
 }
