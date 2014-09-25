@@ -804,8 +804,11 @@ Note, however, that whenever a new state is entered, the corresponding
 `transition` conditions for that state are evaluated once without first
 waiting for events.
 
-A Common Misconception
-^^^^^^^^^^^^^^^^^^^^^^
+Common Pitfalls and Misconceptions
+----------------------------------
+
+The delay function does not block
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 A common misconception among new SNL programmers is that the sequencer
 somehow blocks inside the `delay` function within `transition`
@@ -822,3 +825,61 @@ If your action statements have any sort of polling loops or calls to
 ``epicsThreadSleep`` you should reconsider your design. The presence
 of such operations is a strong indication that you're not using the
 sequencer as intended.
+
+Using pvPut and monitor in the same state set
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Let's say you have a channel variable x that is monitored, and this code
+fragment::
+
+  state one {
+    when () {
+      x = 1;
+      pvPut(x);
+      x++;
+    } state two
+  }
+  state two {
+    when (x > 1) {
+      do_something();
+    }
+    when (x <= 1) {
+      do_something_else();
+    }
+  }
+
+This pattern is hazardous in a number of ways. What exactly happens here
+depends on whether you are using `safe mode` or not.
+
+Assuming traditional (unsafe) mode, it is unpredictable which branch in
+state ``two`` will be taken. The ``pvPut(x)`` might cause a monitor event to
+be posted by the PV that was assigned to ``x``. This event will change ``x``
+back to ``1`` whenever it arrives. This might happen at any time in between
+the ``pvPut(x)`` and the testing of the conditions. It could even interrupt
+in the middle of the ``x++`` operation. As a result, this code behaves in
+conpletely unpredictable ways, depending on the timing of the pvPut-monitor
+round-trip.
+
+In `safe mode` things are slightly better: the only point where the event can
+lead to an update of the variable is *right before* evaluation of the
+conditions. However, it is still undetermined which branch will be taken.
+
+You might be tempted to test your code and find that "it works", in the
+sense that the behavior you see appears to consistently chose one of the two
+branches, perhaps after adding some `delay`\s to the conditions. But this
+impression is **misleading**, since what actually happens depends on details
+of thread scheduling and priorities and a host of other timing factors, some
+of which are very hard to control such as network or system load.
+
+If you cannot avoid using pvPut for a monitored variable, then you should at
+least
+
+#. use `safe mode`, *and*
+
+#. either
+
+   a) make sure any change you make to the variable gets published (using
+      `pvPut`) before you leave the current action block, *or*
+
+   b) refrain from changing it, and instead copy the value to some other
+      variable and change *that*.
