@@ -230,8 +230,8 @@ static void gen_action_body(Node *xp, int context)
 	{
 		assert(tp->tag == D_WHEN);
 		/* one case for each transition */
-		indent(level); gen_code("case %d: ", trans_num);
-		gen_block(tp->when_block, context, level+1);
+		indent(level); gen_code("case %d:\n", trans_num);
+		indent(level+1); gen_block(tp->when_block, context, level+1);
 		/* end of case */
 		indent(level+1); gen_code("return;\n");
 		trans_num++;
@@ -350,7 +350,7 @@ static void gen_expr(
 	{
 	/* Statements */
 	case S_CMPND:
-		gen_block(ep, context, level+1);
+		indent(level); gen_block(ep, context, level);
 		break;
 	case S_STMT:
 		gen_line_marker(ep);
