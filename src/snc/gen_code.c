@@ -187,6 +187,7 @@ static void gen_var_struct(Node *prog, uint opt_reent)
 			indent(level); gen_code("struct %s_%s {\n", NM_VARS, ssp->token.str);
 			foreach (vp, ssp->extra.e_ss->var_list->first)
 			{
+				gen_line_marker(vp->decl);
 				indent(level+1); gen_var_decl(vp); gen_code(";\n");
 				num_decls++;
 			}
@@ -199,6 +200,7 @@ static void gen_var_struct(Node *prog, uint opt_reent)
 					gen_code("struct {\n");
 					foreach (vp, sp->extra.e_state->var_list->first)
 					{
+						gen_line_marker(vp->decl);
 						indent(level+2); gen_var_decl(vp); gen_code(";\n");
 						num_decls++;
 					}

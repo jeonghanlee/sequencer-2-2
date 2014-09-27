@@ -799,8 +799,8 @@ static void gen_var_init(Var *vp, int context, int level)
 	assert(vp->decl);
 	if (vp->decl->decl_init)
 	{
-		gen_line_marker(vp->decl->decl_init);
 		indent(level); gen_code("{\n");
+		gen_line_marker(vp->decl->decl_init);
 		indent(level); gen_code("static ");
 		gen_type(vp->type, NM_INITVAR, vp->name);
 		gen_code(" = ");
