@@ -53,6 +53,9 @@ in the file LICENSE that is included with this distribution.
 	:0					\
 )
 
+#define optTest(sp,opt)		(((sp)->options & (opt)) != 0)
+					/* test if opt is set in program instance sp */
+
 /* Generic iteration on lists */
 #define foreach(e,l)		for (e = l; e != 0; e = e->next)
 

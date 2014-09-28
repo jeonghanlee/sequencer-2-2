@@ -59,9 +59,6 @@ typedef epicsUInt32 seqMask;				/* for event masks and options */
 #define bitClear(words, bitnum)	( words[(bitnum)/NBITS] &= ~(1u<<((bitnum)%NBITS)))
 #define bitTest(words, bitnum)	((words[(bitnum)/NBITS] &  (1u<<((bitnum)%NBITS))) != 0)
 
-#define optTest(sp,opt)		(((sp)->options & (opt)) != 0)
-					/* test if opt is set in program instance sp */
-
 #ifndef TRUE
 #define TRUE	1
 #endif
