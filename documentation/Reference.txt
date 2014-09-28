@@ -2136,7 +2136,6 @@ Returns a pointer to the value of the specified program parameter, if
 it exists, else ``NULL``. See `Program Name and Parameters`_.
 
 
-
 .. _safe mode:
 
 Safe Mode
@@ -2144,134 +2143,74 @@ Safe Mode
 
 .. versionadded:: 2.1
 
-SNL code can be interpreted in *safe mode*. This must be
-enabled with the `+s` option, because it changes the way variables
-are handled and is thus not fully backwards compatible. It should, however,
-be easy to adapt existing programs to safe mode by making communication
-between state sets explicit. New programs should no longer use the
-traditional unsafe mode.
+SNL code can be interpreted in safe mode by using the program option `+s`,
+see `safe mode tutorial` for a less dense introduction. Safe mode implies
+reentrant mode, see `reentrant option`.
 
-In the traditional (unsafe) mode, variables are *not* protected against
-access from concurrently running threads. Concurrent access to SNL
-variables was introduced in version 2.0, when implementation of the PV
-layer switched from the old single threaded CA mode ("preemptive
-callbacks disabled") to the multi-threaded mode ("preemptive callbacks
-enabled") in order to support more than one state set per program. This
-could result in data corruption for variables that are not read and written
-atomically, the details of which are architecture and compiler dependent
-(i.e. plain ``int`` is typically atomic, whereas double is problematic on
-some, string and arrays on almost all architectures/compilers). Even for
-plain ``int`` variables, read-modify-write cycles (like ``v++``) cannot be
-guaranteed to have any consistent result. Furthermore, `condition`\s that have
-been met inside a `transition` clause cannot be relied upon to still hold
-inside the associated action block.
+In safe mode, global variables are treated as if they were local to the
+state set. Changing such a variable inside an action block does not have any
+immediate effect on other state sets, nor do external events, such as
+monitors or pvGet completions, change the variables as seen by a state set,
+except at well defined `Synchronization Points`. In other words, each state
+set works on its own copy ("view") of all variables. The `Channel Access`
+layer (and the part of the run time system that implements `anonymous
+channels`) acts on yet another copy, the "world view". Information is only
+ever exchanged between the world view and the state set local view. All
+communication between state sets must be explicit: apart from using event
+flags, the only way information can flow *out* of a state set is using
+`pvPut`, the only way *in* is via `pvGet` or monitors.
 
-Concurrent access to SNL variables happens when
+An important (and welcome) side-effect of safe mode is that in the action
+block after a condition you can rely on the `condition` to be `true` (and
+remain `true` -- unless, of course, the action block itself invalidates it
+by modifying the variables involved).
 
-* multiple state sets access the same variable, or
-* variables are updated from the PV layer due to monitors
-  and asynchronous get operations.
+.. _Synchronization Points:
 
-While it is possible to avoid the first case by careful coding (using e.g.
-event flags for synchronization) it is not possible to guard against the
-second case as these events can interrupt action statements at any time.
+Synchronization Points
+^^^^^^^^^^^^^^^^^^^^^^
 
-One of the reasons SNL programs have mostly worked in spite of this is
-that due to the standard CA thread priorities the callback thread does not
-interrupt the state set threads. Furthermore (and contrary to what many
-people believe) the VxWorks scheduler does not normally serve threads with
-equal priority in a round-robin (time-sliced) fashion; instead each thread
-keeps running until it gets interrupted by a higher priority thread or
-until it blocks on a semaphore.
+At certain points in the program a state set's view of the variables is
+updated from the world view. These are:
 
-However, RTEMS does time-share threads at the same priority, while Linux and
-Windows may or may not honor thread priorities, depending on the system
-configuration. Most importantly, priorities should only be used to improve
-latency for certain operations (at the cost of others) and never should be
-relied upon for program correctness.
+* in each state, immediately before `condition`\s are evaluated (for
+  monitored channels), and
 
-Safe mode solves all these problems by changing the way variables,
-particularly global variables, are interpreted. In safe mode, all variables
---except event flags-- are interpreted as if they were *local to the state
-set*. This means that setting a variable (even a global variable) in one
-state set does *not* automatically change its value as seen by other state
-sets. State sets are effectively isolated against each other, and all
-communication between them must be explicit. They are also isolated against
-updates by callbacks from the PV layer except at those points where they
-don't do anything i.e. when they wait for events in a `transition` clause.
-In safe mode, variable values get updated right before the `condition`\s are
-evaluated, or when explicitly calling synchronization functions like
-`pvGetComplete` or `pvGet` (the latter only if called in
-synchronous mode), as well as `efTest` and `efTestAndClear`.
-The documentation for the built-in functions explains the details.
+* in calls to some of the built-in functions: `efTest`, `efTestAndClear`,
+  `pvGet` (in SYNC mode), and `pvGetComplete` (when it signals completion).
 
-Safe mode implies reentrant mode, see `reentrant option`.
+Note that there is no point at which variables modified by a state set are
+automatically "published". For this you have to use `pvPut` explicitly,
+which updates the world view as a side-effect.
 
+.. _anonymous channels:
 .. _anonymous pvs:
 
-Anonymous PVs
-^^^^^^^^^^^^^
+Anonymous Channels
+^^^^^^^^^^^^^^^^^^
 
-Explicit communication between state sets can use either event flags or
-variables. Event flags work exactly the same as in traditional mode.
+It would be impractical if the programmer had to create a real PV for each
+communication channel inside a program. Instead, in safe mode you can use an
+*anonymous channel* for this purpose. Anonymous channels are created with
+the usual `assign` clause, but use an empty string (``""``) for the PV name
+(which in traditional mode is interpreted as "not assigned"). You can
+imagine such channels to be connected to "virtual" PVs that are implemented
+inside the sequencer's run time system.
 
-To use a variable for communication it must have been *assigned* with an
-`assign` statement. You can then use `pvPut`,
-`pvGet`, `pvMonitor`, and most of the other built-in PV
-functions, *regardless of whether the PV name is the empty string (``""``)
-or not*. If it is the empty string, the PV functions behave as if the
-assignment had been to an internal, anonymous 'pseudo PV' that behaves
-similar to an external 'real' PV. The variant ``assign var;`` of the
-`assign` statement has been introduced as an abbreviation for
-``assign var to "";``.
-
-
-For instance, with the declaration ::
-
-   int var;
-   assign var;
-
-the action statement ::
-
-   pvPut(var)
-
-makes the value of ``var`` available to other state sets. They will,
-however, not see the new value until they issue either a (synchronous)
-`pvGet`, or the variable is declared as monitored and state
-change `condition`\s are evaluated.
-
-The action ::
-
-   pvGet(var, SYNC)
-
-updates ``var`` immediately with whatever has been written to it
-previously via `pvPut` by some other state set. Whereas ::
-
-   pvGet(var, ASYNC)
-
-has no immediate effect on the variable ``var``. Instead, ``var``
-will be updated only if the code calls `pvGetComplete`
-(and it returns `true`), or when state change `condition`\s are
-evaluated the next time.
-
-.. note:: This behaviour is exactly the same as with external PVs.
-
-.. note:: Using `SYNC <compType>` or `ASYNC <compType>` with anonymous PVs is not very
-   useful since all operations complete immediately.
-
-Event flags can be `sync`\ed to anonymous PVs and will behave
-as with external PVs.
+Anonymous channels should work exactly like channels assigned to a "real" PV
+-- they can be `monitor`\ed, `sync`\ed to event flags etc. -- except that
+they are always connected and the operations on them always complete
+immediately.
 
 Event Flags in Safe Mode
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-Apart from the `sync` and `syncq` features, and apart
-from the atomicity of `efTestAndClear`, an event flag behaves
-similar to an anonymous PV of boolean type with a monitor. In safe
-mode, `efTest` and `efTestAndClear` have the additional
-side-effect of acting as a synchronization point for all variables that
-are `sync`\ed with the event flag: the state set local copies of
-these variable are updated from their globally visible copies.
+Apart from the `sync` and `syncq` features, and apart from the atomicity of
+`efTestAndClear`, an event flag behaves like an anonymous PV of boolean type
+with a monitor. In safe mode, `efTest` and `efTestAndClear` have the
+additional side-effect of acting as a synchronization point for all
+variables that are `sync`\ed with the event flag.
+
 
 Foreign Variables and Functions
 -------------------------------

@@ -804,6 +804,118 @@ Note, however, that whenever a new state is entered, the corresponding
 `transition` conditions for that state are evaluated once without first
 waiting for events.
 
+.. _safe mode tutorial:
+
+Safe Mode
+---------
+
+.. versionadded:: 2.1
+
+SNL code can be interpreted in *safe mode*. This must be enabled with the
+`+s` option, because it changes the way variables are handled and is thus
+not fully backwards compatible. It should, however, be easy to adapt
+existing programs to safe mode by making communication between state sets
+explicit. New programs should no longer use the traditional unsafe mode.
+
+Rationale
+^^^^^^^^^
+
+In the traditional (unsafe) mode, variables are *not* protected against
+access from concurrently running threads. Concurrent access to SNL
+variables was introduced in version 2.0, when implementation of the PV
+layer switched from the old single threaded CA mode ("preemptive
+callbacks disabled") to the multi-threaded mode ("preemptive callbacks
+enabled") in order to support more than one state set per program. This
+could result in data corruption for variables that are not read and written
+atomically, the details of which are architecture and compiler dependent
+(i.e. plain ``int`` is typically atomic, whereas double is problematic on
+some, string and arrays on almost all architectures/compilers). Even for
+plain ``int`` variables, read-modify-write cycles (like ``v++``) cannot be
+guaranteed to have any consistent result. Furthermore, `condition`\s that have
+been met inside a `transition` clause cannot be relied upon to still hold
+inside the associated action block.
+
+Concurrent access to SNL variables happens when
+
+* multiple state sets access the same variable, or
+* variables are updated from the PV layer due to monitors
+  and asynchronous get operations.
+
+While it is possible to avoid the first case by careful coding (using e.g.
+event flags for synchronization) it is not possible to guard against the
+second case as these events can interrupt action statements at any time.
+
+One of the reasons SNL programs have mostly worked in spite of this is
+that due to the standard CA thread priorities the callback thread does not
+interrupt the state set threads. Furthermore (and contrary to what many
+people believe) the VxWorks scheduler does not normally serve threads with
+equal priority in a round-robin (time-sliced) fashion; instead each thread
+keeps running until it gets interrupted by a higher priority thread or
+until it blocks on a semaphore.
+
+However, RTEMS does time-share threads at the same priority, while Linux and
+Windows may or may not honor thread priorities, depending on the system
+configuration. Most importantly, priorities should only be used to improve
+latency for certain operations (at the cost of others) and never should be
+relied upon for program correctness.
+
+Safe mode solves all these problems by changing the way variables,
+particularly global variables, are interpreted.
+
+How it Works
+^^^^^^^^^^^^
+
+In safe mode, all variables
+--except event flags-- are interpreted as if they were *local to the state
+set*. This means that setting a variable (even a global variable) in one
+state set does *not* automatically change its value as seen by other state
+sets. State sets are effectively isolated against each other, and all
+communication between them must be explicit. They are also isolated against
+updates by callbacks from the PV layer except at those points where they
+don't do anything i.e. when they wait for events in a `transition` clause.
+In safe mode, variable values get updated right before the `condition`\s are
+evaluated, or when explicitly calling synchronization functions like
+`pvGetComplete` or `pvGet` (the latter only if called in
+synchronous mode), as well as `efTest` and `efTestAndClear`.
+The documentation for the built-in functions explains the details.
+
+For instance, with the declaration ::
+
+   int var;
+   assign var;
+
+the action statement ::
+
+   pvPut(var)
+
+makes the value of ``var`` available to other state sets. They will,
+however, not see the new value until they issue either a (synchronous)
+`pvGet`, or the variable is declared as monitored and state
+change `condition`\s are evaluated.
+
+The action ::
+
+   pvGet(var, SYNC)
+
+updates ``var`` immediately with whatever has been written to it
+previously via `pvPut` by some other state set. Whereas ::
+
+   pvGet(var, ASYNC)
+
+has no immediate effect on the variable ``var``. Instead, ``var``
+will be updated only if the code calls `pvGetComplete`
+(and it returns `true`).
+
+.. todo::
+
+   Also when state change `condition`\s are evaluated the next time?
+
+.. note:: This behaviour is exactly the same as with external PVs.
+
+.. note:: Using `SYNC <compType>` or `ASYNC <compType>` with anonymous PVs is not very
+   useful since all operations complete immediately.
+
+
 Common Pitfalls and Misconceptions
 ----------------------------------
 
