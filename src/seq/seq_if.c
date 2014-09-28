@@ -130,7 +130,7 @@ static pvStat check_pending(
 		if (*req) {
 			errlogSevPrintf(errlogMajor,
 				"%s(ss %s, var %s, pv %s): user error "
-				"(there is already a %s pending for this variable/"
+				"(there is already a %s pending for this channel/"
 				"state set combination)\n",
 				call, ss->ssName, varName, dbch->dbName, call
 			);
@@ -203,7 +203,7 @@ epicsShareFunc pvStat seq_pvGetTmo(SS_ID ss, CH_ID chId, enum compType compType,
 	if (!dbch)
 	{
 		errlogSevPrintf(errlogMajor,
-			"pvGet(%s): user error (variable not assigned)\n",
+			"pvGet(%s): user error (not assigned to a PV)\n",
 			ch->varName
 		);
 		return pvStatERROR;
@@ -392,7 +392,7 @@ static void anonymous_put(SS_ID ss, CHAN *ch)
 		if (full)
 		{
 			errlogSevPrintf(errlogMinor,
-			  "pvPut on queued variable '%s' (anonymous): "
+			  "pvPut on queued channel '%s' (anonymous): "
 			  "last queue element overwritten (queue is full)\n",
 			  ch->varName
 			);
@@ -445,7 +445,7 @@ epicsShareFunc pvStat seq_pvPutTmo(SS_ID ss, CH_ID chId, enum compType compType,
 	if (!dbch)
 	{
 		errlogSevPrintf(errlogMajor,
-			"pvPut(%s): user error (variable not assigned)\n",
+			"pvPut(%s): user error (not assigned to a PV)\n",
 			ch->varName
 		);
 		return pvStatERROR;
@@ -1103,7 +1103,7 @@ epicsShareFunc boolean seq_pvGetQ(SS_ID ss, CH_ID chId)
 	if (!ch->queue)
 	{
 		errlogSevPrintf(errlogMajor,
-			"pvGetQ(%s): user error (variable not queued)\n",
+			"pvGetQ(%s): user error (not queued)\n",
 			ch->varName
 		);
 		return FALSE;
