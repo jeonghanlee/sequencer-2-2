@@ -266,42 +266,52 @@ epicsShareFunc pvStat seq_pvGetTmo(SS_ID ss, CH_ID chId, enum compType compType,
  * side effect, copy value from shared buffer to state set local buffer.
  */
 epicsShareFunc boolean seq_pvGetComplete(
+	SS_ID	ss,
+	CH_ID	chId)
+{
+	PROG	*sp = ss->prog;
+	CHAN	*ch = sp->chan + chId;
+
+	if (!ch->dbch)
+	{
+		/* Anonymous PVs always complete immediately */
+		if (!optTest(sp, OPT_SAFE))
+			errlogSevPrintf(errlogMajor,
+				"pvGetComplete(%s): user error (not assigned to a PV)\n",
+				ch->varName);
+		return TRUE;
+	}
+	else if (!ss->getReq[chId])
+	{
+		pvStat status = check_connected(ch->dbch, metaPtr(ch,ss));
+		if (status == pvStatOK && optTest(sp, OPT_SAFE))
+		{
+			/* In safe mode, copy value and meta data from shared buffer
+			   to ss local buffer. */
+			/* Copy regardless of whether dirty flag is set or not */
+			ss_read_buffer(ss, ch, FALSE);
+		}
+		return TRUE;
+	}
+	return FALSE;
+}
+
+/*
+ * Array variant of seq_pvGetComplete.
+ */
+epicsShareFunc boolean seq_pvArrayGetComplete(
 	SS_ID		ss,
 	CH_ID		chId,
 	unsigned	length,
 	boolean		any,
 	boolean		*complete)
 {
-	PROG		*sp = ss->prog;
 	boolean		anyDone = FALSE, allDone = TRUE;
 	unsigned	n;
 
 	for (n = 0; n < length; n++)
 	{
-		boolean		done = FALSE;
-		CHAN		*ch = sp->chan + chId + n;
-
-		if (!ch->dbch)
-		{
-			/* Anonymous PVs always complete immediately */
-			if (!optTest(sp, OPT_SAFE))
-				errlogSevPrintf(errlogMajor,
-					"pvGetComplete(%s): user error (variable not assigned)\n",
-					ch->varName);
-			done = TRUE;
-		}
-		else if (!ss->getReq[chId+n])
-		{
-			pvStat status = check_connected(ch->dbch, metaPtr(ch,ss));
-			if (status == pvStatOK && optTest(sp, OPT_SAFE))
-			{
-				/* In safe mode, copy value and meta data from shared buffer
-				   to ss local buffer. */
-				/* Copy regardless of whether dirty flag is set or not */
-				ss_read_buffer(ss, ch, FALSE);
-			}
-			done = TRUE;
-		}
+		boolean done = seq_pvGetComplete(ss, chId + n);
 
 		anyDone = anyDone || done;
 		allDone = allDone && done;
@@ -316,7 +326,7 @@ epicsShareFunc boolean seq_pvGetComplete(
 		}
 	}
 
-	DEBUG("pvGetComplete: chId=%u, length=%u, anyDone=%u, allDone=%u\n",
+	DEBUG("pvArrayGetComplete: chId=%u, length=%u, anyDone=%u, allDone=%u\n",
 		chId, length, anyDone, allDone);
 
 	return any?anyDone:allDone;
@@ -326,29 +336,37 @@ epicsShareFunc boolean seq_pvGetComplete(
  * Cancel the last asynchronous get request.
  */
 epicsShareFunc void seq_pvGetCancel(
+	SS_ID	ss,
+	CH_ID	chId)
+{
+	PROG	*sp = ss->prog;
+	CHAN	*ch = sp->chan + chId;
+
+	if (!ch->dbch)
+	{
+		if (!optTest(sp, OPT_SAFE))
+			errlogSevPrintf(errlogMinor,
+				"pvGetCancel(%s): user error (not assigned to a PV)\n",
+				ch->varName);
+	}
+	else
+	{
+		ss->getReq[chId] = NULL;	/* cancel the request */
+	}
+}
+
+/*
+ * Array variant of seq_pvGetCancel.
+ */
+epicsShareFunc void seq_pvArrayGetCancel(
 	SS_ID		ss,
 	CH_ID		chId,
 	unsigned	length)
 {
-	PROG		*sp = ss->prog;
 	unsigned	n;
 
 	for (n = 0; n < length; n++)
-	{
-		CHAN		*ch = ss->prog->chan + chId + n;
-
-		if (!ch->dbch)
-		{
-			if (!optTest(sp, OPT_SAFE))
-				errlogSevPrintf(errlogMinor,
-					"pvGetCancel(%s): user error (variable not assigned)\n",
-					ch->varName);
-		}
-		else
-		{
-			ss->getReq[chId+n] = NULL;	/* cancel the request */
-		}
-	}
+		seq_pvGetCancel(ss, chId + n);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -536,29 +554,53 @@ epicsShareFunc boolean seq_pvPutComplete(
 	boolean		any,
 	boolean		*complete)
 {
-	PROG		*sp = ss->prog;
+	return seq_pvArrayPutComplete(ss, chId, length, any, complete);
+}
+
+/*
+ * Return whether the last put completed.
+ */
+static boolean seq_pvSinglePutComplete(
+	SS_ID	ss,
+	CH_ID	chId)
+{
+	PROG	*sp = ss->prog;
+	CHAN	*ch = sp->chan + chId;
+
+	if (!ch->dbch)
+	{
+		/* Anonymous PVs always complete immediately */
+		if (!(sp->options & OPT_SAFE))
+			errlogSevPrintf(errlogMajor,
+				"pvPutComplete(%s): user error (not assigned to a PV)\n",
+				ch->varName);
+		return TRUE;
+	}
+	else if (!ss->putReq[chId])
+	{
+		check_connected(ch->dbch, metaPtr(ch,ss));
+		return TRUE;
+	}
+
+	return FALSE;
+}
+
+/*
+ * Return whether the last put completed.
+ */
+epicsShareFunc boolean seq_pvArrayPutComplete(
+	SS_ID		ss,
+	CH_ID		chId,
+	unsigned	length,
+	boolean		any,
+	boolean		*complete)
+{
 	boolean		anyDone = FALSE, allDone = TRUE;
 	unsigned	n;
 
 	for (n = 0; n < length; n++)
 	{
-		boolean		done = FALSE;
-		CHAN		*ch = sp->chan + chId + n;
-
-		if (!ch->dbch)
-		{
-			/* Anonymous PVs always complete immediately */
-			if (!(sp->options & OPT_SAFE))
-				errlogSevPrintf(errlogMajor,
-					"pvPutComplete(%s): user error (variable not assigned)\n",
-					ch->varName);
-			done = TRUE;
-		}
-		else if (!ss->putReq[chId+n])
-		{
-			check_connected(ch->dbch, metaPtr(ch,ss));
-			done = TRUE;
-		}
+		boolean	done = seq_pvSinglePutComplete(ss, chId + n);
 
 		anyDone = anyDone || done;
 		allDone = allDone && done;
@@ -573,7 +615,7 @@ epicsShareFunc boolean seq_pvPutComplete(
 		}
 	}
 
-	DEBUG("pvPutComplete: chId=%u, length=%u, anyDone=%u, allDone=%u\n",
+	DEBUG("pvArrayPutComplete: chId=%u, length=%u, anyDone=%u, allDone=%u\n",
 		chId, length, anyDone, allDone);
 
 	return any?anyDone:allDone;
@@ -583,29 +625,37 @@ epicsShareFunc boolean seq_pvPutComplete(
  * Cancel the last asynchronous put request.
  */
 epicsShareFunc void seq_pvPutCancel(
+	SS_ID	ss,
+	CH_ID	chId)
+{
+	PROG	*sp = ss->prog;
+	CHAN	*ch = sp->chan + chId;
+
+	if (!ch->dbch)
+	{
+		if (!optTest(sp, OPT_SAFE))
+			errlogSevPrintf(errlogMinor,
+				"pvPutCancel(%s): user error (not assigned to a PV)\n",
+				ch->varName);
+	}
+	else
+	{
+		ss->putReq[chId] = NULL;	/* cancel the request */
+	}
+}
+
+/*
+ * Cancel the last asynchronous put request.
+ */
+epicsShareFunc void seq_pvArrayPutCancel(
 	SS_ID		ss,
 	CH_ID		chId,
 	unsigned	length)
 {
-	PROG		*sp = ss->prog;
 	unsigned	n;
 
 	for (n = 0; n < length; n++)
-	{
-		CHAN		*ch = ss->prog->chan + chId + n;
-
-		if (!ch->dbch)
-		{
-			if (!optTest(sp, OPT_SAFE))
-				errlogSevPrintf(errlogMinor,
-					"pvPutCancel(%s): user error (variable not assigned)\n",
-					ch->varName);
-		}
-		else
-		{
-			ss->putReq[chId+n] = NULL;	/* cancel the request */
-		}
-	}
+		seq_pvPutCancel(ss, chId + n);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -704,40 +754,34 @@ epicsShareFunc pvStat seq_pvAssign(SS_ID ss, CH_ID chId, const char *pvName)
 	return status;
 }
 
-/*
- * Initiate a monitor.
- */
-epicsShareFunc pvStat seq_pvMonitor(SS_ID ss, CH_ID chId, unsigned length)
+static pvStat seq_pvSingleMonitor(SS_ID ss, CH_ID chId, boolean turn_on, const char *what)
 {
 	PROG	*sp = ss->prog;
-	pvStat	status = pvStatOK;
-	unsigned i;
+	CHAN	*ch = sp->chan + chId;
+	DBCHAN	*dbch = ch->dbch;
+	pvStat	status;
 
-	for (i=0; i<length; i++)
+	if (!dbch)
 	{
-		CHAN	*ch = sp->chan + chId + i;
-		DBCHAN	*dbch = ch->dbch;
-
-		if (!dbch && optTest(sp, OPT_SAFE))
+		if (optTest(sp, OPT_SAFE))
 		{
 			ch->monitored = TRUE;
-			continue;
+			return pvStatOK;
 		}
-		if (!dbch)
+		else
 		{
 			errlogSevPrintf(errlogMajor,
-				"pvMonitor(%s): user error (not assigned to a PV)\n",
-				ch->varName
+				"%s(%s): user error (not assigned to a PV)\n",
+				what, ch->varName
 			);
 			return pvStatERROR;
 		}
-		ch->monitored = TRUE;
-		status = seq_camonitor(ch, TRUE);
-		if (status != pvStatOK)
-		{
-			pv_call_failure(dbch, metaPtr(ch,ss), status);
-			break;
-		}
+	}
+	ch->monitored = turn_on;
+	status = seq_camonitor(ch, turn_on);
+	if (status != pvStatOK)
+	{
+		pv_call_failure(dbch, metaPtr(ch,ss), status);
 	}
 	return status;
 }
@@ -745,56 +789,74 @@ epicsShareFunc pvStat seq_pvMonitor(SS_ID ss, CH_ID chId, unsigned length)
 /*
  * Start monitor.
  */
-epicsShareFunc pvStat seq_pvStopMonitor(SS_ID ss, CH_ID chId, unsigned length)
+epicsShareFunc pvStat seq_pvMonitor(SS_ID ss, CH_ID chId)
 {
-	PROG	*sp = ss->prog;
-	pvStat	status = pvStatOK;
-	unsigned i;
-
-	for (i=0; i<length; i++)
-	{
-		CHAN	*ch = sp->chan + chId + i;
-		DBCHAN	*dbch = ch->dbch;
-
-		if (!dbch && optTest(sp, OPT_SAFE))
-		{
-			ch->monitored = FALSE;
-			continue;
-		}
-		if (!dbch)
-		{
-			errlogSevPrintf(errlogMajor,
-				"pvStopMonitor(%s): user error (not assigned to a PV)\n",
-				ch->varName
-			);
-			return pvStatERROR;
-		}
-		ch->monitored = FALSE;
-		status =  seq_camonitor(ch, FALSE);
-		if (status != pvStatOK)
-		{
-			pv_call_failure(dbch, metaPtr(ch,ss), status);
-			break;
-		}
-	}
-	return status;
+	return seq_pvSingleMonitor(ss, chId, TRUE, "pvMonitor");
 }
 
 /*
- * Synchronize pv with an event flag.
+ * Array variant of seq_pvMonitor.
+ */
+epicsShareFunc pvStat seq_pvArrayMonitor(SS_ID ss, CH_ID chId, unsigned length)
+{
+	unsigned n;
+
+	for (n=0; n<length; n++)
+	{
+		pvStat status = seq_pvSingleMonitor(ss, chId + n, TRUE, "pvArrayMonitor");
+		if (status != pvStatOK)
+			return status;
+	}
+	return pvStatOK;
+}
+
+/*
+ * Stop monitor.
+ */
+epicsShareFunc pvStat seq_pvStopMonitor(SS_ID ss, CH_ID chId)
+{
+	return seq_pvSingleMonitor(ss, chId, FALSE, "pvStopMonitor");
+}
+
+/*
+ * Array variant of seq_pvStopMonitor.
+ */
+epicsShareFunc pvStat seq_pvArrayStopMonitor(SS_ID ss, CH_ID chId, unsigned length)
+{
+	unsigned n;
+
+	for (n=0; n<length; n++)
+	{
+		pvStat status = seq_pvSingleMonitor(ss, chId + n, FALSE, "pvArrayStopMonitor");
+		if (status != pvStatOK)
+			return status;
+	}
+	return pvStatOK;
+}
+
+/*
+ * Synchronize channel with an event flag.
  * ev_flag == 0 means unSync.
  */
-epicsShareFunc void seq_pvSync(SS_ID ss, CH_ID chId, unsigned length, EF_ID new_ev_flag)
+epicsShareFunc void seq_pvSync(SS_ID ss, CH_ID chId, EF_ID new_ev_flag)
+{
+	seq_pvArraySync(ss, chId, 1, new_ev_flag);
+}
+
+/*
+ * Array variant of seq_pvSync.
+ */
+epicsShareFunc void seq_pvArraySync(SS_ID ss, CH_ID chId, unsigned length, EF_ID new_ev_flag)
 {
 	PROG	*sp = ss->prog;
-	unsigned i;
+	unsigned n;
 
 	assert(new_ev_flag >= 0 && new_ev_flag <= sp->numEvFlags);
 
 	epicsMutexMustLock(sp->lock);
-	for (i=0; i<length; i++)
+	for (n=0; n<length; n++)
 	{
-		CHAN	*this_ch = sp->chan + chId + i;
+		CHAN	*this_ch = sp->chan + chId + n;
 		EF_ID	old_ev_flag = this_ch->syncedTo;
 
 		if (old_ev_flag != new_ev_flag)
@@ -876,7 +938,22 @@ epicsShareFunc boolean seq_pvConnected(SS_ID ss, CH_ID chId)
 }
 
 /*
- * Return whether database channel is assigned.
+ * Return whether elements of a channel array are connected.
+ */
+epicsShareFunc boolean seq_pvArrayConnected(SS_ID ss, CH_ID chId, unsigned length)
+{
+	unsigned n;
+
+	for (n=0; n<length; n++)
+	{
+		if (!seq_pvConnected(ss, chId+n))
+			return FALSE;
+	}
+	return TRUE;
+}
+
+/*
+ * Return whether channel is assigned.
  */
 epicsShareFunc boolean seq_pvAssigned(SS_ID ss, CH_ID chId)
 {

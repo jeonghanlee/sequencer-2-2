@@ -41,12 +41,18 @@ static void gen_entex_body(Node *xp, int context);
 static void gen_event_body(Node *xp, int context);
 static void gen_action_body(Node *xp, int context);
 static void gen_expr(int context, Node *ep, int level);
-static void gen_ef_func(int context, Node *ep, const char *func_name, uint ef_action_only);
-static void gen_pv_func(int context, Node *ep,
-	const char *func_name, uint multi_pv, uint add_length,
-	uint num_params, uint ef_args,
-	const char *default_values[]);
-static void gen_builtin_func(int context, Node *ep);
+static void gen_builtin_call(int context, Node *ep);
+static void gen_ef_arg(
+	int		context,
+	const char	*func_name,	/* function name */
+	Node		*ap,		/* argument expression */
+	uint		index);		/* argument index */
+static void gen_pv_arg(
+	int		context,
+	const char	*func_name,	/* function name */
+	Node		*ap,		/* argument expression */
+	uint		index,		/* argument index */
+	uint		pv_array);	/* function expects a pv array */
 
 static void gen_prog_func(
 	Node *prog,
@@ -440,7 +446,7 @@ static void gen_expr(
 	case E_FUNC:
 		if (ep->func_expr->tag == E_BUILTIN)
 		{
-			gen_builtin_func(context, ep);
+			gen_builtin_call(context, ep);
 			break;
 		}
 		gen_expr(context, ep->func_expr, 0);
@@ -524,203 +530,163 @@ static void gen_expr(
 }
 
 /* Generate builtin function call */
-static void gen_builtin_func(int context, Node *ep)
+static void gen_builtin_call(int context, Node *ep)
 {
 	Node *ap;	/* argument node */
-	struct func_symbol *sym = ep->func_expr->extra.e_builtin;
+	struct func_symbol *fsym = ep->func_expr->extra.e_builtin;
+	const struct param **ppp;
+	uint n = 1;
 
 	assert(ep->func_expr->tag == E_BUILTIN);
-	assert(sym);
+	assert(fsym);
 
-#ifdef	DEBUG
-	report("gen_builtin_func: name=%s, type=%u, add_length=%u, "
-		"default_args=%u, ef_action_only=%u, ef_args=%u\n",
-		sym->name, sym->type, sym->add_length, sym->default_args,
-		sym->ef_action_only, sym->ef_args);
-#endif
 	/* All builtin functions require ssId as 1st parameter */
 	assert_at_node(context != C_GLOBAL, ep,
-		"calling built-in function %s not allowed here\n", sym->name);
-	gen_code("seq_%s("NM_SS, sym->c_name ? sym->c_name : sym->name);
-	if (context != C_COND && sym->cond_only)
+		"calling built-in function %s not allowed here\n", fsym->name);
+	gen_code("seq_%s("NM_SS, fsym->c_name ? fsym->c_name : fsym->name);
+	if (fsym->cond_only && context != C_COND)
 	{
 		error_at_node(ep,
-		  "calling built-in function %s not allowed here\n", sym->name);
+			"calling %s is only allowed inside a when condition\n", fsym->name);
 		return;
 	}
-	switch (sym->type)
+	if (fsym->action_only && context == C_COND)
 	{
-	case FT_EVENT:
-		/* Event flag functions */
-		gen_ef_func(context, ep, sym->name, sym->ef_action_only);
-		break;
-	case FT_PV:
-		gen_pv_func(context, ep, sym->name, sym->multi_pv, sym->add_length,
-			sym->default_args, sym->ef_args, sym->default_values);
-		break;
-	case FT_OTHER:
-		/* just fill in user-supplied parameters */
-		foreach (ap, ep->func_args)
-		{
-			gen_code(", ");
-			gen_expr(context, ap, 0);
-		}
-		gen_code(")");
-		break;
-	default:
-		assert(impossible);
+		error_at_node(ep,
+			"calling %s is not allowed inside a when condition\n", fsym->name);
+		return;
 	}
+
+	assert(fsym->params);
+	ppp = fsym->params;
+	ap = ep->func_args;
+	while (*ppp)
+	{
+		const struct param *pp = *ppp;
+		gen_code(", ");
+		if (!ap)
+		{
+			if (pp->default_value)
+				gen_code("%s", pp->default_value);
+			else
+			{
+				error_at_node(ep,
+					"not enough arguments to built-in function '%s'\n",
+					fsym->name);
+				return;
+			}
+		}
+		else
+		{
+			switch(pp->type)
+			{
+			case PT_OTHER:
+				gen_expr(context, ap, 0);
+				break;
+			case PT_EF:
+				gen_ef_arg(context, fsym->name, ap, n);
+				break;
+			case PT_PV:
+				gen_pv_arg(context, fsym->name, ap, n, FALSE);
+				break;
+			case PT_PV_ARRAY:
+				gen_pv_arg(context, fsym->name, ap, n, TRUE);
+				break;
+			}
+		}
+		ppp++;
+		n++;
+		if (ap)
+			ap = ap->next;
+	}
+	if (ap)
+		error_at_node(ep,
+			"too many arguments to built-in function '%s'\n", fsym->name);
+	gen_code(")");
 }
 
 /* Check an event flag argument */
 static void gen_ef_arg(
+	int		context,
 	const char	*func_name,	/* function name */
 	Node		*ap,		/* argument expression */
 	uint		index		/* argument index */
 )
 {
-	Var	*vp;
-
-	assert(ap);
-	if (ap->tag != E_VAR)
-	{
+	if (ap->tag == E_CONST && ap->extra.e_const->type == CT_EVFLAG)
+		gen_expr(context, ap, 0);
+	else if (ap->tag != E_VAR || ap->extra.e_var->type->tag != T_EVFLAG)
 		error_at_node(ap,
-		  "argument %d to built-in function %s must be an event flag\n",
-		  index, func_name);
-		return;
-	}
-	vp = ap->extra.e_var;
-	assert(vp->type);
-	if (vp->type->tag != T_EVFLAG)
-	{
-		error_at_node(ap,
-		  "argument to built-in function %s must be an event flag\n", func_name);
-		return;
-	}
-	gen_var_access(vp);
+			"argument %d to built-in function %s must be an event flag\n",
+			index, func_name);
+	else
+		gen_var_access(ap->extra.e_var);
 }
 
-/* Generate code for all event flag functions */
-static void gen_ef_func(
+static void gen_pv_arg(
 	int		context,
-	Node		*ep,		/* function call expression */
 	const char	*func_name,	/* function name */
-	uint		action_only	/* not allowed in cond */
+	Node		*ap,		/* argument expression */
+	uint		index,		/* argument index */
+	uint		pv_array	/* function expects a pv array */
 )
 {
-	Node	*ap;			/* argument expression */
+	Var *vp = 0;
+	Node *subscr = 0;
 
-	ap = ep->func_args;
-
-	if (action_only && context == C_COND)
+	switch (ap->tag)
 	{
-		error_at_node(ep,
-		  "calling %s is not allowed inside a when condition\n", func_name);
-		return;
-	}
-	if (!ap)
-	{
-		error_at_node(ep,
-		  "built-in function %s requires an argument\n", func_name);
-		return;
-	}
-	gen_code(", ");
-	gen_ef_arg(func_name, ap, 1);
-	gen_code(")");
-}
-
-/* Generate code for pv functions requiring a database variable.
-   The channel id (index into channel array) is substituted for the variable.
-   "add_length" => the array length (1 if not an array) follows the channel id 
-   "num_params > 0" => add default (zero) parameters up to the spec. number */
-static void gen_pv_func(
-	int		context,
-	Node		*ep,		/* function call expression */
-	const char	*func_name,	/* function name */
-	uint		multi_pv,	/* whether multiple pv arrays are supported */
-	uint		add_length,	/* add array length after channel id */
-	uint		num_params,	/* number of params to add (if omitted) */
-	uint		ef_args,	/* extra args are event flags */
-	const char	*default_values[]/* param values to add (if omitted) */
-)
-{
-	Node	*ap, *subscr = 0;
-	Var	*vp = 0;
-	uint	num_extra_parms = 0;
-
-	ap = ep->func_args;
-	if (ap == 0)
-	{
-		error_at_node(ep,
-			"function '%s' requires an argument\n", func_name);
-		return;
-	}
-
-	if (ap->tag == E_VAR)
-	{
+	case E_VAR:
 		vp = ap->extra.e_var;
 		assert(vp);
-		if (vp->assign == M_MULTI)
+		if (vp->assign == M_MULTI && !pv_array)
 		{
-			if (!add_length)
-			{
-				error_at_node(ap,
-					"passing multi-PV array '%s' to function '%s' is not "
-					"allowed\n",
-					vp->name, func_name);
-				report_at_node(ap, "Perhaps you meant to pass '%s[0]'?\n", vp->name);
-				return;
-			}
-			/* Note: multi_pv is off by default for functions
-			   that did not support that in version 2.1,
-			   passing +p allows the new (multi_pv) behaviour. */
-			assert(add_length);
-			if (!(multi_pv || global_options.newpv))
-			{
-				error_at_node(ap,
-					"passing multi-PV array '%s' to function '%s' is not "
-					"allowed in compatibility mode (option -p)\n",
-					vp->name, func_name);
-				report_at_node(ap, "Perhaps you meant to pass '%s[0]'?\n", vp->name);
-				report_at_node(ap, "Use option +p to allow this function "
-					"(and some others) to operate on all contained PVs\n");
-				return;
-			}
+			error_at_node(ap,
+				"passing multi-PV array '%s' to function '%s' is no "
+				"longer allowed\n",
+				vp->name, func_name);
+			report_at_node(ap, "Perhaps you meant to pass '%s[0]' or "
+				"call the pvArray... variant?\n", vp->name);
+			return;
 		}
-	}
-	else if (ap->tag == E_SUBSCR)
-	{
-		/* Form should be: <pv variable>[<expression>] */
-		Node *operand = ap->subscr_operand;
+		if (vp->assign == M_SINGLE && pv_array)
+		{
+			error_at_node(ap,
+				"passing single-PV variable '%s' to function '%s' is not "
+				"allowed\n",
+				vp->name, func_name);
+			return;
+		}
+		break;
+	case E_SUBSCR:
 		subscr = ap->subscr_index;
-		if (operand->tag == E_VAR)
+		if (ap->subscr_operand->tag == E_VAR)
 		{
-			vp = operand->extra.e_var;
+			vp = ap->subscr_operand->extra.e_var;
+			break;
 		}
-	}
-	if (vp == 0)
-	{
-		error_at_node(ep,
-		  "parameter 1 to '%s' must be a variable or subscripted variable\n",
-		  func_name);
+		/* fall through */
+	default:
+		error_at_node(ap,
+			"parameter %d to '%s' must be a variable or subscripted variable\n",
+			index, func_name);
 		return;
 	}
+	assert(vp);
 
-#ifdef	DEBUG
-	report("gen_pv_func: fun=%s, var=%s\n", func_name, vp->name);
-#endif
-	gen_code(", ");
 	if (vp->assign == M_NONE)
 	{
-		error_at_node(ep,
-			"parameter 1 to '%s' was not assigned to a pv\n", func_name);
+		error_at_node(ap,
+			"parameter %d to '%s' was not assigned to a pv\n",
+			index, func_name);
 		gen_code("?/*%s*/", vp->name);
 	}
 	else if (ap->tag == E_SUBSCR && vp->assign != M_MULTI)
 	{
-		error_at_node(ep,
-			"parameter 1 to '%s' is subscripted but the variable "
-			"it refers to has not been assigned to multiple pvs\n", func_name);
+		error_at_node(ap,
+			"parameter %d to '%s' is subscripted but the variable "
+			"it refers to has not been assigned to multiple pvs\n",
+			index, func_name);
 		gen_code("%d/*%s*/", vp->index, vp->name);
 	}
 	else
@@ -736,61 +702,6 @@ static void gen_pv_func(
 		gen_expr(context, subscr, 0);
 		gen_code(")");
 	}
-
-	/* If requested, add length parameter (if subscripted variable,
-	   length is always 1) */
-	if (add_length)
-	{
-		if (ap->tag != E_SUBSCR)
-		{
-			gen_code(", %d", type_array_length1(vp->type));
-		}
-		else
-		{
-			gen_code(", 1");
-		}
-	}
-
-	/* Add any additional parameter(s) */
-	foreach (ap, ap->next)
-	{
-		num_extra_parms++;
-		gen_code(", ");
-		if (ef_args)
-		{
-			/* special case: constant NOEVFLAG */
-			if (ap->tag == E_CONST)
-			{
-				if (ap->extra.e_const && ap->extra.e_const->type == CT_EVFLAG)
-					gen_expr(context, ap, 0);
-				else
-					error_at_node(ap,
-					  "argument %d to built-in function %s must "
-					  "be an event flag\n",
-					  num_extra_parms+1, func_name);
-			}
-			else
-				gen_ef_arg(func_name, ap, num_extra_parms+1);
-		}
-		else
-		{
-			gen_expr(context, ap, 0);
-		}
-	}
-
-	/* If not enough additional parameter(s) were specified, add
-	   extra zero parameters */
-	while (num_extra_parms < num_params)
-	{
-		gen_code(", %s", default_values[num_extra_parms]);
-		num_extra_parms++;
-	}
-
-	/* Close the parameter list */
-	gen_code(")");
-#ifdef	DEBUG
-	report("gen_pv_func: done (fun=%s, var=%s)\n", func_name, vp->name);
-#endif
 }
 
 static void gen_var_init(Var *vp, int context, int level)

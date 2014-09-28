@@ -54,9 +54,13 @@ typedef	struct state_set *const SS_ID;	/* state set id, opaque */
 typedef struct seqg_vars SEQ_VARS;	/* struct defined in generated code */
 typedef char string[MAX_STRING_SIZE];	/* representation of SNL string type */
 
-/* these typedefs make the code more self documenting */
+/*
+ * It is strongly advised to treat EF_ID and CH_ID as opaque;
+ * in future versions they may be replaced by pointer types.
+ */
 typedef unsigned EF_ID;			/* identifier for an event */
-typedef unsigned CH_ID;		/* identifier for a pv */
+typedef unsigned CH_ID;			/* identifier for a pv */
+
 typedef int seqBool;
 
 typedef struct seqProgram seqProgram;	/* struct defined in generated code */
@@ -79,16 +83,16 @@ epicsShareFunc seqBool seq_pvGetQ(SS_ID, CH_ID);
 epicsShareFunc void seq_pvFlushQ(SS_ID, CH_ID);
 epicsShareFunc pvStat seq_pvPut(SS_ID, CH_ID, enum compType);
 epicsShareFunc pvStat seq_pvPutTmo(SS_ID, CH_ID, enum compType, double tmo);
-epicsShareFunc seqBool seq_pvGetComplete(SS_ID, CH_ID,
-	unsigned, seqBool, seqBool*);
+epicsShareFunc seqBool seq_pvGetComplete(SS_ID, CH_ID);
+/* note: extra parameters retained for compatibility: */
 epicsShareFunc seqBool seq_pvPutComplete(SS_ID, CH_ID,
 	unsigned, seqBool, seqBool*);
-epicsShareFunc void seq_pvGetCancel(SS_ID, CH_ID, unsigned);
-epicsShareFunc void seq_pvPutCancel(SS_ID, CH_ID, unsigned);
+epicsShareFunc void seq_pvGetCancel(SS_ID, CH_ID);
+epicsShareFunc void seq_pvPutCancel(SS_ID, CH_ID);
 epicsShareFunc pvStat seq_pvAssign(SS_ID, CH_ID, const char *);
-epicsShareFunc pvStat seq_pvMonitor(SS_ID, CH_ID, unsigned);
-epicsShareFunc void seq_pvSync(SS_ID, CH_ID, unsigned, EF_ID);
-epicsShareFunc pvStat seq_pvStopMonitor(SS_ID, CH_ID, unsigned);
+epicsShareFunc pvStat seq_pvMonitor(SS_ID, CH_ID);
+epicsShareFunc void seq_pvSync(SS_ID, CH_ID, EF_ID);
+epicsShareFunc pvStat seq_pvStopMonitor(SS_ID, CH_ID);
 /* pv info */
 epicsShareFunc char *seq_pvName(SS_ID, CH_ID);
 epicsShareFunc unsigned seq_pvCount(SS_ID, CH_ID);
@@ -100,8 +104,8 @@ epicsShareFunc seqBool seq_pvAssigned(SS_ID, CH_ID);
 epicsShareFunc seqBool seq_pvConnected(SS_ID, CH_ID);
 
 #define seq_pvIndex(ssId, chId)	chId
-#define seq_ssId(ssId)			seqg_ss
-#define seq_pVar(ssId)			seqg_var
+#define ssId			seqg_ss
+#define pVar			seqg_var
 
 /* global operations */
 epicsShareFunc void seq_pvFlush(SS_ID);
@@ -125,8 +129,6 @@ epicsShareFunc epicsThreadId epicsShareAPI seq(seqProgram *, const char *, unsig
 
 /* backwards compatibility macros */
 /* DEPRECATED don't use in new code */
-#define ssId			seqg_ss
-#define pVar			seqg_var
 #define USER_VAR		SEQ_VARS
 #define UserVar			seqg_vars
 #define VAR_ID			CH_ID

@@ -9,41 +9,34 @@ in the file LICENSE that is included with this distribution.
 
 #include "sym_table.h"
 
-struct const_symbol
-{
+struct const_symbol {
     const char  *name;
     int         type;
 };
 
-enum const_type
-{
-    CT_NONE,
-    CT_BOOL,
-    CT_SYNCFLAG,
+enum const_type {
     CT_EVFLAG,
-    CT_PVSTAT,
-    CT_PVSEVR
+    CT_OTHER
 };
 
-enum func_type
-{
-    FT_EVENT,
-    FT_PV,
-    FT_OTHER
+enum param_type {
+    PT_EF,
+    PT_PV,
+    PT_PV_ARRAY,
+    PT_OTHER
 };
 
-struct func_symbol
-{
-    const char  *name;              /* SNL name */
-    const char  *c_name;            /* C name, or 0 if same as SNL name */
-    uint        type            :2; /* see enum func_type */
-    uint        multi_pv        :1; /* whether multi-pv args are supported */
-    uint        add_length      :1; /* need to pass array size */
-    uint        default_args    :2; /* number of optional parameters */
-    uint        ef_action_only  :1; /* not allowed in when-conditions */
-    uint        ef_args         :1; /* extra parameter must be an event flag */
-    uint        cond_only       :1; /* only allowed in when-conditions */
-    const char  **default_values;   /* defaults for optional parameters */
+struct param {
+    enum param_type type;
+    const char *default_value;
+};
+
+struct func_symbol {
+    const char *name;           /* SNL name */
+    const char *c_name;         /* C name, or 0 if same as SNL name */
+    uint action_only:1;         /* not allowed in when-conditions */
+    uint cond_only:1;           /* only allowed in when-conditions */
+    const struct param **params;/* parameter descriptions */
 };
 
 /* Insert builtin constants into symbol table */

@@ -8,96 +8,117 @@ in the file LICENSE that is included with this distribution.
 
 static struct const_symbol const_symbols[] =
 {
-    {"TRUE",                CT_BOOL},
-    {"FALSE",               CT_BOOL},
-    {"SYNC",                CT_SYNCFLAG},
-    {"ASYNC",               CT_SYNCFLAG},
+    {"TRUE",                CT_OTHER },
+    {"FALSE",               CT_OTHER },
+    {"SYNC",                CT_OTHER },
+    {"ASYNC",               CT_OTHER },
     {"NOEVFLAG",            CT_EVFLAG},
-    {"pvStatOK",            CT_PVSTAT},
-    {"pvStatERROR",         CT_PVSTAT},
-    {"pvStatDISCONN",       CT_PVSTAT},
-    {"pvStatREAD",          CT_PVSTAT},
-    {"pvStatWRITE",         CT_PVSTAT},
-    {"pvStatHIHI",          CT_PVSTAT},
-    {"pvStatHIGH",          CT_PVSTAT},
-    {"pvStatLOLO",          CT_PVSTAT},
-    {"pvStatLOW",           CT_PVSTAT},
-    {"pvStatSTATE",         CT_PVSTAT},
-    {"pvStatCOS",           CT_PVSTAT},
-    {"pvStatCOMM",          CT_PVSTAT},
-    {"pvStatTIMEOUT",       CT_PVSTAT},
-    {"pvStatHW_LIMIT",      CT_PVSTAT},
-    {"pvStatCALC",          CT_PVSTAT},
-    {"pvStatSCAN",          CT_PVSTAT},
-    {"pvStatLINK",          CT_PVSTAT},
-    {"pvStatSOFT",          CT_PVSTAT},
-    {"pvStatBAD_SUB",       CT_PVSTAT},
-    {"pvStatUDF",           CT_PVSTAT},
-    {"pvStatDISABLE",       CT_PVSTAT},
-    {"pvStatSIMM",          CT_PVSTAT},
-    {"pvStatREAD_ACCESS",   CT_PVSTAT},
-    {"pvStatWRITE_ACCESS",  CT_PVSTAT},
-    {"pvSevrOK",            CT_PVSEVR},
-    {"pvSevrERROR",         CT_PVSEVR},
-    {"pvSevrNONE",          CT_PVSEVR},
-    {"pvSevrMINOR",         CT_PVSEVR},
-    {"pvSevrMAJOR",         CT_PVSEVR},
-    {"pvSevrINVALID",       CT_PVSEVR},
-    {0,                     CT_NONE}
+    {"pvStatOK",            CT_OTHER },
+    {"pvStatERROR",         CT_OTHER },
+    {"pvStatDISCONN",       CT_OTHER },
+    {"pvStatREAD",          CT_OTHER },
+    {"pvStatWRITE",         CT_OTHER },
+    {"pvStatHIHI",          CT_OTHER },
+    {"pvStatHIGH",          CT_OTHER },
+    {"pvStatLOLO",          CT_OTHER },
+    {"pvStatLOW",           CT_OTHER },
+    {"pvStatSTATE",         CT_OTHER },
+    {"pvStatCOS",           CT_OTHER },
+    {"pvStatCOMM",          CT_OTHER },
+    {"pvStatTIMEOUT",       CT_OTHER },
+    {"pvStatHW_LIMIT",      CT_OTHER },
+    {"pvStatCALC",          CT_OTHER },
+    {"pvStatSCAN",          CT_OTHER },
+    {"pvStatLINK",          CT_OTHER },
+    {"pvStatSOFT",          CT_OTHER },
+    {"pvStatBAD_SUB",       CT_OTHER },
+    {"pvStatUDF",           CT_OTHER },
+    {"pvStatDISABLE",       CT_OTHER },
+    {"pvStatSIMM",          CT_OTHER },
+    {"pvStatREAD_ACCESS",   CT_OTHER },
+    {"pvStatWRITE_ACCESS",  CT_OTHER },
+    {"pvSevrOK",            CT_OTHER },
+    {"pvSevrERROR",         CT_OTHER },
+    {"pvSevrNONE",          CT_OTHER },
+    {"pvSevrMINOR",         CT_OTHER },
+    {"pvSevrMAJOR",         CT_OTHER },
+    {"pvSevrINVALID",       CT_OTHER },
+    {"pVar",                CT_OTHER },
+    {"ssId",                CT_OTHER },
+    {0,                     CT_OTHER }
 };
 
-const char *pvGetPutArgs[] = {
-    "DEFAULT",
-    "DEFAULT_TIMEOUT"
-};
+/* single parameter descriptors */
+static const struct param efP       = { PT_EF, 0 };
+static const struct param pvP       = { PT_PV, 0 };
+static const struct param pvArrayP  = { PT_PV_ARRAY, 0 };
+static const struct param noDefP    = { PT_OTHER, 0 };
+static const struct param compTypeP = { PT_OTHER, "DEFAULT" };
+static const struct param tmoP      = { PT_OTHER, "DEFAULT_TIMEOUT" };
+static const struct param boolP     = { PT_OTHER, "FALSE" };
+static const struct param ptrP      = { PT_OTHER, "NULL" };
+static const struct param lengthP   = { PT_OTHER, 0 };
+static const struct param defLenP   = { PT_OTHER, "1" };
 
-const char *pvGetPutCompleteArgs[] = {
-    "FALSE",
-    "NULL"
-};
+/* multiple parameter descriptors */
+static const struct param *noParams[]                    = {0};
+static const struct param *otherParams[]                 = {&noDefP,0};
+static const struct param *efParams[]                    = {&efP,0};
+static const struct param *assignParams[]                = {&pvP,&noDefP,0};
+static const struct param *pvParams[]                    = {&pvP,0};
+static const struct param *pvArrayParams[]               = {&pvArrayP,&lengthP,0};
+static const struct param *pvSyncParams[]                = {&pvP,&efP,0};
+static const struct param *pvArraySyncParams[]           = {&pvArrayP,&lengthP,&efP,0};
+static const struct param *pvGetPutParams[]              = {&pvP,&compTypeP,&tmoP,0};
+static const struct param *pvArrayGetPutCompleteParams[] = {&pvArrayP,&lengthP,&boolP,&ptrP,0};
+/* for backward compatibility */
+static const struct param *pvPutCompleteParams[]         = {&pvP,&defLenP,&boolP,&ptrP,0};
 
 static struct func_symbol func_symbols[] =
 {
-    /* name                             type           add_length    ef_action_only   cond_only          */
-    /*  |                                |        multi_pv  | default_args |  ef_args   | default_values */
-    /*  |                                |            |     |       |      |    |       |       |        */
-    {"delay",           0,              FT_OTHER,   FALSE,  FALSE,  0,  FALSE,  FALSE,  TRUE ,  0},
-    {"efClear",         0,              FT_EVENT,   FALSE,  FALSE,  0,  TRUE,   FALSE,  FALSE,  0},
-    {"efSet",           0,              FT_EVENT,   FALSE,  FALSE,  0,  TRUE,   FALSE,  FALSE,  0},
-    {"efTest",          0,              FT_EVENT,   FALSE,  FALSE,  0,  FALSE,  FALSE,  FALSE,  0},
-    {"efTestAndClear",  0,              FT_EVENT,   FALSE,  FALSE,  0,  FALSE,  FALSE,  FALSE,  0},
-    {"macValueGet",     0,              FT_OTHER,   FALSE,  FALSE,  0,  FALSE,  FALSE,  FALSE,  0},
-    {"optGet",          0,              FT_OTHER,   FALSE,  FALSE,  0,  FALSE,  FALSE,  FALSE,  0},
-    {"pvAssign",        0,              FT_PV,      FALSE,  FALSE,  0,  FALSE,  FALSE,  FALSE,  0},
-    {"pvAssignCount",   0,              FT_OTHER,   FALSE,  FALSE,  0,  FALSE,  FALSE,  FALSE,  0},
-    {"pvAssigned",      0,              FT_PV,      FALSE,  FALSE,  0,  FALSE,  FALSE,  FALSE,  0},
-    {"pvChannelCount",  0,              FT_OTHER,   FALSE,  FALSE,  0,  FALSE,  FALSE,  FALSE,  0},
-    {"pvConnectCount",  0,              FT_OTHER,   FALSE,  FALSE,  0,  FALSE,  FALSE,  FALSE,  0},
-    {"pvConnected",     0,              FT_PV,      FALSE,  FALSE,  0,  FALSE,  FALSE,  FALSE,  0},
-    {"pvCount",         0,              FT_PV,      FALSE,  FALSE,  0,  FALSE,  FALSE,  FALSE,  0},
-    {"pvFlush",         0,              FT_OTHER,   FALSE,  FALSE,  0,  FALSE,  FALSE,  FALSE,  0},
-    {"pvFlushQ",        0,              FT_PV,      FALSE,  FALSE,  0,  FALSE,  FALSE,  FALSE,  0},
-    {"pvFreeQ",         0,              FT_PV,      FALSE,  FALSE,  0,  FALSE,  FALSE,  FALSE,  0},
-    {"pvGet",           "pvGetTmo",     FT_PV,      FALSE,  FALSE,  2,  FALSE,  FALSE,  FALSE,  pvGetPutArgs},
-    {"pvGetCancel",     0,              FT_PV,      TRUE,   TRUE,   0,  FALSE,  FALSE,  FALSE,  0},
-    {"pvGetComplete",   0,              FT_PV,      FALSE,  TRUE,   2,  FALSE,  FALSE,  FALSE,  pvGetPutCompleteArgs},
-    {"pvGetQ",          0,              FT_PV,      FALSE,  FALSE,  0,  FALSE,  FALSE,  FALSE,  0},
-    {"pvIndex",         0,              FT_PV,      FALSE,  FALSE,  0,  FALSE,  FALSE,  FALSE,  0},
-    {"pvMessage",       0,              FT_PV,      FALSE,  FALSE,  0,  FALSE,  FALSE,  FALSE,  0},
-    {"pvMonitor",       0,              FT_PV,      FALSE,  TRUE,   0,  FALSE,  FALSE,  FALSE,  0},
-    {"pvName",          0,              FT_PV,      FALSE,  FALSE,  0,  FALSE,  FALSE,  FALSE,  0},
-    {"pvPut",           "pvPutTmo",     FT_PV,      FALSE,  FALSE,  2,  FALSE,  FALSE,  FALSE,  pvGetPutArgs},
-    {"pvPutCancel",     0,              FT_PV,      TRUE,   TRUE,   0,  FALSE,  FALSE,  FALSE,  0},
-    {"pvPutComplete",   0,              FT_PV,      TRUE,   TRUE,   2,  FALSE,  FALSE,  FALSE,  pvGetPutCompleteArgs},
-    {"pvSeverity",      0,              FT_PV,      FALSE,  FALSE,  0,  FALSE,  FALSE,  FALSE,  0},
-    {"pvStatus",        0,              FT_PV,      FALSE,  FALSE,  0,  FALSE,  FALSE,  FALSE,  0},
-    {"pvStopMonitor",   0,              FT_PV,      FALSE,  TRUE,   0,  FALSE,  FALSE,  FALSE,  0},
-    {"pvSync",          0,              FT_PV,      FALSE,  TRUE,   0,  FALSE,  TRUE ,  FALSE,  0},
-    {"pvTimeStamp",     0,              FT_PV,      FALSE,  FALSE,  0,  FALSE,  FALSE,  FALSE,  0},
-    {"seqLog",          0,              FT_OTHER,   FALSE,  FALSE,  0,  FALSE,  FALSE,  FALSE,  0},
-    {"pVar",            0,              FT_OTHER,   FALSE,  FALSE,  0,  FALSE,  FALSE,  FALSE,  0},
-    {"ssId",            0,              FT_OTHER,   FALSE,  FALSE,  0,  FALSE,  FALSE,  FALSE,  0},
-    {0,                 0,              FT_OTHER,   FALSE,  FALSE,  0,  FALSE,  FALSE,  FALSE,  0}
+    /* name              c_name     action_only cond_only params                    */
+    {"delay",               0,          FALSE,  TRUE,   otherParams                 },
+    {"efClear",             0,          TRUE,   FALSE,  efParams                    },
+    {"efSet",               0,          TRUE,   FALSE,  efParams                    },
+    {"efTest",              0,          FALSE,  FALSE,  efParams                    },
+    {"efTestAndClear",      0,          FALSE,  FALSE,  efParams                    },
+    {"macValueGet",         0,          FALSE,  FALSE,  otherParams                 },
+    {"optGet",              0,          FALSE,  FALSE,  otherParams                 },
+    {"pvAssign",            0,          FALSE,  FALSE,  assignParams                },
+    {"pvAssignCount",       0,          FALSE,  FALSE,  noParams                    },
+    {"pvAssigned",          0,          FALSE,  FALSE,  pvParams                    },
+    {"pvChannelCount",      0,          FALSE,  FALSE,  noParams                    },
+    {"pvConnectCount",      0,          FALSE,  FALSE,  noParams                    },
+    {"pvConnected",         0,          FALSE,  FALSE,  pvParams                    },
+    {"pvArrayConnected",    0,          FALSE,  FALSE,  pvArrayParams               },
+    {"pvCount",             0,          FALSE,  FALSE,  pvParams                    },
+    {"pvFlush",             0,          FALSE,  FALSE,  noParams                    },
+    {"pvFlushQ",            0,          FALSE,  FALSE,  pvParams                    },
+    {"pvFreeQ",             0,          FALSE,  FALSE,  pvParams                    },
+    {"pvGet",               "pvGetTmo", FALSE,  FALSE,  pvGetPutParams              },
+    {"pvGetCancel",         0,          FALSE,  FALSE,  pvParams                    },
+    {"pvArrayGetCancel",    0,          FALSE,  FALSE,  pvArrayParams               },
+    {"pvGetComplete",       0,          FALSE,  FALSE,  pvParams                    },
+    {"pvArrayGetComplete",  0,          FALSE,  FALSE,  pvArrayGetPutCompleteParams },
+    {"pvGetQ",              0,          FALSE,  FALSE,  pvParams                    },
+    {"pvIndex",             0,          FALSE,  FALSE,  pvParams                    },
+    {"pvMessage",           0,          FALSE,  FALSE,  pvParams                    },
+    {"pvMonitor",           0,          FALSE,  FALSE,  pvParams                    },
+    {"pvArrayMonitor",      0,          FALSE,  FALSE,  pvArrayParams               },
+    {"pvName",              0,          FALSE,  FALSE,  pvParams                    },
+    {"pvPut",               "pvPutTmo", FALSE,  FALSE,  pvGetPutParams              },
+    {"pvPutCancel",         0,          FALSE,  FALSE,  pvParams                    },
+    {"pvArrayPutCancel",    0,          FALSE,  FALSE,  pvArrayParams               },
+    {"pvPutComplete",       0,          FALSE,  FALSE,  pvPutCompleteParams         },
+    {"pvArrayPutComplete",  0,          FALSE,  FALSE,  pvArrayGetPutCompleteParams },
+    {"pvSeverity",          0,          FALSE,  FALSE,  pvParams                    },
+    {"pvStatus",            0,          FALSE,  FALSE,  pvParams                    },
+    {"pvStopMonitor",       0,          FALSE,  FALSE,  pvParams                    },
+    {"pvArrayStopMonitor",  0,          FALSE,  FALSE,  pvArrayParams               },
+    {"pvSync",              0,          FALSE,  FALSE,  pvSyncParams                },
+    {"pvArraySync",         0,          FALSE,  FALSE,  pvArraySyncParams           },
+    {"pvTimeStamp",         0,          FALSE,  FALSE,  pvParams                    },
+    {0,                     0,          FALSE,  FALSE,  0                           }
 };
 
 /* Insert builtin constants into symbol table */

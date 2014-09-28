@@ -29,6 +29,11 @@ in the file LICENSE that is included with this distribution.
 
 #include "seqCom.h"
 #include "seq_prim_types.h"
+#include "shareLib.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef epicsUInt32 seqMask;				/* for event masks and options */
 
@@ -135,5 +140,26 @@ epicsShareFunc void seq_efInit(PROG_ID sp, EF_ID ev_flag, unsigned val);
 /* called by generated main and registrar routines */
 epicsShareFunc void seqRegisterSequencerProgram(seqProgram *p);
 epicsShareFunc void seqRegisterSequencerCommands(void);
+
+/*
+ * These function prototypes are intentionally left out of the public API in
+ * seqCom.h. They will be moved there in version 2.3 with slightly modified
+ * types. You may use them in embedded C code but your programs will no longer
+ * work when upgrading to 2.3.
+ */
+epicsShareFunc seqBool seq_pvArrayGetComplete(SS_ID, CH_ID,
+	unsigned, seqBool, seqBool*);
+epicsShareFunc seqBool seq_pvArrayPutComplete(SS_ID, CH_ID,
+	unsigned, seqBool, seqBool*);
+epicsShareFunc void seq_pvArrayGetCancel(SS_ID, CH_ID, unsigned);
+epicsShareFunc void seq_pvArrayPutCancel(SS_ID, CH_ID, unsigned);
+epicsShareFunc pvStat seq_pvArrayMonitor(SS_ID, CH_ID, unsigned);
+epicsShareFunc pvStat seq_pvArrayStopMonitor(SS_ID, CH_ID, unsigned);
+epicsShareFunc void seq_pvArraySync(SS_ID, CH_ID, unsigned, EF_ID);
+epicsShareFunc seqBool seq_pvArrayConnected(SS_ID ss, CH_ID chId, unsigned length);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif	/*INCLseqsnch*/

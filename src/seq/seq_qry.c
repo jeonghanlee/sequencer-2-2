@@ -95,13 +95,13 @@ epicsShareFunc void epicsShareAPI seqShow(epicsThreadId tid)
 		printf("  Get in progress = [");
 		for (n = 0; n < sp->numChans; n++)
 			if (optTest(sp, OPT_SAFE) || seq_pvAssigned(ss, n))
-				printf("%d",!seq_pvGetComplete(ss, n, 0, 0, 0));
+				printf("%d",!seq_pvGetComplete(ss, n));
 		printf("]\n");
 
 		printf("  Put in progress = [");
 		for (n = 0; n < sp->numChans; n++)
 			if (optTest(sp, OPT_SAFE) || seq_pvAssigned(ss, n))
-				printf("%d",!seq_pvPutComplete(ss, n, 0, 0, 0));
+				printf("%d",!seq_pvPutComplete(ss, n, 1, 0, 0));
 		printf("]\n");
 
 		if (optTest(sp, OPT_SAFE))
