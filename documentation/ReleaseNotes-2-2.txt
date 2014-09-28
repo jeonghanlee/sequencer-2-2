@@ -51,10 +51,6 @@ generated C code, the C compiler will warn you anyway. You can enable extra
 warnings (`+W`, see `New Option for Extra Warnings`_ below) to get
 these warnings, but that will report foreign functions, too.
 
-Due to these changes, the so called "foreign entity declarations",
-introduced in version 2.1, have become obsolete and are therefore
-*deprecated*. With hindsight, introducing them was a bad idea.
-
 A related change is that struct or union members are no longer identified
 with variables in the SNL syntax; members are no longer considered to be
 foreign entities (but for compatibility you can still list them in a foreign
@@ -89,6 +85,24 @@ since there is no way to "assign" struct members to PVs. Lifting this
 limitation is closely related to passing channel arguments to functions and
 therefore postponed, too.
 
+New Option for Extra Warnings
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The new option:`+W` (off by default) enables extra warnings, that you
+normally don't want to see. Currently this warns you once for each foreign
+entity that appears in the program.
+
+
+Deprecated and Removed Features
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Deprecated Foreign Declarations
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The so called "foreign entity declarations", introduced in version 2.1, have
+become obsolete (see `Other Foreign Entities`_) and are therefore
+*deprecated*.
+
 Removed Keyword "connect"
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -98,13 +112,30 @@ will introduce a completely new syntax for that feature anyway. I can demote
 the removal to a deprecation warning if it turns out that this seriously
 hurts people.
 
+With hindsight, introducing this was a bad idea, as were foreign
+declarations.
 
-New Option for Extra Warnings
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Removed PV Library
+~~~~~~~~~~~~~~~~~~
 
-The new option:`+W` (off by default) enables extra warnings, that you
-normally don't want to see. Currently this warns you once for each foreign
-entity that appears in the program.
+The PV library has been almost completely eliminated. What remains is a thin
+layer over CA, implemented in C, and offering only the functionality that is
+actually needed by the sequencer. The API is similar (but not identical) to
+the old C API; particularly, all the pvStat, pvSevr, and pvType definitions
+are as before.
+
+The documentation for the PV layer has been removed, too. The only remaining
+user relevant part of the interface is contained in pvAlarm.h, see
+`Built-in Constants`_.
+
+Also removed were the Keck examples and the KTL related stuff in other example
+directories.
+
+Removed devSequencer
+~~~~~~~~~~~~~~~~~~~~
+
+The (broken and ugly) sequencer device support was removed.
+Consequently, seqFindProgByName was be removed as it is no longer needed.
 
 
 Built-in Constants
@@ -148,7 +179,7 @@ pvMessage
 
 The built-in function `pvMessage` now consistently returns a failure string
 describing the problem whenever anything with the passed channel variable
-went wrong. This particilarly applies to any failure status returned from
+went wrong. This particularly applies to any failure status returned from
 the CA layer.
 
 New Delay Implementation
@@ -169,7 +200,7 @@ function. The effect of delaying the state transition is now achieved
 (completely internal to the implementation of seq_delay) by adjusting the
 minimum time to wait for events (if the delay has not yet expired). The
 run-time system no longer stores the delay, but rather the (future) time
-when the wakeup should happen, leading to more accurate timing of delays.
+when the wake-up should happen, leading to more accurate timing of delays.
 
 Since calling delay outside of the condition of a state transition never had
 any useful effect, it is now disallowed.
@@ -201,7 +232,7 @@ PV Functions and Multiply Assigned Arrays
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A long time wart of the sequencer, inherited from the 2.0 version, was the
-behaviour of built-in pv functions when you pass an array in which elements
+behaviour of built-in PV functions when you pass an array in which elements
 are assigned to separate PVs. In most cases (except one, see below) this
 behaved as if you had passed in just the first element of the array, which
 is inconsistent and error-prone.
@@ -212,21 +243,29 @@ such programs seems like a bad idea. Instead, this is now a *compile time
 error*. The error message contains a hint how the user can fix their program
 ("perhaps you meant to pass xxx[0]?") so that it retains its old behaviour.
 
-For some of the pv functions, operating on all contained PVs of a multi-PV
+For some of the PV functions, operating on all contained PVs of a multi-PV
 array would make sense if one would be willing to overload them. I decided
 against that and instead provide a number of new functions named
-"pvArray..." for that:
+"pvArray...":
 
 * `pvArrayGetComplete`
 * `pvArrayMonitor`
 * `pvArrayPutComplete`
 * `pvArrayStopMonitor`
 * `pvArraySync`
+* `pvArrayConnected`
 
 I may add ``pvArrayGet`` and ``pvArrayPut`` in the future. Especially for
-the `SYNC<compType>` variant, such functions could be implemented more
-efficiently than the semantically equivalent for loop over all elements of
+the `SYNC<compType>` variant, such functions could be implemented (much)
+more efficiently than the semantically equivalent loop over all elements of
 the array.
+
+.. note::
+
+  The C side equivalents seq_pvArray... are not (yet) part of the public
+  API. The reason is that in version 2.3 they will get a slightly different
+  type. You can use them in embedded C code but if you do that you should be
+  aware that your program might not work or even build with version 2.3.
 
 Timeout Arguments for pvGet and pvPut
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -242,17 +281,16 @@ As before, the default behaviour for ``pvGet(var)`` i.e. neither an explicit
 effect. In this case, or if ``SYNC`` is given with no extra argument, the
 standard default timeout of 10 seconds is assumed.
 
-.. note::
-
-  This changes the prototype of the underlying C functions seq_pvGet and
-  seq_pvPut. Existing C code can be fixed by supplying DEFAULT_TIMEOUT as
-  an extra argument, see `External API`_ below.
+In contrast to previous releases of version 2.2, the C equivalents are
+unchanged with respect to version 2.1. Instead, the compiler generates calls
+to ``seq_pvGetTmo`` or ``seq_pvPutTmo`` which have the additional argument.
 
 New Built-in Functions pvGetCancel and pvPutCancel
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 It is now possible to cancel and asynchronous get or put request by calling
-`pvGetCancel` or `pvPutCancel`, respectively.
+`pvGetCancel` or `pvPutCancel`, or the channel array variants
+`pvArrayGetCancel` or `pvArrayPutCancel`, respectively.
 
 
 Generated C Code
@@ -273,7 +311,7 @@ variable declarations. This concerns types imported via ``%%#include``
 as well as types defined in escaped C code.
 
 Note that this means that escaped C code that appears before the first state
-set cannot access global variables declared in SNL, even if the reentrant
+set cannot access global variables declared in SNL, even if the re-entrant
 option is not in effect. Such C code should now be placed after the last
 state set.
 
@@ -289,7 +327,7 @@ These now follow a strict naming convention:
   Generated names start with ``seqg_``.
 
 In particular, ``struct UserVar`` became ``struct seqg_var``, and the
-implicit parameters ``ssId`` and ``pVar`` are now ``seqg_ss`` and
+implicit parameters ``ssId`` and ``pVar`` are now named ``seqg_ss`` and
 ``seqg_var``, respectively. Because these three identifiers are often
 referenced in escaped C code, I have added compatibility aliases for them,
 so as not to break existing programs. See `External API`_ below for details.
@@ -304,7 +342,7 @@ shout! Adding more compatibility aliases can be done any time.
 Event Flags
 ~~~~~~~~~~~
 
-The compiler now generates symbolic names for event flags to make it easier for
+The compiler now generates variables for event flags to make it easier for
 escaped C code to call event flag functions (seq_ef*).
 
 
@@ -313,7 +351,7 @@ External API
 
 I finally got around to separating the public API (to be called from
 e.g. embedded C code) from the internal interface between the compiler
-generated code and the runtime system. The latter parts have been moved
+generated code and the run-time system. The latter parts have been moved
 from seqCom.h to the new header file seq_snc.h.
 
 In particular, the following changes have been made:
@@ -334,10 +372,10 @@ Retained
 
 Added
 ~~~~~
-- builtin "functions" seq_pVar and seq_ssId (like pvIndex these are actually
+- built-in "functions" seq_pVar and seq_ssId (like pvIndex these are actually
   implemented as macros in seqCom.h)
 
-- builtin functions seq_pvGetCancel, seq_pvPutCancel
+- built-in functions seq_pvGetCancel, seq_pvPutCancel
 
 - the constant DEFAULT_TIMEOUT (see `New Delay Implementation`_)
 
@@ -369,7 +407,9 @@ Removed
 
 - DELAY_ID (obsolete, see `New Delay Implementation`_)
 
-- OPT_MAIN (-m is a compile time only option)
+- OPT_MAIN (-m is a compile time option)
+
+- optTest (is now internal to seq library)
 
 Moved to seq_snc.h
 ~~~~~~~~~~~~~~~~~~
@@ -401,7 +441,7 @@ Moved to seq_snc.h
 
   + NBITS
   + NWORDS
-  + bitSet, bitClear, bitTest, optTest
+  + bitSet, bitClear, bitTest
 
   Like option values, these were never meant to be part of a public API.
 
@@ -414,7 +454,7 @@ Moved to seq_snc.h
 Other Changes
 ~~~~~~~~~~~~~
 
-- the (in EPICS base) deprecated epicsShareAPI markers have been removed
+- epicsShareAPI markers have been removed except for shell commands
 
 Remarks
 ~~~~~~~
@@ -423,32 +463,7 @@ My justification for making these potentially breaking changes is that this
 is how it should have been done from the start. The things I have removed
 were never meant to be part of a public API. In the unlikely event that
 there are existing programs with a legitimate need to access these
-internals, they can always include seq_snc.h (at their own risk), or just
-refrain from upgrading to version 2.2.
-
-
-Removed PV Library
-^^^^^^^^^^^^^^^^^^
-
-The PV library has been almost completely eliminated. What remains is a thin
-layer over CA, implemented in C, and offering only the functionality that is
-actually needed by the sequencer. The API is similar (but not identical) to
-the old C API; particularly, all the pvStat, pvSevr, and pvType definitions
-are as before.
-
-The documentation for the PV layer has been removed, too. The only remaining
-user relevant part of the interface is contained in pvAlarm.h, see
-`Built-in Constants`_ above.
-
-Also removed were the keck examples and the KTL related stuff in other example
-directories.
-
-
-Removed devSequencer
-^^^^^^^^^^^^^^^^^^^^
-
-The (broken and ugly) sequencer device support was removed.
-Consequently, seqFindProgByName was be removed as it is no longer needed.
+internals, they can always include seq_snc.h.
 
 
 Build System
@@ -480,7 +495,7 @@ header files or in fact SNL code from another file.
 Bug Fixes
 ^^^^^^^^^
 
-* Place program lock around wakeup commands in CA callback.
+* Place program lock around wake-up commands in CA callback.
 
   This prevents a race condition resulting in a crash when the program
   shuts down and deletes mutexes etc before the callback has issued its
