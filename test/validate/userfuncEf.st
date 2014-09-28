@@ -34,7 +34,7 @@ ss myss {
     }
     state set {
         when () {
-            efSet_x(ssId(), x);
+            efSet_x(ssId, x);
         } state check_set
     }
     state check_set {

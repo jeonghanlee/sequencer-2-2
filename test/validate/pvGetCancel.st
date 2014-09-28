@@ -7,7 +7,6 @@ in the file LICENSE that is included with this distribution.
 program pvGetCancelTest
 
 /* option +s; */
-option +p;
 
 %%#include "../testSupport.h"
 

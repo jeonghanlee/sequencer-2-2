@@ -14,7 +14,7 @@ entry {
 ss test {
     state testExt {
         entry {
-            extfun(ssId());
+            extfun(ssId);
         }
         when (efTestAndClear(e)) {
             testPass("got the event");

@@ -29,12 +29,12 @@ ss myss {
         int i_saved = 0;
         when (delay(0.1)) {
             if (i % 2)
-                incr(ssId(), &i, pvIndex(i));
+                incr(ssId, &i, pvIndex(i));
             else
-                incr_compat(ssId(), &i, pvIndex(i));
+                incr_compat(ssId, &i, pvIndex(i));
             testOk1(i_saved == i-1);
             i_saved = i;
-            set_i(pVar(), 1);
+            set_i(pVar, 1);
             testOk1(i == 1);
             null();
         } state doit
