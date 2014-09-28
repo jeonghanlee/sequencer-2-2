@@ -78,11 +78,15 @@ is treated similarly, except that it is stripped of leading and
 trailing whitespace and inserted in the output with the current
 indentation.
 
+Note that embedded C code fragments are *not* allowed to appear in
+expressions.
+
 See `Escape to C Code` for examples and rationale.
 
-Embedded C code fragments are causing two of the three conflicts in the
-grammar. The reason is that the parser cannot decide whether such a
-fragment is a declaration or a statement.
+Embedded C code fragments are the cause for one of the two conflicts in the
+grammar. The reason is that the parser cannot always decide whether such a
+fragment is a declaration or a statement. (The other conflict is due to the
+infamous "dangling else".)
 
 Line Markers
 ^^^^^^^^^^^^
@@ -398,12 +402,12 @@ anyway.
 Basic Types
 ~~~~~~~~~~~
 
+These are the allowed base types, of which you can declare variables,
+or pointers or arrays etc.
+
 .. productionlist::
    basetype: `prim_type`
    basetype: "evflag"
-
-These are the allowed base types, of which you can declare variables,
-or pointers or arrays etc.
 
 .. versionadded:: 2.2
 
@@ -658,7 +662,7 @@ An array variable assigned wholesale to one process variable (using
 the first syntactic variant above) or an element of a
 two-dimensional variable assigned to an array process variable
 (using the second syntactic variant) will use either the length of
-the array or the native count for the underlying
+the array or the native count for the underlying process
 variable, whichever is smaller, when communicating with the
 underlying process variable. The native count is determined when a
 connection is established. For anonymous PVs, the length of the array is
@@ -948,9 +952,6 @@ Entry blocks are executed when the state is entered, before any of the
 Exit blocks are executed when the state is left, after the `transition`
 block that determines the next state.
 
-.. note:: State options can be used to control whether entry/exit blocks
-   get executed even if the new state is the same as the current one.
-
 Transitions
 ~~~~~~~~~~~
 
@@ -958,7 +959,6 @@ Transitions
    transitions: `transitions` `transition`
    transitions: `transition`
    transition: "when" "(" `condition` ")" `block` "state" `identifier`
-   transition: "when" "(" `condition` ")" `block` "exit"
    condition: `opt_expr`
 
 A state transition starts with the keyword "when", followed by a condition
@@ -967,7 +967,7 @@ then the name of the target state (which must be a state of the same state
 set).
 
 The condition must be a valid boolean expression (see `Expressions`_). If
-there is no condition given, it defaults to `TRUE <seqBool>` (1).
+there is no condition given, it defaults to `TRUE <seqBool>`.
 
 Conditions are evaluated
 
@@ -976,24 +976,48 @@ Conditions are evaluated
 #. when an event happens (see below).
 
 Evaluation proceeds in the order in which the `transitions` appear in the
-program. If one of the `condition`\s evaluates to `TRUE <seqBool>`, the corresponding
-action block is executed, any exit block of the state is executed, and the
-state changes to the specified new state. Otherwise, the state set waits
-until an event happens. 
+program. If one of the `condition`\s evaluates to `true`, the
+corresponding action block is executed, any exit block of the state is
+executed, and the state changes to the specified new state. Otherwise, the
+state set waits until an event happens.
 
 There are five types of event:
 
 -  a process variable monitor is posted
 -  an asynchronous `pvGet` or `pvPut` completes
--  a time `delay` elapses
+-  a `delay` timer expires
 -  an event flag is set or cleared
 -  a process variable connects or disconnects
 
+While the sequencer's runtime system and the compiler work together to
+minimize evaluation of conditions, there is no guarantee whatsoever about
+the number of times conditions might be evaluated before one of them returns
+`true`.
+
+Conditions are usually written so that they have no side-effects. This
+ensures that it does not matter how often they are evaluated or in which
+order.
+
+.. note::
+
+   If a condition has a side-effect, care should be taken to ensure that the
+   effect is limited to the case when the whole(!) condition fires (returns
+   `true`), so that it will occur at most once. Otherwise you will have no
+   control over when and how often the effect happens.
+
+   Built-in functions that have side-effects and are suitable for use in
+   conditions, notably `efTestAndClear` and `pvGetQ`, meet this criterion,
+   but only of used by themselves alone. If used as part of a larger
+   expression, the whole condition might no longer meet the citerion.
+
 .. versionadded:: 2.1
+
+.. productionlist::
+   transition: "when" "(" `condition` ")" `block` "exit"
 
 Instead of declaring which should be the next state, one can use the single
 keyword "exit". This has the same effect as a call to the `seqStop`
-command, that is, at this point all state sets should terminate (after
+shell command, that is, at this point all state sets should terminate (after
 completing any action block in progress) and execution proceed with the
 global exit block (if any). Afterwards all channels are disconnected, all
 allocated memory is freed, and the program terminates.
@@ -1349,12 +1373,13 @@ the parameters of built-in functions. Note that these are not valid SNL types.
 .. c:type:: channel
 
 A parameter with this type means the function expects an SNL variable or
-array element that has been assigned to a (possibly anonymous) process
+array element that is assigned to a single (possibly anonymous) process
 variable.
 
-A parameter with type ``channel[]`` means the function expects an array, of
-which the elements have been assigned to different (possibly anonymous)
-process variables.
+A parameter with type ``channel[]`` means the function expects a channel
+array, that is, an array where the elements are assigned to separate
+(possibly anonymous) process variables. By convention, functions accepting a
+`channel` array have a name that starts with "pvArray".
 
 Several of these functions are intended to be called only from
 `transition` clauses or only from action code. If the compiler allows
@@ -1447,6 +1472,8 @@ is not very useful.
 Calling this function with a multi-PV array is no longer allowed and results
 in a compile-time error.
 
+.. todo:: pvArrayPut
+
 
 pvPutComplete
 ^^^^^^^^^^^^^
@@ -1457,13 +1484,16 @@ pvPutComplete
 Returns whether the last asynchronous `pvPut` to this process variable has
 completed.
 
+Always returns `true` for anonymous PVs.
+
 .. versionchanged:: 2.2
 
 Calling this function with a multi-PV array is no longer allowed and results
 in a compile-time error. In previous versions this was the one built-in pv
 function that correctly worked on channel arrays. The corresponding C
-function still has the extra arguments for compatibility, but in SNL you
-should now use `pvArrayPutComplete`.
+function still has the extra arguments for compatibility, but in SNL code
+you must now use `pvArrayPutComplete` for channel arrays.
+
 
 pvArrayPutComplete
 ^^^^^^^^^^^^^^^^^^
@@ -1471,18 +1501,18 @@ pvArrayPutComplete
 .. versionadded:: 2.2
 
 .. c:function::
-   seqBool pvArrayPutComplete(channel ch[], unsigned num, seqBool any = FALSE, seqBool *pComplete = NULL)
+   seqBool pvArrayPutComplete(channel ch[], unsigned int length, seqBool any = FALSE, seqBool *complete = NULL)
 
-Like `pvPutComplete`, but returns whether all of the ``num`` first
+Like `pvPutComplete`, but returns whether all of the ``length`` first
 elements of the array have completed their last asynchronous `pvPut`. The
-``num`` argument should not be larger than the number of elements in
+``length`` argument should not be larger than the number of elements in
 the array.
 
-If the optional ``any`` argument is `TRUE <seqBool>`, then instead it
-returns whether *any* of these channels have completed.
+If the optional ``any`` argument is `true`, then instead it returns whether
+*any* of these channels have completed.
 
-If the optional ``pComplete`` argument is not ``NULL``, it must point to an
-array of `seqBool`\s with at least  ``num`` elements; the will then
+If the optional ``complete`` argument is not ``NULL``, it must point to an
+array of `seqBool`\s with at least  ``length`` elements; the will then
 write the individual results for the array elements into this array.
 
 
@@ -1503,10 +1533,10 @@ pvArrayPutCancel
 .. versionadded:: 2.2
 
 .. c:function::
-   void pvArrayPutCancel(channel ch[], unsigned num)
+   void pvArrayPutCancel(channel ch[], unsigned int length)
 
 Like `pvPutCancel` but all pending asynchronous `pvPut`\s to the first
-``num`` elements of the array are cancelled.
+``length`` elements of the array are cancelled.
 
 
 pvGet
@@ -1532,7 +1562,7 @@ immediately, regardless of whether `-a` or `+a` is in effect.
 
 In `safe mode`, if `ASYNC <compType>` is specified and the variable is not
 monitored, then the state set local copy of the variable will not be updated
-until a call to pvGetComplete is made and returns `TRUE <seqBool>` or, if the
+until a call to pvGetComplete is made and returns `true` or, if the
 variable is monitored, until the state set waits for events in a `transition`
 clause. Note that anonymous PVs behave exactly in the same way.
 
@@ -1550,6 +1580,8 @@ the request times out. This value overrides the default timeout of 10 seconds.
 Calling this function with a multi-PV array is no longer allowed and results
 in a compile-time error.
 
+.. todo:: pvArrayGet
+
 
 pvGetComplete
 ^^^^^^^^^^^^^
@@ -1561,7 +1593,9 @@ Returns whether the last asynchronous `pvGet` for ``ch`` has completed.
 
 In `safe mode`, the the state set local copy of the variable will be
 updated with the value from the PV layer as a side effect of this call
-(if `TRUE <seqBool>` is returned).
+(if `true` is returned).
+
+Always returns `true` for anonymous PVs.
 
 .. versionchanged:: 2.2
 
@@ -1576,7 +1610,7 @@ pvArrayGetComplete
 .. versionadded:: 2.2
 
 .. c:function::
-   seqBool pvArrayGetComplete(channel ch[], unsigned num, seqBool any = FALSE, seqBool *pComplete = NULL)
+   seqBool pvArrayGetComplete(channel ch[], unsigned int length, seqBool any = FALSE, seqBool *complete = NULL)
 
 Like `pvGetComplete` but works on all channels of a multi-PV array. The
 optional arguments have the same meaning as for `pvArrayPutComplete`.
@@ -1584,6 +1618,8 @@ optional arguments have the same meaning as for `pvArrayPutComplete`.
 
 pvGetCancel
 ^^^^^^^^^^^
+
+.. versionadded:: 2.2
 
 .. c:function::
    void pvGetCancel(channel ch)
@@ -1594,10 +1630,12 @@ Cancel a pending (asynchronous) `pvGet`.
 pvArrayGetCancel
 ^^^^^^^^^^^^^^^^
 
-.. c:function::
-   void pvArrayGetCancel(channel ch[], unsigned num)
+.. versionadded:: 2.2
 
-Cancel pending (asynchronous) `pvGet` operations for the first ``num``
+.. c:function::
+   void pvArrayGetCancel(channel ch[], unsigned int length)
+
+Cancel pending (asynchronous) `pvGet` operations for the first ``length``
 elements of the array.
 
 
@@ -1625,7 +1663,7 @@ combining a call to pvGetQ with other `condition`\s in the same
         } state ...
 
 would remove the head from the queue every time the `condition` gets
-evaluated, regardless of whether ``other_condition`` is `TRUE <seqBool>`. This is
+evaluated, regardless of whether ``other_condition`` is `true`. This is
 most probably not the desired effect, as you would lose an unknown number of
 messages. (Of course it *could* be exactly what you want, for instance if
 ``other_condition`` were something like ``!suppress_output``.) Whereas ::
@@ -1684,7 +1722,7 @@ pvAssign
 .. c:function::
    pvStat pvAssign(channel ch, char *pv_name)
 
-Assigns or re-assigns ``ch`` to a process variable wih name ``pv_name``. If
+Assigns or re-assigns ``ch`` to a process variable with name ``pv_name``. If
 ``pv_name`` is an empty string or ``NULL``, then ``ch`` is de-assigned (not
 associated with any process variable); in `safe mode` it causes assignment
 to an anonymous PV.
@@ -1699,16 +1737,16 @@ is assigned to. In order to make sure that it has connected to the new PV,
 you can use the `pvConnected` built-in function inside a `transition`
 clause.
 
+Like for all other operations, completion is immediate for anonymous PVs.
+
 .. todo::
 
    Add an optional argument, so users can make pvAssign wait for the
    connection to be established (or some timeout).
 
-A better name for this function would be ``pvReassign``.
-
 .. note::
 
-   ``pvAssign`` can only be called on variables (or array elements)
+   pvAssign can only be called on variables (or array elements)
    that have been statically marked as process variables using the
    `assign` syntax. An empty string may be used for the initial
    assignment, or (from version 2.1. onward) the simplified form
@@ -1731,6 +1769,10 @@ A better name for this function would be ``pvReassign``.
    for each array element individually.
 
 .. versionadded:: 2.2
+
+.. todo::
+
+   Revise this
 
 Program parameter expansion is done in the same way as when using the
 `assign` clause.
@@ -1757,6 +1799,20 @@ Calling this function with a multi-PV array is no longer allowed and results
 in a compile-time error.
 
 
+pvArrayMonitor
+^^^^^^^^^^^^^^
+
+.. versionadded:: 2.2
+
+.. c:function::
+   pvStat pvArrayMonitor(channel ch[], unsigned int length)
+
+Like `pvMonitor` but turns on monitors for the first ``length`` elements of
+a channel array.
+
+See `monitor` clause.
+
+
 pvStopMonitor
 ^^^^^^^^^^^^^
 
@@ -1771,14 +1827,26 @@ Calling this function with a multi-PV array is no longer allowed and results
 in a compile-time error.
 
 
+pvArrayStopMonitor
+^^^^^^^^^^^^^^^^^^
+
+.. versionadded:: 2.2
+
+.. c:function::
+   pvStat pvArrayStopMonitor(channel ch[], unsigned int length)
+
+Like `pvStopMonitor` but turns off monitors for the first ``length``
+elements of a channel array.
+
+
 pvSync
 ^^^^^^
 
 .. c:function::
-   void pvSync(channel ch, event_flag)
+   void pvSync(channel ch, evflag ef)
 
 Synchronizes a variable with an event flag, or removes such a
-synchronization if ``event_flag`` is `NOEVFLAG`.
+synchronization if ``ef`` is `NOEVFLAG`.
 
 See `sync` clause.
 
@@ -1788,15 +1856,29 @@ Calling this function with a multi-PV array is no longer allowed and results
 in a compile-time error.
 
 
+pvArraySync
+^^^^^^^^^^^
+
+.. versionadded:: 2.2
+
+.. c:function::
+   void pvArraySync(channel ch[], unsigned int length, evflag ef)
+
+Synchronizes the first ``length`` elements of a channel array with an event
+flag, or removes such a synchronization if ``ef`` is `NOEVFLAG`.
+
+See `sync` clause.
+
+
 pvCount
 ^^^^^^^
 
 .. c:function::
    unsigned pvCount(channel ch)
 
-Returns the element count associated with the process variable. This value
-is independent of the array size (if the variable is an array), it can be
-smaller or larger.
+Returns the element count associated with the (single) process variable.
+This value is independent of the array size given in the declaration, it can
+be smaller or larger.
 
 .. versionchanged:: 2.2
 
@@ -1810,9 +1892,8 @@ pvStatus
 .. c:function::
    pvStat pvStatus(channel ch)
 
-Returns the current alarm status (e.g. ``pvStatHIHI``, see the header file
-pvAlarm.h) of the underlying PV
-or indicates failure of a previous PV operation.
+Returns the current alarm status of the underlying PV or indicates failure
+of a previous PV operation.
 
 The status, severity, and message returned by `pvStatus`,
 `pvSeverity`, and `pvMessage` reflect either the underlying
@@ -1900,12 +1981,22 @@ Returns whether the underlying process variable is currently connected.
 
 .. versionchanged:: 2.2
 
+Always returns `true` for anonymous PVs.
+
 Calling this function with a multi-PV array is no longer allowed and results
 in a compile-time error.
 
-.. todo::
 
-   Add a variant for multi-PV arrays.
+pvArrayConnected
+^^^^^^^^^^^^^^^^
+
+.. versionadded:: 2.2
+
+.. c:function::
+   seqBool pvArrayConnected(channel ch[], unsigned int length)
+
+Returns whether elements of a channel array are currently connected.
+
 
 pvIndex
 ^^^^^^^
@@ -1959,7 +2050,7 @@ Returns the total number of SNL variables in this
 program that are assigned to underlying process variables.
 
 For instance, if all SNL variables are assigned then the following
-expression is `TRUE <seqBool>`::
+expression is `true`::
 
    pvAssignCount() == pvChannelCount()
 
@@ -1977,7 +2068,7 @@ Returns the total number of underlying process
 variables that are connected.
 
 For instance, if all assigned variables are connected then the following
-expression is `TRUE <seqBool>`::
+expression is `true`::
 
    pvConnectCount() == pvAssignCount()
 
@@ -1986,7 +2077,7 @@ efSet
 ^^^^^
 
 .. c:function::
-   void efSet(event_flag)
+   void efSet(evflag ef)
 
 Sets the event flag and causes evaluation of the `transition`
 clauses for all state sets that are pending on this event flag.
@@ -1996,7 +2087,7 @@ efClear
 ^^^^^^^
 
 .. c:function::
-   seqBool efClear(event_flag)
+   seqBool efClear(evflag ef)
 
 Clears the event flag and causes evaluation of the `transition`
 clauses for all state sets that are pending on this event flag.
@@ -2006,7 +2097,7 @@ efTest
 ^^^^^^
 
 .. c:function::
-   seqBool efTest(event_flag)
+   seqBool efTest(evflag ef)
 
 Returns whether the event flag was set.
 
@@ -2022,7 +2113,7 @@ efTestAndClear
 ^^^^^^^^^^^^^^
 
 .. c:function::
-   seqBool efTestAndClear(event_flag)
+   seqBool efTestAndClear(evflag ef)
 
 Clears the event flag and returns whether the event
 flag was set. It is intended for use within a `transition` clause.
@@ -2094,10 +2185,10 @@ keeps running until it gets interrupted by a higher priority thread or
 until it blocks on a semaphore.
 
 However, RTEMS does time-share threads at the same priority, while Linux and
-Windows honor thread priorities only if real-time mode (which needs
-administrator privileges). Most importantly, priorities should only be used
-to improve latency for certain operations (at the cost of others) and never
-should be relied upon for program correctness.
+Windows may or may not honor thread priorities, depending on the system
+configuration. Most importantly, priorities should only be used to improve
+latency for certain operations (at the cost of others) and never should be
+relied upon for program correctness.
 
 Safe mode solves all these problems by changing the way variables,
 particularly global variables, are interpreted. In safe mode, all variables
@@ -2160,7 +2251,7 @@ previously via `pvPut` by some other state set. Whereas ::
 
 has no immediate effect on the variable ``var``. Instead, ``var``
 will be updated only if the code calls `pvGetComplete`
-(and it returns `TRUE <seqBool>`), or when state change `condition`\s are
+(and it returns `true`), or when state change `condition`\s are
 evaluated the next time.
 
 .. note:: This behaviour is exactly the same as with external PVs.
