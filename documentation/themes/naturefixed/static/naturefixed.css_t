@@ -83,3 +83,5 @@ div.documentwrapper {
 div.bodywrapper {
     margin: 0 0 0 0;
 }
+
+div.body h3 { font-size: 130%; background-color: #D8DEE3; }
