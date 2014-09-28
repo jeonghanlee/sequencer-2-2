@@ -47,7 +47,7 @@ Other releases can be downloaded by following the links here:
    ========== =========================== ============================
    Version    Release Notes               Known Problems
    ========== =========================== ============================
-   `2.2.0.3`_ `Release_Notes_2.2.0`       n/a
+   `2.2.0.3`_ `Release_Notes_2.2.0.3`     n/a
    `2.1.17`_  `Release_Notes_2.1.17`      n/a
    `2.1.16`_  `Release_Notes_2.1.16`      `Known_Problems_2.1.16`
    `2.1.15`_  `Release_Notes_2.1.15`      `Known_Problems_2.1.15`

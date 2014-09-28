@@ -1,10 +1,10 @@
 Release Notes for Version 2.2
 =============================
 
-.. _Release_Notes_2.2.0:
+.. _Release_Notes_2.2.0.3:
 
-Release 2.2.0
--------------
+Release 2.2.0.3
+---------------
 
 This is a new feature release. As with all dot-zero releases, be careful
 before using this in production systems.
