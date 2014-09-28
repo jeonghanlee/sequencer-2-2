@@ -743,7 +743,7 @@ epicsShareFunc pvStat seq_pvMonitor(SS_ID ss, CH_ID chId, unsigned length)
 }
 
 /*
- * Cancel a monitor.
+ * Start monitor.
  */
 epicsShareFunc pvStat seq_pvStopMonitor(SS_ID ss, CH_ID chId, unsigned length)
 {
@@ -834,7 +834,7 @@ epicsShareFunc void seq_pvSync(SS_ID ss, CH_ID chId, unsigned length, EF_ID new_
 }
 
 /*
- * Return total number of database channels.
+ * Return total number of channels.
  */
 epicsShareFunc unsigned seq_pvChannelCount(SS_ID ss)
 {
@@ -842,7 +842,7 @@ epicsShareFunc unsigned seq_pvChannelCount(SS_ID ss)
 }
 
 /*
- * Return number of database channels connected.
+ * Return number of channels connected.
  */
 epicsShareFunc unsigned seq_pvConnectCount(SS_ID ss)
 {
@@ -850,7 +850,7 @@ epicsShareFunc unsigned seq_pvConnectCount(SS_ID ss)
 }
 
 /*
- * Return number of database channels assigned.
+ * Return number of channels assigned.
  */
 epicsShareFunc unsigned seq_pvAssignCount(SS_ID ss)
 {
@@ -864,7 +864,7 @@ epicsShareFunc void seq_pvFlush(SS_ID ss)
 }
 
 /*
- * Return whether database channel is connected.
+ * Return whether channel is connected.
  */
 epicsShareFunc boolean seq_pvConnected(SS_ID ss, CH_ID chId)
 {
