@@ -103,6 +103,13 @@ The so called "foreign entity declarations", introduced in version 2.1, have
 become obsolete (see `Other Foreign Entities`_) and are therefore
 *deprecated*.
 
+Deprecated State Local ``assign`` etc
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Using an `assign`, `monitor`, `sync`, or `syncq` clause inside a state is
+now deprecated. This was never very useful to begin with, and gets in the
+way of some future improvements.
+
 Removed Keyword "connect"
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -113,7 +120,7 @@ the removal to a deprecation warning if it turns out that this seriously
 hurts people.
 
 With hindsight, introducing this was a bad idea, as were foreign
-declarations.
+declarations and state local assign.
 
 Removed PV Library
 ~~~~~~~~~~~~~~~~~~
