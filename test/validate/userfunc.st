@@ -13,7 +13,7 @@ option +s;
 %{
 static void incr(SS_ID ssId, int *pv, VAR_ID v);
 static void incr_compat(SS_ID ssId, int *pv, VAR_ID v);
-static void set_i(SEQ_VARS *const pVar, int value);
+static void set_i(USER_VAR *const pVar, int value);
 static void null(void);
 }%
 
@@ -62,7 +62,7 @@ static void incr(SS_ID ssId, int *pv, VAR_ID v)
     seq_pvPutTmo(ssId, v, SYNC, 1.0);
 }
 
-static void set_i(SEQ_VARS *const pVar, int value)
+static void set_i(USER_VAR *const pVar, int value)
 {
     pVar->i = value;
 }

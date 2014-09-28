@@ -29,24 +29,16 @@ static const int impossible = FALSE;
 
 static Node *add_implicit_parameters(Node *fun_decl, Node *param_decls)
 {
-    Node *p1, *p2;
+    Node *p1;
     Token t;
 
-    /* 1st implicit parameter: "SS_ID " NM_SS */
+    /* implicit parameter: "SS_ID " NM_ENV */
     t.symbol = TOK_NAME;
-    t.str = NM_SS;
+    t.str = NM_ENV;
     t.line = fun_decl->token.line;
     t.file = fun_decl->token.file;
     p1 = mk_decl(node(E_VAR, t), mk_foreign_type(F_TYPENAME, "SS_ID"));
-    /* 2nd implicit parameter: "SEQ_VARS *const " NM_VAR */
-    t.symbol = TOK_NAME;
-    t.str = NM_VAR;
-    t.line = fun_decl->token.line;
-    t.file = fun_decl->token.file;
-    p2 = mk_decl(node(E_VAR, t),
-        mk_const_type(mk_pointer_type(mk_foreign_type(F_TYPENAME, "SEQ_VARS")))
-    );
-    return link_node(p1, link_node(p2, param_decls));
+    return link_node(p1, param_decls);
 }
 
 static Node *remove_void_parameter(Node *param_decls)

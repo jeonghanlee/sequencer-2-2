@@ -36,8 +36,7 @@ void indent(int level);
 
 /* names of generated function arguments */
 #define NM_VAR		"seqg_var"
-#define NM_SS		"seqg_ss"
-#define NM_PROG		"seqg_prog"
+#define NM_ENV		"seqg_env"
 #define NM_TRN		"seqg_trn"
 #define NM_PTRN		"seqg_ptrn"
 #define NM_PNST		"seqg_pnst"

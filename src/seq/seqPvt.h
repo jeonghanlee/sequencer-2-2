@@ -81,6 +81,8 @@ typedef struct pvreq		PVREQ;
 typedef const struct pv_type	PVTYPE;
 typedef struct pv_meta_data	PVMETA;
 
+typedef struct seqg_vars        SEQ_VARS;
+
 /* Channel, i.e. an assigned variable */
 struct channel
 {
@@ -133,6 +135,8 @@ struct db_channel
 
 struct state_set
 {
+	SEQ_VARS	*var;		/* variable value block */
+
 	/* static state set data (assigned once on startup) */
 	const char	*ssName;	/* state set name (for debugging) */
 	epicsThreadId	threadId;	/* thread id */
@@ -155,11 +159,14 @@ struct state_set
 	PVMETA		*metaData;	/* meta data (safe mode) */
 	/* safe mode */
 	boolean		*dirty;		/* array of flags, one for each channel */
-	SEQ_VARS	*var;		/* variable value block */
 };
+
+STATIC_ASSERT(offsetof(struct state_set,var)==0);
 
 struct program_instance
 {
+	SEQ_VARS	*var;		/* user variable area (shared buffer) */
+
 	/* static program data (assigned once on startup) */
 	const char	*progName;	/* program name (for messages) */
 	int		instance;	/* program instance number */
@@ -172,7 +179,6 @@ struct program_instance
 	unsigned	numQueues;	/* number of syncQ queues */
 	SSCB		*ss;		/* array of state set control blocks */
 	unsigned	numSS;		/* number of state sets */
-	SEQ_VARS	*var;		/* user variable area (shared buffer) */
 	size_t		varSize;	/* size of user variable area */
 	MACRO		*macros;	/* ptr to macro table */
 	char		*params;	/* program parameters */
@@ -199,6 +205,8 @@ struct program_instance
 	epicsEventId	dead;		/* event to signal exit of main thread done */
 	PROG		*next;		/* next element in program list */
 };
+
+STATIC_ASSERT(offsetof(struct program_instance,var)==0);
 
 /* Request data for pvPut and pvGet */
 struct pvreq

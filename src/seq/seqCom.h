@@ -51,7 +51,6 @@ enum compType {
 };
 
 typedef	struct state_set *const SS_ID;	/* state set id, opaque */
-typedef struct seqg_vars SEQ_VARS;	/* struct defined in generated code */
 typedef char string[MAX_STRING_SIZE];	/* representation of SNL string type */
 
 /*
@@ -104,8 +103,6 @@ epicsShareFunc seqBool seq_pvAssigned(SS_ID, CH_ID);
 epicsShareFunc seqBool seq_pvConnected(SS_ID, CH_ID);
 
 #define seq_pvIndex(ssId, chId)	chId
-#define ssId			seqg_ss
-#define pVar			seqg_var
 
 /* global operations */
 epicsShareFunc void seq_pvFlush(SS_ID);
@@ -129,8 +126,10 @@ epicsShareFunc epicsThreadId epicsShareAPI seq(seqProgram *, const char *, unsig
 
 /* backwards compatibility macros */
 /* DEPRECATED don't use in new code */
-#define USER_VAR		SEQ_VARS
+typedef struct seqg_vars        USER_VAR;
 #define UserVar			seqg_vars
+#define ssId			seqg_env
+#define pVar			seqg_var
 #define VAR_ID			CH_ID
 #define EV_ID			EF_ID
 #define seq_pvFreeQ		seq_pvFlushQ

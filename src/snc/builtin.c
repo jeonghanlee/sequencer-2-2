@@ -43,8 +43,8 @@ static struct const_symbol const_symbols[] =
     {"pvSevrMINOR",         CT_OTHER },
     {"pvSevrMAJOR",         CT_OTHER },
     {"pvSevrINVALID",       CT_OTHER },
-    {"pVar",                CT_OTHER },
-    {"ssId",                CT_OTHER },
+    {"seqg_var",            CT_OTHER },
+    {"seqg_env",            CT_OTHER },
     {0,                     CT_OTHER }
 };
 

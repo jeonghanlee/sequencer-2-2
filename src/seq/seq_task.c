@@ -39,21 +39,18 @@ void sequencer (void *arg)	/* ptr to original (global) state program table */
 		goto exit;
 	}
 
-	/* Note that the program init function
-	   gets the global var buffer sp->var passed,
-	   not the state set local one, even in safe mode. */
-
 	/* Call sequencer init function to initialize variables. */
-	sp->initFunc(sp, sp->var);
+	sp->initFunc(sp);
 
 	/* Initialize state set variables. In safe mode, copy variable
 	   block to state set buffers. Must do all this before connecting. */
-	for (nss = 0; nss < sp->numSS; nss++)
+	if (optTest(sp, OPT_SAFE))
 	{
-		SSCB	*ss = sp->ss + nss;
-
-		if (optTest(sp, OPT_SAFE))
+		for (nss = 0; nss < sp->numSS; nss++)
+		{
+			SSCB	*ss = sp->ss + nss;
 			memcpy(ss->var, sp->var, sp->varSize);
+		}
 	}
 
 	/* Attach to PV system */
@@ -75,7 +72,7 @@ void sequencer (void *arg)	/* ptr to original (global) state program table */
 
 	/* Call program entry function if defined.
 	   Treat as if called from 1st state set. */
-	if (sp->entryFunc) sp->entryFunc(sp->ss, sp->ss->var);
+	if (sp->entryFunc) sp->entryFunc(sp->ss);
 
 	/* Create each additional state set task (additional state set thread
 	   names are derived from the first ss) */
@@ -112,7 +109,7 @@ void sequencer (void *arg)	/* ptr to original (global) state program table */
 
 	/* Call program exit function if defined.
 	   Treat as if called from 1st state set. */
-	if (sp->exitFunc) sp->exitFunc(sp->ss, sp->ss->var);
+	if (sp->exitFunc) sp->exitFunc(sp->ss);
 
 exit:
 	DEBUG("   Disconnect all channels\n");
@@ -252,12 +249,6 @@ static void ss_entry(void *arg)
 {
 	SSCB		*ss = (SSCB *)arg;
 	PROG		*sp = ss->prog;
-	SEQ_VARS	*var;
-
-	if (optTest(sp, OPT_SAFE))
-		var = ss->var;
-	else
-		var = sp->var;
 
 	/* Attach to PV system; was already done for the first state set */
 	if (ss != sp->ss)
@@ -305,7 +296,7 @@ static void ss_entry(void *arg)
 		if (st->entryFunc && (ss->prevState != ss->currentState
 			|| optTest(st, OPT_DOENTRYFROMSELF)))
 		{
-			st->entryFunc(ss, var);
+			st->entryFunc(ss);
 		}
 
 		/* Flush any outstanding DB requests */
@@ -349,7 +340,7 @@ static void ss_entry(void *arg)
 			ss->wakeupTime = INFINITY;
 
 			/* Check state change conditions */
-			ev_trig = st->eventFunc(ss, var,
+			ev_trig = st->eventFunc(ss,
 				&transNum, &ss->nextState);
 
 			/* Clear all event flags (old ef mode only) */
@@ -366,7 +357,7 @@ static void ss_entry(void *arg)
 		} while (!ev_trig);
 
 		/* Execute the state change action */
-		st->actionFunc(ss, var, transNum, &ss->nextState);
+		st->actionFunc(ss, transNum, &ss->nextState);
 
 		/* Check whether we have been asked to exit */
 		if (sp->die) goto exit;
@@ -375,7 +366,7 @@ static void ss_entry(void *arg)
 		if (st->exitFunc && (ss->currentState != ss->nextState
 			|| optTest(st, OPT_DOEXITTOSELF)))
 		{
-			st->exitFunc(ss, var);
+			st->exitFunc(ss);
 		}
 
 		/* Change to next state */

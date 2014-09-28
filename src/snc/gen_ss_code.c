@@ -101,6 +101,8 @@ void gen_ss_code(Node *prog, Options options)
 	/* HACK: intialise global variable as implicit parameter */
 	global_options = options;
 
+	gen_code("\n#define " NM_VAR " (*(struct " NM_VARS " *const *)" NM_ENV ")\n");
+
 	/* Generate program init func */
 	gen_prog_func(prog, "init", NM_INIT, gen_prog_init_body);
 
@@ -143,6 +145,8 @@ void gen_ss_code(Node *prog, Options options)
 	/* Generate program exit func */
 	if (prog->prog_exit)
 		gen_prog_entex_func(prog, "exit", NM_EXIT, gen_prog_exit_body);
+
+	gen_code("\n#undef " NM_VAR "\n");
 }
 
 /* Generate a local C variable declaration for each variable declared
@@ -190,7 +194,7 @@ static void gen_state_func(
 {
 	gen_code("\n/* %s function for state \"%s\" in state set \"%s\" */\n",
 		title, state_name, ss_name);
-	gen_code("static %s %s_%s_%d_%s(SS_ID " NM_SS ", SEQ_VARS *const " NM_VAR "%s)\n",
+	gen_code("static %s %s_%s_%d_%s(SS_ID " NM_ENV "%s)\n",
 		rettype, prefix, ss_name, ss_num, state_name, extra_args);
 	gen_body(xp, context);
 }
@@ -278,7 +282,7 @@ static void gen_event_body(Node *xp, int context)
 		{
 			/* "when(...) {...} exit" -> exit from program */
 			indent(level+1);
-			gen_code("seq_exit(" NM_SS ");\n");
+			gen_code("seq_exit(" NM_ENV ");\n");
 		}
 		else
 		{
@@ -454,7 +458,7 @@ static void gen_expr(
 		if (type_is_function(ep->func_expr))
 		{
 			/* add arguments for implicit parameters */
-			gen_code(NM_SS ", " NM_VAR);
+			gen_code(NM_ENV);
 			if (ep->func_args)
 				gen_code(", ");
 		}
@@ -543,7 +547,7 @@ static void gen_builtin_call(int context, Node *ep)
 	/* All builtin functions require ssId as 1st parameter */
 	assert_at_node(context != C_GLOBAL, ep,
 		"calling built-in function %s not allowed here\n", fsym->name);
-	gen_code("seq_%s("NM_SS, fsym->c_name ? fsym->c_name : fsym->name);
+	gen_code("seq_%s("NM_ENV, fsym->c_name ? fsym->c_name : fsym->name);
 	if (fsym->cond_only && context != C_COND)
 	{
 		error_at_node(ep,
@@ -778,7 +782,7 @@ static void gen_prog_func(
 {
 	assert(prog->tag == D_PROG);
 	gen_code("\n/* Program %s func */\n", doc);
-	gen_code("static void %s(PROG_ID "NM_PROG", SEQ_VARS *const "NM_VAR")\n{\n",
+	gen_code("static void %s(PROG_ID " NM_ENV ")\n{\n",
 		name);
 	gen_body(prog);
 	gen_code("}\n");
@@ -793,7 +797,7 @@ static void gen_prog_entex_func(
 {
 	assert(prog->tag == D_PROG);
 	gen_code("\n/* Program %s func */\n", doc);
-	gen_code("static void %s(SS_ID " NM_SS ", SEQ_VARS *const " NM_VAR ")\n",
+	gen_code("static void %s(SS_ID " NM_ENV ")\n",
 		name);
 	gen_body(prog);
 }
@@ -823,10 +827,12 @@ void gen_funcdef(Node *fp)
 		Var *vp = fp->funcdef_decl->extra.e_decl;
 
 		gen_code("\n");
+		gen_code("#define " NM_VAR " (*(struct " NM_VARS " *const *)" NM_ENV ")\n");
 		gen_line_marker(vp->decl);
 		gen_code("static ");
 		gen_var_decl(vp);
 		gen_code("\n");
 		gen_block(fp->funcdef_block, C_FUNC, 0);
+		gen_code("#undef " NM_VAR "\n");
 	}
 }
