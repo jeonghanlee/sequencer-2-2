@@ -50,3 +50,11 @@ Glossary of Terms
 
       `SNL` jargon for finite state machine. A program may contain multiple
       state sets and each runs in its own thread.
+
+   true
+
+      Any non-zero value, as in C.
+
+   false
+
+      Zero, as in C.
