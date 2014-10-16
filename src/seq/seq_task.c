@@ -317,7 +317,7 @@ static void ss_entry(void *arg)
 		{
 			ss->timeEntered = now;
 		}
-		ss->wakeupTime = INFINITY;
+		ss->wakeupTime = epicsINF;
 
 		/* Loop until an event is triggered, i.e. when() returns TRUE
 		 */
@@ -337,7 +337,7 @@ static void ss_entry(void *arg)
 			if (optTest(sp, OPT_SAFE))
 				ss_read_all_buffer(sp, ss);
 
-			ss->wakeupTime = INFINITY;
+			ss->wakeupTime = epicsINF;
 
 			/* Check state change conditions */
 			ev_trig = st->eventFunc(ss,
