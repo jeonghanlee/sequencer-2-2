@@ -24,15 +24,14 @@ entry {
 }
 
 ss race1 {
+    string z;
+    assign z to "";
     state init {
         when () {
             x[0] = 0;
         } state wait
     }
     state wait {
-        string z;
-        assign z to "";
-
         when (delay(0.001)) {
             int j;
             for (j=0; j <1000; j++) {
@@ -102,15 +101,14 @@ ss race2 {
 }
 
 ss race3 {
+    string z;
+    assign z to "";
     state init {
         when () {
             x[0] = 0;
         } state wait
     }
     state wait {
-        string z;
-        assign z to "";
-
         when (delay(0.001)) {
             int j;
             for (j=0; j <1000; j++) {

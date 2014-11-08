@@ -28,26 +28,26 @@ entry {
 }
 
 ss one {
+    char *a[4] = {
+        "1", "2", "3"
+    };
+    /* assign a; */
+    string b[4] = {
+        "1234567890123456789012345678901234567890",
+        "abcdefghijabcdefghijabcdefghijabcdefghij",
+        "ABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJ",
+        "123"
+    };
+    assign b;
+    int c[2] = {123,456};
+    assign c;
+    monitor b;
+    monitor c;
+    sync b to ef;
+    sync c to ef;
+    string s = "s";
+    assign s;
     state one {
-        char *a[4] = {
-            "1", "2", "3"
-        };
-        /* assign a; */
-        string b[4] = {
-            "1234567890123456789012345678901234567890",
-            "abcdefghijabcdefghijabcdefghijabcdefghij",
-            "ABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJ",
-            "123"
-        };
-        assign b;
-        int c[2] = {123,456};
-        assign c;
-        monitor b;
-        monitor c;
-        sync b to ef;
-        sync c to ef;
-        string s = "s";
-        assign s;
         entry {
             pvPut(b);
             pvPut(c);
