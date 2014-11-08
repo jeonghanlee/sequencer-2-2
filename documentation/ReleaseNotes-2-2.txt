@@ -219,21 +219,15 @@ any useful effect, it is now disallowed.
   this function from the C side, I'd venture that it is broken anyway and
   should be fixed.
 
- 
-Program Parameter Substitution for pvAssign
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This function now does substitution of program parameters (formerly
-sometimes called "macros") inside the PV name, exactly as in the assign
-clause.
+pvAssignSubst
+~~~~~~~~~~~~~
 
-.. todo::
-
-  Should I revert that change? It could potentially break programs, even
-  though I doubt in practice anyone uses pvAssign to circumvent the
-  replacement because they use curly braces in PV names. Another issue is
-  that I'd very much like to move the sequencer to use the standard EPICS
-  macro replacement facility. Should I support $(...) alongside {...}?
+Unlike the `assign` clause, the dynamic `pvAssign` function does not
+substitute program parameters (previously sometimes referred to as "macros")
+in the channel name. There is now a new function `pvAssignSubst` that
+behaves exactly like `pvAssign` except that it substitutes program
+parameters in the channel name, just like `assign` does.
 
 PV Functions and Multiply Assigned Arrays
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -375,14 +369,16 @@ Retained
 - typedefs string, SS_ID, seqBool, seqProgram
 
 - all functions except seqRegisterSequencerProgram and seqRegisterSequencerCommands
-  but including seq_pvIndex
+  but including seq_pvIndex (which is actually a macro)
 
 Added
 ~~~~~
-- built-in "functions" seq_pVar and seq_ssId (like pvIndex these are actually
-  implemented as macros in seqCom.h)
 
-- built-in functions seq_pvGetCancel, seq_pvPutCancel
+- new built-in functions:
+
+  + seq_pvGetCancel
+  + seq_pvPutCancel
+  + seq_pvAssignSubst
 
 - the constant DEFAULT_TIMEOUT (see `New Delay Implementation`_)
 

@@ -1783,6 +1783,16 @@ Calling this function with a multi-PV array is no longer allowed and results
 in a compile-time error.
 
 
+pvAssignSubst
+^^^^^^^^^^^^^
+
+.. c:function::
+   pvStat pvAssignSubst(channel ch, char *pv_name)
+
+Like `pvAssign`, except that it substitutes program parameters, like the
+`assign` clause.
+
+
 pvMonitor
 ^^^^^^^^^
 
