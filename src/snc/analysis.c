@@ -519,6 +519,10 @@ static void analyse_assign(SymTable st, ChanList *chan_list, Node *scope, Node *
 			"assign must be in the same scope as declaration\n", name);
 		return;
 	}
+	if (scope->tag == D_STATE)
+	{
+		warning_at_node(defn, "state local assign is deprecated\n");
+	}
 	if (defn->assign_subscr)
 	{
 		assign_subscript(chan_list, defn, vp, defn->assign_subscr, defn->assign_pvs);
@@ -816,6 +820,10 @@ static void analyse_monitor(SymTable st, Node *scope, Node *defn)
 			"monitor must be in the same scope as declaration\n", var_name);
 		return;
 	}
+	if (scope->tag == D_STATE)
+	{
+		warning_at_node(defn, "state local monitor is deprecated\n");
+	}
 	if (defn->monitor_subscr)
 	{
 		monitor_elem(defn, vp, defn->monitor_subscr);
@@ -948,6 +956,10 @@ static void analyse_sync(SymTable st, Node *scope, Node *defn)
 			"sync must be in the same scope as (variable) declaration\n",
 			var_name, ef_name);
 		return;
+	}
+	if (scope->tag == D_STATE)
+	{
+		warning_at_node(defn, "state local sync is deprecated\n");
 	}
 	if (vp->sync == M_SINGLE)
 	{
@@ -1087,6 +1099,10 @@ static void analyse_syncq(SymTable st, SyncQList *syncq_list, Node *scope, Node 
 			"syncq must be in the same scope as declaration\n",
 			var_name);
 		return;
+	}
+	if (scope->tag == D_STATE)
+	{
+		warning_at_node(defn, "state local syncq is deprecated\n");
 	}
 	if (vp->syncq == M_SINGLE)
 	{
