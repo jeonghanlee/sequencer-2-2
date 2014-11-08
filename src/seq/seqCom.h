@@ -88,6 +88,7 @@ epicsShareFunc seqBool seq_pvPutComplete(SS_ID, CH_ID,
 	unsigned, seqBool, seqBool*);
 epicsShareFunc void seq_pvGetCancel(SS_ID, CH_ID);
 epicsShareFunc void seq_pvPutCancel(SS_ID, CH_ID);
+epicsShareFunc pvStat seq_pvAssignSubst(SS_ID, CH_ID, const char *);
 epicsShareFunc pvStat seq_pvAssign(SS_ID, CH_ID, const char *);
 epicsShareFunc pvStat seq_pvMonitor(SS_ID, CH_ID);
 epicsShareFunc void seq_pvSync(SS_ID, CH_ID, EF_ID);

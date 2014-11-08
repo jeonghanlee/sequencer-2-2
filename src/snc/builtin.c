@@ -86,6 +86,7 @@ static struct func_symbol func_symbols[] =
     {"optGet",              0,          FALSE,  FALSE,  otherParams                 },
     {"pvAssign",            0,          FALSE,  FALSE,  assignParams                },
     {"pvAssignCount",       0,          FALSE,  FALSE,  noParams                    },
+    {"pvAssignSubst",       0,          FALSE,  FALSE,  assignParams                },
     {"pvAssigned",          0,          FALSE,  FALSE,  pvParams                    },
     {"pvChannelCount",      0,          FALSE,  FALSE,  noParams                    },
     {"pvConnectCount",      0,          FALSE,  FALSE,  noParams                    },

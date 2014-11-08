@@ -662,6 +662,19 @@ epicsShareFunc void seq_pvArrayPutCancel(
 
 /*
  * Assign/Connect to a channel.
+ * Like seq_pvAssign, but replaces program parameters in the pv name,
+ * as in an assign clause.
+ */
+epicsShareFunc pvStat seq_pvAssignSubst(SS_ID ss, CH_ID chId, const char *pvName)
+{
+	char	new_pv_name[100];
+
+	seqMacEval(ss->prog, pvName, new_pv_name, sizeof(new_pv_name));
+	return seq_pvAssign(ss, chId, new_pv_name);
+}
+
+/*
+ * Assign/Connect to a channel.
  * Assign to a zero-length string ("") disconnects/de-assigns,
  * in safe mode, creates an anonymous PV.
  */
@@ -671,11 +684,8 @@ epicsShareFunc pvStat seq_pvAssign(SS_ID ss, CH_ID chId, const char *pvName)
 	CHAN	*ch = sp->chan + chId;
 	pvStat	status = pvStatOK;
 	DBCHAN	*dbch = ch->dbch;
-	char	new_pv_name[100];
 
-	seqMacEval(sp, pvName, new_pv_name, sizeof(new_pv_name));
-
-	DEBUG("Assign %s to \"%s\"\n", ch->varName, new_pv_name);
+	DEBUG("Assign %s to \"%s\"\n", ch->varName, pvName);
 
 	epicsMutexMustLock(sp->lock);
 
@@ -707,7 +717,7 @@ epicsShareFunc pvStat seq_pvAssign(SS_ID ss, CH_ID chId, const char *pvName)
 		free(dbch->dbName);
 	}
 
-	if (new_pv_name[0] == 0)	/* new name is empty -> free resources */
+	if (pvName[0] == 0)	/* new name is empty -> free resources */
 	{
 		if (dbch) {
 			free(ch->dbch);
@@ -724,7 +734,7 @@ epicsShareFunc pvStat seq_pvAssign(SS_ID ss, CH_ID chId, const char *pvName)
 				return pvStatERROR;
 			}
 		}
-		dbch->dbName = epicsStrDup(new_pv_name);
+		dbch->dbName = epicsStrDup(pvName);
 		if (!dbch->dbName)
 		{
 			errlogSevPrintf(errlogFatal, "pvAssign: epicsStrDup failed\n");
