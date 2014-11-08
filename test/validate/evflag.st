@@ -26,7 +26,7 @@ monitor anonymous;
 sync anonymous to ef_anonymous;
 
 entry {
-    seq_test_init(0);
+    seq_test_init(44);
     efClear(ef_named);
 }
 
