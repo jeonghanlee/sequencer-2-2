@@ -29,9 +29,14 @@ Releases are available here:
 
    http://www-csr.bessy.de/control/SoftDist/sequencer/releases/
 
-The current stable release is `2.1.16`_. Please take a look at the
+The current stable release is `2.1.18`_. Please take a look at the
 `VersioningPolicy` if you are unsure whether to upgrade to
 a new release.
+
+.. warning::
+
+  The documentation you will find on this page is for version 2.2.
+  The `documentation for version 2.1`_ is of course still online.
 
 Development snapshots are available under the name
 
@@ -48,7 +53,8 @@ Other releases can be downloaded by following the links here:
    Version    Release Notes               Known Problems
    ========== =========================== ============================
    `2.2.0.3`_ `Release_Notes_2.2.0.3`     n/a
-   `2.1.17`_  `Release_Notes_2.1.17`      n/a
+   `2.1.18`_  `Release_Notes_2.1.18`      n/a
+   `2.1.17`_  `Release_Notes_2.1.17`      `Known_Problems_2.1.17`
    `2.1.16`_  `Release_Notes_2.1.16`      `Known_Problems_2.1.16`
    `2.1.15`_  `Release_Notes_2.1.15`      `Known_Problems_2.1.15`
    `2.1.14`_  `Release_Notes_2.1.14`      `Known_Problems_2.1.14`
@@ -113,6 +119,7 @@ You can also follow development by using the `repository browser`_.
 
 .. _latest snapshot: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2-2-snapshot-latest.tar.gz
 .. _2.2.0.3: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2.2.0.3.tar.gz
+.. _2.1.18: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2.1.18.tar.gz
 .. _2.1.17: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2.1.17.tar.gz
 .. _2.1.16: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2.1.16.tar.gz
 .. _2.1.15: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2.1.15.tar.gz
@@ -156,6 +163,7 @@ You can also follow development by using the `repository browser`_.
 .. _old: http://www-csr.bessy.de/control/SoftDist/sequencer/repo/old/
 .. _stable: http://www-csr.bessy.de/control/SoftDist/sequencer/repo/stable/
 .. _experimental: http://www-csr.bessy.de/control/SoftDist/sequencer/repo/experimental/
+.. _documentation for version 2.1: http://www-csr.bessy.de/control/SoftDist/sequencer-2-1/index.html
 
 Unpack
 ------
