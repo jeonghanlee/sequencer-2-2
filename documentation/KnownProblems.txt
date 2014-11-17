@@ -1,6 +1,16 @@
 Known Problems
 ==============
 
+.. _Known_Problems_2.1.17:
+
+Known Problems in Release 2.1.17
+--------------------------------
+
+* When waiting initially for channels to connect and connection takes
+  unusually long time or some variables does not exist, a variable is used
+  un-initialized, which might result in strange times reported on the
+  console.
+
 .. _Known_Problems_2.1.16:
 
 Known Problems in Release 2.1.16
