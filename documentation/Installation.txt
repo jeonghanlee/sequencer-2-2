@@ -6,7 +6,7 @@ Prerequisites
 
 You need to have `EPICS base`_ and its dependencies (`GNU
 make`_, `Perl`_) installed. Any version of EPICS base starting
-with 3.14.8.2 and up to 3.15 should do.
+with 3.14.12.2 and up to 3.15 should do.
 
 From version 2.1 onwards, building the sequencer requires the lexer
 generator tool `re2c`_. If you are on a Linux system, you will

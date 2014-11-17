@@ -9,8 +9,18 @@ Release 2.2.0.3
 This is a new feature release. As with all dot-zero releases, be careful
 before using this in production systems.
 
-As with recent 2.1 releases, EPICS base versions starting with
-3.14.8.2 up to 3.15 are supported and should work, see `Installation`.
+Supported EPICS Base Versions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This version drops support for base versions older than 3.14.12.2. At the
+time of writing this, base R3.15.x is still sort of a moving target, and
+there can be problems when running the tests, but it should at least compile
+clean.
+
+If you manage to compile the sequencer with earlier base versions, well,
+good for you. It'll probably work, too. I will also accept patches that
+restore lost compatibility with older base versions, provided they achieve
+this without unduly complicating the code base or build system.
 
 New Language Features
 ^^^^^^^^^^^^^^^^^^^^^
