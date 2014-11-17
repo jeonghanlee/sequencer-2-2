@@ -1,6 +1,28 @@
 Release Notes for Version 2.1
 =============================
 
+.. _Release_Notes_2.1.18:
+
+Release 2.1.18
+--------------
+
+* seq: move variable timeNow out of the loop
+  
+  This fixes a bug in the code that waits for initial channels to connect.
+  Thanks to Janez Golob <janez.golob@cosylab.com> for discovering this and for
+  providing a fix (and convincing me that this is actually a bug).
+
+* seq: added public seqStats.h which exports seqGatherStats
+
+  This change is based on a proposal by Murali Shankar
+  <mshankar@slac.stanford.edu>, Richard Neill Dabney
+  <rdabney@slac.stanford.edu>, and Michael Stanley Zelazny
+  <zelazny@slac.stanford.edu> to add device support for monitoring the
+  sequencer statistics. It exposes previously private functionality that was
+  used by the seqcar shell command and adds no new functionality.
+
+* various fixes and improvements to the documentation
+
 .. _Release_Notes_2.1.17:
 
 Release 2.1.17
