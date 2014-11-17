@@ -40,7 +40,7 @@ upload_docs: docs
 
 upload_repo:
 	darcs push $(DEFAULT_REPO)
-	darcs push --repo=$(DEFAULT_REPO) -a $(USER_AT_HOST):$(SEQ_PATH)/repo/branch-$(BRANCH)
+	darcs push -a $(USER_AT_HOST):$(SEQ_PATH)/repo/branch-$(BRANCH)
 
 snapshot: upload_repo
 	darcs dist -d $(SNAPSHOT)
