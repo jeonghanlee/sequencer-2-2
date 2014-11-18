@@ -18,7 +18,7 @@ ss test {
             pvGet(x,SYNC);
             testOk1(strcmp(x,"pvAssignSubst")==0);
         } exit
-        when (delay(1)) {
+        when (delay(2)) {
             testFail("timeout");
         } exit
     }
