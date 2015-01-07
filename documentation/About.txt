@@ -29,7 +29,7 @@ For further information
 
 This page describes version 2.2 and the documentation, in particular the
 language reference, has been updated to reflect the `changes between 2.1 and
-2.2 <Release_Notes_2.2.0.3>`. For older versions, please refer to `the old version of this page`_.
+2.2 <Release_Notes_2.2.1>`. For older versions, please refer to `the old version of this page`_.
 
 .. _domain specific programming language: http://en.wikipedia.org/wiki/Domain-specific_programming_language
 .. _EPICS: http://www.aps.anl.gov/epics/

@@ -1,21 +1,19 @@
 Release Notes for Version 2.2
 =============================
 
-.. _Release_Notes_2.2.0.3:
+.. _Release_Notes_2.2.1:
 
-Release 2.2.0.3
----------------
+Release 2.2.1
+-------------
 
-This is a new feature release. As with all dot-zero releases, be careful
-before using this in production systems.
+This is the first release of version 2.2 of the sequencer. The following
+describes what has changed relative to version 2.1.
 
 Supported EPICS Base Versions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-This version drops support for base versions older than 3.14.12.2. At the
-time of writing this, base R3.15.x is still sort of a moving target, and
-there can be problems when running the tests, but it should at least compile
-clean.
+This version drops support for base versions older than 3.14.12.2, all
+others whould work fine.
 
 If you manage to compile the sequencer with earlier base versions, well,
 good for you. It'll probably work, too. I will also accept patches that
