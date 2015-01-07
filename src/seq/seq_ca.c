@@ -366,15 +366,16 @@ void seq_disconnect(PROG *sp)
 
 pvStat seq_camonitor(CHAN *ch, boolean turn_on)
 {
-	DBCHAN	*dbch = ch->dbch;
+	DBCHAN	*dbch;
 	PROG	*sp = ch->prog;
 	pvStat	status;
 	boolean	done;
 
 	assert(ch);
-	assert(dbch);
 
 	epicsMutexMustLock(sp->lock);
+	dbch = ch->dbch;
+	assert(dbch);
 	done = turn_on == pvMonIsDefined(dbch->pvid);
 	dbch->gotMonitor = FALSE;
 	epicsMutexUnlock(sp->lock);
@@ -412,9 +413,11 @@ void seq_conn_handler(int connected, void *arg)
 {
 	CHAN	*ch = (CHAN *)arg;
 	PROG	*sp = ch->prog;
-	DBCHAN	*dbch = ch->dbch;
+	DBCHAN	*dbch;
 
 	epicsMutexMustLock(sp->lock);
+
+	dbch = ch->dbch;
 
 	assert(dbch != NULL);
 

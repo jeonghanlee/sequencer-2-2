@@ -683,17 +683,27 @@ epicsShareFunc pvStat seq_pvAssign(SS_ID ss, CH_ID chId, const char *pvName)
 	PROG	*sp = ss->prog;
 	CHAN	*ch = sp->chan + chId;
 	pvStat	status = pvStatOK;
-	DBCHAN	*dbch = ch->dbch;
+	DBCHAN	*dbch;
+
+	if (!pvName) pvName = "";
 
 	DEBUG("Assign %s to \"%s\"\n", ch->varName, pvName);
 
 	epicsMutexMustLock(sp->lock);
 
+	dbch = ch->dbch;
+
 	if (dbch)	/* was assigned to a named PV */
 	{
+		ch->dbch = 0;
+
+		epicsMutexUnlock(sp->lock);
+
 		status = pvVarDestroy(&dbch->pvid);
 
-		sp->assignCount -= 1;
+		epicsMutexMustLock(sp->lock);
+
+		sp->assignCount--;
 
 		if (dbch->connected)	/* see connection handler */
 		{
@@ -714,13 +724,14 @@ epicsShareFunc pvStat seq_pvAssign(SS_ID ss, CH_ID chId, const char *pvName)
 			errlogSevPrintf(errlogFatal, "pvAssign(var %s, pv %s): pvVarDestroy() failure: "
 				"%s\n", ch->varName, dbch->dbName, pvVarGetMess(dbch->pvid));
 		}
+
 		free(dbch->dbName);
 	}
 
 	if (pvName[0] == 0)	/* new name is empty -> free resources */
 	{
 		if (dbch) {
-			free(ch->dbch);
+			free(dbch);
 		}
 	}
 	else		/* new name is non-empty -> create resources */
@@ -731,6 +742,7 @@ epicsShareFunc pvStat seq_pvAssign(SS_ID ss, CH_ID chId, const char *pvName)
 			if (!dbch)
 			{
 				errlogSevPrintf(errlogFatal, "pvAssign: calloc failed\n");
+				epicsMutexUnlock(sp->lock);
 				return pvStatERROR;
 			}
 		}
@@ -739,10 +751,11 @@ epicsShareFunc pvStat seq_pvAssign(SS_ID ss, CH_ID chId, const char *pvName)
 		{
 			errlogSevPrintf(errlogFatal, "pvAssign: epicsStrDup failed\n");
 			free(dbch);
+			epicsMutexUnlock(sp->lock);
 			return pvStatERROR;
 		}
 		ch->dbch = dbch;
-		sp->assignCount++;
+
 		status = pvVarCreate(
 			sp->pvSys,		/* PV system context */
 			dbch->dbName,		/* DB channel name */
@@ -756,6 +769,10 @@ epicsShareFunc pvStat seq_pvAssign(SS_ID ss, CH_ID chId, const char *pvName)
 				"%s\n", ch->varName, dbch->dbName, pvVarGetMess(dbch->pvid));
 			free(ch->dbch->dbName);
 			free(ch->dbch);
+		}
+		else
+		{
+			sp->assignCount++;
 		}
 	}
 
