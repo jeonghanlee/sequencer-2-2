@@ -6,8 +6,21 @@ Release Notes for Version 2.1
 Release 2.1.18
 --------------
 
+* seq: fix possible deadlock when using pvAssign with base >= 3.14.12.4
+
+  From EPICS base 3.14.12.3 to 3.14.12.4 there was a change (a bug fix) in the
+  ca_clear_channel implementation with the effect that it waits for any
+  already active callback to complete. This could cause a deadlock between CA
+  callbacks and a state set thread calling pvAssign because both need to take
+  the program instance mutex lock. The solution is to release the lock before
+  pvVarDestroy is called (which in turn calls ca_clear_channel) and to re-take
+  it afterwards.
+
+  Thanks to Michael Davidsaver <mdavidsaver@bnl.gov> for finding the cause
+  of this problem.
+
 * seq: move variable timeNow out of the loop
-  
+
   This fixes a bug in the code that waits for initial channels to connect.
   Thanks to Janez Golob <janez.golob@cosylab.com> for discovering this and for
   providing a fix (and convincing me that this is actually a bug).
