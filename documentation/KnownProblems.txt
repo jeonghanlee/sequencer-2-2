@@ -6,10 +6,20 @@ Known Problems
 Known Problems in Release 2.1.17
 --------------------------------
 
+* From EPICS base 3.14.12.3 to 3.14.12.4 there was a change (a bug fix) in
+  the ca_clear_channel implementation with the effect that it waits for any
+  already active callback to complete. This could cause a deadlock between
+  CA callbacks and a state set thread calling pvAssign because both need to
+  take the program instance mutex lock. The solution is to release the lock
+  before pvVarDestroy is called (which in turn calls ca_clear_channel) and
+  to re-take it afterwards. Thanks to Michael Davidsaver
+  <mdavidsaver@bnl.gov> for finding the cause of this problem.
+
 * When waiting initially for channels to connect and connection takes
   unusually long time or some variables does not exist, a variable is used
   un-initialized, which might result in strange times reported on the
-  console.
+  console. Thanks to Janez Golob <janez.golob@cosylab.com> for finding this
+  bug and providing a fix.
 
 .. _Known_Problems_2.1.16:
 
