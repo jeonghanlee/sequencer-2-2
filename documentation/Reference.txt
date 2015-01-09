@@ -1,8 +1,9 @@
 SNL Reference for Version 2.2
 =============================
 
-This chapter gives a detailed reference for the SNL syntax and semantics
-and for the built-in functions.
+This chapter gives a detailed reference for the SNL syntax and semantics and
+for the built-in functions of SNL in version 2.2. The `documentation for
+version 2.1`_ is and will remain available, too.
 
 Formal syntax is given in `BNF`_. Multiple rules for the same
 `nonterminal symbol`_ mean that any of the given rules may apply. `Terminal
@@ -11,6 +12,7 @@ symbols`_ are enclosed in double quotes.
 .. _BNF: http://en.wikipedia.org/wiki/Backus-Naur_Form
 .. _nonterminal symbol: http://en.wikipedia.org/wiki/Terminal_and_nonterminal_symbols#Nonterminal_symbols
 .. _terminal symbols: http://en.wikipedia.org/wiki/Terminal_and_nonterminal_symbols#Terminal_symbols
+.. _documentation for version 2.1: http://www-csr.bessy.de/control/SoftDist/sequencer-2-1/Reference.html
 
 Lexical Syntax
 --------------
