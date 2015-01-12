@@ -94,11 +94,11 @@ distribution.
 Note on Versions
 ----------------
 
-This manual describes version 2.2 of the sequencer. This version
-adds support for declaring variables of almost all types expressible in C.
-It also adds support for defining functions and struct types in SNL.
-The backend of the compiler was changed so that generated name follow
-a consistent naming convention. The interface between compiler and runtime
+This manual describes version 2.2 of the sequencer. This version adds
+support for declaring variables of almost all types expressible in C. It
+also adds support for defining functions and struct types in SNL. The
+backend of the compiler was changed so that generated names follow a
+consistent naming convention. The interface between compiler and runtime
 system has been separated from the public API available to escaped C code.
 
 Version 2.1 added
@@ -106,8 +106,6 @@ support for local definitions (including variable declarations) at all
 levels, a significantly improved compiler that employs new lexer and
 parser generators, lots of bug fixes, and a new *safe mode* to avoid
 variable corruption due to race conditions.
-See `Release_Notes_2.1.0` and `Release_Notes_2.0.99` for
-details.
 
 Version 2.0 differs from version 1.9 mainly in that sequencer
 run-time code can run under any operating system for which an EPICS
