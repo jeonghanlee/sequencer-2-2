@@ -317,7 +317,6 @@ state::
 
   ss generate_voltage {
     state ramp {
-      option -e;
       entry {
         pvPut(vout);
       }
@@ -327,17 +326,12 @@ state::
     }
   }
 
-The actions in an entry block in a state declaration are executed
-whenever the state is entered. The state option ::
-
-  option -e;
-
-specifies that this action block is *not* executed if coming from the
-same state; in this case this ensures that the ::
+The actions in an entry block in a state declaration are executed whenever
+the state is entered from a different state. In this case this means the ::
 
   pvPut(vout);
 
-that appears inside the entry block is executed only once when the
+that appears inside the entry block will be executed only once when the
 state is entered for the first time.
 
 
