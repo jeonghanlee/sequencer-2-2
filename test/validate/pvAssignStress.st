@@ -1,4 +1,4 @@
-program pvAssignSubstTest
+program pvAssignStressTest
 
 %%#include "../testSupport.h"
 
