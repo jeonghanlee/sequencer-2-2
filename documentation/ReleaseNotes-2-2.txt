@@ -13,7 +13,7 @@ Supported EPICS Base Versions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 This version drops support for base versions older than 3.14.12.2, all
-others whould work fine.
+others should work fine.
 
 If you manage to compile the sequencer with earlier base versions, well,
 good for you. It'll probably work, too. I will also accept patches that
