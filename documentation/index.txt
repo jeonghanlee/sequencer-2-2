@@ -12,6 +12,7 @@ State Notation Language and Sequencer
 
 :Maintainer: Ben Franksen <benjamin.franksen@helmholtz-berlin.de>
 :Bug Reports: tech-talk@aps.anl.gov
+:Version: |version|
 
 Welcome to the home page of the **EPICS Sequencer** project.
 
