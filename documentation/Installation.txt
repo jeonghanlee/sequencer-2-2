@@ -1,5 +1,9 @@
-Installation
-============
+Download and Installation
+=========================
+
+This chapter gives instructions on how to download, build, and install the
+sequencer, as well as how to run the tests, build the manual, report bugs,
+and contribute patches.
 
 Prerequisites
 -------------
