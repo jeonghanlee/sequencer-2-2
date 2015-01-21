@@ -149,8 +149,8 @@ static void seq_get_handler(
 	SSCB	*ss = rq->ss;
 	PROG	*sp = ch->prog;
 
-	assert(ch->dbch != NULL);
 	freeListFree(sp->pvReqPool, arg);
+	if (!ch->dbch) return;
 	/* ignore callback if not expected, e.g. already timed out */
 	if (ss->getReq[chNum(ch)] == rq)
 		proc_db_events(value, type, ch, ss, pvEventGet, status);
@@ -168,8 +168,8 @@ static void seq_put_handler(
 	SSCB	*ss = rq->ss;
 	PROG	*sp = ch->prog;
 
-	assert(ch->dbch != NULL);
 	freeListFree(sp->pvReqPool, arg);
+	if (!ch->dbch) return;
 	/* ignore callback if not expected, e.g. already timed out */
 	if (ss->putReq[chNum(ch)] == rq)
 		proc_db_events(value, type, ch, ss, pvEventPut, status);
@@ -185,7 +185,7 @@ static void seq_mon_handler(
 	PROG	*sp = ch->prog;
 	DBCHAN	*dbch = ch->dbch;
 
-	assert(dbch != NULL);
+	if (!dbch) return;
 	proc_db_events(value, type, ch, 0, pvEventMonitor, status);
 	if (!dbch->gotMonitor)
 	{
@@ -413,13 +413,15 @@ void seq_conn_handler(int connected, void *arg)
 {
 	CHAN	*ch = (CHAN *)arg;
 	PROG	*sp = ch->prog;
-	DBCHAN	*dbch;
+	DBCHAN	*dbch = ch->dbch;
 
 	epicsMutexMustLock(sp->lock);
 
-	dbch = ch->dbch;
-
-	assert(dbch != NULL);
+	if (!dbch)
+	{
+		epicsMutexUnlock(sp->lock);
+		return;
+	}
 
 	if (!connected)
 	{
