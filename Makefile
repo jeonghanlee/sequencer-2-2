@@ -54,4 +54,12 @@ release: upload_docs upload_repo
 	rsync seq-$(SEQ_RELEASE).tar.gz $(USER_AT_HOST):$(SEQ_PATH)/releases/
 	$(RM) seq-$(SEQ_RELEASE).tar.gz
 
+GIT_MIRROR = /opt/repositories/controls/git/seq/branch-$(BRANCH)
+
+mirror: $(GIT_MIRROR)/.git
+	touch $(GIT_MIRROR)/git.marks
+	darcs convert export --read-marks $(GIT_MIRROR)/darcs.marks --write-marks $(GIT_MIRROR)/darcs.marks | (cd $(GIT_MIRROR) && git fast-import --import-marks=git.marks --export-marks=git.marks)
+	cd $(GIT_MIRROR)/.git && git --bare update-server-info
+	rsync -r -t --delete $(GIT_MIRROR)/.git/ $(USER_AT_HOST):$(SEQ_PATH)/repo/branch-$(BRANCH).git/
+
 .PHONY: html docs docs.clean upload_docs upload_repo snapshot release
