@@ -14,6 +14,7 @@ examples_DEPEND_DIRS = src
 
 BRANCH = 2-2
 DEFAULT_REPO = rcsadm@repo.acc.bessy.de:/opt/repositories/controls/darcs/epics/support/seq/branch-$(BRANCH)
+GIT_MIRROR = /opt/repositories/controls/git/seq/branch-$(BRANCH)
 SEQ_PATH = www/control/SoftDist/sequencer-$(BRANCH)
 USER_AT_HOST = wwwcsr@www-csr.bessy.de
 DATE = $(shell date -I)
@@ -38,7 +39,13 @@ realclean clean: docs.clean
 upload_docs: docs
 	rsync -r -t $(TOP)/html/ $(USER_AT_HOST):$(SEQ_PATH)/
 
-upload_repo:
+mirror: $(GIT_MIRROR)/.git
+	touch $(GIT_MIRROR)/git.marks
+	darcs convert export --read-marks $(GIT_MIRROR)/darcs.marks --write-marks $(GIT_MIRROR)/darcs.marks | (cd $(GIT_MIRROR) && git fast-import --import-marks=git.marks --export-marks=git.marks)
+	cd $(GIT_MIRROR)/.git && git --bare update-server-info
+	rsync -r -t --delete $(GIT_MIRROR)/.git/ $(USER_AT_HOST):$(SEQ_PATH)/repo/branch-$(BRANCH).git/
+
+upload_repo: mirror
 	darcs push $(DEFAULT_REPO)
 	darcs push -a $(USER_AT_HOST):$(SEQ_PATH)/repo/branch-$(BRANCH)
 
@@ -54,12 +61,9 @@ release: upload_docs upload_repo
 	rsync seq-$(SEQ_RELEASE).tar.gz $(USER_AT_HOST):$(SEQ_PATH)/releases/
 	$(RM) seq-$(SEQ_RELEASE).tar.gz
 
-GIT_MIRROR = /opt/repositories/controls/git/seq/branch-$(BRANCH)
+changelog: force
+	DARCS_ALWAYS_COLOR=0 darcs changes -a --from-tag=. | egrep -v '^(Author|Date|patch)' > changelog
 
-mirror: $(GIT_MIRROR)/.git
-	touch $(GIT_MIRROR)/git.marks
-	darcs convert export --read-marks $(GIT_MIRROR)/darcs.marks --write-marks $(GIT_MIRROR)/darcs.marks | (cd $(GIT_MIRROR) && git fast-import --import-marks=git.marks --export-marks=git.marks)
-	cd $(GIT_MIRROR)/.git && git --bare update-server-info
-	rsync -r -t --delete $(GIT_MIRROR)/.git/ $(USER_AT_HOST):$(SEQ_PATH)/repo/branch-$(BRANCH).git/
+force:
 
-.PHONY: html docs docs.clean upload_docs upload_repo snapshot release
+.PHONY: html docs docs.clean upload_docs mirror upload_repo snapshot release
