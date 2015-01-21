@@ -50,7 +50,7 @@ pvStat seq_connect(PROG *sp, boolean wait)
 {
 	pvStat		status;
 	unsigned	nch;
-	int		delay = 2.0;
+	int		delay = 2;
 	boolean		ready = FALSE;
 
 	/*
@@ -126,7 +126,7 @@ pvStat seq_connect(PROG *sp, boolean wait)
 				}
 				pvTimeGetCurrentDouble(&timeNow);
 				if (delay < 3600)
-					delay *= 1.71;
+					delay = (int)(delay*1.71);
 				else
 					delay = 3600;
 			}
