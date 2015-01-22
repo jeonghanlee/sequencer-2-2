@@ -45,14 +45,14 @@ ss read_named {
                 testOk(expected==named,
                     "immediate completion:      expected=%d==%d=named", expected, named);
             } else {
-                testSkip(1, "no immediate completion");
+                testPass("no immediate completion");
             }
             epicsThreadSleep(0.1);
             if (pvGetComplete(named)) {
                 testOk(expected==named,
                     "completion after delay:    expected=%d==%d=named", expected, named);
             } else {
-                testSkip(1, "no completion after delay");
+                testPass("no completion after delay");
             }
         } state wait
     }
@@ -85,14 +85,14 @@ ss read_anon {
                 testOk(expected==anon,
                     "immediate completion:      expected=%d==%d=anon", expected, anon);
             } else {
-                testSkip(1, "no immediate completion");
+                testPass("no immediate completion");
             }
             epicsThreadSleep(0.1);
             if (pvGetComplete(anon)) {
                 testOk(expected==anon,
                     "completion after delay:    expected=%d==%d=anon", expected, anon);
             } else {
-                testSkip(1, "no completion after delay");
+                testPass("no completion after delay");
             }
         } state wait
     }
