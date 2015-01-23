@@ -6,3 +6,8 @@ Known Problems
 Known Problems in Release 2.2.1
 -------------------------------
 
+* In test/validate, pvAssignStress.st has the same program name as
+  pvAssignSubst.st, leading to build errors when cross-compiling to VxWorks
+  or RTEMS, where all tests get linked into a single library. This can be
+  fixed by changing the program name in pvAssignStress.st to
+  "pvAssignStressTest".
