@@ -11,3 +11,6 @@ Known Problems in Release 2.2.1
   or RTEMS, where all tests get linked into a single library. This can be
   fixed by changing the program name in pvAssignStress.st to
   "pvAssignStressTest".
+
+* A previous bugfix in the pvAssign builtin introduced a regression, that
+  can lead to assertion failures. The code repository contains a fix.
