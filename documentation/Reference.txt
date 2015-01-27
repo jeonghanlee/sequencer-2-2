@@ -1770,15 +1770,6 @@ Like for all other operations, completion is immediate for anonymous PVs.
    `assign` clause. Instead, you must call ``pvAssign``
    for each array element individually.
 
-.. versionadded:: 2.2
-
-.. todo::
-
-   Revise this
-
-Program parameter expansion is done in the same way as when using the
-`assign` clause.
-
 .. versionchanged:: 2.2
 
 Calling this function with a multi-PV array is no longer allowed and results
