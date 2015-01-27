@@ -6,7 +6,7 @@ Release Notes for Version 2.2
 Release 2.2.2
 -------------
 
-The bugs listed in `Known_Problems_2.2.1`have been fixed.
+The bugs listed in `Known_Problems_2.2.1` have been fixed.
 
 No other user relevant changes have been made.
 
