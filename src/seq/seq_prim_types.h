@@ -7,6 +7,8 @@ in the file LICENSE that is included with this distribution.
 #ifndef INCLseq_prim_typesh
 #define INCLseq_prim_typesh
 
+#include "shareLib.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -32,9 +34,9 @@ enum prim_type_tag {
 };
 
 #ifndef prim_types_GLOBAL
-extern
+epicsShareExtern
 #endif
-const char *prim_type_name[]
+epicsShareDef const char *prim_type_name[]
 #ifdef prim_types_GLOBAL
 = {
     "char",
@@ -59,9 +61,9 @@ const char *prim_type_name[]
 ;
 
 #ifndef prim_types_GLOBAL
-extern
+epicsShareExtern
 #endif
-const char *prim_type_tag_name[]
+epicsShareDef const char *prim_type_tag_name[]
 #ifdef prim_types_GLOBAL
 = {
     "P_CHAR",

@@ -27,9 +27,9 @@ in the file LICENSE that is included with this distribution.
 #ifndef INCLseqsnch
 #define INCLseqsnch
 
+#include "shareLib.h"
 #include "seqCom.h"
 #include "seq_prim_types.h"
-#include "shareLib.h"
 
 #ifdef __cplusplus
 extern "C" {
