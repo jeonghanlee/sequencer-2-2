@@ -32,7 +32,7 @@ my $tests = {
 
 my @progs = sort(keys(%$tests));
 
-plan tests => @progs + 0;
+plan tests => 3 * (@progs + 0);
 
 sub snc_diag {
   diag "snc said this:";
@@ -40,8 +40,6 @@ sub snc_diag {
 }
 
 foreach my $prog (@progs) {
-  subtest $prog => sub {
-    plan tests => 3;
     my $output = `make -s -B $prog.c 2>&1`;
     my $exitcode = $? >> 8;
     $output =~ s/^make.*$//m;
@@ -53,10 +51,8 @@ foreach my $prog (@progs) {
     my $nw = 0;
     $nw++ while ($output =~ /warning/g);
     is($nw, $tests->{$prog}->{warnings}, "number of warnings") or $failed=1;
-      
     my $ne = 0;
     $ne++ while ($output =~ /error/g);
     is($ne, $tests->{$prog}->{errors}, "number of errors") or $failed=1;
     snc_diag($output) if $failed;
-  }
 }
