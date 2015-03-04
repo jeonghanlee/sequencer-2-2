@@ -13,4 +13,10 @@ Known Problems in Release 2.2.1
   "pvAssignStressTest".
 
 * A previous bugfix in the pvAssign builtin introduced a regression, that
-  can lead to assertion failures. The code repository contains a fix.
+  can lead to assertion failures.
+
+* Building static libraries fails due to wrong order of dependent libraries
+  in two Makefiles.
+
+* Tests fail in tests/compiler if the build host has an ancient version of
+  Testy::More that does not support subtest. This happens e.g. on RHEL 6.6.
