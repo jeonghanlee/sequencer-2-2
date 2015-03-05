@@ -131,7 +131,8 @@ pvStat seq_connect(PROG *sp, boolean wait)
 					delay = 3600;
 			}
 		} while (!ready);
-		printf("%s[%d]: all channels connected & received 1st monitor\n",
+		errlogSevPrintf(errlogInfo,
+			"%s[%d]: all channels connected & received 1st monitor\n",
 			sp->progName, sp->instance);
 	}
 	return pvStatOK;

@@ -117,7 +117,8 @@ exit:
 	DEBUG("   Remove program instance from list\n");
 	seqDelProg(sp);
 
-	printf("Instance %d of sequencer program \"%s\" terminated\n",
+	errlogSevPrintf(errlogInfo,
+		"Instance %d of sequencer program \"%s\" terminated\n",
 		sp->instance, sp->progName);
 
 	/* Free all allocated memory */

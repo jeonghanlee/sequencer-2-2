@@ -67,7 +67,7 @@ epicsShareFunc epicsThreadId epicsShareAPI seq(
 	seqRegisterSequencerProgram(seqProg);
 
 	/* Print version & date of sequencer */
-	printf(SEQ_RELEASE "\n");
+	errlogSevPrintf(errlogInfo, SEQ_RELEASE "\n");
 
 	/* Exit if no parameters specified */
 	if (!seqProg)
@@ -140,7 +140,8 @@ epicsShareFunc epicsThreadId epicsShareAPI seq(
 		return 0;
 	}
 
-	printf("Spawning sequencer program \"%s\", thread %p: \"%s\"\n",
+	errlogSevPrintf(errlogInfo,
+		"Spawning sequencer program \"%s\", thread %p: \"%s\"\n",
 		sp->progName, tid, threadName);
 
 	return tid;
