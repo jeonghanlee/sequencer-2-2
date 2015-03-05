@@ -355,7 +355,11 @@ void seq_disconnect(PROG *sp)
 		DEBUG("seq_disconnect: disconnect %s from %s\n",
 			ch->varName, dbch->dbName);
 		/* Disconnect this PV */
+		epicsMutexUnlock(sp->lock);
+		/* Note: must unlock around pvVarDestroy to avoid deadlock
+		   with pending callbacks. */
 		status = pvVarDestroy(&dbch->pvid);
+		epicsMutexMustLock(sp->lock);
 		if (status != pvStatOK)
 			errlogSevPrintf(errlogFatal, "seq_disconnect(var '%s', pv '%s'): pvVarDestroy() failure: "
 				"%s\n", ch->varName, dbch->dbName, pvVarGetMess(dbch->pvid));
