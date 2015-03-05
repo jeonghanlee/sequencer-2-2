@@ -20,6 +20,7 @@
 #     executable is the name of the file the script runs
 
 use strict;
+use Cwd;
 
 my $valgrind = "";
 
@@ -33,6 +34,8 @@ if ($valgrind_path) {
 my $db = "../$stem.db";
 
 my $host_arch = $ENV{EPICS_HOST_ARCH};
+
+my $top = Cwd::abs_path("../../..");
 
 open(my $OUT, ">", $target) or die "Can't create $target: $!\n";
 
@@ -54,16 +57,16 @@ if (!$pid) {
   exec("./$exe -S -d $db");
   die "exec failed: $err";
 }
-system("$valgrind./$exe -S -t");
+system("TOP=$top $valgrind./$exe -S -t");
 $killit;
 EOF
 } elsif (-r "$db") {
   print $OUT <<EOF;
-system "$valgrind./$exe -S -t -d $db";
+system "TOP=$top $valgrind./$exe -S -t -d $db";
 EOF
 } else {
   print $OUT <<EOF;
-system "$valgrind./$exe -S -t";
+system "TOP=$top $valgrind./$exe -S -t";
 EOF
 }
 
