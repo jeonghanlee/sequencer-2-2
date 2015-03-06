@@ -35,7 +35,7 @@ my $db = "../$stem.db";
 
 my $host_arch = $ENV{EPICS_HOST_ARCH};
 
-my $top = Cwd::abs_path("../../..");
+my $top = Cwd::abs_path($ENV{TOP});
 
 open(my $OUT, ">", $target) or die "Can't create $target: $!\n";
 
@@ -51,22 +51,28 @@ if ($host_arch =~ /win32/) {
 
 if ($ioc eq "ioc") {
   print $OUT <<EOF;
+\$ENV{HARNESS_ACTIVE} = 1;
+\$ENV{TOP} = '$top';
 my $pid = fork();
 die "fork failed: $err" unless defined($pid);
 if (!$pid) {
   exec("./$exe -S -d $db");
   die "exec failed: $err";
 }
-system("TOP=$top $valgrind./$exe -S -t");
+system("$valgrind./$exe -S -t");
 $killit;
 EOF
 } elsif (-r "$db") {
   print $OUT <<EOF;
-system "TOP=$top $valgrind./$exe -S -t -d $db";
+\$ENV{HARNESS_ACTIVE} = 1;
+\$ENV{TOP} = '$top';
+system "$valgrind./$exe -S -t -d $db";
 EOF
 } else {
   print $OUT <<EOF;
-system "TOP=$top $valgrind./$exe -S -t";
+\$ENV{HARNESS_ACTIVE} = 1;
+\$ENV{TOP} = '$top';
+system "$valgrind./$exe -S -t";
 EOF
 }
 
