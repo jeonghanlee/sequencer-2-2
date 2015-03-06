@@ -68,7 +68,7 @@ void test_mystruct(struct mystruct *p) {
         testDiag("name=%s, value=", p->name);
         testOk1(p->name==s.name);
         test_array(p->value, s.value, 5);
-        testDiag("  warning={%.1f,%.1f}, alarm={%.1f,%.1f}, deadband=%.1f\n  process=%p\n",
+        testDiag("  warning={%.1f,%.1f}, alarm={%.1f,%.1f}, deadband=%.1f, process=%p\n",
             p->warning.low, p->warning.high,
             p->alarm.low, p->alarm.high,
             p->deadband, p->process);
