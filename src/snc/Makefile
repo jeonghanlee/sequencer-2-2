@@ -61,7 +61,7 @@ $(COMMON_DIR)/snl.bnf: snl.lem
 $(COMMON_DIR)/Syntax.txt: ../bnf2txt.pl snl.re $(COMMON_DIR)/snl.bnf
 	$(PERL) $^ > $@
 
-ifdef BASE_3_14
+ifeq ($(BASE_3_14),YES)
 %$(DEP): %.c
 	@-$(MKMF) $(HDEPENDS_FLAGS) -m $*$(DEP) $(HDEPENDS_INCLUDES) $*$(OBJ) $<
 endif
