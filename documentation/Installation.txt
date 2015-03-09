@@ -33,7 +33,7 @@ Releases are available here:
 
    http://www-csr.bessy.de/control/SoftDist/sequencer/releases/
 
-The current stable release is `2.2.1`_. Please take a look at the
+The current stable release is `2.2.2`_. Please take a look at the
 `VersioningPolicy` if you are unsure whether to upgrade to
 a new release.
 
@@ -56,6 +56,7 @@ Here are all releases for version 2.2:
    ========== =========================== ============================
    Version    Release Notes               Known Problems
    ========== =========================== ============================
+   `2.2.2`_   `Release_Notes_2.2.1`       n/a
    `2.2.1`_   `Release_Notes_2.2.1`       `Known_Problems_2.2.1`
    ========== =========================== ============================
 
@@ -78,7 +79,7 @@ where ``<branch>`` is the branch name. There are currently three branches:
   the focus is on stability.
 
 * `branch-2-3`_ is where new features are developed that will appear in
-  version 2.3. There are no releases yet.
+  version 2.3. There are no releases yet but the code already works quite well.
 
 See `Contribute`_ for a short description how to record and send
 patches.
@@ -86,6 +87,7 @@ patches.
 You can also follow development by using the `repository browser`_.
 
 .. _latest snapshot: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2-2-snapshot-latest.tar.gz
+.. _2.2.2: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2.2.2.tar.gz
 .. _2.2.1: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2.2.1.tar.gz
 .. _repository browser: http://www-csr.bessy.de/cgi-bin/darcsweb.cgi
 .. _branch-2-0: http://www-csr.bessy.de/cgi-bin/darcsweb.cgi?r=seq%20branch-2-0;a=summary
