@@ -37,10 +37,11 @@ The current stable release is `2.2.2`_. Please take a look at the
 `VersioningPolicy` if you are unsure whether to upgrade to
 a new release.
 
-.. warning::
+.. note::
 
   The documentation and download links you will find on this page are for
-  version 2.2. For older version, see the `documentation for version 2.1`_.
+  version 2.2. The `documentation for version 2.1`_ is still there and will
+  be maintained at least until version 2.3 is released.
 
 Development snapshots are available under the name
 
@@ -60,29 +61,23 @@ Here are all releases for version 2.2:
    `2.2.1`_   `Release_Notes_2.2.1`       `Known_Problems_2.2.1`
    ========== =========================== ============================
 
-If you want to help testing, please use
-the `latest snapshot`_, or check out the `darcs`_ repository::
+If you want to help testing, please use the `latest snapshot`_, or check out
+the `darcs`_ repository for `branch-2-2`_::
 
-   darcs get http://www-csr.bessy.de/control/SoftDist/sequencer/repo/<branch>
+   darcs get http://www-csr.bessy.de/control/SoftDist/sequencer/repo/branch-2-2
 
-where ``<branch>`` is the branch name. There are currently three branches:
+Since release 2.2.2 there is also a git mirror, so you can as well ::
 
-* `branch-2-0`_ is an old version. This branch has been frozen since 2011
-  and will receive no more patches, nor will there be any new releases.
+   git clone http://www-csr.bessy.de/control/SoftDist/sequencer/repo/branch-2-2.git
 
-* `branch-2-1`_ is the previous version. No further development will happen
-  here. I may make further bug-fix releases for people who don't want to
-  upgrade to version 2.2 yet.
+but please note that this is just a mirror, no more: I cannot accept git
+patches (or whatever they are called in git); it may also happen that I have
+to re-create the whole git repo from scratch (because incremental conversion
+sometimes fails).
 
-* `branch-2-2`_ is the current "stable" version. New features might still be
-  added here if they can be implemented in a fully compatible manner, but
-  the focus is on stability.
+Development of new features now happens on `branch-2-3`_.
 
-* `branch-2-3`_ is where new features are developed that will appear in
-  version 2.3. There are no releases yet but the code already works quite well.
-
-See `Contribute`_ for a short description how to record and send
-patches.
+See `Contribute`_ for a short description how to record and send patches.
 
 You can also follow development by using the `repository browser`_.
 
@@ -311,9 +306,15 @@ you are using.
 Contribute
 ----------
 
-I am always happy to receive patches (bug fixes, improvements,
-whatever). You can create a local copy of the `darcs`_
-repository (the stable branch in this example) by saying::
+I am always happy to receive patches (bug fixes, improvements, whatever).
+For minor changes you don't need to bother with `darcs`_, just send me a
+`patch file`_.
+
+.. _patch file: http://en.wikipedia.org/wiki/Patch_%28Unix%29
+
+For more involved changes you might want to send a `darcs`_ patch. You can
+create a local copy of the `darcs`_ repository (the stable branch in this
+example) by saying::
 
    darcs get http://www-csr.bessy.de/control/SoftDist/sequencer/repo/stable
 
