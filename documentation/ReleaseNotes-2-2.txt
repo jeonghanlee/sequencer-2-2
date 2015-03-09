@@ -8,7 +8,21 @@ Release 2.2.2
 
 The bugs listed in `Known_Problems_2.2.1` have been fixed.
 
-No other user relevant changes have been made.
+In addition, some of the tests and parts of the test infrastructure have
+been changed so as to produce clean TAP files (this is currently only
+supported by base-3.15 with 'make tapfiles'). For the same reason, the usual
+messages when a program starts are no longer issued with printf, but rather
+with errlogSevPrintf(errlogInfo,...).
+
+Some improvements to the web pages have been made: the version the pages
+refer to is more prominently visible, some shortcuts have been renamed, and
+side-bar shortcuts to all other (maintained) versions were added.
+
+I added git mirrors of the darcs repos, the URLs are:
+
+http://www-csr.bessy.de/control/SoftDist/sequencer/repo/branch-2-1.git
+http://www-csr.bessy.de/control/SoftDist/sequencer/repo/branch-2-2.git
+http://www-csr.bessy.de/control/SoftDist/sequencer/repo/branch-2-3.git
 
 .. _Release_Notes_2.2.1:
 
