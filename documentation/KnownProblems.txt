@@ -15,8 +15,18 @@ Known Problems in Release 2.2.1
 * A previous bugfix in the pvAssign builtin introduced a regression, that
   can lead to assertion failures.
 
+* When exiting from a program, deadlock is possible when a pending callback
+	is active when the program shuts down.
+
+* Tests fail in tests/compiler if the build host has an ancient version of
+  Test::More that does not support subtest. This happens e.g. on RHEL 6.6.
+
+* Dependency generation in src/snc is broken if compiled against base-3.15
+  due to a bug in the Makefile (and one in base).
+
 * Building static libraries fails due to wrong order of dependent libraries
   in two Makefiles.
 
-* Tests fail in tests/compiler if the build host has an ancient version of
-  Testy::More that does not support subtest. This happens e.g. on RHEL 6.6.
+* Building on Windows can fail due to missing epicsShare stuff in seq_snc.h.
+
+* Fixed a bug in the documentation for pvAssign.
