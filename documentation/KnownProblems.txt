@@ -15,8 +15,11 @@ Known Problems in Release 2.2.1
 * A previous bugfix in the pvAssign builtin introduced a regression, that
   can lead to assertion failures.
 
+* A wrong assertion in the CA event handler may be triggered when connection
+  to a PV is lost in the middle of a pending get request.
+
 * When exiting from a program, deadlock is possible when a pending callback
-	is active when the program shuts down.
+  is active when the program shuts down.
 
 * Tests fail in tests/compiler if the build host has an ancient version of
   Test::More that does not support subtest. This happens e.g. on RHEL 6.6.
