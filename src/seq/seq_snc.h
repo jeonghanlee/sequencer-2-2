@@ -30,12 +30,11 @@ in the file LICENSE that is included with this distribution.
 #include "shareLib.h"
 #include "seqCom.h"
 #include "seq_prim_types.h"
+#include "seq_mask.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-typedef epicsUInt32 seqMask;				/* for event masks and options */
 
 /* Bit encoding for run-time options */
 #define OPT_DEBUG		((seqMask)1u<<0)	/* turn on debugging */
@@ -50,14 +49,6 @@ typedef epicsUInt32 seqMask;				/* for event masks and options */
 							/* entry to state from same state */
 #define OPT_DOENTRYFROMSELF	((seqMask)1u<<1)	/* Do entry{} even if from same state */
 #define OPT_DOEXITTOSELF	((seqMask)1u<<2)	/* Do exit{} even if to same state */
-
-/* seqMask macros */
-#define NBITS			(8*sizeof(seqMask))	/* # bits in seqMask word */
-#define NWORDS(maxBitNum)	(1+(maxBitNum)/NBITS)	/* # words in seqMask */
-
-#define bitSet(words, bitnum)	( words[(bitnum)/NBITS] |=  (1u<<((bitnum)%NBITS)))
-#define bitClear(words, bitnum)	( words[(bitnum)/NBITS] &= ~(1u<<((bitnum)%NBITS)))
-#define bitTest(words, bitnum)	((words[(bitnum)/NBITS] &  (1u<<((bitnum)%NBITS))) != 0)
 
 #ifndef TRUE
 #define TRUE	1

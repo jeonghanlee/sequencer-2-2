@@ -8,9 +8,6 @@ This file is distributed subject to a Software License Agreement found
 in the file LICENSE that is included with this distribution.
 \*************************************************************************/
 #define prim_types_GLOBAL
-#include "seq_prim_types.h"
-#undef prim_types_GLOBAL
-
 #include "seq.h"
 #include "seq_debug.h"
 

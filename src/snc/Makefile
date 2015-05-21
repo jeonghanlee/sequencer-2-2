@@ -25,7 +25,7 @@ snc_SRCS += sym_table.c     # symbol table
 snc_SRCS += builtin.c       # builtin constants and functions
 snc_SRCS += type_check.c    # rudimentary type checker
 
-snc_LIBS += seq pv ca Com
+snc_LIBS += Com
 
 # locally overwrite default value for this variable
 HTMLS += Syntax.txt

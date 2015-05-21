@@ -59,6 +59,8 @@ in the file LICENSE that is included with this distribution.
 #undef epicsAssertAuthor
 #endif
 #define epicsAssertAuthor "benjamin.franksen@helmholtz-berlin.de"
+
+#define declare_prim_type_names
 #include "seqPvt.h"
 
 #endif /*INCLseqh*/

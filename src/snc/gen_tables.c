@@ -15,13 +15,6 @@ in the file LICENSE that is included with this distribution.
 #include <string.h>
 #include <assert.h>
 
-#ifdef _WIN32
-#  include <malloc.h>
-#elif (__STDC_VERSION__ < 199901L) && !defined(__GNUC__)
-#  include <alloca.h>
-#endif
-
-#include "seq_snc.h"
 #include "analysis.h"
 #include "main.h"
 #include "sym_table.h"
@@ -29,6 +22,8 @@ in the file LICENSE that is included with this distribution.
 #include "node.h"
 #include "var_types.h"
 #include "gen_tables.h"
+#include "seq_mask.h"
+#include "seq_release.h"
 
 typedef struct event_mask_args {
 	seqMask	*event_words;
@@ -189,12 +184,7 @@ static void gen_state_table(Node *ss_list, uint num_event_flags, uint num_channe
 	uint	n;
 	uint	num_event_words = NWORDS(num_event_flags + num_channels);
 	uint	ss_num = 0;
-
-#if (__STDC_VERSION__ >= 199901L) || defined(__GNUC__)
-	seqMask	event_mask[num_event_words];
-#else
-	seqMask	*event_mask = (seqMask *)alloca(num_event_words*sizeof(seqMask));
-#endif
+	seqMask	*event_mask = newArray(seqMask, num_event_words);
 
 	/* NOTE: Bit zero of event mask is not used. Bit 1 to num_event_flags
 	   are used for event flags, then come channels. */

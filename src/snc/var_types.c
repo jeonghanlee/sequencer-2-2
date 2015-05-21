@@ -10,18 +10,14 @@ in the file LICENSE that is included with this distribution.
 #include <stdio.h>
 #include <string.h>
 
+#define prim_types_GLOBAL
+#define var_types_GLOBAL
+
 #include "main.h"
 #include "snl.h"
 #include "gen_code.h"   /* implicit parameter names */
 #include "node.h"
-
-#define var_types_GLOBAL
 #include "var_types.h"
-#undef var_types_GLOBAL
-
-#define prim_types_GLOBAL
-#include "seq_prim_types.h"
-#undef prim_types_GLOBAL
 
 /* #define DEBUG */
 

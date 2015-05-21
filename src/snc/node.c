@@ -20,7 +20,6 @@ in the file LICENSE that is included with this distribution.
 
 #define node_info_GLOBAL
 #include "types.h"
-#undef node_info_GLOBAL
 #include "node.h"
 #include "main.h"
 

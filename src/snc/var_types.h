@@ -7,6 +7,7 @@ in the file LICENSE that is included with this distribution.
 #ifndef INCLvar_typesh
 #define INCLvar_typesh
 
+#define declare_prim_type_names
 #include "seq_prim_types.h"
 #include "types.h"
 
