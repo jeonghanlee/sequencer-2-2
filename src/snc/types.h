@@ -14,7 +14,7 @@ in the file LICENSE that is included with this distribution.
 
 #include <stdlib.h>
 
-#include <epicsVersion.h>
+#include "epicsVersion.h"
 
 #include "seq_static_assert.h"
 

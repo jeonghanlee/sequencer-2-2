@@ -8,8 +8,9 @@ in the file LICENSE that is included with this distribution.
                                 Symbol table
 \*************************************************************************/
 #include <stdio.h>	/* gpHash.h mentions FILE but does not include stdio */
-#include <gpHash.h>
 #include <assert.h>
+
+#include "gpHash.h"
 
 #include "types.h"
 #include "sym_table.h"

@@ -10,18 +10,18 @@ in the file LICENSE that is included with this distribution.
 /*************************************************************************\
                 Main program, reporting and printing procedures
 \*************************************************************************/
-#include	<stdio.h>
-#include	<stdlib.h>
-#include	<string.h>
-#include	<stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdarg.h>
 
-#include	"types.h"
-#include	"parser.h"
-#include	"analysis.h"
-#include	"gen_code.h"
-#include	"main.h"
+#include "types.h"
+#include "parser.h"
+#include "analysis.h"
+#include "gen_code.h"
+#include "main.h"
 
-#include <seq_release.h>
+#include "seq_release.h"
 
 static Options options = DEFAULT_OPTIONS;
 
