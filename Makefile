@@ -47,7 +47,7 @@ upload_repo:
 	cd $(GIT_MIRROR)/.git && git --bare update-server-info
 	rsync -r --delete $(GIT_MIRROR)/.git/ $(USER_AT_HOST):$(SEQ_PATH)/repo/branch-$(BRANCH).git/
 
-snapshot: upload_repo
+snapshot:
 	darcs dist -d $(SNAPSHOT)
 	rsync $(SNAPSHOT).tar.gz $(USER_AT_HOST):$(SEQ_PATH)/releases/
 	ssh $(USER_AT_HOST) 'cd $(SEQ_PATH)/releases && ln -f -s $(SNAPSHOT).tar.gz seq-$(BRANCH)-snapshot-latest.tar.gz'
