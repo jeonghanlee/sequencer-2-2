@@ -51,6 +51,15 @@ ifndef ECHO
 endif
 
 #--------------------------------------------------
+# avoid deprecation warnings with base 3.15
+
+ifdef BASE_3_15
+COMPILE.snl = $(SNC) $(TARGET_SNCFLAGS) $(SNCFLAGS) $(USR_SNCFLAGS) $< -o $(*F).c
+else
+COMPILE.snl = $(SNC) $(TARGET_SNCFLAGS) $(SNCFLAGS) $(USR_SNCFLAGS) $(call PATH_FILTER,$<) -o $(*F).c
+endif
+
+#--------------------------------------------------
 # Rules
 
 %.st$(DEP): %.st
@@ -63,11 +72,11 @@ endif
 
 %.c: %.i $(SNC)
 	$(ECHO) "compiling $< to C"
-	$(SNC) $(TARGET_SNCFLAGS) $(SNCFLAGS) $(USR_SNCFLAGS) $(call PATH_FILTER,$<) -o $(*F).c
+	$(COMPILE.snl)
 
 %.c: %.stt $(SNC)
 	$(ECHO) "compiling $< to C"
-	$(SNC) $(TARGET_SNCFLAGS) $(SNCFLAGS) $(USR_SNCFLAGS) $(call PATH_FILTER,$<) -o $(*F).c
+	$(COMPILE.snl)
 
 CLEANS += $(wildcard *.d)
 
