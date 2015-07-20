@@ -11,6 +11,7 @@ State Notation Language and Sequencer
    :align: right
 
 :Maintainer: Ben Franksen <benjamin.franksen@helmholtz-berlin.de>
+:Co-Maintainer: Freddie Akeroyd <freddie.akeroyd@stfc.ac.uk>
 :Bug Reports: tech-talk@aps.anl.gov
 :Version: |version|
 
