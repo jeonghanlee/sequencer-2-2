@@ -57,7 +57,7 @@ Here are all releases for version 2.2:
    ========== =========================== ============================
    Version    Release Notes               Known Problems
    ========== =========================== ============================
-   `2.2.2`_   `Release_Notes_2.2.1`       n/a
+   `2.2.2`_   `Release_Notes_2.2.1`       `Known_Problems_2.2.2`
    `2.2.1`_   `Release_Notes_2.2.1`       `Known_Problems_2.2.1`
    ========== =========================== ============================
 

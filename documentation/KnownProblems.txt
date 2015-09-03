@@ -1,6 +1,14 @@
 Known Problems
 ==============
 
+.. _Known_Problems_2.2.2:
+
+Known Problems in Release 2.2.2
+-------------------------------
+
+* Attempting to issue a DEFAULT pvPut when an ASYNC put is already
+  pending on the same variable leads to an assertion failure.
+
 .. _Known_Problems_2.2.1:
 
 Known Problems in Release 2.2.1
