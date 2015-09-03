@@ -39,5 +39,3 @@ Known Problems in Release 2.2.1
   in two Makefiles.
 
 * Building on Windows can fail due to missing epicsShare stuff in seq_snc.h.
-
-* Fixed a bug in the documentation for pvAssign.
