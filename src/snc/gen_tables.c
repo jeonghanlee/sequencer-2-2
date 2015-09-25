@@ -353,7 +353,7 @@ static void gen_state_event_mask(Node *sp, uint num_event_flags,
 #ifdef DEBUG
 	report("event mask for state %s is", sp->token.str);
 	for (n = 0; n < num_event_words; n++)
-		report(" 0x%lx", event_words[n]);
+		report(" 0x%lx", (unsigned long)event_words[n]);
 	report("\n");
 #endif
 }

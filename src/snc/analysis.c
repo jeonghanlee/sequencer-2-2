@@ -628,7 +628,7 @@ static void assign_subscript(
 	assert(pv_name);			/* precondition */
 
 #ifdef DEBUG
-	report("assign %s[%s] to '%s';\n", vp->name, subscr->token.str, pv_name);
+	report("assign %s[%s] to '%s';\n", vp->name, subscr->token.str, pv_name->token.str);
 #endif
 
 	if (vp->type->tag != T_ARRAY)	/* establish L3 */
@@ -890,7 +890,7 @@ static void sync_elem(Node *defn, Var *vp, Node *subscr, Var *evp)
 	assert(vp->sync != M_SINGLE);			/* call */
 
 #ifdef DEBUG
-	report("sync %s[%d] to %s;\n", vp->name, subscr->token.str, evp->name);
+	report("sync %s[%s] to %s;\n", vp->name, subscr->token.str, evp->name);
 #endif
 
 	if (vp->type->tag != T_ARRAY)	/* establish L3 */
@@ -1448,7 +1448,7 @@ static uint connect_states(SymTable st, Node *prog)
 				assert(!next_sp || strcmp(tp->token.str,next_sp->token.str) == 0);
 #ifdef DEBUG
 				report("connect_states: ss = %s, state = %s, when(...){...} state (%s,%d)\n",
-					ssp->token.str, sp->token.str, tp->token.str, next_sp->extra.e_state->index);
+					ssp->token.str, sp->token.str, tp->token.str, next_sp?next_sp->extra.e_state->index:0);
 #endif
 			}
 		}
