@@ -80,14 +80,17 @@ endif
 #TESTPROD_HOST += ctest
 
 #  Libraries
-PROD_LIBS += seq pv
+PROD_LIBS += seqSoftIocSupport seq pv
 PROD_LIBS += $(EPICS_BASE_IOC_LIBS)
+
+LIBRARY += seqSoftIocSupport
+seqSoftIocSupport_SRCS += subThreadSleep.c
+seqSoftIocSupport_LIBS += $(EPICS_BASE_IOC_LIBS)
 
 DBD += seqSoftIoc.dbd
 seqSoftIoc_DBD += base.dbd
 seqSoftIoc_DBD += testSupport.dbd
 
-seqSoftIoc_SRCS += subThreadSleep.c
 seqSoftIoc_SRCS += seqSoftIoc_registerRecordDeviceDriver.cpp
 
 ifeq '$(EPICS_HAS_UNIT_TEST)' '1'
