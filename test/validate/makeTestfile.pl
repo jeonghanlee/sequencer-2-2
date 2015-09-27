@@ -42,15 +42,23 @@ open(my $OUT, ">", $target) or die "Can't create $target: $!\n";
 my $pid = '$pid';
 my $err = '$!';
 
-my $killit;
-if ($host_arch =~ /win32/) {
-  $killit = 'system("taskkill /F /IM softIoc.exe")';
-} else {
-  $killit = 'kill 9, $pid or die "kill failed: $!"';
-}
+my $killit = 'kill 9, $pid or die "kill failed: $!"';
+my $child_proc = '$child_proc';
 
 if ($ioc eq "ioc") {
-  print $OUT <<EOF;
+  if ("$host_arch" =~ /win32/ || "$host_arch" =~ /windows/) {
+    print $OUT <<EOF;
+require Win32::Process;
+\$ENV{HARNESS_ACTIVE} = 1;
+\$ENV{TOP} = '$top';
+my $child_proc;
+Win32::Process::Create($child_proc, "./$exe", "$exe -S -d $db", 0, 0, ".") || die "Win32::Process::Create() failed: $err";
+my $pid = $child_proc->GetProcessID();
+system("$valgrind./$exe -S -t");
+$killit;
+EOF
+  } else {
+    print $OUT <<EOF;
 \$ENV{HARNESS_ACTIVE} = 1;
 \$ENV{TOP} = '$top';
 my $pid = fork();
@@ -62,6 +70,7 @@ if (!$pid) {
 system("$valgrind./$exe -S -t");
 $killit;
 EOF
+  }
 } elsif (-r "$db") {
   print $OUT <<EOF;
 \$ENV{HARNESS_ACTIVE} = 1;
