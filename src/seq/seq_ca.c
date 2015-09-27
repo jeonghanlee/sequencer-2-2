@@ -92,7 +92,7 @@ pvStat seq_connect(PROG *sp, boolean wait)
 
 		do {
 			unsigned ac, mc, cc, gmc;
-			double timeNow;
+			double timeNow = timeStartWait;
 			/* Check whether we have been asked to exit */
 			if (sp->die)
 				return pvStatERROR;
