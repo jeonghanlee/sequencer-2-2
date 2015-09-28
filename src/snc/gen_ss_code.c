@@ -712,6 +712,11 @@ static void gen_var_init(Var *vp, int context, int level)
 {
 	assert(vp);
 	assert(vp->decl);
+
+	/* We need to do generate initializing code only if an initializer
+	is present, since the generated C variables are either static
+	(non-reentrant mode) or allocated with calloc (reentrant mode), and
+	thus always initialized to zero. */
 	if (vp->decl->decl_init)
 	{
 		indent(level); gen_code("{\n");
