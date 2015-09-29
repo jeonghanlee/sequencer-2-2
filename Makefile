@@ -39,6 +39,11 @@ realclean clean: docs.clean
 upload_docs: docs
 	rsync -r -t $(TOP)/html/ $(USER_AT_HOST):$(SEQ_PATH)/
 
+recreate_git_mirror:
+	rm -rf $(GIT_MIRROR)
+	git init $(GIT_MIRROR)
+	touch $(GIT_MIRROR)/git.marks
+
 upload_repo:
 	darcs push $(DEFAULT_REPO)
 	cd $(DEFAULT_REPO) && darcs push --all $(USER_AT_HOST):$(SEQ_PATH)/repo/branch-$(BRANCH)
@@ -64,4 +69,4 @@ changelog: force
 
 force:
 
-.PHONY: html docs docs.clean upload_docs mirror upload_repo snapshot release
+.PHONY: html docs docs.clean upload_docs mirror upload_repo snapshot release recreate_git_mirror
