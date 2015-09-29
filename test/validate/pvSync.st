@@ -4,8 +4,6 @@ Copyright (c) 2010-2015 Helmholtz-Zentrum Berlin f. Materialien
 This file is distributed subject to a Software License Agreement found
 in the file LICENSE that is included with this distribution.
 \*************************************************************************/
-program pvSyncTest
-
 %%#include "../testSupport.h"
 
 option +s;
@@ -21,7 +19,11 @@ assign i;
 monitor i;
 
 double a[NTESTS];
-assign a to {};
+assign a to {
+#ifdef WITH_DB
+#include "../pvSync.h"
+#endif
+};
 monitor a;
 
 evflag ef_x, ef_a, ef_i, ef_putx;
