@@ -35,6 +35,8 @@ my $db = "../$stem.db";
 
 my $host_arch = $ENV{EPICS_HOST_ARCH};
 
+my $path = $ENV{PATH};
+
 my $top = Cwd::abs_path($ENV{TOP});
 
 open(my $OUT, ">", $target) or die "Can't create $target: $!\n";
@@ -45,12 +47,18 @@ my $err = '$!';
 my $killit = 'kill 9, $pid or die "kill failed: $!"';
 my $child_proc = '$child_proc';
 
+my $pathsep = ':';
+if ("$host_arch" =~ /win32/ || "$host_arch" =~ /windows/) {
+  $pathsep = ';';
+}
+
 if ($ioc eq "ioc") {
   if ("$host_arch" =~ /win32/ || "$host_arch" =~ /windows/) {
     print $OUT <<EOF;
 require Win32::Process;
 \$ENV{HARNESS_ACTIVE} = 1;
 \$ENV{TOP} = '$top';
+\$ENV{PATH} = '$top/bin/$host_arch$pathsep$path';
 my $child_proc;
 Win32::Process::Create($child_proc, "./$exe", "$exe -S -d $db", 0, 0, ".") || die "Win32::Process::Create() failed: $err";
 my $pid = $child_proc->GetProcessID();
@@ -61,6 +69,7 @@ EOF
     print $OUT <<EOF;
 \$ENV{HARNESS_ACTIVE} = 1;
 \$ENV{TOP} = '$top';
+\$ENV{PATH} = '$top/bin/$host_arch$pathsep$path';
 my $pid = fork();
 die "fork failed: $err" unless defined($pid);
 if (!$pid) {
@@ -75,12 +84,14 @@ EOF
   print $OUT <<EOF;
 \$ENV{HARNESS_ACTIVE} = 1;
 \$ENV{TOP} = '$top';
+\$ENV{PATH} = '$top/bin/$host_arch$pathsep$path';
 system "$valgrind./$exe -S -t -d $db";
 EOF
 } else {
   print $OUT <<EOF;
 \$ENV{HARNESS_ACTIVE} = 1;
 \$ENV{TOP} = '$top';
+\$ENV{PATH} = '$top/bin/$host_arch$pathsep$path';
 system "$valgrind./$exe -S -t";
 EOF
 }
