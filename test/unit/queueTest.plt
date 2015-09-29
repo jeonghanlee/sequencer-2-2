@@ -14,6 +14,7 @@ if ("$host_arch" =~ /win32/ || "$host_arch" =~ /windows/) {
   $exe = '.exe';
 }
 
+$ENV{HARNESS_ACTIVE} = 1;
 $ENV{PATH} = "$top/bin/$host_arch$pathsep$path";
 
 exec "./queueTest$exe" or die 'exec failed';
