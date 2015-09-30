@@ -52,46 +52,40 @@ if ("$host_arch" =~ /win32/ || "$host_arch" =~ /windows/) {
   $pathsep = ';';
 }
 
+print $OUT <<EOF;
+\$ENV{HARNESS_ACTIVE} = 1;
+\$ENV{TOP} = '$top';
+\$ENV{PATH} = '$top/bin/$host_arch$pathsep$path';
+EOF
+
 if ($ioc eq "ioc") {
   if ("$host_arch" =~ /win32/ || "$host_arch" =~ /windows/) {
     print $OUT <<EOF;
 require Win32::Process;
-\$ENV{HARNESS_ACTIVE} = 1;
-\$ENV{TOP} = '$top';
-\$ENV{PATH} = '$top/bin/$host_arch$pathsep$path';
 my $child_proc;
 Win32::Process::Create($child_proc, "./$exe", "$exe -S -d $db", 0, 0, ".") || die "Win32::Process::Create() failed: $err";
 my $pid = $child_proc->GetProcessID();
-system("$valgrind./$exe -S -t");
-$killit;
 EOF
   } else {
     print $OUT <<EOF;
-\$ENV{HARNESS_ACTIVE} = 1;
-\$ENV{TOP} = '$top';
-\$ENV{PATH} = '$top/bin/$host_arch$pathsep$path';
 my $pid = fork();
 die "fork failed: $err" unless defined($pid);
 if (!$pid) {
   exec("./$exe -S -d $db");
   die "exec failed: $err";
 }
+EOF
+  }
+  print $OUT <<EOF;
 system("$valgrind./$exe -S -t");
 $killit;
 EOF
-  }
 } elsif (-r "$db") {
   print $OUT <<EOF;
-\$ENV{HARNESS_ACTIVE} = 1;
-\$ENV{TOP} = '$top';
-\$ENV{PATH} = '$top/bin/$host_arch$pathsep$path';
 system "$valgrind./$exe -S -t -d $db";
 EOF
 } else {
   print $OUT <<EOF;
-\$ENV{HARNESS_ACTIVE} = 1;
-\$ENV{TOP} = '$top';
-\$ENV{PATH} = '$top/bin/$host_arch$pathsep$path';
 system "$valgrind./$exe -S -t";
 EOF
 }
