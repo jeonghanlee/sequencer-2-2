@@ -31,17 +31,17 @@ seq:
   Required for running tests with windows debug build
 
 * fix default put during a pending async put
-  
+
   Attempting to issue a DEFAULT pvPut even when an ASYNC put is already
   pending on the same variable led to an assertion failure. This is now fixed.
 
 common:
 
 * cleaned up the prim_types mess, snc no longer depends on seq library
-  
+
   Making the compiler depend on the seq library was a bad idea, since the
   names of the primitive types were the only thing that snc needed from seq.
-  
+
   Instead I added a new src/common subdir that installs (and for seq_release.h
   generates) the header files that are shared between the compiler and the
   runtime. The epicsShare stuff has been removed from seq_prim_types.h. A new
@@ -77,10 +77,19 @@ test:
 
 * enable pvSync with or without db
 
+* set HARNESS_ACTIVE env var in queueTest.plt
+
+* use a per host "unique" CA server port
+
+  The idea here is to isolate concurrent test runs on the same machine against
+  each other. The port is set to 10000 + pid % 30000, which is not unique in a
+  strict sense, but the probability of a collision is quite small and the
+  solution is non-intrusive and very simple to implement.
+
 examples/demo:
 
 * link specific code into a library instead of main
-  
+
   This fixes problems for cygwin-x86 arch.
 
 build system:
