@@ -56,6 +56,7 @@ print $OUT <<EOF;
 \$ENV{HARNESS_ACTIVE} = 1;
 \$ENV{TOP} = '$top';
 \$ENV{PATH} = '$top/bin/$host_arch$pathsep$path';
+\$ENV{EPICS_CA_SERVER_PORT} = 10000 + \$\$ % 30000;
 EOF
 
 if ($ioc eq "ioc") {
