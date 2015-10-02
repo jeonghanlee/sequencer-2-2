@@ -13,9 +13,6 @@ monitor x;
 string y;
 assign y to "";
 
-evflag efx;
-sync x to efx;
-
 #define MAX_TESTS 10
 
 entry {

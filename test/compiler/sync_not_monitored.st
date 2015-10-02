@@ -11,4 +11,11 @@ assign x;
 evflag f;
 sync x to f; /* ok: not monitored */
 
-#include "simple.st"
+ss simple {
+    state simple {
+        /* nonsense code to avoid unused variable warnings */
+        when (x==x) {
+            efSet(f);
+        } exit
+    }
+}

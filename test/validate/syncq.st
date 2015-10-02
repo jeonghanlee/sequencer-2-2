@@ -11,14 +11,10 @@ option +s;
 string s[3];
 assign s to "syncq";
 monitor s;
-evflag ef_s;
-syncq s to ef_s 5;
 
 string s1[1];
 assign s1 to "syncq";
 monitor s1;
-evflag ef_s1;
-sync s1 to ef_s1;
 syncq s1 5;
 
 int n = 0;
