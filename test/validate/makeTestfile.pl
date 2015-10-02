@@ -44,7 +44,6 @@ open(my $OUT, ">", $target) or die "Can't create $target: $!\n";
 my $pid = '$pid';
 my $err = '$!';
 
-my $killit = 'kill 9, $pid or die "kill failed: $!"';
 my $child_proc = '$child_proc';
 
 my $pathsep = ':';
@@ -57,6 +56,8 @@ print $OUT <<EOF;
 \$ENV{TOP} = '$top';
 \$ENV{PATH} = '$top/bin/$host_arch$pathsep$path';
 \$ENV{EPICS_CA_SERVER_PORT} = 10000 + \$\$ % 30000;
+#only for debugging:
+#print STDERR "port=\$ENV{EPICS_CA_SERVER_PORT}\\n";
 EOF
 
 if ($ioc eq "ioc") {
@@ -79,7 +80,7 @@ EOF
   }
   print $OUT <<EOF;
 system("$valgrind./$exe -S -t");
-$killit;
+kill 9, $pid or die "kill failed: $err";
 EOF
 } elsif (-r "$db") {
   print $OUT <<EOF;
