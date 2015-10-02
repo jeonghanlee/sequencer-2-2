@@ -6,7 +6,7 @@ in the file LICENSE that is included with this distribution.
 \*************************************************************************/
 program p
 
-int x;
+float x = 0.0;
 assign x;
 evflag f;
 sync x to f; /* ok: not monitored */
