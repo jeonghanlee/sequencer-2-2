@@ -1239,10 +1239,13 @@ epicsShareFunc void seq_pvFlushQ(SS_ID ss, CH_ID chId)
 		ch->dbch ? ch->dbch->dbName : "<anomymous>", seqQueueUsed(queue));
 	seqQueueFlush(queue);
 
-	epicsMutexMustLock(sp->lock);
-	/* Clear event flag */
-	bitClear(sp->evFlags, ev_flag);
-	epicsMutexUnlock(sp->lock);
+	if (ev_flag)
+	{
+		epicsMutexMustLock(sp->lock);
+		/* Clear event flag */
+		bitClear(sp->evFlags, ev_flag);
+		epicsMutexUnlock(sp->lock);
+	}
 }
 
 /*
