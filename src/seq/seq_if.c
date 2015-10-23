@@ -726,7 +726,8 @@ epicsShareFunc pvStat seq_pvAssign(SS_ID ss, CH_ID chId, const char *pvName)
 
 	if (pvName[0] == 0)	/* new name is empty -> free resources */
 	{
-		if (dbch) {
+		if (dbch)
+		{
 			free(dbch);
 		}
 	}
