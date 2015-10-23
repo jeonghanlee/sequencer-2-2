@@ -11,6 +11,7 @@ option +s;
 string s[3];
 assign s to "syncq";
 monitor s;
+syncq s 5;
 
 string s1[1];
 assign s1 to "syncq";

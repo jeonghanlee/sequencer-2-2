@@ -1,0 +1,5 @@
+record(ao,"CD01:FD:PERIOD") {
+    field(EGU,"seconds")
+    field(LOPR,10)
+    field(HOPR,360)
+}
