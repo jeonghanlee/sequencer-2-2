@@ -30,11 +30,11 @@ snc_LIBS += Com
 # locally overwrite default value for this variable
 HTMLS += Syntax.txt
 
-# avoid deprecation warnings with base 3.15
-ifdef BASE_3_15
-LEMON = $(INSTALL_HOST_BIN)/lemon$(HOSTEXE)
-else
+# avoid deprecation warnings with base 3.15 and later
+ifeq ($(BASE_3_14),YES)
 LEMON = $(call PATH_FILTER,$(INSTALL_HOST_BIN)/lemon$(HOSTEXE))
+else
+LEMON = $(INSTALL_HOST_BIN)/lemon$(HOSTEXE)
 endif
 
 include $(TOP)/configure/RULES
@@ -44,9 +44,6 @@ include $(TOP)/configure/RULES
 vpath %.lem ..
 vpath %.lt ..
 vpath %.txt $(COMMON_DIR)
-
-# this extra dependency needed for 3.14.8 compatibility
-lexer.o: snl.h
 
 snl.c snl.h snl.out: parser_created
 
@@ -75,12 +72,13 @@ else
 type_check$(DEP): parser_created
 endif
 
-ifdef BASE_3_15
 CLEANS += lexer.c lexer$(DEP) parser_created snl.c snl$(DEP) snl.h
-else
+
+# there is no rule like this in base 3.14
+ifeq ($(BASE_3_14),YES)
 ifdef T_A
 clean::
-	@$(RM) lexer.c lexer$(DEP) parser_created snl.c snl$(DEP) snl.h
+	@$(RM) $(CLEANS)
 endif
 endif
 
