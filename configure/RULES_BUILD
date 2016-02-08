@@ -60,7 +60,8 @@ COMPILE_SNL_SRC = $<
 endif
 
 define COMPILE.snl
-	$(SNC) $(TARGET_SNCFLAGS) $(SNCFLAGS) $(USR_SNCFLAGS) $(COMPILE_SNL_SRC) -o $(@F)
+	$(SNC) $(TARGET_SNCFLAGS) $(SNCFLAGS) $(USR_SNCFLAGS) $(COMPILE_SNL_SRC) -o $@.tmp
+        mv $@.tmp $@
 endef
 
 #--------------------------------------------------
