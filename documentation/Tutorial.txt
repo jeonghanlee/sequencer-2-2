@@ -650,26 +650,35 @@ example::
 Asynchronous Use of pvPut
 -------------------------
 
-Normally the `pvPut` operation completes asynchronously. In
-the past it has been the responsibility of the programmer to ensure
-that the operation completed (typically by monitoring other
-variables). However, the function `pvPutComplete` can now be
-used for this. Also, while the `+a` compiler flag does not
-affect put operations, `pvPut`, like `pvGet`, accepts
-an optional ``SYNC`` or ``ASYNC`` argument, which forces a synchronous
-or asynchronous put. For example::
+Normally `pvPut` is a "fire and forget" operation without any provisions for
+testing if and when it completed successfully. However, this
+behaviour can be modified by passing an optional ``SYNC`` or ``ASYNC``
+argument. With ``SYNC``, the call blocks until the operation is complete,
+while with ``ASYNC`` the call returns immediately. In the latter case,
+`pvPutComplete` tells you whether the operation completed.
+
+For example, ::
 
   pvPut(init[i], SYNC);
 
-`pvPutComplete` supports arrays and can be used to check
-whether a set of puts have all completed. This example illustrates how
-to manage a set of parallel commands.
+will block until the put operation to the PV behind ``init[i]`` (and all the
+processing resulting from it) is complete, while ::
 
-::
+  pvPut(init[i], ASYNC);
+
+does not block and instead lets you test completion explicitly, e.g. ::
+
+  when(pvPutComplete(init[i])) {
+    ...
+  }
+
+Note that `pvPutComplete` can only be used with single PVs. Testing
+completion for multiple PVs in a multi-PV array can be done with
+`pvArrayPutComplete` as in the following example ::
 
   #define N 3
   long init[N];
-  long done[N]; /* used in the modified example below */
+  seqBool done[N]; /* used in the modified example below */
   assign init to {"ss1:init", "ss2:init", "ss3:init"};
 
   state inactive {
@@ -682,27 +691,27 @@ to manage a set of parallel commands.
   }
 
   state active {
-    when ( pvPutComplete( init ) ) {
+    when ( pvArrayPutComplete( init ) ) {
     } state done
 
     when ( delay( 10.0 ) ) {
     } state timeout
   }
 
-`pvPutComplete` also supports optional arguments to wake up
-the state set as each put completes. The following could be inserted
+`pvArrayPutComplete` accepts optional arguments to tweak its behaviour.
+For instance, the following could be inserted
 before the first `transition` clause in the ``active`` state above.
 The ``TRUE`` argument causes `pvPutComplete` to return
 ``TRUE`` when any command completed (rather than only when all
-commands complete). The ``done`` argument is the address of a ``long``
-array of the same size as ``init`` ; its elements are set to 0 for
-puts that are not yet complete and to 1 for puts that are complete.
+commands complete). The ``done`` argument is the address of a ``seqBool``
+array of the same size as ``init`` ; its elements are set to ``FALSE`` for
+puts that are not yet complete and to ``TRUE`` for puts that are complete.
 
 ::
 
   when ( pvPutComplete( init, TRUE, done ) ) {
     for ( i = 0; i < N; i++ )
-    printf( " %ld", done[i] );
+      printf( " %ld", done[i] );
     printf( "\n" );
   } state active
 
