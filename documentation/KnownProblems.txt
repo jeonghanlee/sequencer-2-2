@@ -1,6 +1,18 @@
 Known Problems
 ==============
 
+.. _Known_Problems_2.2.3:
+
+Known Problems in Release 2.2.3
+-------------------------------
+
+* Certain versions of Windows don't like relative paths with forward slashes
+  for commands whose result gets redirected to a file. This leads to errors
+  when building against base-3.15 which has deprecated the ``PATH_FILTER``
+  function (which converts forward to backward slashes). The solution is to
+  define ``LEMON=$(abspath $(INSTALL_HOST_BIN)/lemon$(HOSTEXE))`` in
+  ``src/snc/Makefile``.
+
 .. _Known_Problems_2.2.2:
 
 Known Problems in Release 2.2.2
