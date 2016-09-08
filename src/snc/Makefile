@@ -34,7 +34,7 @@ HTMLS += Syntax.txt
 ifeq ($(BASE_3_14),YES)
 LEMON = $(call PATH_FILTER,$(INSTALL_HOST_BIN)/lemon$(HOSTEXE))
 else
-LEMON = $(INSTALL_HOST_BIN)/lemon$(HOSTEXE)
+LEMON = $(abspath $(INSTALL_HOST_BIN)/lemon$(HOSTEXE))
 endif
 
 include $(TOP)/configure/RULES
