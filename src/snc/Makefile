@@ -27,7 +27,6 @@ snc_SRCS += type_check.c    # rudimentary type checker
 
 snc_LIBS += Com
 
-# locally overwrite default value for this variable
 HTMLS += Syntax.txt
 
 # avoid deprecation warnings with base 3.15 and later
