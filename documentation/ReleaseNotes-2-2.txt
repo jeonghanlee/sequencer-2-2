@@ -1,6 +1,80 @@
 Release Notes for Version 2.2
 =============================
 
+.. _Release_Notes_2.2.4:
+
+Release 2.2.4
+-------------
+
+code:
+
+* seq: fixed a possible race condition with pvAssign
+
+  The problem concerns access to the dbch member of CHAN: the runtime pvAssign
+  may free this pointer (and also sets it to NULL); on the other hand, the CA
+  callbacks need to access it, or else must return immediately. There was a
+  test that checks if dbch is NULL but it was not locked against concurrent
+  access from pvAssign, which could lead to an assertion failure or worse to
+  invalid memory accesses.
+
+* seq: in pvFlushQ test that queue and associated event flag of the channel
+  actually exist before accessing them.
+
+  This fixes possible crashes when using this function with non-queued or
+  queued but non-synced channels.
+
+* pv: fix test for result of epicsTimeGetCurrent
+
+  This change fixes a problem with EPICS base-3.16, which adds more error
+  codes to epicsTime.
+
+docs:
+
+* fixed errors in section "Asynchronous Use of pvPut" of tutorial
+
+  Thanks to Christian Pulvermacher <christian.pulvermacher@kek.jp> for
+  spotting this.
+
+build system:
+
+* snc: turn LEMON into an absolute path with base 3.15
+
+  This fixes a build problem on some Windows versions which don't like
+  relative path names for commands when the output is redirected to a file.
+
+* snc: extra dependency avoids (harmless) errors when generating .d files
+
+* snc: simplify the multi-target lemon rule
+
+  Instead of generating an intermediate file ("parser_created") we now use a
+  pattern rule. This is the more reliable (and recommended) way to make rules
+  with multiple targets work as expected.
+
+* test only for BASE_3_14==YES
+
+  Testing for 3.15 doesn't make sense (yet), as the majority of changes
+  will be needed for 3.16 and later versions, too. Testing BASE_3_15==YES
+  will be reserved for incompatibilities between 3.15 and 3.16 etc.
+
+* avoid deprecation warnings for use of PATH_FILTER with base 3.15
+
+* snc: make recipe for snl.bnf atomic
+
+test/examples:
+
+* moved test for invalid state change statement to compiler tests
+
+* moved demo programs from test/validate to examples/small
+
+  The programs are only compiled as TESTPROD_HOST to avoid cluttering the
+  install directories any further; db files can be served using the standard
+  softIoc binary from base.
+
+* added timer.st to examples
+
+* refactor killing background IOCs
+
+
 .. _Release_Notes_2.2.3:
 
 Release 2.2.3
