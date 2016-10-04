@@ -2984,20 +2984,20 @@ PRIVATE char *file_makename(struct lemon *lemp, const char *suffix)
     inputname = lemp->filename;
   }
 
-  name = malloc( outputdirlen + 1 + lemonStrlen(inputname) + lemonStrlen(suffix) + 1);
+  name = (char*)malloc( outputdirlen + 1 + lemonStrlen(inputname) + lemonStrlen(suffix) + 1);
 
   if( name==0 ){
     fprintf(stderr,"Can't allocate space for a filename.\n");
     exit(1);
   }
-  strcpy(name,"");
+  lemon_strcpy(name,"");
   if (outputdirlen > 0) {
-    strcat(name,outputdir);
+    lemon_strcat(name,outputdir);
     if (outputdir[outputdirlen-1] != '/') {
-      strcat(name,"/");
+      lemon_strcat(name,"/");
     }
   }
-  strcat(name,inputname);
+  lemon_strcat(name,inputname);
   cp = strrchr(name,'.');
   if( cp ) *cp = 0;
   lemon_strcat(name,suffix);
