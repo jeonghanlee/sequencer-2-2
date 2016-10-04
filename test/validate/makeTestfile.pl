@@ -48,6 +48,7 @@ my $child_proc = '$child_proc';
 
 my $pathsep = ':';
 if ("$host_arch" =~ /win32/ || "$host_arch" =~ /windows/) {
+  $path =~ s|\\|/|g;  # a trailing \ in PATH causes quoting issues
   $pathsep = ';';
 }
 
