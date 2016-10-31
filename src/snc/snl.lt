@@ -873,7 +873,7 @@ void Parse(
         yy_destructor(yypParser, (YYCODETYPE)yymajor, &yyminorunion);
         yymajor = YYNOCODE;
       }else{
-        while( yypParser->yytos >= yypParser->yystack
+        while( yypParser->yytos > yypParser->yystack
             && yymx != YYERRORSYMBOL
             && (yyact = yy_find_reduce_action(
                         yypParser->yytos->stateno,
@@ -881,7 +881,8 @@ void Parse(
         ){
           yy_pop_parser_stack(yypParser);
         }
-        if( yypParser->yytos < yypParser->yystack || yymajor==0 ){
+        assert( yypParser->yytos >= yypParser->yystack );
+        if( yypParser->yytos == yypParser->yystack || yymajor==0 ){
           yy_destructor(yypParser,(YYCODETYPE)yymajor,&yyminorunion);
           yy_parse_failed(yypParser);
 #ifndef YYNOERRORRECOVERY
