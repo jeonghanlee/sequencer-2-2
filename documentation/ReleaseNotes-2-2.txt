@@ -28,6 +28,16 @@ code:
   This change fixes a problem with EPICS base-3.16, which adds more error
   codes to epicsTime.
 
+* lemon: updated lemon.c and the parser template from upstream
+
+  This was done to avoid 64 bit problems that the native Windows compiler
+  warned about, since such problems are usually handled quite efficiently by
+  the sqlite maintainers. Unfortunately the latest version of the parser
+  template had a serious bug that could result in compiler crashes. This bug
+  has been fixed in the sequencer (and reported, but not yet fixed, in the
+  upstream version). This in turn uncovered a weakness in the compiler
+  tests, see below.
+
 docs:
 
 * fixed errors in section "Asynchronous Use of pvPut" of tutorial
@@ -73,6 +83,11 @@ test/examples:
 * added timer.st to examples
 
 * refactor killing background IOCs
+
+* test that snc terminates normally on all input programs
+
+  Previously, in case snc crashes on some input file, it was possible that
+  this was not detected by the tests.
 
 
 .. _Release_Notes_2.2.3:
