@@ -33,27 +33,36 @@ my $tests = {
 
 my @progs = sort(keys(%$tests));
 
-plan tests => 3 * (@progs + 0);
+plan tests => 4 * (@progs + 0);
 
 sub snc_diag {
   diag "snc said this:";
   diag explain $_[0];
 }
 
+my $host_arch = $ENV{EPICS_HOST_ARCH};
+
 foreach my $prog (@progs) {
-    my $output = `make -s -B $prog.c 2>&1`;
+  # prepare source by passing it through CPP
+  `make -s -B $prog.i`;
+  my $failed = 0;
+  # execute the snc and capture the output
+  my $output = `../../../bin/$host_arch/snc $prog.i -o $prog.c 2>&1`;
+  # test whether it terminated normally
+  my $exitsig = $? & 127;
+  is ($exitsig, 0, "$prog: snc terminates normally") or $failed = 1;
+  SKIP: {
+    # skip all other tests if snc crashed
+    skip "snc died with signal $exitsig", 3 if $exitsig;
     my $exitcode = $? >> 8;
-    $output =~ s/^make.*$//m;
-    my $failed;
-    SKIP: {
-      skip "errors are expected", 1 if $tests->{$prog}->{errors} > 0;
-      is($exitcode, 0, "good exitcode") or $failed=1;
-    }
+    my $errors_are_expected = $tests->{$prog}->{errors} > 0;
+    ok (($exitcode != 0) == $errors_are_expected, "$prog: correct exitcode");
     my $nw = 0;
     $nw++ while ($output =~ /warning/g);
-    is($nw, $tests->{$prog}->{warnings}, "number of warnings") or $failed=1;
+    is($nw, $tests->{$prog}->{warnings}, "$prog: number of warnings") or $failed = 1;
     my $ne = 0;
     $ne++ while ($output =~ /error/g);
-    is($ne, $tests->{$prog}->{errors}, "number of errors") or $failed=1;
-    snc_diag($output) if $failed;
+    is($ne, $tests->{$prog}->{errors}, "$prog: number of errors") or $failed = 1;
+  }
+  snc_diag($output) if $failed;
 }
