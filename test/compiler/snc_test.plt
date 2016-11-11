@@ -41,13 +41,17 @@ sub snc_diag {
 }
 
 my $host_arch = $ENV{EPICS_HOST_ARCH};
+my $dirsep = '/';
+if ("$host_arch" =~ /win32/ || "$host_arch" =~ /windows/) {
+  $dirsep = '\\';
+}
 
 foreach my $prog (@progs) {
   # prepare source by passing it through CPP
   `make -s -B $prog.i`;
   my $failed = 0;
   # execute the snc and capture the output
-  my $output = `../../../bin/$host_arch/snc $prog.i -o $prog.c 2>&1`;
+  my $output = `..${dirsep}..${dirsep}..${dirsep}bin${dirsep}${host_arch}${dirsep}snc $prog.i -o $prog.c 2>&1`;
   # test whether it terminated normally
   my $exitsig = $? & 127;
   is ($exitsig, 0, "$prog: snc terminates normally") or $failed = 1;
