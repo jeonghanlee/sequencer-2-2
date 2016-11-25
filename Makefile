@@ -19,7 +19,7 @@ SEQ_PATH = www/control/SoftDist/sequencer-$(BRANCH)
 USER_AT_HOST = wwwcsr@www-csr.bessy.de
 DATE = $(shell date -I)
 SNAPSHOT = seq-$(BRANCH)-snapshot-$(DATE)
-SEQ_TAG = seq-$(subst .,-,$(SEQ_RELEASE))
+SEQ_TAG = R$(subst .,-,$(SEQ_RELEASE))
 SEQ_TAG_TIME = $(shell darcs changes --all --xml-output \
 	--matches 'exact "TAG $(SEQ_TAG)"' | perl -ne 'print "$$1.$$2" if /date=.(\d{12})(\d{2})/')
 
