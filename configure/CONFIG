@@ -30,4 +30,7 @@ EPICS_HAS_UNIT_TEST := $(shell $(PERL) -e\
 
 ECHO := $(if $(findstring s,$(MAKEFLAGS)),$(NOP),@echo)
 
+# to check for strict C90 compatibility with gcc uncomment the following line:
+#USR_CFLAGS += -std=c90 -Wpedantic -Wno-long-long -Wno-format
+
 SEQ_RELEASE = 2.2.4
