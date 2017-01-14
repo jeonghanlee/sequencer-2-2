@@ -1,6 +1,15 @@
 Known Problems
 ==============
 
+.. _Known_Problems_2.2.4:
+
+Known Problems in Release 2.2.4
+-------------------------------
+
+* Building fails with Visual Studio 2010 due to a C99-ism (mixed
+  declarations and code) that was introduced when upgrading the lemon parser
+  template.
+
 .. _Known_Problems_2.2.3:
 
 Known Problems in Release 2.2.3
