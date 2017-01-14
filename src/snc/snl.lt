@@ -829,11 +829,11 @@ void Parse(
     }else if( yyact <= YY_MAX_REDUCE ){
       yy_reduce(yypParser,yyact-YY_MIN_REDUCE);
     }else{
-      assert( yyact == YY_ERROR_ACTION );
-      yyminorunion.yy0 = yyminor;
 #ifdef YYERRORSYMBOL
       int yymx;
 #endif
+      assert( yyact == YY_ERROR_ACTION );
+      yyminorunion.yy0 = yyminor;
 #ifndef NDEBUG
       if( yyTraceFILE ){
         fprintf(yyTraceFILE,"%sSyntax Error!\n",yyTracePrompt);
