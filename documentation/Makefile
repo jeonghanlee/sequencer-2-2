@@ -42,7 +42,7 @@ help:
 	@echo "  doctest   to run all doctests embedded in the documentation (if enabled)"
 
 realclean clean:
-	-rm -rf $(BUILDDIR)
+	$(RMDIR) $(BUILDDIR)
 
 runtests:
 
