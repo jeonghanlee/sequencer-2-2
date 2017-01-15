@@ -36,6 +36,8 @@ else
 LEMON = $(abspath $(INSTALL_HOST_BIN)/lemon$(HOSTEXE))
 endif
 
+HDEPENDS_METHOD = MKMF
+
 include $(TOP)/configure/RULES
 #----------------------------------------
 #  ADD RULES AFTER THIS LINE
