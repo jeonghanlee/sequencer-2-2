@@ -1,6 +1,24 @@
 Release Notes for Version 2.2
 =============================
 
+.. _Release_Notes_2.2.5:
+
+Release 2.2.5
+-------------
+
+* docs: use RMDIR instead of rm -rf for clean target in the Makefile
+
+  This fixes (harmless but annoying) error messages on Windows.
+
+* snc: use mkmf.pl to generate the dependencies
+
+  This fixes error messages and sometimes also build failures during parallel
+  builds on Linux machines iwth many cores. These are caused by EPICS build
+  rules not passing -MD to gcc when generating dependencies for C source files.
+
+* snc: fixed C90 incompatibility in the parser template, see :ref:`Known_Problems_2.2.4`.
+
+
 .. _Release_Notes_2.2.4:
 
 Release 2.2.4
