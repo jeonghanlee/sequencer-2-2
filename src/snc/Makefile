@@ -29,12 +29,7 @@ snc_LIBS += Com
 
 HTMLS += Syntax.txt
 
-# avoid deprecation warnings with base 3.15 and later
-ifeq ($(BASE_3_14),YES)
-LEMON = $(call PATH_FILTER,$(INSTALL_HOST_BIN)/lemon$(HOSTEXE))
-else
 LEMON = $(abspath $(INSTALL_HOST_BIN)/lemon$(HOSTEXE))
-endif
 
 HDEPENDS_METHOD = MKMF
 

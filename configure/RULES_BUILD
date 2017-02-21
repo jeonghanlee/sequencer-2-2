@@ -51,13 +51,6 @@ ifndef ECHO
 endif
 
 #--------------------------------------------------
-# avoid deprecation warnings with base 3.15
-
-ifeq ($(BASE_3_14),YES)
-COMPILE_SNL_SRC = $(call PATH_FILTER,$<)
-else
-COMPILE_SNL_SRC = $<
-endif
 
 define COMPILE.snl
 	$(SNC) $(TARGET_SNCFLAGS) $(SNCFLAGS) $(USR_SNCFLAGS) $(COMPILE_SNL_SRC) -o $@.tmp
