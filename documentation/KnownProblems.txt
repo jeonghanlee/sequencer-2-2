@@ -10,6 +10,16 @@ Known Problems in Release 2.2.4
   declarations and code) that was introduced when upgrading the lemon parser
   template.
 
+* Parallel building can fail when using gcc to generate dependency information.
+  The solution is to use the EPICS tool mkmf.pl instead by placing a line
+
+    HDEPENDS_METHOD = MKMF
+
+  in the config section of src/snc/Makefile.
+
+* On Windows, ``make clean`` fails inside the documentation directory. The
+  fix is to replace ``rm -rf`` with ``$(RMDIR)`` in documentation/Makefile.
+
 .. _Known_Problems_2.2.3:
 
 Known Problems in Release 2.2.3
