@@ -2139,6 +2139,16 @@ Returns a pointer to the value of the specified program parameter, if
 it exists, else ``NULL``. See `Program Name and Parameters`_.
 
 
+optGet
+^^^^^^
+
+.. c:function::
+   seqBool optGet(char *option_name)
+
+Returns whether the program option with the given name is in effect or not.
+The option name is a string consisting of a single letter such as "a" for
+the program option `+a`/`-a`.
+
 .. _safe mode:
 
 Safe Mode
