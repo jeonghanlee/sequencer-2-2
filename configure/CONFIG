@@ -26,7 +26,8 @@ ifdef T_A
 endif
 
 EPICS_HAS_UNIT_TEST := $(shell $(PERL) -e\
- 'print($(EPICS_REVISION) > 14 || ($(EPICS_REVISION) == 14 && $(EPICS_MODIFICATION) >= 10))')
+ 'print($(EPICS_VERSION) > 3 || ($(EPICS_VERSION) == 3 &&\
+  ($(EPICS_REVISION) > 14 || ($(EPICS_REVISION) == 14 && $(EPICS_MODIFICATION) >= 10))))')
 
 ECHO := $(if $(findstring s,$(MAKEFLAGS)),$(NOP),@echo)
 
