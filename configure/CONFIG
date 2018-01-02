@@ -25,6 +25,10 @@ ifdef T_A
   -include $(TOP)/configure/O.$(T_A)/CONFIG_APP_INCLUDE
 endif
 
+# This avoids deprecation warnings when compiling against
+# base 3.16 or higher
+USR_CPPFLAGS += -DUSE_TYPED_RSET
+
 EPICS_HAS_UNIT_TEST := $(shell $(PERL) -e\
  'print($(EPICS_VERSION) > 3 || ($(EPICS_VERSION) == 3 &&\
   ($(EPICS_REVISION) > 14 || ($(EPICS_REVISION) == 14 && $(EPICS_MODIFICATION) >= 10))))')
