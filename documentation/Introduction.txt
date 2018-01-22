@@ -81,6 +81,10 @@ Mark Rivers made a number of useful suggestions and tested version 2.1
 with several sets of existing programs on various platforms. J. Lewis
 Muir provided documentation patches.
 
+Special thanks go to the people who develop and maintain `re2c`_, the
+ultimate tool to generate versatile and extremely fast lexers for C and C++.
+
+.. _re2c: http://re2c.org/
 
 Copying and Distribution
 ------------------------
