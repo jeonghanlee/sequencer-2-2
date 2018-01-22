@@ -1,6 +1,15 @@
 Known Problems
 ==============
 
+.. _Known_Problems_2.2.5:
+
+Known Problems in Release 2.2.5
+-------------------------------
+
+* While building against base 7.x succeeds there are lots of deprecation
+  warnings and most of the tests are not run due to an incomplete definition
+  of the EPICS_HAS_UNIT_TEST make variable.
+
 .. _Known_Problems_2.2.4:
 
 Known Problems in Release 2.2.4
