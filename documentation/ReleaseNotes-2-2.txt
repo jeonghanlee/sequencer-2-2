@@ -1,6 +1,19 @@
 Release Notes for Version 2.2
 =============================
 
+.. _Release_Notes_2.2.6:
+
+Release 2.2.6
+-------------
+
+Building against EPICS base 7.x:
+
+* locally define USE_TYPED_RSET to avoid deprecation warnings
+
+* fix definition of EPICS_HAS_UNIT_TEST for base versions > 3
+
+Also made a few minor changes to the documentation.
+
 .. _Release_Notes_2.2.5:
 
 Release 2.2.5
