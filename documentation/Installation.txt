@@ -8,23 +8,39 @@ and contribute patches.
 Prerequisites
 -------------
 
+EPICS base
+^^^^^^^^^^
+
 You need to have `EPICS base`_ and its dependencies (`GNU make`_, `Perl`_)
 installed. Any version of EPICS base starting with 3.14.12.2 and up to 3.15
 should do. Starting with seq-`2.2.6`_, EPICS base versions up to 7.0.1 can be
 used.
 
-From version 2.1 onwards, building the sequencer requires the lexer
-generator tool `re2c`_. If you are on a Linux system, you will
-probably want to use the re2c package your distribution provides,
-otherwise sources and windows binaries are available from the `re2c
-download`_ page. The minimum version required is 0.9.9, but I
-recommend using the latest version that is avaliable for your system.
-
 .. _EPICS base: http://www.aps.anl.gov/epics/base/
 .. _GNU make: http://www.gnu.org/software/make/
 .. _Perl: http://www.perl.org/
+
+re2c
+^^^^
+
+Building the sequencer also requires the lexer generator tool `re2c`_. The
+minimum version required is 0.9.9, but I recommend using the latest version
+that is avaliable for your system. If you are building on a Linux system,
+you can use the re2c package your distribution provides.
+
+On Windows things are not quite as smooth. The `old re2c download`_ page on
+sourceforge contains pre-built binaries for Windows systems, albeit only up
+to version 0.13.5. If this doesn't work for you, there is `EPICS-re2c`_,
+a version of re2c that has been wrapped as an EPICS module.
+
+In any case, if the re2c executable is not installed in a directory listed
+in your PATH environment variable, you should change the definition of RE2C
+in configure/CONFIG_SITE to the full path name of the re2c executable before
+building the sequencer, see `Configure and Build` below.
+
 .. _re2c: http://re2c.org/
-.. _re2c download: http://sourceforge.net/projects/re2c/files/
+.. _old re2c download: http://sourceforge.net/projects/re2c/files/old/
+.. _EPICS-re2c: https://github.com/FreddieAkeroyd/EPICS-re2c
 
 
 Download
@@ -130,6 +146,8 @@ i.e. ``.../seq-x.y.z/``.
 .. _GNU tar: http://www.gnu.org/software/tar/
 .. _reStructuredText: http://docutils.sourceforge.net/rst.html
 
+
+.. _Configure and Build:
 
 Configure and Build
 -------------------
