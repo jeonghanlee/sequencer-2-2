@@ -8,5 +8,6 @@ DIRS += johng
 DIRS += simple
 DIRS += small
 DIRS += pvGetAsync
+DIRS += traffic
 
 include $(TOP)/configure/RULES_DIRS

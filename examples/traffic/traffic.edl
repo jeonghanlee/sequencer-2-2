@@ -1,0 +1,78 @@
+4 0 1
+beginScreenProperties
+major 4
+minor 0
+release 1
+x 100
+y 100
+w 50
+h 130
+font "helvetica-medium-r-18.0"
+ctlFont "helvetica-medium-r-18.0"
+btnFont "helvetica-medium-r-18.0"
+fgColor index 14
+bgColor index 3
+textColor index 14
+ctlFgColor1 index 14
+ctlFgColor2 index 0
+ctlBgColor1 index 0
+ctlBgColor2 index 14
+topShadowColor index 0
+botShadowColor index 14
+snapToGrid
+endScreenProperties
+
+# (Circle)
+object activeCircleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 10
+y 10
+w 30
+h 30
+lineColor index 14
+fill
+fillColor index 21
+visPv "traffic:red_light"
+visMin "1"
+visMax "2"
+endObjectProperties
+
+# (Circle)
+object activeCircleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 10
+y 50
+w 30
+h 30
+lineColor index 14
+fill
+fillColor index 30
+visPv "traffic:yellow_light"
+visMin "1"
+visMax "2"
+endObjectProperties
+
+# (Circle)
+object activeCircleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 10
+y 90
+w 30
+h 30
+lineColor index 14
+fill
+fillColor index 16
+visPv "traffic:green_light"
+visMin "1"
+visMax "2"
+endObjectProperties
+

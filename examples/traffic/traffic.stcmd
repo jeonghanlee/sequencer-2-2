@@ -1,0 +1,5 @@
+dbLoadDatabase O.Common/traffic.dbd
+traffic_registerRecordDeviceDriver pdbbase
+dbLoadRecords traffic.db
+iocInit
+seq traffic
