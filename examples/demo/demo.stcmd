@@ -1,6 +1,6 @@
-dbLoadDatabase "../../dbd/demo.dbd"
+dbLoadDatabase O.Common/demo.dbd
 demo_registerRecordDeviceDriver(pdbbase)
-dbLoadRecords "demo.db" "PREFIX=demo"
+dbLoadRecords demo.db "PREFIX=demo"
 #dbLoadRecords "demo.db" "PREFIX=demo2"
 #dbLoadRecords "demo.db" "PREFIX=demo3"
 iocInit
