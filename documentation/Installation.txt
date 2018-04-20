@@ -30,8 +30,9 @@ you can use the re2c package your distribution provides.
 
 On Windows things are not quite as smooth. The `old re2c download`_ page on
 sourceforge contains pre-built binaries for Windows systems, albeit only up
-to version 0.13.5. If this doesn't work for you, there is `EPICS-re2c`_,
-a version of re2c that has been wrapped as an EPICS module.
+to version 0.13.5. If this doesn't work for you, there is `EPICS-re2c`_, a
+version of re2c that has been wrapped as an EPICS module. There is also a
+Windows build of `re2c-1.0.3 on Appveyor`_.
 
 In any case, if the re2c executable is not installed in a directory listed
 in your PATH environment variable, you should change the definition of RE2C
@@ -41,7 +42,7 @@ building the sequencer, see `Configure and Build` below.
 .. _re2c: http://re2c.org/
 .. _old re2c download: http://sourceforge.net/projects/re2c/files/old/
 .. _EPICS-re2c: https://github.com/FreddieAkeroyd/EPICS-re2c
-
+.. _re2c-1.0.3 on Appveyor: https://ci.appveyor.com/project/FreddieAkeroyd/re2c/build/artifacts
 
 Download
 --------
