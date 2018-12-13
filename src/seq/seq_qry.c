@@ -406,8 +406,10 @@ static int seqShowSP(PROG *sp, void *parg)
 	int		*pprogCount = (int *)parg;
 
 	if ((*pprogCount)++ == 0)
+	{
 		printf("Program Name        Thread ID           Thread Name         SS Name\n");
 		printf("------------        ---------           -----------         -------\n");
+	}
 	progName = sp->progName;
 	for (nss = 0; nss < sp->numSS; nss++)
 	{
