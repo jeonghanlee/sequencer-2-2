@@ -2,7 +2,7 @@ TOP=../..
 
 include $(TOP)/configure/CONFIG
 
-PROD_LIBS += Com seq pv
+PROD_LIBS += seq pv ca Com
 
 USR_INCLUDES += -I$(TOP)/src/seq
 
