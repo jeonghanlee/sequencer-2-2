@@ -16,8 +16,12 @@ in the file LICENSE that is included with this distribution.
 
 #include "iocsh.h"
 
+/* Call cmdButtonsRegistrar manually, avoids build problems on Windows */
+void (*pvar_func_cmdButtonsRegistrar)(void);
+
 int main(int argc,char *argv[])
 {
+    (*pvar_func_cmdButtonsRegistrar)();
     if(argc>=2)
         iocsh(argv[1]);
     iocsh(NULL);

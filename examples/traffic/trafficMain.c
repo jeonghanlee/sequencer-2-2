@@ -7,7 +7,7 @@ in the file LICENSE that is included with this distribution.
 \*************************************************************************/
 /* Author:  Marty Kraimer Date:    17MAR2000 */
 /*
- * Main program for demo sequencer
+ * Main program for traffic sequencer
  */
 #include <stddef.h>
 #include <stdlib.h>
@@ -16,8 +16,12 @@ in the file LICENSE that is included with this distribution.
 
 #include "iocsh.h"
 
+/* Call trafficRegistrar manually, avoids build problems on Windows */
+void (*pvar_func_trafficRegistrar)(void);
+
 int main(int argc,char *argv[])
 {
+    (*pvar_func_trafficRegistrar)();
     if(argc>=2)
         iocsh(argv[1]);
     iocsh(NULL);

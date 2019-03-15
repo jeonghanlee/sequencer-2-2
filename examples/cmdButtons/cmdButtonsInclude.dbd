@@ -6,5 +6,3 @@ include "stringoutRecord.dbd"
 
 device(bo, CONSTANT, devBoSoft, "Soft Channel")
 device(stringout, CONSTANT, devSoSoft, "Soft Channel")
-
-registrar(seqCmdBtnsRegistrar)
