@@ -51,10 +51,10 @@ The following is a graphical representation of the above state machine:
       default_group_color = "#6BA81E"
 
       span_width = 180  // default value is 64
-      span_height = 30  // default value is 40
+      span_height = 50  // default value is 40
 
-      class start [shape = minidiamond, color = "#6BA81E", fontsize = 14]
-      class state [shape = cloud, style = "1,2", height = 30, width = 100, color = "#6BA81E", fontsize = 14]
+      class start [shape = minidiamond]
+      class state [style = dashed, height = 30, width = 100]
       class cond [shape = flowchart.condition, width = 80, height = 30]
       class actions [shape = flowchart.terminator, width = 120]
       class inner [style = "1,2"]
@@ -62,14 +62,18 @@ The following is a graphical representation of the above state machine:
       start [class = start]
       start -> light_off
       group {
-         light_off [class = state]
+         shape = line
+         style = dashed
+         light_off [class = state, label = "state: light_off"]
          v_above_5 [class = cond, label = "v > 5"]
          turn_on [class = actions, label = "light = TRUE;\npvPut(light);"]
          light_off -> v_above_5 -> turn_on [class = inner]
       }
       turn_on -> light_on
       group {
-         light_on [class = state]
+         shape = line
+         style = dashed
+         light_on [class = state, label = "state: light_on"]
          v_below_3 [class = cond, label = "v < 3"]
          turn_off [class = actions, label = "light = FALSE;\npvPut(light);"]
          light_on -> v_below_3 -> turn_off [class = inner]
@@ -260,10 +264,10 @@ following STD:
       default_group_color = "#6BA81E"
 
       span_width = 180  // default value is 64
-      span_height = 30  // default value is 40
+      span_height = 50  // default value is 40
 
-      class start [shape = minidiamond, color = "#6BA81E", fontsize = 14]
-      class state [shape = cloud, style = "1,2", height = 30, width = 100, color = "#6BA81E", fontsize = 14]
+      class start [shape = minidiamond]
+      class state [style = dashed, height = 30, width = 100]
       class cond [shape = flowchart.condition, width = 80, height = 30]
       class actions [shape = flowchart.terminator, width = 120]
       class inner [style = "1,2"]
@@ -271,14 +275,18 @@ following STD:
       start [class = start]
       start -> init
       group {
-         init [class = state, label = "state init"]
+         shape = line
+         style = dashed
+         init [class = state, label = "state: init"]
          nil [class = cond, label = "TRUE"]
          set_vout [class = actions, height = 55, label = "vout = 0.0;\npvPut(vout);\ndelta = 0.2;\n"]
          init -> nil -> set_vout [class = inner]
       }
       set_vout -> ramp
       group {
-         ramp [class = state, label = "state ramp"]
+         shape = line
+         style = dashed
+         ramp [class = state, label = "state: ramp"]
          delay [class = cond, label = "delay(0.1)", width = 100]
          repeat [class = actions, label = "...\nvout += delta;"]
          ramp -> delay -> repeat [class = inner]
