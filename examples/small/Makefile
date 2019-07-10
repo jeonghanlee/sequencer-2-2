@@ -15,6 +15,7 @@ TESTPROD_HOST += delay
 TESTPROD_HOST += entry
 TESTPROD_HOST += entryVar
 TESTPROD_HOST += optt
+TESTPROD_HOST += parameter
 TESTPROD_HOST += pvTimeStamp
 TESTPROD_HOST += syncq
 TESTPROD_HOST += timer
