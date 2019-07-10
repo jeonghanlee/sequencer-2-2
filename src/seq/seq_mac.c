@@ -174,8 +174,6 @@ void seqMacParse(PROG *sp, const char *macStr)
 
 		/* Parse the value */
 		nChar = seqMacParseValue(macStr);
-		if (nChar == 0)
-			break;
 
 		/* Remove previous value if it exists */
 		value = mac->value;
