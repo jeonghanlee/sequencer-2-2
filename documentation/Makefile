@@ -4,13 +4,10 @@ include $(TOP)/configure/CONFIG
 # You can set these variables from the command line.
 SPHINXOPTS    = -q #-n
 SPHINXBUILD   = sphinx-build
-PAPER         = a4
 BUILDDIR      = O.Common
 
 # Internal variables.
-PAPEROPT_a4     = -D latex_paper_size=a4
-PAPEROPT_letter = -D latex_paper_size=letter
-ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
+ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(SPHINXOPTS) .
 
 .PHONY: install all build realclean
 .PHONY: help clean html dirhtml pickle json htmlhelp qthelp latex changes
