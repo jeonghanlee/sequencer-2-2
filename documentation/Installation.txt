@@ -257,11 +257,11 @@ after each one giving a summary of how many tests failed etc.
 
 To check out an example, change directory to examples/demo and run ::
 
-   ../../bin/$EPICS_HOST_ARCH/demo stcmd.host
+   ./O.linux-x86_64/demo demo.stcmd
 
 The output should look something like this::
 
-   ben@sarun[1]: .../examples/demo > ../../bin/linux-x86/demo stcmd.host 
+   ben@sarun[1]: .../examples/demo > ./O.linux-x86_64/demo demo.stcmd
    dbLoadDatabase "../../dbd/demo.dbd"
    demo_registerRecordDeviceDriver(pdbbase)
    dbLoadRecords "demo.db"
