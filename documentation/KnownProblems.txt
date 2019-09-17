@@ -1,6 +1,17 @@
 Known Problems
 ==============
 
+.. _Known_Problems_2.2.6:
+
+Known Problems in Release 2.2.6
+-------------------------------
+
+* pvGet fails if the array size declared in SNL is greater than the native
+  array size of the PV, whereas monitoring with that setup works.
+
+* The examples/demo doesn't work with base >+ 3.15 due to a missing entry in
+  the dbd file.
+
 .. _Known_Problems_2.2.5:
 
 Known Problems in Release 2.2.5
