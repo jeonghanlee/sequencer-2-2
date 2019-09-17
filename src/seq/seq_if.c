@@ -232,7 +232,7 @@ epicsShareFunc pvStat seq_pvGetTmo(SS_ID ss, CH_ID chId, enum compType compType,
 	status = pvVarGetCallback(
 			&dbch->pvid,		/* PV id */
 			ch->type->getType,	/* request type */
-			ch->count,		/* element count */
+			dbch->dbCount,		/* element count */
 			req);			/* user arg */
 	if (status != pvStatOK)
 	{
