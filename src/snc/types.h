@@ -50,7 +50,7 @@ typedef unsigned int		uint;
 
 struct sym_table
 {
-#if EPICS_REVISION<14 || (EPICS_REVISION==14 && EPICS_MODIFICATION <= 10)
+#if (EPICS_VERSION == 3) && (EPICS_REVISION<14 || (EPICS_REVISION==14 && EPICS_MODIFICATION <= 10))
 	void *table;
 #else
 	struct gphPvt *table;
