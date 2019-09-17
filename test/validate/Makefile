@@ -13,6 +13,7 @@ SNCFLAGS_vxWorks += -nil-
 #  Set to path of valgrind executable if tests should run under valgrind
 USE_VALGRIND =
 
+REGRESSION_TESTS_WITH_DB += array
 REGRESSION_TESTS_WITH_DB += bittypes
 REGRESSION_TESTS_WITH_DB += evflag
 REGRESSION_TESTS_WITH_DB += monitorEvflag
@@ -32,7 +33,6 @@ REGRESSION_TESTS_WITH_DB += norace
 # fail (safe mode off)
 #REGRESSION_TESTS_WITH_DB += race
 
-REGRESSION_TESTS_WITHOUT_DB += array
 REGRESSION_TESTS_WITHOUT_DB += assign
 REGRESSION_TESTS_WITHOUT_DB += change
 REGRESSION_TESTS_WITHOUT_DB += commaOperator

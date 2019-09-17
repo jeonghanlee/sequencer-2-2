@@ -8,8 +8,14 @@ program arrayTest
 
 %%#include "../testSupport.h"
 
+unsigned short longer[10] = {0,1,2,3,4,5,6,7,8,9};
+assign longer to "array";
+
+unsigned short shorter[3] = {10,11,12};
+assign shorter;
+
 entry {
-    seq_test_init(20);
+    seq_test_init(33);
 }
 
 ss array {
@@ -38,6 +44,25 @@ ss array {
             }
             for (i = 0; i < 4; i++) {
                 testDiag("a4ps[%d]=%p", i, a4ps[i]);
+            }
+            // test array variable that is longer than the PV
+            pvPut(longer,SYNC);
+            pvGet(longer);
+            for (i = 0; i < 10; i++) {
+                testOk1(longer[i]==i);
+                longer[i] = 0;
+            }
+            pvAssign(shorter,"array");
+        } state reconnect
+    }
+    state reconnect {
+        when (pvConnectCount() == pvAssignCount()) {
+            int i;
+            // test array variable that is shorter than the PV
+            pvPut(shorter,SYNC);
+            pvGet(shorter);
+            for (i = 0; i < 3; i++) {
+                testOk1(shorter[i]==i+10);
             }
         } exit
     }
