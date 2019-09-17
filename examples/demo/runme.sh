@@ -1,2 +1,2 @@
 #!/bin/sh
-./O.linux-x86/demo demo.stcmd
+./O.$EPICS_HOST_ARCH/demo demo.stcmd
