@@ -1,6 +1,64 @@
 Release Notes for Version 2.2
 =============================
 
+.. _Release_Notes_2.2.7:
+
+Release 2.2.7
+-------------
+
+Bug fixes:
+
+* fix: pvGet should not request more elements than the channel has
+
+  Otherwise the CA call will fail and we get no data at all.
+
+  Thanks to Dejan Kocjan <dejan.kocjan@cosylab.com> for finding the cause of
+  this problem and proposing the fix.
+
+* tests: extend array test with pvPut and pvGet
+
+  This tests that both work as expected even if the declared array size is
+  shorter or longer than the native array size of the PV.
+
+* fix a bug in seqMacParse
+
+  When the value of a parameter is the unquoted empty string as in "var=",
+  this would not be recognized and the default value was used instead. Just a
+  stupid unnecessary explicit test I had to remove. Thanks to Hovanes Egiyan
+  for reporting this problem.
+
+* Fix build problems in examples/ on Windows
+
+  The registerRecordDeviceDriver.pl script generates code that on Windows
+  requires symbols named in the DBD file to be linked from an DLL, not from a
+  directly-linked source file. When main() is directly linked with an object
+  file containing a registrar entry, we can call that registrar code directly
+  from main() as done here instead of using the generated code.
+
+  These build errors may only appear when using a MinGW compiler, either
+  native or as a cross-build running on another OS.
+
+* fix PROD_LIBS definition in test/unit/Makefile
+
+  Thanks to Michael Davidsaver <mdavidsaver@gmail.com> for spotting this.
+
+* fix: add missing braces around if body in seqShowAll
+
+* fix #if expression to determine whether base < 3.14.10
+
+Various minor improvements:
+
+* build: add standard includes to configure/{RELEASE,CONFIG_SITE}
+
+* examples/demo: use $EPICS_HOST_ARCH in runme.sh
+
+* add a small example to test program parameters
+
+* docs: adapt how to invoke the demo program
+
+* docs: made blockdiags a bit more readable
+
+
 .. _Release_Notes_2.2.6:
 
 Release 2.2.6
