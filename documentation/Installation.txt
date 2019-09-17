@@ -51,7 +51,7 @@ Releases are available here:
 
    http://www-csr.bessy.de/control/SoftDist/sequencer/releases/
 
-The current stable release is `2.2.5`_. Please take a look at the
+The current stable release is `2.2.7`_. Please take a look at the
 `VersioningPolicy` if you are unsure whether to upgrade to
 a new release.
 
@@ -72,16 +72,17 @@ In the releases directory there is always a symbolic link to the
 
 Here are all releases for version 2.2:
 
-   ========== =========================== ============================
-   Version    Release Notes               Known Problems
-   ========== =========================== ============================
-   `2.2.6`_   `Release_Notes_2.2.6`       n/a
-   `2.2.5`_   `Release_Notes_2.2.5`       `Known_Problems_2.2.5`
-   `2.2.4`_   `Release_Notes_2.2.4`       `Known_Problems_2.2.4`
-   `2.2.3`_   `Release_Notes_2.2.3`       `Known_Problems_2.2.3`
-   `2.2.2`_   `Release_Notes_2.2.2`       `Known_Problems_2.2.2`
-   `2.2.1`_   `Release_Notes_2.2.1`       `Known_Problems_2.2.1`
-   ========== =========================== ============================
+   ========== ======================= ============================
+   Version    Release Notes           Known Problems
+   ========== ======================= ============================
+   `2.2.7`_   `Release_Notes_2.2.7`   n/a
+   `2.2.6`_   `Release_Notes_2.2.6`   `Known_Problems_2.2.6`
+   `2.2.5`_   `Release_Notes_2.2.5`   `Known_Problems_2.2.5`
+   `2.2.4`_   `Release_Notes_2.2.4`   `Known_Problems_2.2.4`
+   `2.2.3`_   `Release_Notes_2.2.3`   `Known_Problems_2.2.3`
+   `2.2.2`_   `Release_Notes_2.2.2`   `Known_Problems_2.2.2`
+   `2.2.1`_   `Release_Notes_2.2.1`   `Known_Problems_2.2.1`
+   ========== ======================= ============================
 
 If you want to help testing, please use the `latest snapshot`_, or check out
 the `darcs`_ repository for `branch-2-2`_::
@@ -104,6 +105,7 @@ See `Contribute`_ for a short description how to record and send patches.
 You can also follow development by using the `repository browser`_.
 
 .. _latest snapshot: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2-2-snapshot-latest.tar.gz
+.. _2.2.7: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2.2.7.tar.gz
 .. _2.2.6: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2.2.6.tar.gz
 .. _2.2.5: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2.2.5.tar.gz
 .. _2.2.4: http://www-csr.bessy.de/control/SoftDist/sequencer/releases/seq-2.2.4.tar.gz
