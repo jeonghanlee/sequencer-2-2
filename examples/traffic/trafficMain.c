@@ -17,7 +17,7 @@ in the file LICENSE that is included with this distribution.
 #include "iocsh.h"
 
 /* Call trafficRegistrar manually, avoids build problems on Windows */
-void (*pvar_func_trafficRegistrar)(void);
+extern void (*pvar_func_trafficRegistrar)(void);
 
 int main(int argc,char *argv[])
 {

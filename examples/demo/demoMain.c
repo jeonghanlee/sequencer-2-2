@@ -17,7 +17,7 @@ in the file LICENSE that is included with this distribution.
 #include "iocsh.h"
 
 /* Call demoRegistrar manually, avoids build problems on Windows */
-void (*pvar_func_demoRegistrar)(void);
+extern void (*pvar_func_demoRegistrar)(void);
 
 int main(int argc,char *argv[])
 {
