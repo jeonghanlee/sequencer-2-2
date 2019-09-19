@@ -1,6 +1,15 @@
 Known Problems
 ==============
 
+.. _Known_Problems_2.2.7:
+
+Known Problems in Release 2.2.7
+-------------------------------
+
+* building the examples fails on MacOS due to recent build fixes for Windows =:|
+
+  The repo has a patch to fix that.
+
 .. _Known_Problems_2.2.6:
 
 Known Problems in Release 2.2.6
