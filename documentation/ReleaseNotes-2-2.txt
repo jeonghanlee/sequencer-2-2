@@ -1,6 +1,14 @@
 Release Notes for Version 2.2
 =============================
 
+.. _Release_Notes_2.2.8:
+
+Release 2.2.8
+-------------
+
+This relase only fixes a build problem on MacOS.
+
+
 .. _Release_Notes_2.2.7:
 
 Release 2.2.7
